@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cpptools-extension-pack",
+        "ms-vscode.cpptools-themes",
+        "vadimcn.vscode-lldb",
+        "dbaeumer.vscode-eslint",
+        "eamodio.gitlens"
+    ]
+}

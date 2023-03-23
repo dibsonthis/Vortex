@@ -1,0 +1,4 @@
+x = 45 * 2.43
+y = ["hello"]
+// this is a comment
+z = true~

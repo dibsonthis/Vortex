@@ -1,0 +1,30 @@
+{
+  "configurations": [
+    {
+      "name": "Mac",
+      "intelliSenseMode": "clang-x64",
+      "includePath": ["${default}"],
+      "macFrameworkPath": ["/System/Library/Frameworks"],
+      "defines": ["_DEBUG", "UNICODE", "_UNICODE"],
+      "compilerPath": "/usr/bin/clang",
+      "cStandard": "c17",
+      "cppStandard": "c++17",
+      "browse": {
+        "path": ["${workspaceFolder}"],
+        "limitSymbolsToIncludedHeaders": true,
+        "databaseFilename": ""
+      }
+    },
+    {
+      "name": "GCC",
+      "includePath": ["${workspaceFolder}/**", "C:/msys64/mingw64/include/c++/12.2.0"],
+      "defines": ["_DEBUG", "UNICODE", "_UNICODE"],
+      "windowsSdkVersion": "10.0.18362.0",
+      "compilerPath": "C:/msys64/mingw64/bin/g++.exe",
+      "cStandard": "c17",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "windows-gcc-x64"
+    }
+  ],
+  "version": 4
+}
