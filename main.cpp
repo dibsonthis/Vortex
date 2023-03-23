@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include "src/Lexer/Lexer.hpp"
+#include "src/Parser/Parser.hpp"
 
 enum Type
 {
@@ -16,6 +17,11 @@ int main(int argc, char** argv)
     {
         Lexer lexer("../../../source.txt");
         lexer.tokenize();
+
+        Parser parser(lexer.nodes);
+        parser.parse_bin_op({"*", "/"});
+        parser.parse_bin_op({"+", "-"});
+        auto ast = parser.filter_tree();
 
         std::cin.get();
         exit(0);

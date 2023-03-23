@@ -1,7 +1,11 @@
+#pragma once
+
 #include <vector>
 #include <iostream>
 
 #define node_ptr std::shared_ptr<Node>
+
+struct Node;
 
 enum class NodeType {
 	ID,
@@ -31,6 +35,8 @@ struct BooleanNode {
 
 struct OpNode {
 	std::string value;
+	node_ptr left;
+	node_ptr right;
 };
 
 struct Node {
@@ -55,3 +61,5 @@ struct Node {
 node_ptr new_number_node(double value);
 node_ptr new_string_node(std::string value);
 node_ptr new_boolean_node(bool value);
+
+std::string node_repr(node_ptr);

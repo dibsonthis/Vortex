@@ -10,7 +10,8 @@
         "-std=c++17",
         "${fileDirname}\\src\\Node\\Node.cpp",
         "${fileDirname}\\src\\Lexer\\Lexer.cpp",
-        // "${fileDirname}\\src\\Parser\\Parser.cpp",
+        "${fileDirname}\\src\\Parser\\Parser.cpp",
+        "${fileDirname}\\src\\utils\\utils.cpp",
 
         "${fileDirname}\\main.cpp",
 
@@ -37,7 +38,8 @@
         "-std=c++17",
         "${fileDirname}\\src\\Node\\Node.cpp",
         "${fileDirname}\\src\\Lexer\\Lexer.cpp",
-        // "${fileDirname}\\src\\Parser\\Parser.cpp",
+        "${fileDirname}\\src\\Parser\\Parser.cpp",
+        "${fileDirname}\\src\\utils\\utils.cpp",
 
         "${fileDirname}\\main.cpp",
 
@@ -66,7 +68,8 @@
         "-stdlib=libc++",
         "${fileDirname}/src/Node/Node.cpp",
         "${fileDirname}/src/Lexer/Lexer.cpp",
-        // "${fileDirname}/src/Parser/Parser.cpp",
+        "${fileDirname}/src/Parser/Parser.cpp",
+        "${fileDirname}/src/utils/utils.cpp",
 
         "${fileDirname}/main.cpp",
 
@@ -91,7 +94,8 @@
         "-stdlib=libc++",
         "${fileDirname}/src/Node/Node.cpp",
         "${fileDirname}/src/Lexer/Lexer.cpp",
-        // "${fileDirname}/src/Parser/Parser.cpp",
+        "${fileDirname}/src/Parser/Parser.cpp",
+        "${fileDirname}/src/utils/utils.cpp",
 
         "${fileDirname}/main.cpp",
 
