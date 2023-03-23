@@ -14,14 +14,13 @@ public:
         current_node = nodes[0];
     }
     void advance(int n = 1);
-    void run();
+    void reset(int idx = 0);
 
     node_ptr get_left();
     node_ptr get_right();
 
-    void reset(int idx = 0);
-
     void parse_bin_op(std::vector<std::string> operators);
+    void parse(int idx = 0);
 
     std::vector<node_ptr> filter_tree();
 };

@@ -19,8 +19,7 @@ int main(int argc, char** argv)
         lexer.tokenize();
 
         Parser parser(lexer.nodes);
-        parser.parse_bin_op({"*", "/"});
-        parser.parse_bin_op({"+", "-"});
+        parser.parse();
         auto ast = parser.filter_tree();
 
         std::cin.get();

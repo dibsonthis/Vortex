@@ -44,8 +44,13 @@ void Parser::parse_bin_op(std::vector<std::string> operators) {
         }
         advance();
     }
+}
 
-    reset();
+void Parser::parse(int idx) {
+    parse_bin_op({"*", "/"});
+    reset(idx);
+    parse_bin_op({"+", "-"});
+    reset(idx);
 }
 
 std::vector<node_ptr> Parser::filter_tree() {
