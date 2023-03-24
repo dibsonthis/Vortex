@@ -20,7 +20,7 @@ int main(int argc, char** argv)
 
         Parser parser(lexer.nodes);
         parser.parse(0, parser.nodes.size()-1);
-        auto ast = parser.filter_tree();
+        auto ast = parser.nodes;
 
         std::cin.get();
         exit(0);

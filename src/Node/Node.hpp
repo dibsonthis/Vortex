@@ -81,8 +81,6 @@ struct Node {
 	ParenNode Paren;
 	FuncCallNode FuncCall;
 	AccessorNode Accessor;
-
-	bool __parsed;
 };
 
 std::string node_repr(node_ptr);

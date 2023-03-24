@@ -20,9 +20,6 @@ public:
     node_ptr peek(int n = 1);
     void reset(int idx = 0);
 
-    node_ptr get_left();
-    node_ptr get_right();
-
     void parse_list(int end);
     void parse_paren(int end);
     void parse_bin_op(std::vector<std::string> operators, int end);
@@ -37,8 +34,6 @@ public:
 
     node_ptr flatten_comma_node(node_ptr node);
     int find_closing_index(int start, std::string opening_symbol, std::string closing_symbol);
-    std::vector<node_ptr> filter_tree();
-    void remove_parsed();
     void erase_prev();
     void erase_next();
     void error_and_exit(std::string message);
