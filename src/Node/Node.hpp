@@ -17,6 +17,7 @@ enum class NodeType {
 	COMMA_LIST,
 	PAREN,
 	FUNC_CALL,
+	ACCESSOR,
 	START_OF_FILE,
 	END_OF_FILE,
 };
@@ -56,6 +57,11 @@ struct FuncCallNode {
 	std::vector<node_ptr> args;
 };
 
+struct AccessorNode {
+	node_ptr container;
+	node_ptr accessor;
+};
+
 struct Node {
 	Node() = default;
     Node(NodeType type) : type(type) {}
@@ -74,12 +80,9 @@ struct Node {
 	ListNode List;
 	ParenNode Paren;
 	FuncCallNode FuncCall;
+	AccessorNode Accessor;
 
 	bool __parsed;
 };
-
-node_ptr new_number_node(double value);
-node_ptr new_string_node(std::string value);
-node_ptr new_boolean_node(bool value);
 
 std::string node_repr(node_ptr);

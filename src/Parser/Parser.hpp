@@ -29,6 +29,7 @@ public:
     void parse_un_op(std::vector<std::string> operators, int end);
     void parse_comma(int end);
     void parse_func_call(int end);
+    void parse_accessor(int end);
     void flatten_commas(int end);
     void parse(int start, int end);
 
@@ -38,5 +39,12 @@ public:
     int find_closing_index(int start, std::string opening_symbol, std::string closing_symbol);
     std::vector<node_ptr> filter_tree();
     void remove_parsed();
+    void erase_prev();
+    void erase_next();
     void error_and_exit(std::string message);
+
+    node_ptr new_number_node(double value);
+    node_ptr new_string_node(std::string value);
+    node_ptr new_boolean_node(bool value);
+    node_ptr new_accessor_node();
 };

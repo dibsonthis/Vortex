@@ -1,1 +1,1 @@
-hello_world(12, 56, "hi") + 25.5
+hello_world()[4][0]
