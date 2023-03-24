@@ -23,6 +23,7 @@ public:
     node_ptr get_right();
 
     void parse_list(int end);
+    void parse_paren(int end);
     void parse_bin_op(std::vector<std::string> operators, int end);
     void parse(int start, int end);
 

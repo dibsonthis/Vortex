@@ -70,7 +70,31 @@ void Parser::parse_list(int end) {
     }
 }
 
+void Parser::parse_paren(int end) {
+    while (current_node->type != NodeType::END_OF_FILE && index != end) {
+        if (current_node->Operator.value == "(") {
+            current_node->type = NodeType::PAREN;
+            int curr_idx = index;
+            int closing_index = find_closing_index(index, "(", ")");
+            advance();
+            parse(index, closing_index);
+            for (int i = index; i < closing_index; i++) {
+                if (!nodes[i]->__parsed) {
+                    nodes[curr_idx]->Paren.elements.push_back(nodes[i]);
+                    nodes[i]->__parsed = true;
+                }
+            }
+            reset(closing_index);
+            current_node->__parsed = true; // "]"
+        }
+
+        advance();
+    }
+}
+
 void Parser::parse(int start, int end) {
+    parse_paren(end);
+    reset(start);
     parse_list(end);
     reset(start);
     parse_bin_op({"*", "/"}, end);
