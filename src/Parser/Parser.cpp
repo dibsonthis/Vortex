@@ -9,6 +9,13 @@ void Parser::advance(int n) {
     }
 }
 
+node_ptr Parser::peek(int n) {
+    int idx = index + n;
+    if (idx < nodes.size()) {
+        return nodes[idx];
+    }
+}
+
 void Parser::reset(int idx) {
     index = idx;
     current_node = nodes[index];
@@ -36,12 +43,31 @@ node_ptr Parser::get_right() {
 
 void Parser::parse_bin_op(std::vector<std::string> operators, int end) {
     while (current_node->type != NodeType::END_OF_FILE && index != end) {
-        if (!current_node->__parsed && vector_contains_string(operators, current_node->Operator.value)) {
+        if (!current_node->__parsed && !has_children(current_node) && vector_contains_string(operators, current_node->Operator.value)) {
             node_ptr left = get_left();
             node_ptr right = get_right();
             left->__parsed = true;
             right->__parsed = true;
             current_node->Operator.left = left;
+            current_node->Operator.right = right;
+        }
+        advance();
+    }
+}
+
+void Parser::parse_un_op(std::vector<std::string> operators, int end) {
+    while (current_node->type != NodeType::END_OF_FILE && index != end) {
+        if (!current_node->__parsed && vector_contains_string(operators, current_node->Operator.value) && 
+            (
+                peek(-1)->type == NodeType::OP ||
+                peek(-1)->type == NodeType::START_OF_FILE
+            ) && 
+            (
+                peek(-1)->Operator.value != ")" &&
+                peek(-1)->Operator.value != "]"
+            )) {
+            node_ptr right = get_right();
+            right->__parsed = true;
             current_node->Operator.right = right;
         }
         advance();
@@ -85,9 +111,31 @@ void Parser::parse_paren(int end) {
                 }
             }
             reset(closing_index);
-            current_node->__parsed = true; // "]"
+            current_node->__parsed = true; // ")"
         }
 
+        advance();
+    }
+}
+
+void Parser::parse_func_call(int end) {
+    while (current_node->type != NodeType::END_OF_FILE && index != end) {
+        if (!current_node->__parsed && current_node->type == NodeType::ID && peek()->type == NodeType::PAREN) {
+            current_node->type = NodeType::FUNC_CALL;
+            current_node->FuncCall.name = current_node->ID.value;
+            current_node->FuncCall.args.push_back(peek());
+            advance();
+            current_node->__parsed = true;
+        }
+        advance();
+    }
+}
+
+void Parser::flatten_commas(int end) {
+    while (current_node->type != NodeType::END_OF_FILE && index != end) {
+        if (!current_node->__parsed && current_node->Operator.value == ",") {
+            current_node = flatten_comma_node(current_node);
+        }
         advance();
     }
 }
@@ -97,11 +145,21 @@ void Parser::parse(int start, int end) {
     reset(start);
     parse_list(end);
     reset(start);
+    parse_bin_op({","}, end);
+    reset(start);
+    parse_func_call(end);
+    reset(start);
+    parse_un_op({"+", "-"}, end);
+    reset(start);
+    parse_bin_op({"&&", "||"}, end);
+    reset(start);
     parse_bin_op({"*", "/"}, end);
     reset(start);
     parse_bin_op({"+", "-"}, end);
     reset(start);
     parse_bin_op({"="}, end);
+    reset(start);
+    flatten_commas(end);
     reset(start);
 }
 
@@ -121,6 +179,36 @@ int Parser::find_closing_index(int start, std::string opening_symbol, std::strin
     }
 }
 
+node_ptr Parser::flatten_comma_node(node_ptr node) {
+    node->type = NodeType::COMMA_LIST;
+    if (node->Operator.left->Operator.value == ",") {
+        node->Operator.left = flatten_comma_node(node->Operator.left);
+    } else {
+        node->List.elements.push_back(node->Operator.left);
+    }
+
+    if (node->Operator.left->type == NodeType::COMMA_LIST) {
+        for (auto& child_node : node->Operator.left->List.elements) {
+            node->List.elements.push_back(child_node);
+        }
+    }
+
+
+    if (node->Operator.right->Operator.value == ",") {
+        node->Operator.right = flatten_comma_node(node->Operator.right);
+    } else {
+        node->List.elements.push_back(node->Operator.right);
+    }
+
+    if (node->Operator.right->type == NodeType::COMMA_LIST) {
+        for (auto& child_node : node->Operator.right->List.elements) {
+            node->List.elements.push_back(child_node);
+        }
+    }
+    
+    return node;
+}
+
 std::vector<node_ptr> Parser::filter_tree() {
     std::vector<node_ptr> ast;
     for (node_ptr& node : nodes) {
@@ -129,6 +217,21 @@ std::vector<node_ptr> Parser::filter_tree() {
         }
     }
     return ast;
+}
+
+bool Parser::has_children(node_ptr node) {
+    return (node->Operator.left || node->Operator.right);
+}
+
+void Parser::remove_parsed() {
+    nodes.erase(
+    std::remove_if(
+        nodes.begin(), 
+        nodes.end(),
+        [](node_ptr const & node) { return node->__parsed; }
+    ), 
+    nodes.end()
+); 
 }
 
 void Parser::error_and_exit(std::string message)

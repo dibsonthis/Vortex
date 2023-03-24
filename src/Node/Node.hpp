@@ -14,7 +14,9 @@ enum class NodeType {
 	BOOLEAN,
 	OP,
 	LIST,
+	COMMA_LIST,
 	PAREN,
+	FUNC_CALL,
 	START_OF_FILE,
 	END_OF_FILE,
 };
@@ -49,6 +51,11 @@ struct ParenNode {
 	std::vector<node_ptr> elements;
 };
 
+struct FuncCallNode {
+	std::string name;
+	std::vector<node_ptr> args;
+};
+
 struct Node {
 	Node() = default;
     Node(NodeType type) : type(type) {}
@@ -66,6 +73,7 @@ struct Node {
 	OpNode Operator;
 	ListNode List;
 	ParenNode Paren;
+	FuncCallNode FuncCall;
 
 	bool __parsed;
 };
