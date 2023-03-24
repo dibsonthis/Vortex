@@ -19,7 +19,7 @@ int main(int argc, char** argv)
         lexer.tokenize();
 
         Parser parser(lexer.nodes);
-        parser.parse(0, parser.nodes.size()-1);
+        parser.parse(0, "_");
         auto ast = parser.nodes;
 
         std::cin.get();

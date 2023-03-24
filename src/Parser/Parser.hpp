@@ -20,16 +20,16 @@ public:
     node_ptr peek(int n = 1);
     void reset(int idx = 0);
 
-    void parse_list(int end);
-    void parse_object(int end);
-    void parse_paren(int end);
-    void parse_bin_op(std::vector<std::string> operators, int end);
-    void parse_un_op(std::vector<std::string> operators, int end);
-    void parse_comma(int end);
-    void parse_func_call(int end);
-    void parse_accessor(int end);
-    void flatten_commas(int end);
-    void parse(int start, int end);
+    void parse_list(std::string end);
+    void parse_object(std::string end);
+    void parse_paren(std::string end);
+    void parse_bin_op(std::vector<std::string> operators, std::string end);
+    void parse_un_op(std::vector<std::string> operators, std::string end);
+    void parse_comma(std::string end);
+    void parse_func_call(std::string end);
+    void parse_accessor(std::string end);
+    void flatten_commas(std::string end);
+    void parse(int start, std::string end);
 
     bool has_children(node_ptr node);
 

@@ -21,8 +21,11 @@ void Parser::reset(int idx) {
     current_node = nodes[index];
 }
 
-void Parser::parse_bin_op(std::vector<std::string> operators, int end) {
-    while (current_node->type != NodeType::END_OF_FILE && index != end) {
+void Parser::parse_bin_op(std::vector<std::string> operators, std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
         if (!has_children(current_node) && vector_contains_string(operators, current_node->Operator.value)) {
             node_ptr left = peek(-1);
             node_ptr right = peek(1);
@@ -35,8 +38,11 @@ void Parser::parse_bin_op(std::vector<std::string> operators, int end) {
     }
 }
 
-void Parser::parse_un_op(std::vector<std::string> operators, int end) {
-    while (current_node->type != NodeType::END_OF_FILE && index != end) {
+void Parser::parse_un_op(std::vector<std::string> operators, std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
         if (vector_contains_string(operators, current_node->Operator.value) && 
             (
                 peek(-1)->type == NodeType::OP ||
@@ -50,14 +56,18 @@ void Parser::parse_un_op(std::vector<std::string> operators, int end) {
     }
 }
 
-void Parser::parse_list(int end) {
-    while (current_node->type != NodeType::END_OF_FILE && index != end) {
+void Parser::parse_list(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
         if (current_node->Operator.value == "[") {
             current_node->type = NodeType::LIST;
             int curr_idx = index;
             int closing_index = find_closing_index(index, "[", "]");
+            current_node->Operator.value = "";
             advance();
-            parse(index, closing_index);
+            parse(index, "]");
             advance(-1);
             while (peek()->Operator.value != "]") {
                 nodes[curr_idx]->List.elements.push_back(peek());
@@ -70,14 +80,18 @@ void Parser::parse_list(int end) {
     }
 }
 
-void Parser::parse_object(int end) {
-    while (current_node->type != NodeType::END_OF_FILE && index != end) {
+void Parser::parse_object(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
         if (current_node->Operator.value == "{") {
             current_node->type = NodeType::OBJECT;
             int curr_idx = index;
             int closing_index = find_closing_index(index, "{", "}");
+            current_node->Operator.value = "";
             advance();
-            parse(index, closing_index);
+            parse(index, "}");
             advance(-1);
             while (peek()->Operator.value != "}") {
                 nodes[curr_idx]->Object.elements.push_back(peek());
@@ -90,14 +104,18 @@ void Parser::parse_object(int end) {
     }
 }
 
-void Parser::parse_paren(int end) {
-    while (current_node->type != NodeType::END_OF_FILE && index != end) {
+void Parser::parse_paren(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
         if (current_node->Operator.value == "(") {
             current_node->type = NodeType::PAREN;
             int curr_idx = index;
             int closing_index = find_closing_index(index, "(", ")");
+            current_node->Operator.value = "";
             advance();
-            parse(index, closing_index);
+            parse(index, ")");
             advance(-1);
             while (peek()->Operator.value != ")") {
                 nodes[curr_idx]->Paren.elements.push_back(peek());
@@ -110,8 +128,11 @@ void Parser::parse_paren(int end) {
     }
 }
 
-void Parser::parse_func_call(int end) {
-    while (current_node->type != NodeType::END_OF_FILE && index != end) {
+void Parser::parse_func_call(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
         if (current_node->type == NodeType::ID && peek()->type == NodeType::PAREN) {
             current_node->type = NodeType::FUNC_CALL;
             current_node->FuncCall.name = current_node->ID.value;
@@ -122,8 +143,11 @@ void Parser::parse_func_call(int end) {
     }
 }
 
-void Parser::parse_accessor(int end) {
-    while (current_node->type != NodeType::END_OF_FILE && index != end) {
+void Parser::parse_accessor(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
         while ((current_node->type == NodeType::ID || current_node->type == NodeType::LIST || current_node->type == NodeType::FUNC_CALL || current_node->type == NodeType::ACCESSOR) 
         && peek()->type == NodeType::LIST) {
             node_ptr accessor = new_accessor_node();
@@ -136,8 +160,11 @@ void Parser::parse_accessor(int end) {
     }
 }
 
-void Parser::flatten_commas(int end) {
-    while (current_node->type != NodeType::END_OF_FILE && index != end) {
+void Parser::flatten_commas(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
         if (current_node->Operator.value == ",") {
             current_node = flatten_comma_node(current_node);
         }
@@ -145,12 +172,12 @@ void Parser::flatten_commas(int end) {
     }
 }
 
-void Parser::parse(int start, int end) {
+void Parser::parse(int start, std::string end) {
     parse_paren(end);
     reset(start);
-    parse_list(end);
-    reset(start);
     parse_object(end);
+    reset(start);
+    parse_list(end);
     reset(start);
     parse_func_call(end);
     reset(start);

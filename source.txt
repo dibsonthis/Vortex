@@ -7,5 +7,6 @@
 		postCode: 4453,
 		state: "NSW",
 		country: "Australia"
-	}
+	},
+	fav_nums: [4, 8, 15, 16, 23, 42]
 }
