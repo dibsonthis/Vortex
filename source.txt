@@ -1,1 +1,11 @@
-hello_world()[4][0]
+{
+	name: "John",
+	age: 24,
+	sex: Gender.Male,
+	location: {
+		street: "123 South Street",
+		postCode: 4453,
+		state: "NSW",
+		country: "Australia"
+	}
+}

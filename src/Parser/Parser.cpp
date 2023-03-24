@@ -59,13 +59,31 @@ void Parser::parse_list(int end) {
             advance();
             parse(index, closing_index);
             advance(-1);
-            if (peek()->Operator.value == "]") {
-                erase_next();
-            } else {
+            while (peek()->Operator.value != "]") {
                 nodes[curr_idx]->List.elements.push_back(peek());
                 erase_next();
+            }
+            erase_next();
+        }
+
+        advance();
+    }
+}
+
+void Parser::parse_object(int end) {
+    while (current_node->type != NodeType::END_OF_FILE && index != end) {
+        if (current_node->Operator.value == "{") {
+            current_node->type = NodeType::OBJECT;
+            int curr_idx = index;
+            int closing_index = find_closing_index(index, "{", "}");
+            advance();
+            parse(index, closing_index);
+            advance(-1);
+            while (peek()->Operator.value != "}") {
+                nodes[curr_idx]->Object.elements.push_back(peek());
                 erase_next();
             }
+            erase_next();
         }
 
         advance();
@@ -81,13 +99,11 @@ void Parser::parse_paren(int end) {
             advance();
             parse(index, closing_index);
             advance(-1);
-            if (peek()->Operator.value == ")") {
-                erase_next();
-            } else {
+            while (peek()->Operator.value != ")") {
                 nodes[curr_idx]->Paren.elements.push_back(peek());
                 erase_next();
-                erase_next();
             }
+            erase_next();
         }
 
         advance();
@@ -134,7 +150,7 @@ void Parser::parse(int start, int end) {
     reset(start);
     parse_list(end);
     reset(start);
-    parse_bin_op({","}, end);
+    parse_object(end);
     reset(start);
     parse_func_call(end);
     reset(start);
@@ -147,6 +163,12 @@ void Parser::parse(int start, int end) {
     parse_bin_op({"*", "/"}, end);
     reset(start);
     parse_bin_op({"+", "-"}, end);
+    reset(start);
+    parse_bin_op({"."}, end);
+    reset(start);
+    parse_bin_op({":"}, end);
+    reset(start);
+    parse_bin_op({","}, end);
     reset(start);
     parse_bin_op({"="}, end);
     reset(start);

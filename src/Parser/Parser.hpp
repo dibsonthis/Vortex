@@ -21,6 +21,7 @@ public:
     void reset(int idx = 0);
 
     void parse_list(int end);
+    void parse_object(int end);
     void parse_paren(int end);
     void parse_bin_op(std::vector<std::string> operators, int end);
     void parse_un_op(std::vector<std::string> operators, int end);

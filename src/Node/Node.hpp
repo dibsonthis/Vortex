@@ -14,6 +14,7 @@ enum class NodeType {
 	BOOLEAN,
 	OP,
 	LIST,
+	OBJECT,
 	COMMA_LIST,
 	PAREN,
 	FUNC_CALL,
@@ -48,6 +49,10 @@ struct ListNode {
 	std::vector<node_ptr> elements;
 };
 
+struct ObjectNode {
+	std::vector<node_ptr> elements;
+};
+
 struct ParenNode {
 	std::vector<node_ptr> elements;
 };
@@ -78,6 +83,7 @@ struct Node {
 	BooleanNode Boolean;
 	OpNode Operator;
 	ListNode List;
+	ObjectNode Object;
 	ParenNode Paren;
 	FuncCallNode FuncCall;
 	AccessorNode Accessor;
