@@ -37,6 +37,7 @@ public:
     int find_closing_index(int start, std::string opening_symbol, std::string closing_symbol);
     void erase_prev();
     void erase_next();
+    void erase_curr();
     void error_and_exit(std::string message);
 
     node_ptr new_number_node(double value);

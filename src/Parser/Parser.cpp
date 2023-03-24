@@ -21,6 +21,29 @@ void Parser::reset(int idx) {
     current_node = nodes[index];
 }
 
+void Parser::parse_comma(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+        if (!has_children(current_node) && current_node->Operator.value == ",") {
+            node_ptr left = peek(-1);
+            node_ptr right = peek(1);
+
+            if ((left->type == NodeType::OP && !has_children(left)) || (right->type == NodeType::OP && !has_children(right))) {
+                erase_curr();
+                continue;
+            }
+
+            current_node->Operator.left = left;
+            current_node->Operator.right = right;
+            erase_next();
+            erase_prev();
+        }
+        advance();
+    }
+}
+
 void Parser::parse_bin_op(std::vector<std::string> operators, std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
@@ -195,7 +218,7 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_bin_op({":"}, end);
     reset(start);
-    parse_bin_op({","}, end);
+    parse_comma(end);
     reset(start);
     parse_bin_op({"="}, end);
     reset(start);
@@ -256,6 +279,13 @@ void Parser::erase_next() {
 void Parser::erase_prev() {
     nodes.erase(nodes.begin() + index - 1);
     index--;
+    current_node = nodes[index];
+}
+
+void Parser::erase_curr() {
+    nodes.erase(nodes.begin() + index);
+    index--;
+    current_node = nodes[index];
 }
 
 bool Parser::has_children(node_ptr node) {
