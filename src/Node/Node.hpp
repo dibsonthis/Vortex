@@ -13,6 +13,7 @@ enum class NodeType {
     STRING,
 	BOOLEAN,
 	OP,
+	LIST,
 	START_OF_FILE,
 	END_OF_FILE,
 };
@@ -39,6 +40,10 @@ struct OpNode {
 	node_ptr right;
 };
 
+struct ListNode {
+	std::vector<node_ptr> elements;
+};
+
 struct Node {
 	Node() = default;
     Node(NodeType type) : type(type) {}
@@ -54,6 +59,7 @@ struct Node {
     StringNode String;
 	BooleanNode Boolean;
 	OpNode Operator;
+	ListNode List;
 
 	bool __parsed;
 };
