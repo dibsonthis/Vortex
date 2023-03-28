@@ -1,12 +1,60 @@
-{
-	name: "John",
-	age: 24,
-	sex: Gender.Male,
-	location: {
-		street: "123 South Street",
-		postCode: 4453,
-		state: "NSW",
-		country: "Australia"
-	},
-	fav_nums: [4, 8, 15, 16, 23, 42]
+// import Copyable, Importable from "modules/copyable"
+
+interface Position {
+	xPos?: number,
+	yPos: number
 }
+
+// interface Circle {
+// 	radius: number,
+// 	position: Position
+// }
+
+// interface Square {
+// 	length: number,
+// 	position: Position
+// }
+
+// trait Sizeable {
+// 	area: () => number,
+// 	isBig: (n: number) => bool
+// }
+
+// trait Loggable {
+// 	log: () => none
+// }
+
+// Circle { radius } :: Sizeable, Loggable {
+// 	area: () => PI * radius ^ 2,
+// 	isBig: (n) => radius > n,
+// 	log: () => print("Circle: { radius: ${radius} }")
+// }
+
+// Square { length } :: Sizeable, Loggable {
+// 	area: () => length ^ 2,
+// 	isBig: (n) => length > n,
+// 	log: () => print("Square: { length: ${length} }")
+// }
+
+// logArea = (x: T, n: number)::{ T: Sizeable & Loggable } => if { 
+// 	x.isBig(n): x.log(x.area()), 
+// 	print("Not worth logging")
+// }
+
+// circle = Circle { radius: 20, position: { xPos: 0, yPos: 12 }}
+// square = Square { length: 15, position: { xPos: 8, yPos: 23 }}
+
+// logArea(circle, 20) // or circle.logArea(20), they are interchangeable
+// logArea(square, 20)
+
+// interface Person {
+// 	name: string,
+// 	age?: number
+// }
+
+// p = Person {
+// 	name: "John"
+// }
+
+// getAgePlus1 = Person { age } => age + 1 // error, 'age' could have no value
+// getAgePlus1 = Person { age } => age ? age + 1 : -1

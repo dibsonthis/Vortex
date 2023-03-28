@@ -25,9 +25,11 @@ public:
     void parse_paren(std::string end);
     void parse_bin_op(std::vector<std::string> operators, std::string end);
     void parse_un_op(std::vector<std::string> operators, std::string end);
+    void parse_post_op(std::vector<std::string> operators, std::string end);
     void parse_comma(std::string end);
     void parse_func_call(std::string end);
     void parse_accessor(std::string end);
+    void parse_interface(std::string end);
     void flatten_commas(std::string end);
     void parse(int start, std::string end);
 

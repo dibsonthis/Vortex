@@ -79,6 +79,24 @@ void Parser::parse_un_op(std::vector<std::string> operators, std::string end) {
     }
 }
 
+void Parser::parse_post_op(std::vector<std::string> operators, std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+        if (vector_contains_string(operators, current_node->Operator.value) && 
+            (
+                peek(1)->type == NodeType::OP ||
+                peek(1)->type == NodeType::END_OF_FILE
+            )) {
+            node_ptr left = peek(-1);
+            current_node->Operator.right = left;
+            erase_prev();
+        }
+        advance();
+    }
+}
+
 void Parser::parse_list(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
@@ -123,6 +141,26 @@ void Parser::parse_object(std::string end) {
             erase_next();
         }
 
+        if (current_node->Object.elements.size() == 1 && current_node->Object.elements[0]->type == NodeType::COMMA_LIST) {
+            current_node->Object.elements = current_node->Object.elements[0]->List.elements;
+        }
+
+        advance();
+    }
+}
+
+void Parser::parse_interface(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+        if (current_node->type == NodeType::ID && current_node->ID.value == "interface" && peek()->type == NodeType::ID && peek(2)->type == NodeType::OBJECT) {
+            current_node->type = NodeType::INTERFACE;
+            current_node->Interface.name = peek()->ID.value;
+            current_node->Interface.elements = peek(2)->Object.elements;
+            erase_next();
+            erase_next();
+        }
         advance();
     }
 }
@@ -200,11 +238,15 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_object(end);
     reset(start);
+    parse_interface(end);
+    reset(start);
     parse_list(end);
     reset(start);
     parse_func_call(end);
     reset(start);
     parse_accessor(end);
+    reset(start);
+    parse_post_op({"?"}, end);
     reset(start);
     parse_un_op({"+", "-"}, end);
     reset(start);

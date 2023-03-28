@@ -18,6 +18,7 @@ enum class NodeType {
 	COMMA_LIST,
 	PAREN,
 	FUNC_CALL,
+	INTERFACE,
 	ACCESSOR,
 	START_OF_FILE,
 	END_OF_FILE,
@@ -67,6 +68,11 @@ struct AccessorNode {
 	node_ptr accessor;
 };
 
+struct InterfaceNode {
+	std::string name;
+	std::vector<node_ptr> elements;
+};
+
 struct Node {
 	Node() = default;
     Node(NodeType type) : type(type) {}
@@ -87,6 +93,7 @@ struct Node {
 	ParenNode Paren;
 	FuncCallNode FuncCall;
 	AccessorNode Accessor;
+	InterfaceNode Interface;
 };
 
 std::string node_repr(node_ptr);
