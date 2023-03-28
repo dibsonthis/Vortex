@@ -1,9 +1,16 @@
 // import Copyable, Importable from "modules/copyable"
 
-interface Position {
-	xPos?: number,
-	yPos: number
+() => number;
+(x: number) => string;
+(x: string) => {
+	ret x + 1
 }
+(x) => x + 1
+
+// interface Position {
+// 	xPos?: number,
+// 	yPos: number
+// }
 
 // interface Circle {
 // 	radius: number,

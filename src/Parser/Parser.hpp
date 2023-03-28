@@ -28,14 +28,18 @@ public:
     void parse_post_op(std::vector<std::string> operators, std::string end);
     void parse_comma(std::string end);
     void parse_func_call(std::string end);
+    void parse_func_def(std::string end);
     void parse_accessor(std::string end);
     void parse_interface(std::string end);
+    void parse_trait(std::string end);
+    void parse_return(std::string end);
     void flatten_commas(std::string end);
     void parse(int start, std::string end);
 
     bool has_children(node_ptr node);
 
     node_ptr flatten_comma_node(node_ptr node);
+    void remove_op_node(std::string type);
     int find_closing_index(int start, std::string opening_symbol, std::string closing_symbol);
     void erase_prev();
     void erase_next();

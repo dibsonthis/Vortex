@@ -20,6 +20,7 @@ int main(int argc, char** argv)
 
         Parser parser(lexer.nodes);
         parser.parse(0, "_");
+        parser.remove_op_node(";");
         auto ast = parser.nodes;
 
         std::cin.get();

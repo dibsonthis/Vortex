@@ -165,6 +165,38 @@ void Parser::parse_interface(std::string end) {
     }
 }
 
+void Parser::parse_trait(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+        if (current_node->type == NodeType::ID && current_node->ID.value == "trait" && peek()->type == NodeType::ID && peek(2)->type == NodeType::OBJECT) {
+            current_node->type = NodeType::TRAIT;
+            current_node->Trait.name = peek()->ID.value;
+            current_node->Trait.elements = peek(2)->Object.elements;
+            erase_next();
+            erase_next();
+        }
+        advance();
+    }
+}
+
+void Parser::parse_func_def(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+        if (current_node->Operator.value == "=>" && peek(-1)->type == NodeType::PAREN && peek()->type != NodeType::END_OF_FILE) {
+            current_node->type = NodeType::FUNC;
+            current_node->Function.params = peek(-1);
+            current_node->Function.body = peek();
+            erase_next();
+            erase_prev();
+        }
+        advance();
+    }
+}
+
 void Parser::parse_paren(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
@@ -221,6 +253,26 @@ void Parser::parse_accessor(std::string end) {
     }
 }
 
+void Parser::parse_return(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+
+        if (current_node->ID.value == "ret") {
+            current_node->type = NodeType::RETURN;
+            if (peek()->Operator.value == ";" || peek()->Operator.value == "}") {
+                advance();
+                continue;
+            } else {
+                current_node->Return.value = peek();
+                erase_next();
+            }
+        }
+        advance();
+    }
+}
+
 void Parser::flatten_commas(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
@@ -239,6 +291,8 @@ void Parser::parse(int start, std::string end) {
     parse_object(end);
     reset(start);
     parse_interface(end);
+    reset(start);
+    parse_trait(end);
     reset(start);
     parse_list(end);
     reset(start);
@@ -260,9 +314,13 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_bin_op({":"}, end);
     reset(start);
+    parse_func_def(end);
+    reset(start);
     parse_comma(end);
     reset(start);
     parse_bin_op({"="}, end);
+    reset(start);
+    parse_return(end);
     reset(start);
     flatten_commas(end);
     reset(start);
@@ -312,6 +370,16 @@ node_ptr Parser::flatten_comma_node(node_ptr node) {
     }
     
     return node;
+}
+
+void Parser::remove_op_node(std::string type) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == type) {
+            erase_curr();
+        }
+
+        advance();
+    }
 }
 
 void Parser::erase_next() {
