@@ -289,7 +289,12 @@ void Parser::parse_func_call(std::string end) {
         if (current_node->type == NodeType::ID && peek()->type == NodeType::PAREN) {
             current_node->type = NodeType::FUNC_CALL;
             current_node->FuncCall.name = current_node->ID.value;
-            current_node->FuncCall.args.push_back(peek());
+            node_ptr argsList = peek();
+            if (argsList->Paren.elements.size() == 1 && argsList->Paren.elements[0]->type == NodeType::COMMA_LIST) {
+                current_node->FuncCall.args = argsList->Paren.elements[0]->List.elements;
+            } else if (argsList->Paren.elements.size() == 1) {
+                current_node->FuncCall.args.push_back(argsList->Paren.elements[0]);
+            }
             erase_next();
         }
         advance();

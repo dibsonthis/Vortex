@@ -30,10 +30,10 @@
 // 	log: () => print("Circle: { radius: ${radius} }")
 // }
 
-Square { length } :: Sizeable {
-	area: () => length + 2,
-	isBig: (n) => length + n
-}
+// Square { length } :: Sizeable {
+// 	area: () => length + 2,
+// 	isBig: (n) => length + n
+// }
 
 // Square :: Sizeable {
 // 	area: () => 10,
@@ -53,7 +53,9 @@ Square { length } :: Sizeable {
 // square = Square { length: 15, position: { xPos: 8, yPos: 23 }}
 
 // logArea(circle, 20) // or circle.logArea(20), they are interchangeable
-// logArea(square, 20)
+logArea(square, 20)
+log(1)
+log()
 
 // interface Person {
 // 	name: string,
