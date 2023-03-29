@@ -97,6 +97,48 @@ void Parser::parse_post_op(std::vector<std::string> operators, std::string end) 
     }
 }
 
+void Parser::parse_equals(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+        if (!has_children(current_node) && current_node->Operator.value == "=") {
+            node_ptr left = peek(-1);
+            node_ptr right = peek(1);
+            current_node->Operator.left = left;
+            current_node->Operator.right = right;
+            erase_next();
+            erase_prev();
+
+            if (current_node->Operator.right->type == NodeType::FUNC) {
+                current_node->Operator.right->Function.name = left->ID.value;
+            }
+        }
+        advance();
+    }
+}
+
+void Parser::parse_colon(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+        if (!has_children(current_node) && current_node->Operator.value == ":") {
+            node_ptr left = peek(-1);
+            node_ptr right = peek(1);
+            current_node->Operator.left = left;
+            current_node->Operator.right = right;
+            erase_next();
+            erase_prev();
+
+            if (current_node->Operator.right->type == NodeType::FUNC) {
+                current_node->Operator.right->Function.name = left->ID.value;
+            }
+        }
+        advance();
+    }
+}
+
 void Parser::parse_list(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
@@ -181,12 +223,30 @@ void Parser::parse_trait(std::string end) {
     }
 }
 
+void Parser::parse_trait_implementation(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+        if (current_node->Operator.value == "::" && (peek(-1)->type == NodeType::ID || peek(-1)->type == NodeType::OBJECT_DECONSTRUCT) && peek()->type == NodeType::OBJECT_DECONSTRUCT) {
+            current_node->type = NodeType::TRAIT_IMPL;
+            current_node->Operator.value = "";
+            current_node->TraitImplementation.implementor = peek(-1);
+            current_node->TraitImplementation.name = peek(1)->ObjectDeconstruct.name;
+            current_node->TraitImplementation.elements = peek(1)->ObjectDeconstruct.elements;
+            erase_next();
+            erase_prev();
+        }
+        advance();
+    }
+}
+
 void Parser::parse_func_def(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
             break;
         }
-        if (current_node->Operator.value == "=>" && peek(-1)->type == NodeType::PAREN && peek()->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == "=>" && (peek(-1)->type == NodeType::PAREN || peek(-1)->type == NodeType::OBJECT_DECONSTRUCT || peek(-1)->Operator.value == "::") && peek()->type != NodeType::END_OF_FILE) {
             current_node->type = NodeType::FUNC;
             current_node->Function.params = peek(-1);
             current_node->Function.body = peek();
@@ -230,6 +290,21 @@ void Parser::parse_func_call(std::string end) {
             current_node->type = NodeType::FUNC_CALL;
             current_node->FuncCall.name = current_node->ID.value;
             current_node->FuncCall.args.push_back(peek());
+            erase_next();
+        }
+        advance();
+    }
+}
+
+void Parser::parse_object_desconstruct(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+        if (current_node->type == NodeType::ID && peek()->type == NodeType::OBJECT) {
+            current_node->type = NodeType::OBJECT_DECONSTRUCT;
+            current_node->ObjectDeconstruct.name = current_node->ID.value;
+            current_node->ObjectDeconstruct.elements = peek()->Object.elements;
             erase_next();
         }
         advance();
@@ -312,13 +387,21 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_bin_op({"."}, end);
     reset(start);
-    parse_bin_op({":"}, end);
+    parse_object_desconstruct(end);
+    reset(start);
+    parse_trait_implementation(end);
+    reset(start);
+    parse_bin_op({"::"}, end);
     reset(start);
     parse_func_def(end);
     reset(start);
+    parse_bin_op({"&"}, end);
+    reset(start);
+    parse_colon(end);
+    reset(start);
     parse_comma(end);
     reset(start);
-    parse_bin_op({"="}, end);
+    parse_equals(end);
     reset(start);
     parse_return(end);
     reset(start);

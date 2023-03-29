@@ -1,12 +1,5 @@
 // import Copyable, Importable from "modules/copyable"
 
-() => number;
-(x: number) => string;
-(x: string) => {
-	ret x + 1
-}
-(x) => x + 1
-
 // interface Position {
 // 	xPos?: number,
 // 	yPos: number
@@ -37,9 +30,17 @@
 // 	log: () => print("Circle: { radius: ${radius} }")
 // }
 
-// Square { length } :: Sizeable, Loggable {
-// 	area: () => length ^ 2,
-// 	isBig: (n) => length > n,
+Square { length } :: Sizeable {
+	area: () => length + 2,
+	isBig: (n) => length + n
+}
+
+// Square :: Sizeable {
+// 	area: () => 10,
+// 	isBig: (n) => true,
+// }
+
+// Square { length } :: Loggable {
 // 	log: () => print("Square: { length: ${length} }")
 // }
 

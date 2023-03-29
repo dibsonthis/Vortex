@@ -15,12 +15,14 @@ enum class NodeType {
 	OP,
 	LIST,
 	OBJECT,
+	OBJECT_DECONSTRUCT,
 	COMMA_LIST,
 	PAREN,
 	FUNC_CALL,
 	FUNC,
 	INTERFACE,
 	TRAIT,
+	TRAIT_IMPL,
 	ACCESSOR,
 	RETURN,
 	START_OF_FILE,
@@ -57,6 +59,11 @@ struct ObjectNode {
 	std::vector<node_ptr> elements;
 };
 
+struct ObjectDeconstructNode {
+	std::string name;
+	std::vector<node_ptr> elements;
+};
+
 struct ParenNode {
 	std::vector<node_ptr> elements;
 };
@@ -83,6 +90,12 @@ struct InterfaceNode {
 };
 
 struct TraitNode {
+	std::string name;
+	std::vector<node_ptr> elements;
+};
+
+struct TraitImplNode {
+	node_ptr implementor;
 	std::string name;
 	std::vector<node_ptr> elements;
 };
@@ -114,7 +127,9 @@ struct Node {
 	AccessorNode Accessor;
 	InterfaceNode Interface;
 	TraitNode Trait;
+	TraitImplNode TraitImplementation;
 	ReturnNode Return;
+	ObjectDeconstructNode ObjectDeconstruct;
 };
 
 std::string node_repr(node_ptr);

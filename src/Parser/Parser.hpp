@@ -33,6 +33,10 @@ public:
     void parse_interface(std::string end);
     void parse_trait(std::string end);
     void parse_return(std::string end);
+    void parse_object_desconstruct(std::string end);
+    void parse_trait_implementation(std::string end);
+    void parse_colon(std::string end);
+    void parse_equals(std::string end);
     void flatten_commas(std::string end);
     void parse(int start, std::string end);
 

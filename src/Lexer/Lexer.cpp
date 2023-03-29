@@ -611,6 +611,13 @@ void Lexer::tokenize()
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
+		else if (current_char == '&')
+		{
+			node_ptr node(new Node(NodeType::OP, line, column));
+			node->Operator.value = current_char;
+			nodes.push_back(node);
+			advance(); // consume symbol
+		}
 		else
 		{
 			error_and_exit("Unexpected token '" + std::string(1, current_char) + "'.");
