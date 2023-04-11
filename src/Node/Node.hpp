@@ -25,7 +25,9 @@ enum class NodeType {
 	TRAIT_IMPL,
 	ACCESSOR,
 	VARIABLE_DECLARATION,
+	VARIABLE_DECLARATION_MULTIPLE,
 	CONSTANT_DECLARATION,
+	CONSTANT_DECLARATION_MULTIPLE,
 	FOR_LOOP,
 	WHILE_LOOP,
 	RETURN,
@@ -112,9 +114,17 @@ struct VariableDeclatationNode {
 	node_ptr value;
 };
 
+struct VariableDeclatationMultipleNode {
+	std::vector<node_ptr> variable_declarations;
+};
+
 struct ConstantDeclatationNode {
 	std::string name;
 	node_ptr value;
+};
+
+struct ConstantDeclatationMultipleNode {
+	std::vector<node_ptr> constant_declarations;
 };
 
 struct ForLoopNode {
@@ -174,6 +184,8 @@ struct Node {
 	TraitImplNode TraitImplementation;
 	VariableDeclatationNode VariableDeclaration;
 	ConstantDeclatationNode ConstantDeclaration;
+	VariableDeclatationMultipleNode VariableDeclarationMultiple;
+	ConstantDeclatationMultipleNode ConstantDeclarationMultiple;
 	ForLoopNode ForLoop;
 	WhileLoopNode WhileLoop;
 	ObjectDeconstructNode ObjectDeconstruct;

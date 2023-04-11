@@ -348,13 +348,34 @@ void Parser::parse_var(std::string end) {
         }
 
         if (current_node->ID.value == "var") {
-            current_node->type = NodeType::VARIABLE_DECLARATION;
-            if (peek()->type == NodeType::ID) {
-                current_node->VariableDeclaration.name = peek()->ID.value;
+            node_ptr next = peek();
+            if (next->type == NodeType::COMMA_LIST) {
+                current_node->type = NodeType::VARIABLE_DECLARATION_MULTIPLE;
+                for (node_ptr& element : next->List.elements) {
+                    node_ptr var_decl = new_node();
+                    var_decl->type = NodeType::VARIABLE_DECLARATION;
+                    var_decl->VariableDeclaration.name = element->ID.value;
+                    current_node->VariableDeclarationMultiple.variable_declarations.push_back(var_decl);
+                }
                 erase_next();
-            } else if (peek()->Operator.value == "=") {
-                current_node->VariableDeclaration.name = peek()->Operator.left->ID.value;
-                current_node->VariableDeclaration.value = peek()->Operator.right;
+            } else if (next->Operator.value == "=" && next->Operator.left->type == NodeType::COMMA_LIST) {
+                current_node->type = NodeType::VARIABLE_DECLARATION_MULTIPLE;
+                for (node_ptr& element : next->Operator.left->List.elements) {
+                    node_ptr var_decl = new_node();
+                    var_decl->type = NodeType::VARIABLE_DECLARATION;
+                    var_decl->VariableDeclaration.name = element->ID.value;
+                    var_decl->VariableDeclaration.value = next->Operator.right;
+                    current_node->VariableDeclarationMultiple.variable_declarations.push_back(var_decl);
+                }
+                erase_next();
+            } else if (next->type == NodeType::ID) {
+                current_node->type = NodeType::VARIABLE_DECLARATION;
+                current_node->VariableDeclaration.name = next->ID.value;
+                erase_next();
+            } else if (next->Operator.value == "=") {
+                current_node->type = NodeType::VARIABLE_DECLARATION;
+                current_node->VariableDeclaration.name = next->Operator.left->ID.value;
+                current_node->VariableDeclaration.value = next->Operator.right;
                 erase_next();
             }
         }
@@ -369,10 +390,21 @@ void Parser::parse_const(std::string end) {
         }
 
         if (current_node->ID.value == "const") {
-            current_node->type = NodeType::CONSTANT_DECLARATION;
-            if (peek()->Operator.value == "=") {
-                current_node->ConstantDeclaration.name = peek()->Operator.left->ID.value;
-                current_node->ConstantDeclaration.value = peek()->Operator.right;
+            node_ptr next = peek();
+            if (next->Operator.value == "=" && next->Operator.left->type == NodeType::COMMA_LIST) {
+                current_node->type = NodeType::CONSTANT_DECLARATION_MULTIPLE;
+                for (node_ptr& element : next->Operator.left->List.elements) {
+                    node_ptr const_decl = new_node();
+                    const_decl->type = NodeType::CONSTANT_DECLARATION;
+                    const_decl->ConstantDeclaration.name = element->ID.value;
+                    const_decl->ConstantDeclaration.value = next->Operator.right;
+                    current_node->ConstantDeclarationMultiple.constant_declarations.push_back(const_decl);
+                }
+                erase_next();
+            } else if (next->Operator.value == "=") {
+                current_node->type = NodeType::CONSTANT_DECLARATION;
+                current_node->ConstantDeclaration.name = next->Operator.left->ID.value;
+                current_node->ConstantDeclaration.value = next->Operator.right;
                 erase_next();
             } else {
                 error_and_exit("Const declaration expects a value");
@@ -634,6 +666,8 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_comma(end);
     reset(start);
+    flatten_commas(end);
+    reset(start);
     parse_equals(end);
     reset(start);
     parse_var(end);
@@ -641,8 +675,6 @@ void Parser::parse(int start, std::string end) {
     parse_const(end);
     reset(start);
     parse_return(end);
-    reset(start);
-    flatten_commas(end);
     reset(start);
     parse_import(end);
     reset(start);
@@ -757,6 +789,13 @@ node_ptr Parser::new_boolean_node(bool value) {
 
 node_ptr Parser::new_accessor_node() {
     auto node = std::make_shared<Node>(NodeType::ACCESSOR);
+    node->line = line;
+    node->column = column;
+    return node;
+}
+
+node_ptr Parser::new_node() {
+    auto node = std::make_shared<Node>();
     node->line = line;
     node->column = column;
     return node;

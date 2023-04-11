@@ -64,4 +64,5 @@ public:
     node_ptr new_string_node(std::string value);
     node_ptr new_boolean_node(bool value);
     node_ptr new_accessor_node();
+    node_ptr new_node();
 };

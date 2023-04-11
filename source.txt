@@ -1,36 +1,37 @@
-// import [PI, e] : "../imports/math";
+import [PI, e] : "../imports/math";
 
-// var area
-// var radius
-// var text
-// const area_hist = []
+var area, radius, text
+const area_hist = []
 
-// radius.onChange = () => {
-// 	area = PI * radius ^ 2
-// }
+radius.onChange = () => {
+	area = PI * radius ^ 2
+}
 
-// area.onChange = (old) => {
-// 	area_hist.append(area)
-// 	if {
-// 		area > old: text = "area increased",
-// 		area < old: text = "area decreased",
-// 		text = "area remained the same"
-// 	}
-// }
+const logHist = (x) => area_hist.append(x)
+const updateText = (area, old) => {
+	if (area > old) {
+		text = "area increased"
+	} else if (area < old) {
+		text = "area decreased"
+	} else {
+		text = "area remained the same"
+	}
+}
 
-// const cap = (list, n) => {
-// 	if (list.length > n) {
-// 		list.remove(0)
-// 	}
-// }
+area.onChange = (old) => {
+	logHist(area)
+	updateText(area, old)
+}
 
-// area_hist.onChange = () => area_hist.cap(10)
+const cap = (list, n) => {
+	if (list.length > n) {
+		list.remove(0)
+	}
+}
 
-// for (1..100) {
-// 	radius += 1
-// 	print(text + ": " + area)
-// }
+area_hist.onChange = () => area_hist.cap(10)
 
-if (area > old) {
-	text = "area increased"
+for (1..100) {
+	radius += 1
+	print(text + ": " + area)
 }
