@@ -66,13 +66,17 @@
         "-g",
         "-std=c++17",
         "-stdlib=libc++",
+        "-framework \"CoreFoundation\"",
+        "-framework \"Carbon\"",
+        "-framework \"Cocoa\"",
+        "-ObjC++",
         "${fileDirname}/src/Node/Node.cpp",
         "${fileDirname}/src/Lexer/Lexer.cpp",
         "${fileDirname}/src/Parser/Parser.cpp",
         "${fileDirname}/src/utils/utils.cpp",
-
+        
         "${fileDirname}/main.cpp",
-
+        
         "-o",
         "${fileDirname}/bin/build/dev/${fileBasenameNoExtension}"
       ],

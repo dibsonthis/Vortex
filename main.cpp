@@ -2,6 +2,11 @@
 #include <fstream>
 #include "src/Lexer/Lexer.hpp"
 #include "src/Parser/Parser.hpp"
+#include <ApplicationServices/ApplicationServices.h>
+#include <Carbon/Carbon.h>
+#include <Cocoa/Cocoa.h>
+#include <sys/sysctl.h>
+#include <libproc.h>
 
 enum Type
 {

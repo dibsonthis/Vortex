@@ -111,7 +111,11 @@ void Parser::parse_equals(std::string end) {
             erase_prev();
 
             if (current_node->Operator.right->type == NodeType::FUNC) {
-                current_node->Operator.right->Function.name = left->ID.value;
+                if (left->type == NodeType::ID) {
+                    current_node->Operator.right->Function.name = left->ID.value;
+                } else if (left->Operator.value == ".") {
+                    current_node->Operator.right->Function.name = left->Operator.right->ID.value;
+                }
             }
         }
         advance();
@@ -333,6 +337,83 @@ void Parser::parse_accessor(std::string end) {
     }
 }
 
+void Parser::parse_var(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+
+        if (current_node->ID.value == "var") {
+            current_node->type = NodeType::VARIABLE_DECLARATION;
+            if (peek()->type == NodeType::ID) {
+                current_node->VariableDeclaration.name = peek()->ID.value;
+                erase_next();
+            } else if (peek()->Operator.value == "=") {
+                current_node->VariableDeclaration.name = peek()->Operator.left->ID.value;
+                current_node->VariableDeclaration.value = peek()->Operator.right;
+                erase_next();
+            }
+        }
+        advance();
+    }
+}
+
+void Parser::parse_for_loop(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+
+        if (current_node->ID.value == "for") {
+            current_node->type = NodeType::FOR_LOOP;
+            if (peek()->type != NodeType::PAREN && peek(2)->type != NodeType::OBJECT) {
+                error_and_exit("Malformed for loop");
+            }
+            
+            node_ptr for_loop_config = peek();
+
+            if (for_loop_config->Paren.elements.size() == 0 || for_loop_config->Paren.elements.size() > 3) {
+                error_and_exit("For loop constructor expects 1, 2 or 3 elements");
+            }
+
+            if (for_loop_config->Paren.elements[0]->type == NodeType::COMMA_LIST) {
+                for_loop_config->Paren.elements = for_loop_config->Paren.elements[0]->List.elements;
+            } 
+            
+            if (for_loop_config->Paren.elements.size() > 0) {
+                if (for_loop_config->Paren.elements[0]->type == NodeType::NUMBER) {
+                    current_node->ForLoop.start = new_number_node(0);
+                    current_node->ForLoop.end = for_loop_config->Paren.elements[0];
+                } else if (for_loop_config->Paren.elements[0]->Operator.value == "..") {
+                    current_node->ForLoop.start = for_loop_config->Paren.elements[0]->Operator.left;
+                    current_node->ForLoop.end = for_loop_config->Paren.elements[0]->Operator.right;
+                }
+            }
+
+            if (for_loop_config->Paren.elements.size() > 1) {
+                if (for_loop_config->Paren.elements[1]->type != NodeType::ID) {
+                    error_and_exit("Index variable in for loop must be an identifier");
+                }
+
+                current_node->ForLoop.index_name = for_loop_config->Paren.elements[1];
+            }
+
+            if (for_loop_config->Paren.elements.size() > 2) {
+                if (for_loop_config->Paren.elements[2]->type != NodeType::ID) {
+                    error_and_exit("Value variable in for loop must be an identifier");
+                }
+
+                current_node->ForLoop.value_name = for_loop_config->Paren.elements[2];
+            }
+
+            current_node->ForLoop.body = peek(2);
+            erase_next();
+            erase_next();
+        }
+        advance();
+    }
+}
+
 void Parser::parse_return(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
@@ -376,11 +457,15 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_list(end);
     reset(start);
+    parse_for_loop(end);
+    reset(start);
     parse_func_call(end);
     reset(start);
     parse_accessor(end);
     reset(start);
     parse_post_op({"?"}, end);
+    reset(start);
+    parse_bin_op({"."}, end);
     reset(start);
     parse_un_op({"+", "-"}, end);
     reset(start);
@@ -390,7 +475,9 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_bin_op({"+", "-"}, end);
     reset(start);
-    parse_bin_op({"."}, end);
+    parse_bin_op({"^"}, end);
+    reset(start);
+    parse_bin_op({".."}, end);
     reset(start);
     parse_object_desconstruct(end);
     reset(start);
@@ -407,6 +494,8 @@ void Parser::parse(int start, std::string end) {
     parse_comma(end);
     reset(start);
     parse_equals(end);
+    reset(start);
+    parse_var(end);
     reset(start);
     parse_return(end);
     reset(start);

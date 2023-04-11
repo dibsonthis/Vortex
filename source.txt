@@ -1,70 +1,30 @@
-// import Copyable, Importable from "modules/copyable"
+// var area = 0
+// var radius = 0
+// var text = ""
+// var area_hist = []
 
-// interface Position {
-// 	xPos?: number,
-// 	yPos: number
+// radius.onChange = () => {
+// 	area = math.PI * radius ^ 2
 // }
 
-// interface Circle {
-// 	radius: number,
-// 	position: Position
+// area.onChange = (old) => {
+// 	area_hist.append(area)
+// 	if {
+// 		area > old: text = "area increased",
+// 		area < old: text = "area decreased",
+// 		text = "area remained the same"
+// 	}
 // }
 
-// interface Square {
-// 	length: number,
-// 	position: Position
+// var cap_list = (list, n) => {
+// 	if (list.length > n) {
+// 		list.remove(0)
+// 	}
 // }
 
-// trait Sizeable {
-// 	area: () => number,
-// 	isBig: (n: number) => bool
-// }
+area_hist.onChange = () => cap_list(area_hist, 10)
 
-// trait Loggable {
-// 	log: () => none
-// }
-
-// Circle { radius } :: Sizeable, Loggable {
-// 	area: () => PI * radius ^ 2,
-// 	isBig: (n) => radius > n,
-// 	log: () => print("Circle: { radius: ${radius} }")
-// }
-
-// Square { length } :: Sizeable {
-// 	area: () => length + 2,
-// 	isBig: (n) => length + n
-// }
-
-// Square :: Sizeable {
-// 	area: () => 10,
-// 	isBig: (n) => true,
-// }
-
-// Square { length } :: Loggable {
-// 	log: () => print("Square: { length: ${length} }")
-// }
-
-// logArea = (x: T, n: number)::{ T: Sizeable & Loggable } => if { 
-// 	x.isBig(n): x.log(x.area()), 
-// 	print("Not worth logging")
-// }
-
-// circle = Circle { radius: 20, position: { xPos: 0, yPos: 12 }}
-// square = Square { length: 15, position: { xPos: 8, yPos: 23 }}
-
-// logArea(circle, 20) // or circle.logArea(20), they are interchangeable
-logArea(square, 20)
-log(1)
-log()
-
-// interface Person {
-// 	name: string,
-// 	age?: number
-// }
-
-// p = Person {
-// 	name: "John"
-// }
-
-// getAgePlus1 = Person { age } => age + 1 // error, 'age' could have no value
-// getAgePlus1 = Person { age } => age ? age + 1 : -1
+for (1..100, i, v) {
+	radius += 1
+	print(text + ": " + area)
+}
