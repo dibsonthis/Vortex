@@ -358,6 +358,26 @@ void Parser::parse_var(std::string end) {
     }
 }
 
+void Parser::parse_const(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+
+        if (current_node->ID.value == "const") {
+            current_node->type = NodeType::CONSTANT_DECLARATION;
+            if (peek()->Operator.value == "=") {
+                current_node->ConstantDeclaration.name = peek()->Operator.left->ID.value;
+                current_node->ConstantDeclaration.value = peek()->Operator.right;
+                erase_next();
+            } else {
+                error_and_exit("Const declaration expects a value");
+            }
+        }
+        advance();
+    }
+}
+
 void Parser::parse_for_loop(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
@@ -414,6 +434,33 @@ void Parser::parse_for_loop(std::string end) {
     }
 }
 
+void Parser::parse_while_loop(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+
+        if (current_node->ID.value == "while") {
+            current_node->type = NodeType::WHILE_LOOP;
+            if (peek()->type != NodeType::PAREN && peek(2)->type != NodeType::OBJECT) {
+                error_and_exit("Malformed while loop");
+            }
+            
+            node_ptr while_loop_config = peek();
+
+            if (while_loop_config->Paren.elements.size() != 1) {
+                error_and_exit("While loop constructor expects 1 element");
+            }
+
+            current_node->WhileLoop.condition = while_loop_config->Paren.elements[0];
+            current_node->WhileLoop.body = peek(2);
+            erase_next();
+            erase_next();
+        }
+        advance();
+    }
+}
+
 void Parser::parse_return(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
@@ -459,6 +506,8 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_for_loop(end);
     reset(start);
+    parse_while_loop(end);
+    reset(start);
     parse_func_call(end);
     reset(start);
     parse_accessor(end);
@@ -496,6 +545,8 @@ void Parser::parse(int start, std::string end) {
     parse_equals(end);
     reset(start);
     parse_var(end);
+    reset(start);
+    parse_const(end);
     reset(start);
     parse_return(end);
     reset(start);

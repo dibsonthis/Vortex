@@ -33,7 +33,9 @@ public:
     void parse_interface(std::string end);
     void parse_trait(std::string end);
     void parse_var(std::string end);
+    void parse_const(std::string end);
     void parse_for_loop(std::string end);
+    void parse_while_loop(std::string end);
     void parse_return(std::string end);
     void parse_object_desconstruct(std::string end);
     void parse_trait_implementation(std::string end);
