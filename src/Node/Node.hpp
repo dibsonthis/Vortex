@@ -30,6 +30,8 @@ enum class NodeType {
 	WHILE_LOOP,
 	RETURN,
 	IMPORT,
+	IF_STATEMENT,
+	IF_BLOCK,
 	START_OF_FILE,
 	END_OF_FILE,
 };
@@ -133,6 +135,15 @@ struct ImportNode {
 	node_ptr target;
 };
 
+struct IfStatementNode {
+	node_ptr condition;
+	node_ptr body;
+};
+
+struct IfBlockNode {
+	std::vector<node_ptr> statements;
+};
+
 struct ReturnNode {
 	node_ptr value;
 };
@@ -167,6 +178,8 @@ struct Node {
 	WhileLoopNode WhileLoop;
 	ObjectDeconstructNode ObjectDeconstruct;
 	ImportNode Import;
+	IfStatementNode IfStatement;
+	IfBlockNode IfBlock;
 	ReturnNode Return;
 };
 

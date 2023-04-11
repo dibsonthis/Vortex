@@ -485,6 +485,66 @@ void Parser::parse_while_loop(std::string end) {
     }
 }
 
+void Parser::parse_if_statement(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+
+        if (current_node->ID.value == "if") {
+            current_node->type = NodeType::IF_STATEMENT;
+            if (peek()->type != NodeType::PAREN && peek(2)->type != NodeType::OBJECT) {
+                error_and_exit("Malformed if statement");
+            }
+            
+            node_ptr conditional = peek();
+
+            if (conditional->Paren.elements.size() != 1) {
+                error_and_exit("If statement expects 1 conditional statement");
+            }
+
+            current_node->IfStatement.condition = conditional->Paren.elements[0];
+            current_node->IfStatement.body = peek(2);
+            erase_next();
+            erase_next();
+        }
+        advance();
+    }
+}
+
+void Parser::parse_if_block(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+
+        if (current_node->ID.value == "else") {
+            current_node->type = NodeType::IF_BLOCK;
+            node_ptr prev = peek(-1);
+            node_ptr next = peek();
+            if (prev->type != NodeType::IF_STATEMENT && prev->type != NodeType::IF_BLOCK) {
+                error_and_exit("Malformed if block");
+            } else if (next->type != NodeType::IF_STATEMENT && next->type != NodeType::OBJECT) {
+                error_and_exit("Malformed if block");
+            }
+
+            if (prev->type == NodeType::IF_BLOCK) {
+                for (node_ptr& statement : prev->IfBlock.statements) {
+                    current_node->IfBlock.statements.push_back(statement);
+                }
+            } else {
+                current_node->IfBlock.statements.push_back(prev);
+            }
+
+            current_node->IfBlock.statements.push_back(next);
+
+            erase_prev();
+            erase_next();
+        }
+        advance();
+    }
+}
+
 void Parser::parse_return(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
@@ -532,6 +592,10 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_while_loop(end);
     reset(start);
+    parse_if_statement(end);
+    reset(start);
+    parse_if_block(end);
+    reset(start);
     parse_func_call(end);
     reset(start);
     parse_accessor(end);
@@ -542,6 +606,8 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_un_op({"+", "-"}, end);
     reset(start);
+    parse_bin_op({"==", "!=", "<=", ">=", "<", ">"}, end);
+    reset(start);
     parse_bin_op({"&&", "||"}, end);
     reset(start);
     parse_bin_op({"*", "/"}, end);
@@ -549,6 +615,8 @@ void Parser::parse(int start, std::string end) {
     parse_bin_op({"+", "-"}, end);
     reset(start);
     parse_bin_op({"^"}, end);
+    reset(start);
+    parse_bin_op({"+=", "-="}, end);
     reset(start);
     parse_bin_op({".."}, end);
     reset(start);

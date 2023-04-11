@@ -23,7 +23,7 @@ int main(int argc, char** argv)
         Lexer lexer("../../../source.txt");
         lexer.tokenize();
 
-        Parser parser(lexer.nodes);
+        Parser parser(lexer.nodes, lexer.file_name);
         parser.parse(0, "_");
         parser.remove_op_node(";");
         auto ast = parser.nodes;

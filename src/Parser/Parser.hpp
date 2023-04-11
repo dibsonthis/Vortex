@@ -16,6 +16,9 @@ public:
     Parser(std::vector<node_ptr> nodes) : nodes(nodes) {
         current_node = nodes[0];
     }
+    Parser(std::vector<node_ptr> nodes, std::string file_name) : nodes(nodes), file_name(file_name) {
+        current_node = nodes[0];
+    }
     void advance(int n = 1);
     node_ptr peek(int n = 1);
     void reset(int idx = 0);
@@ -36,6 +39,8 @@ public:
     void parse_const(std::string end);
     void parse_for_loop(std::string end);
     void parse_while_loop(std::string end);
+    void parse_if_statement(std::string end);
+    void parse_if_block(std::string end);
     void parse_import(std::string end);
     void parse_return(std::string end);
     void parse_object_desconstruct(std::string end);

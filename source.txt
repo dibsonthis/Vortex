@@ -1,38 +1,36 @@
-import [plus, minus] : "../imports/math";
-import swizzle : "../imports/swizzle";
+// import [PI, e] : "../imports/math";
 
-var area = 0
-var radius = 0
-var text = ""
-const area_hist = []
+// var area
+// var radius
+// var text
+// const area_hist = []
 
-radius.onChange = () => {
-	area = math.PI * radius ^ 2
+// radius.onChange = () => {
+// 	area = PI * radius ^ 2
+// }
+
+// area.onChange = (old) => {
+// 	area_hist.append(area)
+// 	if {
+// 		area > old: text = "area increased",
+// 		area < old: text = "area decreased",
+// 		text = "area remained the same"
+// 	}
+// }
+
+// const cap = (list, n) => {
+// 	if (list.length > n) {
+// 		list.remove(0)
+// 	}
+// }
+
+// area_hist.onChange = () => area_hist.cap(10)
+
+// for (1..100) {
+// 	radius += 1
+// 	print(text + ": " + area)
+// }
+
+if (area > old) {
+	text = "area increased"
 }
-
-area.onChange = (old) => {
-	area_hist.append(area)
-	if {
-		area > old: text = "area increased",
-		area < old: text = "area decreased",
-		text = "area remained the same"
-	}
-}
-
-const cap_list = (list, n) => {
-	if (list.length > n) {
-		list.remove(0)
-	}
-}
-
-area_hist.onChange = () => cap_list(area_hist, 10)
-
-for (1..100, i, v) {
-	radius += 1
-	print(text + ": " + area)
-}
-
-while (true) {
-	radius -= 5
-}
-
