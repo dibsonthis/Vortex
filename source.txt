@@ -1,37 +1,25 @@
 import [PI, e] : "../imports/math";
 
-var area, radius, text
-const area_hist = []
+var radius, area = 0
 
 radius.onChange = () => {
 	area = PI * radius ^ 2
 }
 
-const logHist = (x) => area_hist.append(x)
-const updateText = (area, old) => {
-	if (area > old) {
-		text = "area increased"
-	} else if (area < old) {
-		text = "area decreased"
-	} else {
-		text = "area remained the same"
+const areaWarning = (oldArea, newArea, n) => {
+	if (oldArea <= n && newArea > n) {
+		print("Warning: Area exceeded " + n)
+	}
+
+	const dangerArea = n * 2
+
+	if (oldArea <= dangerArea && newArea > dangerArea) {
+		print("Danger: Area exceeded " + n)
 	}
 }
 
-area.onChange = (old) => {
-	logHist(area)
-	updateText(area, old)
-}
+area.onChange = (old) => areaWarning(old, area, 100)
 
-const cap = (list, n) => {
-	if (list.length > n) {
-		list.remove(0)
-	}
-}
-
-area_hist.onChange = () => area_hist.cap(10)
-
-for (1..100) {
-	radius += 1
-	print(text + ": " + area)
+for (1..1000) {
+	radius += e
 }

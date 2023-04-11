@@ -11,6 +11,7 @@
         "${fileDirname}\\src\\Node\\Node.cpp",
         "${fileDirname}\\src\\Lexer\\Lexer.cpp",
         "${fileDirname}\\src\\Parser\\Parser.cpp",
+        "${fileDirname}\\src\\Interpreter\\Interpreter.cpp",
         "${fileDirname}\\src\\utils\\utils.cpp",
 
         "${fileDirname}\\main.cpp",
@@ -39,6 +40,7 @@
         "${fileDirname}\\src\\Node\\Node.cpp",
         "${fileDirname}\\src\\Lexer\\Lexer.cpp",
         "${fileDirname}\\src\\Parser\\Parser.cpp",
+        "${fileDirname}\\src\\Interpreter\\Interpreter.cpp",
         "${fileDirname}\\src\\utils\\utils.cpp",
 
         "${fileDirname}\\main.cpp",
@@ -73,6 +75,7 @@
         "${fileDirname}/src/Node/Node.cpp",
         "${fileDirname}/src/Lexer/Lexer.cpp",
         "${fileDirname}/src/Parser/Parser.cpp",
+        "${fileDirname}/src/Interpreter/Interpreter.cpp",
         "${fileDirname}/src/utils/utils.cpp",
         
         "${fileDirname}/main.cpp",
@@ -99,6 +102,7 @@
         "${fileDirname}/src/Node/Node.cpp",
         "${fileDirname}/src/Lexer/Lexer.cpp",
         "${fileDirname}/src/Parser/Parser.cpp",
+        "${fileDirname}/src/Interpreter/Interpreter.cpp",
         "${fileDirname}/src/utils/utils.cpp",
 
         "${fileDirname}/main.cpp",
