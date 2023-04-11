@@ -325,6 +325,10 @@ void Parser::parse_accessor(std::string end) {
         if (current_node->Operator.value == end) {
             break;
         }
+        if (current_node->ID.value == "import") {
+            advance();
+            continue;
+        }
         while ((current_node->type == NodeType::ID || current_node->type == NodeType::LIST || current_node->type == NodeType::FUNC_CALL || current_node->type == NodeType::ACCESSOR) 
         && peek()->type == NodeType::LIST) {
             node_ptr accessor = new_accessor_node();
@@ -369,6 +373,26 @@ void Parser::parse_const(std::string end) {
             if (peek()->Operator.value == "=") {
                 current_node->ConstantDeclaration.name = peek()->Operator.left->ID.value;
                 current_node->ConstantDeclaration.value = peek()->Operator.right;
+                erase_next();
+            } else {
+                error_and_exit("Const declaration expects a value");
+            }
+        }
+        advance();
+    }
+}
+
+void Parser::parse_import(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+
+        if (current_node->ID.value == "import") {
+            current_node->type = NodeType::IMPORT;
+            if (peek()->Operator.value == ":") {
+                current_node->Import.module = peek()->Operator.left;
+                current_node->Import.target = peek()->Operator.right;
                 erase_next();
             } else {
                 error_and_exit("Const declaration expects a value");
@@ -551,6 +575,8 @@ void Parser::parse(int start, std::string end) {
     parse_return(end);
     reset(start);
     flatten_commas(end);
+    reset(start);
+    parse_import(end);
     reset(start);
 }
 

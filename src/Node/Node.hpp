@@ -29,6 +29,7 @@ enum class NodeType {
 	FOR_LOOP,
 	WHILE_LOOP,
 	RETURN,
+	IMPORT,
 	START_OF_FILE,
 	END_OF_FILE,
 };
@@ -127,6 +128,11 @@ struct WhileLoopNode {
 	node_ptr body;
 };
 
+struct ImportNode {
+	node_ptr module;
+	node_ptr target;
+};
+
 struct ReturnNode {
 	node_ptr value;
 };
@@ -159,8 +165,9 @@ struct Node {
 	ConstantDeclatationNode ConstantDeclaration;
 	ForLoopNode ForLoop;
 	WhileLoopNode WhileLoop;
-	ReturnNode Return;
 	ObjectDeconstructNode ObjectDeconstruct;
+	ImportNode Import;
+	ReturnNode Return;
 };
 
 std::string node_repr(node_ptr);

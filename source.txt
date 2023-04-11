@@ -1,3 +1,6 @@
+import [plus, minus] : "../imports/math";
+import swizzle : "../imports/swizzle";
+
 var area = 0
 var radius = 0
 var text = ""
@@ -32,3 +35,4 @@ for (1..100, i, v) {
 while (true) {
 	radius -= 5
 }
+
