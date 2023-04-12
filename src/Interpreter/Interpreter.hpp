@@ -7,6 +7,7 @@ struct Symbol {
     node_ptr value;
     node_ptr type;
     bool is_const;
+    std::vector<node_ptr> onChangeFunctions = std::vector<node_ptr>();
 };
 
 struct SymbolTable {
@@ -38,10 +39,10 @@ public:
 
     void evaluate();
     void eval_const_functions();
-    void eval_const_decl();
-    void eval_const_decl_multiple();
-    void eval_var_decl();
-    void eval_var_decl_multiple();
+    void eval_const_decl(node_ptr node);
+    void eval_const_decl_multiple(node_ptr node);
+    void eval_var_decl(node_ptr node);
+    void eval_var_decl_multiple(node_ptr node);
 
     Symbol new_symbol(std::string name, node_ptr value, bool is_const = false, node_ptr type = nullptr);
     Symbol get_symbol(std::string name, std::shared_ptr<SymbolTable> symbol_table);

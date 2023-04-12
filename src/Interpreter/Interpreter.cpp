@@ -34,25 +34,25 @@ void Interpreter::eval_const_functions() {
     }
 }
 
-void Interpreter::eval_const_decl() {
-    Symbol symbol = new_symbol(current_node->ConstantDeclaration.name, current_node->ConstantDeclaration.value, true);
+void Interpreter::eval_const_decl(node_ptr node) {
+    Symbol symbol = new_symbol(node->ConstantDeclaration.name, node->ConstantDeclaration.value, true);
     add_symbol(symbol, symbol_table);
 }
 
-void Interpreter::eval_const_decl_multiple() {
-    for (node_ptr& decl : current_node->ConstantDeclarationMultiple.constant_declarations) {
+void Interpreter::eval_const_decl_multiple(node_ptr node) {
+    for (node_ptr& decl : node->ConstantDeclarationMultiple.constant_declarations) {
         Symbol symbol = new_symbol(decl->ConstantDeclaration.name, decl->ConstantDeclaration.value, true);
         add_symbol(symbol, symbol_table);
     }
 }
 
-void Interpreter::eval_var_decl() {
-    Symbol symbol = new_symbol(current_node->VariableDeclaration.name, current_node->VariableDeclaration.value);
+void Interpreter::eval_var_decl(node_ptr node) {
+    Symbol symbol = new_symbol(node->VariableDeclaration.name, node->VariableDeclaration.value);
     add_symbol(symbol, symbol_table);
 }
 
-void Interpreter::eval_var_decl_multiple() {
-    for (node_ptr& decl : current_node->VariableDeclarationMultiple.variable_declarations) {
+void Interpreter::eval_var_decl_multiple(node_ptr node) {
+    for (node_ptr& decl : node->VariableDeclarationMultiple.variable_declarations) {
         Symbol symbol = new_symbol(decl->VariableDeclaration.name, decl->VariableDeclaration.value);
         add_symbol(symbol, symbol_table);
     }
@@ -64,21 +64,21 @@ void Interpreter::evaluate() {
 
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->type == NodeType::CONSTANT_DECLARATION) {
-            eval_const_decl();
+            eval_const_decl(current_node);
             advance();
             continue;
         }
         if (current_node->type == NodeType::VARIABLE_DECLARATION) {
-            eval_var_decl();
+            eval_var_decl(current_node);
             advance();
             continue;
         }
         if (current_node->type == NodeType::CONSTANT_DECLARATION_MULTIPLE) {
-            eval_const_decl_multiple();
+            eval_const_decl_multiple(current_node);
             continue;
         }
         if (current_node->type == NodeType::VARIABLE_DECLARATION_MULTIPLE) {
-            eval_var_decl_multiple();
+            eval_var_decl_multiple(current_node);
             advance();
             continue;
         }
