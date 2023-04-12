@@ -135,8 +135,10 @@ node_ptr Interpreter::eval_func_call(node_ptr node) {
 
     current_symbol_table = function_symbol_table;
 
-    if (args.size() > function->Function.params.size()) {
-        error_and_exit("Function '" + node->FuncCall.name + "' expects " + std::to_string(function->Function.params.size()) + " parameters but " + std::to_string(args.size()) + " were provided");
+    int num_empty_args = std::count(function->Function.args.begin(), function->Function.args.end(), nullptr);
+
+    if (args.size() > num_empty_args) {
+        error_and_exit("Function '" + node->FuncCall.name + "' expects " + std::to_string(num_empty_args) + " parameters but " + std::to_string(args.size()) + " were provided");
     }
 
     int start_index = 0;
