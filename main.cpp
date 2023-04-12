@@ -2,11 +2,7 @@
 #include <fstream>
 #include "src/Lexer/Lexer.hpp"
 #include "src/Parser/Parser.hpp"
-#include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
-#include <Cocoa/Cocoa.h>
-#include <sys/sysctl.h>
-#include <libproc.h>
+#include "src/Interpreter/Interpreter.hpp"
 
 enum Type
 {
@@ -27,6 +23,9 @@ int main(int argc, char** argv)
         parser.parse(0, "_");
         parser.remove_op_node(";");
         auto ast = parser.nodes;
+
+        Interpreter interpreter(parser.nodes, parser.file_name);
+        interpreter.evaluate();
 
         std::cin.get();
         exit(0);

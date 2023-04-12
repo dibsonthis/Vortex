@@ -3,8 +3,10 @@
 #include "../Node/Node.hpp"
 #include "../utils/utils.hpp"
 struct Symbol {
+    std::string name;
     node_ptr value;
     node_ptr type;
+    bool is_const;
 };
 
 struct SymbolTable {
@@ -20,7 +22,7 @@ public:
     int index = 0;
     std::string file_name;
     int line, column;
-    std::shared_ptr<SymbolTable> symbol_table;
+    std::shared_ptr<SymbolTable> symbol_table = std::make_shared<SymbolTable>();
 
 public:
     Interpreter() = default;
@@ -34,7 +36,18 @@ public:
     node_ptr peek(int n = 1);
     void reset(int idx = 0);
 
-    Symbol new_symbol(std::string name, node_ptr type = nullptr);
+    void evaluate();
+    void eval_const_functions();
+    void eval_const_decl();
+    void eval_const_decl_multiple();
+    void eval_var_decl();
+    void eval_var_decl_multiple();
+
+    Symbol new_symbol(std::string name, node_ptr value, bool is_const = false, node_ptr type = nullptr);
     Symbol get_symbol(std::string name, std::shared_ptr<SymbolTable> symbol_table);
     void add_symbol(Symbol symbol, std::shared_ptr<SymbolTable> symbol_table);
+
+    void erase_prev();
+    void erase_next();
+    void erase_curr();
 };

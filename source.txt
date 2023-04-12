@@ -6,6 +6,8 @@ radius.onChange = () => {
 	area = PI * radius ^ 2
 }
 
+area.onChange = (old) => areaWarning(old, area, 100)
+
 const areaWarning = (oldArea, newArea, n) => {
 	if (oldArea <= n && newArea > n) {
 		print("Warning: Area exceeded " + n)
@@ -17,8 +19,6 @@ const areaWarning = (oldArea, newArea, n) => {
 		print("Danger: Area exceeded " + n)
 	}
 }
-
-area.onChange = (old) => areaWarning(old, area, 100)
 
 for (1..1000) {
 	radius += e
