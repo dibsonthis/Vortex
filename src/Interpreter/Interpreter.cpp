@@ -93,6 +93,17 @@ node_ptr Interpreter::eval_plus(node_ptr node) {
     error_and_exit("Cannot perform operation '+' on types: " + node_repr(left) + ", " + node_repr(right));
 }
 
+node_ptr Interpreter::eval_minus(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
+        return new_number_node(left->Number.value - right->Number.value);
+    }
+
+    error_and_exit("Cannot perform operation '-' on types: " + node_repr(left) + ", " + node_repr(right));
+}
+
 node_ptr Interpreter::eval_node(node_ptr node) {
     if (node->type == NodeType::NUMBER 
     || node->type == NodeType::STRING 
@@ -120,6 +131,9 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     }
     if (node->Operator.value == "+") {
         return eval_plus(node);
+    }
+    if (node->Operator.value == "-") {
+        return eval_minus(node);
     }
 
     return node;

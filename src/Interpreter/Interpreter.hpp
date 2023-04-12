@@ -47,6 +47,7 @@ public:
     // Operations
     node_ptr eval_pos_neg(node_ptr node);
     node_ptr eval_plus(node_ptr node);
+    node_ptr eval_minus(node_ptr node);
 
     Symbol new_symbol(std::string name, node_ptr value, bool is_const = false, node_ptr type = nullptr);
     Symbol get_symbol(std::string name, std::shared_ptr<SymbolTable> symbol_table);
