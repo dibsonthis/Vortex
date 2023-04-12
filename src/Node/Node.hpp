@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <iostream>
+#include <unordered_map>
 
 #define node_ptr std::shared_ptr<Node>
 
@@ -66,6 +67,7 @@ struct ListNode {
 
 struct ObjectNode {
 	std::vector<node_ptr> elements;
+	std::unordered_map<std::string, node_ptr> properties;
 };
 
 struct ObjectDeconstructNode {
@@ -84,7 +86,8 @@ struct FuncCallNode {
 
 struct FuncNode {
 	std::string name;
-	node_ptr params;
+	std::vector<node_ptr> args;
+	std::vector<node_ptr> params;
 	node_ptr body;
 };
 

@@ -23,5 +23,20 @@ std::string node_repr(node_ptr node) {
         case NodeType::END_OF_FILE: {
             return "EOF";
         }
+        case NodeType::CONSTANT_DECLARATION: {
+            return "Const declaration";
+        }
+        case NodeType::CONSTANT_DECLARATION_MULTIPLE: {
+            return "Const declaration";
+        }
+        case NodeType::VARIABLE_DECLARATION: {
+            return "Variable declaration";
+        }
+        case NodeType::VARIABLE_DECLARATION_MULTIPLE: {
+            return "Variable declaration";
+        }
+        default: {
+            return "<not_implemented>";
+        }
     }
 }

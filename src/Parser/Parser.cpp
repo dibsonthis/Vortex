@@ -187,9 +187,9 @@ void Parser::parse_object(std::string end) {
             erase_next();
         }
 
-        if (current_node->Object.elements.size() == 1 && current_node->Object.elements[0]->type == NodeType::COMMA_LIST) {
-            current_node->Object.elements = current_node->Object.elements[0]->List.elements;
-        }
+        // if (current_node->Object.elements.size() == 1 && current_node->Object.elements[0]->type == NodeType::COMMA_LIST) {
+        //     current_node->Object.elements = current_node->Object.elements[0]->List.elements;
+        // }
 
         advance();
     }
@@ -250,9 +250,18 @@ void Parser::parse_func_def(std::string end) {
         if (current_node->Operator.value == end) {
             break;
         }
-        if (current_node->Operator.value == "=>" && (peek(-1)->type == NodeType::PAREN || peek(-1)->type == NodeType::OBJECT_DECONSTRUCT || peek(-1)->Operator.value == "::") && peek()->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == "=>" && peek(-1)->type == NodeType::PAREN && peek()->type != NodeType::END_OF_FILE) {
             current_node->type = NodeType::FUNC;
-            current_node->Function.params = peek(-1);
+            node_ptr params = peek(-1);
+            if (params->Paren.elements.size() == 1 && params->Paren.elements[0]->type == NodeType::COMMA_LIST) {
+                for (node_ptr& elem : params->Paren.elements[0]->List.elements) {
+                    current_node->Function.params.push_back(elem);
+                    current_node->Function.args.push_back(nullptr);
+                }
+            } else if (params->Paren.elements.size() == 1) {
+                current_node->Function.params.push_back(params->Paren.elements[0]);
+                current_node->Function.args.push_back(nullptr);
+            }
             current_node->Function.body = peek();
             erase_next();
             erase_prev();

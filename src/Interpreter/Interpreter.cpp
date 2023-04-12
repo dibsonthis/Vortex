@@ -29,7 +29,7 @@ void Interpreter::eval_const_functions() {
                 error_and_exit("Function '" + current_node->ConstantDeclaration.name + "' is already defined");
             }
             Symbol symbol = new_symbol(current_node->ConstantDeclaration.name, current_node->ConstantDeclaration.value, true);
-            add_symbol(symbol, symbol_table);
+            add_symbol(symbol, current_symbol_table);
             erase_curr();
             continue;
         }
@@ -44,8 +44,8 @@ node_ptr Interpreter::eval_const_decl(node_ptr node) {
         error_and_exit("Variable '" + node->ConstantDeclaration.name + "' is already defined");
     }
     Symbol symbol = new_symbol(node->ConstantDeclaration.name, eval_node(node->ConstantDeclaration.value), true);
-    add_symbol(symbol, symbol_table);
-    return node;
+    add_symbol(symbol, current_symbol_table);
+    return symbol.value;
 }
 
 node_ptr Interpreter::eval_const_decl_multiple(node_ptr node) {
@@ -55,9 +55,9 @@ node_ptr Interpreter::eval_const_decl_multiple(node_ptr node) {
             error_and_exit("Variable '" + decl->ConstantDeclaration.name + "' is already defined");
         }
         Symbol symbol = new_symbol(decl->ConstantDeclaration.name, eval_node(decl->ConstantDeclaration.value), true);
-        add_symbol(symbol, symbol_table);
+        add_symbol(symbol, current_symbol_table);
     }
-    return node;
+    return new_boolean_node(true);
 }
 
 node_ptr Interpreter::eval_var_decl(node_ptr node) {
@@ -66,8 +66,8 @@ node_ptr Interpreter::eval_var_decl(node_ptr node) {
         error_and_exit("Variable '" + node->VariableDeclaration.name + "' is already defined");
     }
     Symbol symbol = new_symbol(node->VariableDeclaration.name, eval_node(node->VariableDeclaration.value));
-    add_symbol(symbol, symbol_table);
-    return node;
+    add_symbol(symbol, current_symbol_table);
+    return symbol.value;
 }
 
 node_ptr Interpreter::eval_var_decl_multiple(node_ptr node) {
@@ -77,9 +77,106 @@ node_ptr Interpreter::eval_var_decl_multiple(node_ptr node) {
             error_and_exit("Variable '" + decl->VariableDeclaration.name + "' is already defined");
         }
         Symbol symbol = new_symbol(decl->VariableDeclaration.name, eval_node(decl->VariableDeclaration.value));
-        add_symbol(symbol, symbol_table);
+        add_symbol(symbol, current_symbol_table);
     }
-    return node;
+    return new_boolean_node(true);
+}
+
+node_ptr Interpreter::eval_list(node_ptr node) {
+    node_ptr list = new_node();
+    list->type = NodeType::LIST;
+    if (node->List.elements.size() == 1) {
+        if (node->List.elements[0]->type == NodeType::COMMA_LIST) {
+            for (auto elem : node->List.elements[0]->List.elements) {
+                list->List.elements.push_back(eval_node(elem));
+            }
+        } else {
+            list->List.elements.push_back(eval_node(node->List.elements[0]));
+        }
+    }
+    return list;
+}
+
+node_ptr Interpreter::eval_object(node_ptr node) {
+    node_ptr object = new_node();
+    object->type = NodeType::OBJECT;
+    for (node_ptr prop : node->Object.elements[0]->List.elements) {
+        if (prop->Operator.value != ":") {
+            error_and_exit("Object must contain properties separated with ':'");
+        }
+        if (prop->Operator.left->type != NodeType::ID) {
+            error_and_exit("Propertiy names must be identifiers");
+        }
+        object->Object.properties[prop->Operator.left->ID.value] = eval_node(prop->Operator.right);
+    }
+    return object;
+}
+
+node_ptr Interpreter::eval_func_call(node_ptr node) {
+    Symbol function_symbol = get_symbol(node->FuncCall.name, symbol_table);
+    if (function_symbol.value == nullptr) {
+        error_and_exit("Function '" + node->FuncCall.name + "' is undefined");
+    }
+    node_ptr function = new_node();
+    function->type = NodeType::FUNC;
+    function->Function.name = function_symbol.name;
+    function->Function.args = std::vector<node_ptr>(function_symbol.value->Function.args);
+    function->Function.params = std::vector<node_ptr>(function_symbol.value->Function.params);
+    function->Function.body = function_symbol.value->Function.body;
+
+    std::vector<node_ptr> args;
+    for (node_ptr arg : node->FuncCall.args) {
+        args.push_back(eval_node(arg));
+    }
+    current_symbol_table->child = std::make_shared<SymbolTable>();
+    auto function_symbol_table = current_symbol_table->child;
+    function_symbol_table->parent = current_symbol_table;
+    function_symbol_table->symbols = current_symbol_table->symbols;
+
+    current_symbol_table = function_symbol_table;
+
+    if (args.size() > function->Function.params.size()) {
+        error_and_exit("Function '" + node->FuncCall.name + "' expects " + std::to_string(function->Function.params.size()) + " parameters but " + std::to_string(args.size()) + " were provided");
+    }
+
+    int start_index = 0;
+
+    for (node_ptr arg : function->Function.args) {
+        if (arg == nullptr) {
+            break;
+        }
+        start_index++;
+    }
+
+    for (int i = 0; i < function->Function.args.size(); i++) {
+        if (function->Function.args[i] != nullptr) {
+            std::string name = function->Function.params[i]->ID.value;
+            node_ptr value = function->Function.args[i];
+            Symbol symbol = new_symbol(name, value);
+            add_symbol(symbol, function_symbol_table);
+        }
+    }
+
+    for (int i = 0; i < args.size(); i++) {
+        std::string name = function->Function.params[i+start_index]->ID.value;
+        node_ptr value = args[i];
+        Symbol symbol = new_symbol(name, value);
+        add_symbol(symbol, function_symbol_table);
+        function->Function.args[i+start_index] = value;
+    }
+
+    node_ptr res = function;
+
+    // Check if function's args vector has any nullptrs
+    // If it does, it's curried, else we run the function
+
+    if (std::find(function->Function.args.begin(), function->Function.args.end(), nullptr) == function->Function.args.end()) {
+        res = eval_node(function->Function.body);
+    }
+
+    current_symbol_table = current_symbol_table->parent;
+
+    return res;
 }
 
 // Operations
@@ -253,17 +350,29 @@ node_ptr Interpreter::eval_gt(node_ptr node) {
 
 node_ptr Interpreter::eval_and(node_ptr node) {
     node_ptr left = eval_node(node->Operator.left);
+
+    if (left->type == NodeType::BOOLEAN && !left->Boolean.value) {
+        return left;
+    }
+
     node_ptr right = eval_node(node->Operator.right);
 
-    if (left->type == NodeType::BOOLEAN && right->type == NodeType::BOOLEAN) {
-        return new_boolean_node(left->Boolean.value && right->Boolean.value);
+    if (right->type == NodeType::BOOLEAN && !right->Boolean.value) {
+        return right;
     }
+
+    return left;
 
     error_and_exit("Cannot perform operation '&&' on types: " + node_repr(left) + ", " + node_repr(right));
 }
 
 node_ptr Interpreter::eval_or(node_ptr node) {
     node_ptr left = eval_node(node->Operator.left);
+
+    if (left->type == NodeType::BOOLEAN && left->Boolean.value) {
+        return left;
+    }
+
     node_ptr right = eval_node(node->Operator.right);
 
     if (left->type == NodeType::BOOLEAN && right->type == NodeType::BOOLEAN) {
@@ -279,8 +388,16 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     || node->type == NodeType::BOOLEAN) {
         return node;
     }
+    if (node->type == NodeType::LIST) {
+        return eval_list(node);
+    }
+    if (node->type == NodeType::OBJECT) {
+        if (node->Object.elements.size() == 1 && node->Object.elements[0]->type == NodeType::COMMA_LIST) {
+            return eval_object(node);
+        }
+    }
     if (node->type == NodeType::ID) {
-        node_ptr value = get_symbol(node->ID.value, symbol_table).value;
+        node_ptr value = get_symbol(node->ID.value, current_symbol_table).value;
         if (value == nullptr) {
             error_and_exit("Variable '" + node->ID.value + "' is undefined");
         }
@@ -303,6 +420,9 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     }
     if (node->type == NodeType::VARIABLE_DECLARATION_MULTIPLE) {
         return eval_var_decl_multiple(node);
+    }
+    if (node->type == NodeType::FUNC_CALL) {
+        return eval_func_call(node);
     }
     if ((node->Operator.value == "+" || node->Operator.value == "-") 
         && node->Operator.left == nullptr) {

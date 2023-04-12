@@ -24,5 +24,15 @@
 // 	radius += e
 // }
 
-var x = 10 == (5 * 2)
-var y = 10 == "hi"
+const add = (a, b) => a + b
+const add12 = add(12)
+const res = add12(10)
+const res2 = add12(18)
+
+
+// const x = 12
+// const y = 8
+
+// const add = (a, b) => a + b
+
+// const z = add(x, y)

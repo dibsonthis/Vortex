@@ -1,5 +1,7 @@
 #pragma once
 
+#define sym_t_ptr std::shared_ptr<SymbolTable>
+
 #include <cmath>
 #include "../Node/Node.hpp"
 #include "../utils/utils.hpp"
@@ -13,8 +15,8 @@ struct Symbol {
 
 struct SymbolTable {
     std::vector<Symbol> symbols;
-    std::shared_ptr<SymbolTable> parent = nullptr;
-    std::shared_ptr<SymbolTable> child = nullptr;
+    sym_t_ptr parent = nullptr;
+    sym_t_ptr child = nullptr;
 };
 
 class Interpreter {
@@ -24,7 +26,8 @@ public:
     int index = 0;
     std::string file_name;
     int line, column;
-    std::shared_ptr<SymbolTable> symbol_table = std::make_shared<SymbolTable>();
+    sym_t_ptr symbol_table = std::make_shared<SymbolTable>();
+    sym_t_ptr current_symbol_table = symbol_table;
 
 public:
     Interpreter() = default;
@@ -45,6 +48,9 @@ public:
     node_ptr eval_const_decl_multiple(node_ptr node);
     node_ptr eval_var_decl(node_ptr node);
     node_ptr eval_var_decl_multiple(node_ptr node);
+    node_ptr eval_list(node_ptr node);
+    node_ptr eval_object(node_ptr node);
+    node_ptr eval_func_call(node_ptr node);
     // Operations
     node_ptr eval_pos_neg(node_ptr node);
     node_ptr eval_add(node_ptr node);
@@ -62,8 +68,8 @@ public:
     node_ptr eval_or(node_ptr node);
 
     Symbol new_symbol(std::string name, node_ptr value, bool is_const = false, node_ptr type = nullptr);
-    Symbol get_symbol(std::string name, std::shared_ptr<SymbolTable> symbol_table);
-    void add_symbol(Symbol symbol, std::shared_ptr<SymbolTable> symbol_table);
+    Symbol get_symbol(std::string name, sym_t_ptr symbol_table);
+    void add_symbol(Symbol symbol, sym_t_ptr symbol_table);
 
     void erase_prev();
     void erase_next();
