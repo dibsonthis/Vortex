@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include "../Node/Node.hpp"
 #include "../utils/utils.hpp"
 struct Symbol {
@@ -46,8 +47,19 @@ public:
     node_ptr eval_var_decl_multiple(node_ptr node);
     // Operations
     node_ptr eval_pos_neg(node_ptr node);
-    node_ptr eval_plus(node_ptr node);
-    node_ptr eval_minus(node_ptr node);
+    node_ptr eval_add(node_ptr node);
+    node_ptr eval_sub(node_ptr node);
+    node_ptr eval_mul(node_ptr node);
+    node_ptr eval_div(node_ptr node);
+    node_ptr eval_pow(node_ptr node);
+    node_ptr eval_eq_eq(node_ptr node);
+    node_ptr eval_not_eq(node_ptr node);
+    node_ptr eval_lt_eq(node_ptr node);
+    node_ptr eval_gt_eq(node_ptr node);
+    node_ptr eval_lt(node_ptr node);
+    node_ptr eval_gt(node_ptr node);
+    node_ptr eval_and(node_ptr node);
+    node_ptr eval_or(node_ptr node);
 
     Symbol new_symbol(std::string name, node_ptr value, bool is_const = false, node_ptr type = nullptr);
     Symbol get_symbol(std::string name, std::shared_ptr<SymbolTable> symbol_table);

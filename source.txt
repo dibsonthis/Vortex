@@ -1,25 +1,28 @@
-import [PI, e] : "../imports/math";
+// import [PI, e] : "../imports/math";
 
-var radius, area = -12 - 2
+// var radius, area = 0
 
-radius.onChange = () => {
-	area = PI * radius ^ 2
-}
+// radius.onChange = () => {
+// 	area = PI * radius ^ 2
+// }
 
-area.onChange = (old) => areaWarning(old, area, 100)
+// area.onChange = (old) => areaWarning(old, area, 100)
 
-const areaWarning = (oldArea, newArea, n) => {
-	if (oldArea <= n && newArea > n) {
-		print("Warning: Area exceeded " + n)
-	}
+// const areaWarning = (oldArea, newArea, n) => {
+// 	if (oldArea <= n && newArea > n) {
+// 		print("Warning: Area exceeded " + n)
+// 	}
 
-	const dangerArea = n * 2
+// 	const dangerArea = n * 2
 
-	if (oldArea <= dangerArea && newArea > dangerArea) {
-		print("Danger: Area exceeded " + n)
-	}
-}
+// 	if (oldArea <= dangerArea && newArea > dangerArea) {
+// 		print("Danger: Area exceeded " + n)
+// 	}
+// }
 
-for (1..1000) {
-	radius += e
-}
+// for (1..1000) {
+// 	radius += e
+// }
+
+var x = 10 == (5 * 2)
+var y = 10 == "hi"

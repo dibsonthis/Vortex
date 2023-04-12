@@ -24,6 +24,10 @@ void Interpreter::reset(int idx) {
 void Interpreter::eval_const_functions() {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->type == NodeType::CONSTANT_DECLARATION && current_node->ConstantDeclaration.value->type == NodeType::FUNC) {
+            node_ptr existing_symbol = get_symbol(current_node->ConstantDeclaration.name, symbol_table).value;
+            if (existing_symbol != nullptr) {
+                error_and_exit("Function '" + current_node->ConstantDeclaration.name + "' is already defined");
+            }
             Symbol symbol = new_symbol(current_node->ConstantDeclaration.name, current_node->ConstantDeclaration.value, true);
             add_symbol(symbol, symbol_table);
             erase_curr();
@@ -35,6 +39,10 @@ void Interpreter::eval_const_functions() {
 }
 
 node_ptr Interpreter::eval_const_decl(node_ptr node) {
+    node_ptr existing_symbol = get_symbol(node->ConstantDeclaration.name, symbol_table).value;
+    if (existing_symbol != nullptr) {
+        error_and_exit("Variable '" + node->ConstantDeclaration.name + "' is already defined");
+    }
     Symbol symbol = new_symbol(node->ConstantDeclaration.name, eval_node(node->ConstantDeclaration.value), true);
     add_symbol(symbol, symbol_table);
     return node;
@@ -42,6 +50,10 @@ node_ptr Interpreter::eval_const_decl(node_ptr node) {
 
 node_ptr Interpreter::eval_const_decl_multiple(node_ptr node) {
     for (node_ptr& decl : node->ConstantDeclarationMultiple.constant_declarations) {
+        node_ptr existing_symbol = get_symbol(decl->ConstantDeclaration.name, symbol_table).value;
+        if (existing_symbol != nullptr) {
+            error_and_exit("Variable '" + decl->ConstantDeclaration.name + "' is already defined");
+        }
         Symbol symbol = new_symbol(decl->ConstantDeclaration.name, eval_node(decl->ConstantDeclaration.value), true);
         add_symbol(symbol, symbol_table);
     }
@@ -49,6 +61,10 @@ node_ptr Interpreter::eval_const_decl_multiple(node_ptr node) {
 }
 
 node_ptr Interpreter::eval_var_decl(node_ptr node) {
+    node_ptr existing_symbol = get_symbol(node->VariableDeclaration.name, symbol_table).value;
+    if (existing_symbol != nullptr) {
+        error_and_exit("Variable '" + node->VariableDeclaration.name + "' is already defined");
+    }
     Symbol symbol = new_symbol(node->VariableDeclaration.name, eval_node(node->VariableDeclaration.value));
     add_symbol(symbol, symbol_table);
     return node;
@@ -56,6 +72,10 @@ node_ptr Interpreter::eval_var_decl(node_ptr node) {
 
 node_ptr Interpreter::eval_var_decl_multiple(node_ptr node) {
     for (node_ptr& decl : node->VariableDeclarationMultiple.variable_declarations) {
+        node_ptr existing_symbol = get_symbol(decl->VariableDeclaration.name, symbol_table).value;
+        if (existing_symbol != nullptr) {
+            error_and_exit("Variable '" + decl->VariableDeclaration.name + "' is already defined");
+        }
         Symbol symbol = new_symbol(decl->VariableDeclaration.name, eval_node(decl->VariableDeclaration.value));
         add_symbol(symbol, symbol_table);
     }
@@ -78,7 +98,7 @@ node_ptr Interpreter::eval_pos_neg(node_ptr node) {
     return node;
 }
 
-node_ptr Interpreter::eval_plus(node_ptr node) {
+node_ptr Interpreter::eval_add(node_ptr node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -93,7 +113,7 @@ node_ptr Interpreter::eval_plus(node_ptr node) {
     error_and_exit("Cannot perform operation '+' on types: " + node_repr(left) + ", " + node_repr(right));
 }
 
-node_ptr Interpreter::eval_minus(node_ptr node) {
+node_ptr Interpreter::eval_sub(node_ptr node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -104,6 +124,155 @@ node_ptr Interpreter::eval_minus(node_ptr node) {
     error_and_exit("Cannot perform operation '-' on types: " + node_repr(left) + ", " + node_repr(right));
 }
 
+node_ptr Interpreter::eval_mul(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
+        return new_number_node(left->Number.value * right->Number.value);
+    }
+
+    error_and_exit("Cannot perform operation '*' on types: " + node_repr(left) + ", " + node_repr(right));
+}
+
+node_ptr Interpreter::eval_div(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
+        return new_number_node(left->Number.value / right->Number.value);
+    }
+
+    error_and_exit("Cannot perform operation '/' on types: " + node_repr(left) + ", " + node_repr(right));
+}
+
+node_ptr Interpreter::eval_pow(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
+        return new_number_node(pow(left->Number.value, right->Number.value));
+    }
+
+    error_and_exit("Cannot perform operation '^' on types: " + node_repr(left) + ", " + node_repr(right));
+}
+
+node_ptr Interpreter::eval_eq_eq(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    if (left->type != right->type) {
+        return new_boolean_node(false);
+    }
+
+    if (left->type == NodeType::NUMBER) {
+        return new_boolean_node(left->Number.value == right->Number.value);
+    }
+
+    if (left->type == NodeType::STRING) {
+        return new_boolean_node(left->String.value == right->String.value);
+    }
+
+    if (left->type == NodeType::BOOLEAN) {
+        return new_boolean_node(left->Boolean.value == right->Boolean.value);
+    }
+
+    // TODO: Extend to lists and objects
+
+    return new_boolean_node(false);
+}
+
+node_ptr Interpreter::eval_not_eq(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    if (left->type != right->type) {
+        return new_boolean_node(true);
+    }
+
+    if (left->type == NodeType::NUMBER) {
+        return new_boolean_node(left->Number.value != right->Number.value);
+    }
+
+    if (left->type == NodeType::STRING) {
+        return new_boolean_node(left->String.value != right->String.value);
+    }
+
+    if (left->type == NodeType::BOOLEAN) {
+        return new_boolean_node(left->Boolean.value != right->Boolean.value);
+    }
+
+    // TODO: Extend to lists and objects
+
+    return new_boolean_node(true);
+}
+
+node_ptr Interpreter::eval_lt_eq(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
+        return new_boolean_node(left->Number.value <= right->Number.value);
+    }
+
+    error_and_exit("Cannot perform operation '<=' on types: " + node_repr(left) + ", " + node_repr(right));
+}
+
+node_ptr Interpreter::eval_gt_eq(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
+        return new_boolean_node(left->Number.value >= right->Number.value);
+    }
+
+    error_and_exit("Cannot perform operation '>=' on types: " + node_repr(left) + ", " + node_repr(right));
+}
+
+node_ptr Interpreter::eval_lt(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
+        return new_boolean_node(left->Number.value < right->Number.value);
+    }
+
+    error_and_exit("Cannot perform operation '<' on types: " + node_repr(left) + ", " + node_repr(right));
+}
+
+node_ptr Interpreter::eval_gt(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
+        return new_boolean_node(left->Number.value > right->Number.value);
+    }
+
+    error_and_exit("Cannot perform operation '>' on types: " + node_repr(left) + ", " + node_repr(right));
+}
+
+node_ptr Interpreter::eval_and(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    if (left->type == NodeType::BOOLEAN && right->type == NodeType::BOOLEAN) {
+        return new_boolean_node(left->Boolean.value && right->Boolean.value);
+    }
+
+    error_and_exit("Cannot perform operation '&&' on types: " + node_repr(left) + ", " + node_repr(right));
+}
+
+node_ptr Interpreter::eval_or(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    if (left->type == NodeType::BOOLEAN && right->type == NodeType::BOOLEAN) {
+        return new_boolean_node(left->Boolean.value || right->Boolean.value);
+    }
+
+    error_and_exit("Cannot perform operation '||' on types: " + node_repr(left) + ", " + node_repr(right));
+}
+
 node_ptr Interpreter::eval_node(node_ptr node) {
     if (node->type == NodeType::NUMBER 
     || node->type == NodeType::STRING 
@@ -111,7 +280,17 @@ node_ptr Interpreter::eval_node(node_ptr node) {
         return node;
     }
     if (node->type == NodeType::ID) {
-        return get_symbol(node->ID.value, symbol_table).value;
+        node_ptr value = get_symbol(node->ID.value, symbol_table).value;
+        if (value == nullptr) {
+            error_and_exit("Variable '" + node->ID.value + "' is undefined");
+        }
+        return value;
+    }
+    if (node->type == NodeType::PAREN) {
+        if (node->Paren.elements.size() != 1) {
+            error_and_exit("Empty parentheses");
+        }
+        return eval_node(node->Paren.elements[0]);
     }
     if (node->type == NodeType::CONSTANT_DECLARATION) {
         return eval_const_decl(node);
@@ -130,10 +309,43 @@ node_ptr Interpreter::eval_node(node_ptr node) {
         return eval_pos_neg(node);
     }
     if (node->Operator.value == "+") {
-        return eval_plus(node);
+        return eval_add(node);
     }
     if (node->Operator.value == "-") {
-        return eval_minus(node);
+        return eval_sub(node);
+    }
+    if (node->Operator.value == "*") {
+        return eval_mul(node);
+    }
+    if (node->Operator.value == "/") {
+        return eval_div(node);
+    }
+    if (node->Operator.value == "^") {
+        return eval_pow(node);
+    }
+    if (node->Operator.value == "==") {
+        return eval_eq_eq(node);
+    }
+    if (node->Operator.value == "!=") {
+        return eval_not_eq(node);
+    }
+    if (node->Operator.value == "<=") {
+        return eval_lt_eq(node);
+    }
+    if (node->Operator.value == ">=") {
+        return eval_gt_eq(node);
+    }
+    if (node->Operator.value == "<") {
+        return eval_lt(node);
+    }
+    if (node->Operator.value == ">") {
+        return eval_gt(node);
+    }
+    if (node->Operator.value == "&&") {
+        return eval_and(node);
+    }
+    if (node->Operator.value == "||") {
+        return eval_or(node);
     }
 
     return node;
