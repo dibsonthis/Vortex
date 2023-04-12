@@ -38,11 +38,15 @@ public:
     void reset(int idx = 0);
 
     void evaluate();
+    node_ptr eval_node(node_ptr node);
     void eval_const_functions();
-    void eval_const_decl(node_ptr node);
-    void eval_const_decl_multiple(node_ptr node);
-    void eval_var_decl(node_ptr node);
-    void eval_var_decl_multiple(node_ptr node);
+    node_ptr eval_const_decl(node_ptr node);
+    node_ptr eval_const_decl_multiple(node_ptr node);
+    node_ptr eval_var_decl(node_ptr node);
+    node_ptr eval_var_decl_multiple(node_ptr node);
+    // Operations
+    node_ptr eval_pos_neg(node_ptr node);
+    node_ptr eval_plus(node_ptr node);
 
     Symbol new_symbol(std::string name, node_ptr value, bool is_const = false, node_ptr type = nullptr);
     Symbol get_symbol(std::string name, std::shared_ptr<SymbolTable> symbol_table);
@@ -51,4 +55,12 @@ public:
     void erase_prev();
     void erase_next();
     void erase_curr();
+
+    node_ptr new_number_node(double value);
+    node_ptr new_string_node(std::string value);
+    node_ptr new_boolean_node(bool value);
+    node_ptr new_accessor_node();
+    node_ptr new_node();
+
+    void error_and_exit(std::string message);
 };

@@ -68,7 +68,7 @@ void Parser::parse_un_op(std::vector<std::string> operators, std::string end) {
         }
         if (vector_contains_string(operators, current_node->Operator.value) && 
             (
-                peek(-1)->type == NodeType::OP ||
+                (peek(-1)->type == NodeType::OP && !has_children(peek(-1))) ||
                 peek(-1)->type == NodeType::START_OF_FILE
             )) {
             node_ptr right = peek(1);

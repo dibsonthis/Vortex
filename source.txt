@@ -1,6 +1,6 @@
 import [PI, e] : "../imports/math";
 
-var radius, area = 0
+var radius, area = -12 + 2
 
 radius.onChange = () => {
 	area = PI * radius ^ 2
