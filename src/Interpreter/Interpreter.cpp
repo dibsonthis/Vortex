@@ -126,6 +126,24 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
     node_ptr function = new_node();
     function->type = NodeType::FUNC;
 
+    if (node->FuncCall.name == "print") {
+        if (node->FuncCall.args.size() == 1) {
+            builtin_print(eval_node(node->FuncCall.args[0]));
+        } else {
+            for (node_ptr arg : node->FuncCall.args) {
+                builtin_print(eval_node(arg));
+                std::cout << '\n';
+            }
+        }
+        return new_node(NodeType::NONE);
+    }
+    if (node->FuncCall.name == "string") {
+        if (node->FuncCall.args.size() != 1) {
+            error_and_exit("Function " + node->FuncCall.name + " expects 1 argument");
+        }
+        return new_string_node(printable(eval_node(node->FuncCall.args[0])));
+    }
+
     if (func != nullptr) {
         function->Function.name = func->Function.name;
         function->Function.args = std::vector<node_ptr>(func->Function.args);
@@ -684,6 +702,53 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
 
         return new_node(NodeType::NONE);
     }
+}
+
+// Builtin functions
+
+std::string Interpreter::printable(node_ptr node) {
+    switch (node->type) {
+        case NodeType::NUMBER: {
+            return std::to_string(node->Number.value);
+        }
+        case NodeType::BOOLEAN: {
+            return node->Boolean.value ? "true" : "false";
+        }
+        case NodeType::STRING: {
+            return node->String.value;
+        }
+        case NodeType::FUNC: {
+            std::string res = "( ";
+            for (node_ptr param : node->Function.params) {
+                res += param->ID.value + " ";
+            }
+            res += ") => ...";
+            return res;
+        }
+        case NodeType::LIST: {
+            std::string res = "[ ";
+            for (node_ptr elem : node->List.elements) {
+                res += printable(node) + " ";
+            }
+            res += "]";
+            return res;
+        }
+        case NodeType::OBJECT: {
+            std::string res = "{\n\n";
+            for (auto const& elem : node->Object.properties) {
+                res += elem.first + ": " + printable(elem.second) + '\n';
+            }
+            res += "}";
+            return res;
+        }
+        default: {
+            return "<not implemented>";
+        }
+    }
+}
+
+void Interpreter::builtin_print(node_ptr node) {
+    std::cout << printable(node) << std::flush;
 }
 
 node_ptr Interpreter::eval_node(node_ptr node) {

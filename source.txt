@@ -26,9 +26,17 @@
 
 var length, area, diff = 0
 
-length::onChange = (old) => {
+length::onChange = () => {
 	area = length ^ 2
-	diff = length - old
 }
 
-length = 12.5
+area::onChange = (old) => {
+	diff = area - old
+}
+
+for (1..10) {
+	length = length + 1
+	print("L: " + string(length) + 
+		  " - A: " + string(area) + 
+		  " - D: " + string(diff) + "\n")
+}

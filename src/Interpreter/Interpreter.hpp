@@ -74,6 +74,8 @@ public:
     node_ptr eval_or(node_ptr node);
     node_ptr eval_eq(node_ptr node);
     node_ptr eval_dot(node_ptr node);
+    // Builtin functions
+    void builtin_print(node_ptr node);
 
     Symbol new_symbol(std::string name, node_ptr value, bool is_const = false, node_ptr type = nullptr);
     Symbol get_symbol(std::string name, sym_t_ptr symbol_table);
@@ -90,6 +92,8 @@ public:
     node_ptr new_accessor_node();
     node_ptr new_node(NodeType type);
     node_ptr new_node();
+
+    std::string printable(node_ptr node);
 
     void error_and_exit(std::string message);
 };
