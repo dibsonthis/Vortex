@@ -360,6 +360,7 @@ void Parser::parse_var(std::string end) {
                     node_ptr var_decl = new_node();
                     var_decl->type = NodeType::VARIABLE_DECLARATION;
                     var_decl->VariableDeclaration.name = element->ID.value;
+                    var_decl->VariableDeclaration.value = new_node(NodeType::NONE);
                     current_node->VariableDeclarationMultiple.variable_declarations.push_back(var_decl);
                 }
                 erase_next();
@@ -376,6 +377,7 @@ void Parser::parse_var(std::string end) {
             } else if (next->type == NodeType::ID) {
                 current_node->type = NodeType::VARIABLE_DECLARATION;
                 current_node->VariableDeclaration.name = next->ID.value;
+                current_node->VariableDeclaration.value = new_node(NodeType::NONE);
                 erase_next();
             } else if (next->Operator.value == "=") {
                 current_node->type = NodeType::VARIABLE_DECLARATION;
@@ -803,6 +805,13 @@ node_ptr Parser::new_accessor_node() {
 
 node_ptr Parser::new_node() {
     auto node = std::make_shared<Node>();
+    node->line = line;
+    node->column = column;
+    return node;
+}
+
+node_ptr Parser::new_node(NodeType type) {
+    auto node = std::make_shared<Node>(type);
     node->line = line;
     node->column = column;
     return node;

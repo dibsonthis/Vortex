@@ -24,8 +24,7 @@
 // 	radius += e
 // }
 
-var length, area = 5
-var diff = 0
+var length, area, diff = 0
 
 length::onChange = (old) => {
 	area = length ^ 2
