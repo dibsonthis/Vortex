@@ -37,6 +37,7 @@ enum class NodeType {
 	IF_BLOCK,
 	START_OF_FILE,
 	END_OF_FILE,
+	NONE
 };
 
 struct IdNode {

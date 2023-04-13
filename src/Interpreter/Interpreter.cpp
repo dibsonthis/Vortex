@@ -173,7 +173,24 @@ node_ptr Interpreter::eval_func_call(node_ptr node) {
     // If it does, it's curried, else we run the function
 
     if (std::find(function->Function.args.begin(), function->Function.args.end(), nullptr) == function->Function.args.end()) {
-        res = eval_node(function->Function.body);
+        if (function->Function.body->type != NodeType::OBJECT) {
+            res = eval_node(function->Function.body);
+        } else {
+            for (int i = 0; i < function->Function.body->Object.elements.size(); i++) {
+                node_ptr expr = function->Function.body->Object.elements[i];
+                node_ptr evaluated_expr = eval_node(expr);
+                if (evaluated_expr->type == NodeType::RETURN) {
+                    res = evaluated_expr->Return.value;
+                    break;
+                } else if (i == function->Function.body->Object.elements.size()-1) {
+                    res = evaluated_expr;
+                    if (res->type == NodeType::RETURN) {
+                        res = res->Return.value;
+                    }
+                    break;
+                }
+            }
+        }
     }
 
     current_symbol_table = current_symbol_table->parent;
@@ -190,30 +207,42 @@ node_ptr Interpreter::eval_if_statement(node_ptr node) {
 
     if (conditional->Boolean.value) {
         for (node_ptr expr : node->IfStatement.body->Object.elements) {
-            eval_node(expr);
+            node_ptr evaluated_expr = eval_node(expr);
+            if (evaluated_expr->type == NodeType::RETURN) {
+                return evaluated_expr;
+            }
         }
     }
 
-    return new_boolean_node(conditional->Boolean.value);
+    return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_if_block(node_ptr node) {
     for (node_ptr statement : node->IfBlock.statements) {
         if (statement->type == NodeType::IF_STATEMENT) {
-            bool res = eval_node(statement)->Boolean.value;
-            if (res) {
-                return new_boolean_node(true);;
+            node_ptr conditional = eval_node(statement->IfStatement.condition);
+            if (conditional->Boolean.value) {
+                return eval_node(statement);
             }
-            continue;
         } else if (statement->type == NodeType::OBJECT) {
             for (node_ptr expr : statement->Object.elements) {
+                if (expr->type == NodeType::RETURN) {
+                    return eval_node(expr);
+                }
                 eval_node(expr);
             }
-            return new_boolean_node(true);
+            return new_node(NodeType::NONE);
         }
     }
 
-    return new_boolean_node(true);
+    return new_node(NodeType::NONE);
+}
+
+node_ptr Interpreter::eval_return(node_ptr node) {
+    node_ptr ret = new_node();
+    ret->type = NodeType::RETURN;
+    ret->Return.value = eval_node(node->Return.value);
+    return ret;
 }
 
 // Operations
@@ -592,6 +621,13 @@ node_ptr Interpreter::new_boolean_node(bool value) {
 
 node_ptr Interpreter::new_accessor_node() {
     auto node = std::make_shared<Node>(NodeType::ACCESSOR);
+    node->line = line;
+    node->column = column;
+    return node;
+}
+
+node_ptr Interpreter::new_node(NodeType type) {
+    auto node = std::make_shared<Node>(type);
     node->line = line;
     node->column = column;
     return node;

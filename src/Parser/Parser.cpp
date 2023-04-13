@@ -187,10 +187,6 @@ void Parser::parse_object(std::string end) {
             erase_next();
         }
 
-        // if (current_node->Object.elements.size() == 1 && current_node->Object.elements[0]->type == NodeType::COMMA_LIST) {
-        //     current_node->Object.elements = current_node->Object.elements[0]->List.elements;
-        // }
-
         advance();
     }
 }

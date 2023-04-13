@@ -35,6 +35,9 @@ std::string node_repr(node_ptr node) {
         case NodeType::VARIABLE_DECLARATION_MULTIPLE: {
             return "Variable declaration";
         }
+        case NodeType::NONE: {
+            return "None";
+        }
         default: {
             return "<not_implemented>";
         }

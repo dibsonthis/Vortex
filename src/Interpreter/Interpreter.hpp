@@ -53,6 +53,7 @@ public:
     node_ptr eval_func_call(node_ptr node);
     node_ptr eval_if_statement(node_ptr node);
     node_ptr eval_if_block(node_ptr node);
+    node_ptr eval_return(node_ptr node);
     // Operations
     node_ptr eval_pos_neg(node_ptr node);
     node_ptr eval_add(node_ptr node);
@@ -81,6 +82,7 @@ public:
     node_ptr new_string_node(std::string value);
     node_ptr new_boolean_node(bool value);
     node_ptr new_accessor_node();
+    node_ptr new_node(NodeType type);
     node_ptr new_node();
 
     void error_and_exit(std::string message);
