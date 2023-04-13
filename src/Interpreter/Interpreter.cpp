@@ -640,6 +640,10 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                 error_and_exit("Cannot modify constant '" + symbol.name + "'");
             }
 
+            // In case we need to feed this back to the onChange functions
+
+            node_ptr old_value = std::make_shared<Node>(*symbol.value);
+
             *symbol.value = *right;
             
             // Call onChange functions
@@ -648,6 +652,9 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                 node_ptr function_call = new_node(NodeType::FUNC_CALL);
                 function_call->FuncCall.name = function->Function.name;
                 function_call->FuncCall.args = std::vector<node_ptr>();
+                if (function->Function.params.size() == 1) {
+                    function_call->FuncCall.args.push_back(old_value);
+                }
                 eval_func_call(function_call, function);
             }
 

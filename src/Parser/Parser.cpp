@@ -369,7 +369,7 @@ void Parser::parse_var(std::string end) {
                     node_ptr var_decl = new_node();
                     var_decl->type = NodeType::VARIABLE_DECLARATION;
                     var_decl->VariableDeclaration.name = element->ID.value;
-                    var_decl->VariableDeclaration.value = next->Operator.right;
+                    var_decl->VariableDeclaration.value = std::make_shared<Node>(*next->Operator.right);
                     current_node->VariableDeclarationMultiple.variable_declarations.push_back(var_decl);
                 }
                 erase_next();
@@ -402,7 +402,7 @@ void Parser::parse_const(std::string end) {
                     node_ptr const_decl = new_node();
                     const_decl->type = NodeType::CONSTANT_DECLARATION;
                     const_decl->ConstantDeclaration.name = element->ID.value;
-                    const_decl->ConstantDeclaration.value = next->Operator.right;
+                    const_decl->ConstantDeclaration.value = std::make_shared<Node>(*next->Operator.right);
                     current_node->ConstantDeclarationMultiple.constant_declarations.push_back(const_decl);
                 }
                 erase_next();
