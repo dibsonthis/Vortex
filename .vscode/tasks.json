@@ -7,7 +7,7 @@
       "label": "C/C++: g++.exe build and debug active file",
       "args": [
         "-g",
-        "-std=c++17",
+        "-std=c++20",
         "${fileDirname}\\src\\Node\\Node.cpp",
         "${fileDirname}\\src\\Lexer\\Lexer.cpp",
         "${fileDirname}\\src\\Parser\\Parser.cpp",
@@ -36,7 +36,7 @@
       "label": "C/C++: g++.exe build interpreter",
       "args": [
         "-g",
-        "-std=c++17",
+        "-std=c++20",
         "${fileDirname}\\src\\Node\\Node.cpp",
         "${fileDirname}\\src\\Lexer\\Lexer.cpp",
         "${fileDirname}\\src\\Parser\\Parser.cpp",
@@ -66,7 +66,7 @@
       "command": "/usr/bin/clang++",
       "args": [
         "-g",
-        "-std=c++17",
+        "-std=c++20",
         "-stdlib=libc++",
         "-framework \"CoreFoundation\"",
         "-framework \"Carbon\"",
@@ -97,7 +97,7 @@
       "command": "/usr/bin/clang++",
       "args": [
         "-O3",
-        "-std=c++17",
+        "-std=c++20",
         "-stdlib=libc++",
         "${fileDirname}/src/Node/Node.cpp",
         "${fileDirname}/src/Lexer/Lexer.cpp",

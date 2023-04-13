@@ -3,6 +3,7 @@
 #define sym_t_ptr std::shared_ptr<SymbolTable>
 
 #include <cmath>
+#include <unordered_map>
 #include "../Node/Node.hpp"
 #include "../utils/utils.hpp"
 struct Symbol {
@@ -14,7 +15,7 @@ struct Symbol {
 };
 
 struct SymbolTable {
-    std::vector<Symbol> symbols;
+    std::unordered_map<std::string, Symbol> symbols;
     sym_t_ptr parent = nullptr;
     sym_t_ptr child = nullptr;
 };
@@ -54,6 +55,8 @@ public:
     node_ptr eval_if_statement(node_ptr node);
     node_ptr eval_if_block(node_ptr node);
     node_ptr eval_return(node_ptr node);
+    node_ptr eval_for_loop(node_ptr node);
+    node_ptr eval_while_loop(node_ptr node);
     // Operations
     node_ptr eval_pos_neg(node_ptr node);
     node_ptr eval_add(node_ptr node);
@@ -69,10 +72,12 @@ public:
     node_ptr eval_gt(node_ptr node);
     node_ptr eval_and(node_ptr node);
     node_ptr eval_or(node_ptr node);
+    node_ptr eval_eq(node_ptr node);
 
     Symbol new_symbol(std::string name, node_ptr value, bool is_const = false, node_ptr type = nullptr);
     Symbol get_symbol(std::string name, sym_t_ptr symbol_table);
     void add_symbol(Symbol symbol, sym_t_ptr symbol_table);
+    void delete_symbol(std::string name, sym_t_ptr symbol_table);
 
     void erase_prev();
     void erase_next();

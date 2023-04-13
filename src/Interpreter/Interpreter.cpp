@@ -100,6 +100,16 @@ node_ptr Interpreter::eval_list(node_ptr node) {
 node_ptr Interpreter::eval_object(node_ptr node) {
     node_ptr object = new_node();
     object->type = NodeType::OBJECT;
+    if (node->Object.elements[0]->type != NodeType::COMMA_LIST) {
+        node_ptr prop = node->Object.elements[0];
+        if (prop->Operator.value != ":") {
+            error_and_exit("Object must contain properties separated with ':'");
+        }
+        if (prop->Operator.left->type != NodeType::ID) {
+            error_and_exit("Propertiy names must be identifiers");
+        }
+        object->Object.properties[prop->Operator.left->ID.value] = eval_node(prop->Operator.right);
+    }
     for (node_ptr prop : node->Object.elements[0]->List.elements) {
         if (prop->Operator.value != ":") {
             error_and_exit("Object must contain properties separated with ':'");
@@ -243,6 +253,29 @@ node_ptr Interpreter::eval_return(node_ptr node) {
     ret->type = NodeType::RETURN;
     ret->Return.value = eval_node(node->Return.value);
     return ret;
+}
+
+node_ptr Interpreter::eval_for_loop(node_ptr node) {
+    
+}
+
+node_ptr Interpreter::eval_while_loop(node_ptr node) {
+    node_ptr conditional = eval_node(node->WhileLoop.condition);
+    if (conditional->type != NodeType::BOOLEAN) {
+        error_and_exit("While loop conditional must evaluate to a boolean");
+    }
+
+    while (conditional->Boolean.value) {
+        for (node_ptr expr : node->WhileLoop.body->Object.elements) {
+            node_ptr evaluated_expr = eval_node(expr);
+            if (evaluated_expr->type == NodeType::RETURN) {
+                return evaluated_expr->Return.value;
+            }
+        }
+        conditional = eval_node(node->WhileLoop.condition);
+    }
+
+    return new_node(NodeType::NONE);
 }
 
 // Operations
@@ -448,6 +481,34 @@ node_ptr Interpreter::eval_or(node_ptr node) {
     error_and_exit("Cannot perform operation '||' on types: " + node_repr(left) + ", " + node_repr(right));
 }
 
+node_ptr Interpreter::eval_eq(node_ptr node) {
+    node_ptr right = eval_node(node->Operator.right);
+    node_ptr left = node->Operator.left;
+
+    if (left->Operator.value == ".") {
+        node_ptr object = left->Operator.left;
+        if (object->type == NodeType::ID) {
+            Symbol symbol = get_symbol(object->ID.value, current_symbol_table);
+            if (symbol.is_const) {
+                error_and_exit("Cannot modify constant object '" + symbol.name + "'");
+            }
+        }
+        object = eval_node(left->Operator.left);
+        node_ptr prop = left->Operator.right;
+
+        if (object->type != NodeType::OBJECT) {
+            error_and_exit("Left hand side of '.' must be an object");
+        }
+
+        if (prop->type != NodeType::ID) {
+            error_and_exit("Right hand side of '.' must be an identifier");
+        }
+
+        object->Object.properties[prop->ID.value] = right;
+        return object;
+    }
+}
+
 node_ptr Interpreter::eval_node(node_ptr node) {
     if (node->type == NodeType::NUMBER 
     || node->type == NodeType::STRING 
@@ -458,7 +519,7 @@ node_ptr Interpreter::eval_node(node_ptr node) {
         return eval_list(node);
     }
     if (node->type == NodeType::OBJECT) {
-        if (node->Object.elements.size() == 1 && node->Object.elements[0]->type == NodeType::COMMA_LIST) {
+        if (node->Object.elements.size() == 1 && node->Object.elements[0]->type == NodeType::COMMA_LIST || node->Object.elements[0]->Operator.value == ":") {
             return eval_object(node);
         }
     }
@@ -539,6 +600,9 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     if (node->Operator.value == "||") {
         return eval_or(node);
     }
+    if (node->Operator.value == "=") {
+        return eval_eq(node);
+    }
 
     return node;
 }
@@ -563,20 +627,19 @@ Symbol Interpreter::new_symbol(std::string name, node_ptr value, bool is_const, 
 }
 
 Symbol Interpreter::get_symbol(std::string name, std::shared_ptr<SymbolTable> symbol_table) {
-    // TODO
-    // Temp solution, will change to better approach
-    // Or change symbol table to be a map
-    for (auto& symbol : symbol_table->symbols) {
-        if (symbol.name == name) {
-            return symbol;
-        }
+    if (symbol_table->symbols.contains(name)) {
+        return symbol_table->symbols[name];
     }
 
     return new_symbol("_undefined_", nullptr);
 }
 
 void Interpreter::add_symbol(Symbol symbol, std::shared_ptr<SymbolTable> symbol_table) {
-    symbol_table->symbols.push_back(symbol);
+    symbol_table->symbols[symbol.name] = symbol;
+}
+
+void Interpreter::delete_symbol(std::string name, std::shared_ptr<SymbolTable> symbol_table) {
+    symbol_table->symbols.erase(name);
 }
 
 void Interpreter::erase_next() {

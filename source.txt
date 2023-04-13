@@ -24,14 +24,12 @@
 // 	radius += e
 // }
 
-const someFunc = (x) => {
-	if (x > 10) {
-		100
-	} else if (x < 10) {
-		200
-	} else {
-		300
-	}
+// radius::onChange = () => {
+// 	area = PI * radius ^ 2
+// }
+
+const obj = {
+	name: "John"
 }
 
-const x = someFunc(10)
+obj.sex = 45
