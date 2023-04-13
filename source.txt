@@ -24,11 +24,10 @@
 // 	radius += e
 // }
 
-// radius::onChange = () => {
-// 	area = PI * radius ^ 2
-// }
+var length, area = 0
 
-var radius = 0
-while (radius < 100) {
-	radius = radius + 10
+length::onChange = () => {
+	area = length ^ 2
 }
+
+length = 10

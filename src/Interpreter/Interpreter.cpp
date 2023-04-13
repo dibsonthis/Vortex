@@ -122,11 +122,16 @@ node_ptr Interpreter::eval_object(node_ptr node) {
     return object;
 }
 
-node_ptr Interpreter::eval_func_call(node_ptr node) {
+node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
     node_ptr function = new_node();
     function->type = NodeType::FUNC;
 
-    if (node->FuncCall.caller == nullptr) {
+    if (func != nullptr) {
+        function->Function.name = func->Function.name;
+        function->Function.args = std::vector<node_ptr>(func->Function.args);
+        function->Function.params = std::vector<node_ptr>(func->Function.params);
+        function->Function.body = func->Function.body;
+    } else if (node->FuncCall.caller == nullptr) {
         Symbol function_symbol = get_symbol(node->FuncCall.name, symbol_table);
         if (function_symbol.value == nullptr) {
             error_and_exit("Function '" + node->FuncCall.name + "' is undefined");
@@ -634,11 +639,43 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             if (symbol.is_const) {
                 error_and_exit("Cannot modify constant '" + symbol.name + "'");
             }
+
             *symbol.value = *right;
+            
+            // Call onChange functions
+
+            for (node_ptr function : symbol.onChangeFunctions) {
+                node_ptr function_call = new_node(NodeType::FUNC_CALL);
+                function_call->FuncCall.name = function->Function.name;
+                function_call->FuncCall.args = std::vector<node_ptr>();
+                eval_func_call(function_call, function);
+            }
+
             return right;
         }
 
         error_and_exit("Variable '" + left->ID.value + "' is undefined");
+    }
+
+    if (left->Operator.value == "::") {
+        node_ptr target = left->Operator.left;
+        node_ptr prop = left->Operator.right;
+
+        if (target->type != NodeType::ID && prop->type != NodeType::ID) {
+            error_and_exit("Hook expects two identifiers");
+        }
+
+        Symbol symbol = get_symbol(target->ID.value, current_symbol_table);
+
+        if (prop->ID.value == "onChange") {
+            if (right->type != NodeType::FUNC) {
+                error_and_exit("onChange hook expects a function");
+            }
+            symbol.onChangeFunctions.push_back(right);
+            add_symbol(symbol, current_symbol_table);
+        }
+
+        return new_node(NodeType::NONE);
     }
 }
 

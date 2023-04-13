@@ -51,7 +51,7 @@ public:
     node_ptr eval_var_decl_multiple(node_ptr node);
     node_ptr eval_list(node_ptr node);
     node_ptr eval_object(node_ptr node);
-    node_ptr eval_func_call(node_ptr node);
+    node_ptr eval_func_call(node_ptr node, node_ptr func = nullptr);
     node_ptr eval_if_statement(node_ptr node);
     node_ptr eval_if_block(node_ptr node);
     node_ptr eval_return(node_ptr node);
