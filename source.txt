@@ -24,15 +24,8 @@
 // 	radius += e
 // }
 
-const add = (a, b) => a + b
-const add12 = add(12)
-const res = add12(10)
-const res2 = add12(18)
-
-
-// const x = 12
-// const y = 8
-
-// const add = (a, b) => a + b
-
-// const z = add(x, y)
+if (10 > 5) {
+	const x = 100
+} else {
+	const x = 200
+}

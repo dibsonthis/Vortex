@@ -181,6 +181,41 @@ node_ptr Interpreter::eval_func_call(node_ptr node) {
     return res;
 }
 
+node_ptr Interpreter::eval_if_statement(node_ptr node) {
+    node_ptr conditional = eval_node(node->IfStatement.condition);
+
+    if (conditional->type != NodeType::BOOLEAN) {
+        error_and_exit("If statement conditional must evaluate to a boolean");
+    }
+
+    if (conditional->Boolean.value) {
+        for (node_ptr expr : node->IfStatement.body->Object.elements) {
+            eval_node(expr);
+        }
+    }
+
+    return new_boolean_node(conditional->Boolean.value);
+}
+
+node_ptr Interpreter::eval_if_block(node_ptr node) {
+    for (node_ptr statement : node->IfBlock.statements) {
+        if (statement->type == NodeType::IF_STATEMENT) {
+            bool res = eval_node(statement)->Boolean.value;
+            if (res) {
+                return new_boolean_node(true);;
+            }
+            continue;
+        } else if (statement->type == NodeType::OBJECT) {
+            for (node_ptr expr : statement->Object.elements) {
+                eval_node(expr);
+            }
+            return new_boolean_node(true);
+        }
+    }
+
+    return new_boolean_node(true);
+}
+
 // Operations
 
 node_ptr Interpreter::eval_pos_neg(node_ptr node) {
@@ -425,6 +460,12 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     }
     if (node->type == NodeType::FUNC_CALL) {
         return eval_func_call(node);
+    }
+    if (node->type == NodeType::IF_STATEMENT) {
+        return eval_if_statement(node);
+    }
+    if (node->type == NodeType::IF_BLOCK) {
+        return eval_if_block(node);
     }
     if ((node->Operator.value == "+" || node->Operator.value == "-") 
         && node->Operator.left == nullptr) {
