@@ -83,6 +83,7 @@ struct ParenNode {
 struct FuncCallNode {
 	std::string name;
 	std::vector<node_ptr> args;
+	node_ptr caller;
 };
 
 struct FuncNode {
@@ -137,6 +138,7 @@ struct ForLoopNode {
 	node_ptr index_name;
 	node_ptr value_name;
 	node_ptr body;
+	node_ptr iterator;
 };
 
 struct WhileLoopNode {

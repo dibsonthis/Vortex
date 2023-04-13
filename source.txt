@@ -28,8 +28,7 @@
 // 	area = PI * radius ^ 2
 // }
 
-const obj = {
-	name: "John"
+var radius = 0
+while (radius < 100) {
+	radius = radius + 10
 }
-
-obj.sex = 45

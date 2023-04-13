@@ -468,6 +468,8 @@ void Parser::parse_for_loop(std::string end) {
                 } else if (for_loop_config->Paren.elements[0]->Operator.value == "..") {
                     current_node->ForLoop.start = for_loop_config->Paren.elements[0]->Operator.left;
                     current_node->ForLoop.end = for_loop_config->Paren.elements[0]->Operator.right;
+                } else if (for_loop_config->Paren.elements[0]->type == NodeType::LIST) {
+                    current_node->ForLoop.iterator = for_loop_config->Paren.elements[0];
                 }
             }
 

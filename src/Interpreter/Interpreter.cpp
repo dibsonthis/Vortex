@@ -123,16 +123,28 @@ node_ptr Interpreter::eval_object(node_ptr node) {
 }
 
 node_ptr Interpreter::eval_func_call(node_ptr node) {
-    Symbol function_symbol = get_symbol(node->FuncCall.name, symbol_table);
-    if (function_symbol.value == nullptr) {
-        error_and_exit("Function '" + node->FuncCall.name + "' is undefined");
-    }
     node_ptr function = new_node();
     function->type = NodeType::FUNC;
-    function->Function.name = function_symbol.name;
-    function->Function.args = std::vector<node_ptr>(function_symbol.value->Function.args);
-    function->Function.params = std::vector<node_ptr>(function_symbol.value->Function.params);
-    function->Function.body = function_symbol.value->Function.body;
+
+    if (node->FuncCall.caller == nullptr) {
+        Symbol function_symbol = get_symbol(node->FuncCall.name, symbol_table);
+        if (function_symbol.value == nullptr) {
+            error_and_exit("Function '" + node->FuncCall.name + "' is undefined");
+        }
+        function->Function.name = function_symbol.name;
+        function->Function.args = std::vector<node_ptr>(function_symbol.value->Function.args);
+        function->Function.params = std::vector<node_ptr>(function_symbol.value->Function.params);
+        function->Function.body = function_symbol.value->Function.body;
+    } else {
+        node_ptr method = node->FuncCall.caller->Object.properties[node->FuncCall.name];
+        if (method->type == NodeType::NONE) {
+            error_and_exit("Method '" + node->FuncCall.name + "' does not exist");
+        }
+        function->Function.name = method->Function.name;
+        function->Function.args = std::vector<node_ptr>(method->Function.args);
+        function->Function.params = std::vector<node_ptr>(method->Function.params);
+        function->Function.body = method->Function.body;
+    }
 
     std::vector<node_ptr> args;
     for (node_ptr arg : node->FuncCall.args) {
@@ -142,6 +154,9 @@ node_ptr Interpreter::eval_func_call(node_ptr node) {
     auto function_symbol_table = current_symbol_table->child;
     function_symbol_table->parent = current_symbol_table;
     function_symbol_table->symbols = current_symbol_table->symbols;
+    if (node->FuncCall.caller != nullptr) {
+        function_symbol_table->symbols["this"] = new_symbol("this", node->FuncCall.caller);
+    }
 
     current_symbol_table = function_symbol_table;
 
@@ -256,7 +271,86 @@ node_ptr Interpreter::eval_return(node_ptr node) {
 }
 
 node_ptr Interpreter::eval_for_loop(node_ptr node) {
+
+    if (node->ForLoop.iterator != nullptr) {
+        node_ptr iterator = eval_node(node->ForLoop.iterator);
+        
+        for (int i = 0; i < iterator->List.elements.size(); i++) {
+            if (node->ForLoop.index_name) {
+                add_symbol(new_symbol(node->ForLoop.index_name->ID.value, new_number_node(i)), current_symbol_table);
+            }
+            if (node->ForLoop.value_name) {
+                add_symbol(new_symbol(node->ForLoop.value_name->ID.value, iterator->List.elements[i]), current_symbol_table);
+            }
+            for (node_ptr expr : node->ForLoop.body->Object.elements) {
+                if (expr->ID.value == "break") {
+                    goto _break;
+                }
+                if (expr->ID.value == "continue") {
+                    goto _continue;
+                }
+                node_ptr evaluated_expr = eval_node(expr);
+                if (evaluated_expr->type == NodeType::RETURN) {
+                    return evaluated_expr;
+                }
+            }
+
+            _continue:
+                continue;
+            _break:
+                break;
+        }
+
+        // Cleanup
+
+        if (node->ForLoop.index_name != nullptr) {
+            delete_symbol(node->ForLoop.index_name->ID.value, current_symbol_table);
+        }
+        if (node->ForLoop.value_name != nullptr) {
+            delete_symbol(node->ForLoop.value_name->ID.value, current_symbol_table);
+        }
+
+        return new_node(NodeType::NONE);
+    }
     
+    for (int i = node->ForLoop.start->Number.value; i < node->ForLoop.end->Number.value; i++) {
+        int index = i-node->ForLoop.start->Number.value;
+        if (node->ForLoop.index_name) {
+            add_symbol(new_symbol(node->ForLoop.index_name->ID.value, new_number_node(index)), current_symbol_table);
+        }
+        if (node->ForLoop.value_name) {
+        add_symbol(new_symbol(
+            node->ForLoop.value_name->ID.value, new_number_node(i)), current_symbol_table);
+        }
+        for (node_ptr expr : node->ForLoop.body->Object.elements) {
+            if (expr->ID.value == "break") {
+                goto _break2;
+            }
+            if (expr->ID.value == "continue") {
+                goto _continue2;
+            }
+            node_ptr evaluated_expr = eval_node(expr);
+            if (evaluated_expr->type == NodeType::RETURN) {
+                return evaluated_expr;
+            }
+        }
+
+        _continue2:
+            continue;
+        _break2:
+            break;
+    }
+
+    // Cleanup
+
+    if (node->ForLoop.index_name != nullptr) {
+        delete_symbol(node->ForLoop.index_name->ID.value, current_symbol_table);
+    }
+    if (node->ForLoop.value_name != nullptr) {
+        delete_symbol(node->ForLoop.value_name->ID.value, current_symbol_table);
+    }
+
+    return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_while_loop(node_ptr node) {
@@ -481,6 +575,31 @@ node_ptr Interpreter::eval_or(node_ptr node) {
     error_and_exit("Cannot perform operation '||' on types: " + node_repr(left) + ", " + node_repr(right));
 }
 
+node_ptr Interpreter::eval_dot(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = node->Operator.right;
+
+    if (left->type != NodeType::OBJECT) {
+        error_and_exit("Left hand side of '.' must be an object");
+    }
+
+    if (right->type != NodeType::ID && right->type != NodeType::FUNC_CALL) {
+        error_and_exit("Right hand side of '.' must be an identifier or function call");
+    }
+
+    if (right->type == NodeType::ID) {
+        if (left->Object.properties.contains(right->ID.value)) {
+            return left->Object.properties[right->ID.value];
+        }
+        return new_node(NodeType::NONE);
+    }
+
+    if (right->type == NodeType::FUNC_CALL) {
+        right->FuncCall.caller = left;
+        return eval_func_call(right);
+    }
+}
+
 node_ptr Interpreter::eval_eq(node_ptr node) {
     node_ptr right = eval_node(node->Operator.right);
     node_ptr left = node->Operator.left;
@@ -506,6 +625,20 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
 
         object->Object.properties[prop->ID.value] = right;
         return object;
+    }
+
+    if (left->type == NodeType::ID) {
+        Symbol symbol = get_symbol(left->ID.value, current_symbol_table);
+        if (symbol.value != nullptr) {
+            // Re-assigning, check if const
+            if (symbol.is_const) {
+                error_and_exit("Cannot modify constant '" + symbol.name + "'");
+            }
+            *symbol.value = *right;
+            return right;
+        }
+
+        error_and_exit("Variable '" + left->ID.value + "' is undefined");
     }
 }
 
@@ -557,6 +690,12 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     if (node->type == NodeType::IF_BLOCK) {
         return eval_if_block(node);
     }
+    if (node->type == NodeType::WHILE_LOOP) {
+        return eval_while_loop(node);
+    }
+    if (node->type == NodeType::FOR_LOOP) {
+        return eval_for_loop(node);
+    }
     if ((node->Operator.value == "+" || node->Operator.value == "-") 
         && node->Operator.left == nullptr) {
         return eval_pos_neg(node);
@@ -600,6 +739,9 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     if (node->Operator.value == "||") {
         return eval_or(node);
     }
+    if (node->Operator.value == ".") {
+        return eval_dot(node);
+    }
     if (node->Operator.value == "=") {
         return eval_eq(node);
     }
@@ -627,8 +769,16 @@ Symbol Interpreter::new_symbol(std::string name, node_ptr value, bool is_const, 
 }
 
 Symbol Interpreter::get_symbol(std::string name, std::shared_ptr<SymbolTable> symbol_table) {
-    if (symbol_table->symbols.contains(name)) {
-        return symbol_table->symbols[name];
+    sym_t_ptr scope = symbol_table;
+
+    if (scope->symbols.contains(name)) {
+        return scope->symbols[name];
+    }
+    while (scope->parent != nullptr) {
+        scope = scope->parent;
+        if (scope->symbols.contains(name)) {
+            return scope->symbols[name];
+        }
     }
 
     return new_symbol("_undefined_", nullptr);
