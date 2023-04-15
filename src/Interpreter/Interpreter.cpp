@@ -28,7 +28,8 @@ void Interpreter::eval_const_functions() {
             if (existing_symbol != nullptr) {
                 error_and_exit("Function '" + current_node->ConstantDeclaration.name + "' is already defined");
             }
-            Symbol symbol = new_symbol(current_node->ConstantDeclaration.name, current_node->ConstantDeclaration.value, true);
+            current_node->ConstantDeclaration.value->Meta.is_const = true;
+            Symbol symbol = new_symbol(current_node->ConstantDeclaration.name, current_node->ConstantDeclaration.value);
             add_symbol(symbol, current_symbol_table);
             erase_curr();
             continue;
@@ -43,7 +44,9 @@ node_ptr Interpreter::eval_const_decl(node_ptr node) {
     if (existing_symbol != nullptr) {
         error_and_exit("Variable '" + node->ConstantDeclaration.name + "' is already defined");
     }
-    Symbol symbol = new_symbol(node->ConstantDeclaration.name, eval_node(node->ConstantDeclaration.value), true);
+    node_ptr value = eval_node(node->ConstantDeclaration.value);
+    value->Meta.is_const = true;
+    Symbol symbol = new_symbol(node->ConstantDeclaration.name, value);
     add_symbol(symbol, current_symbol_table);
     return symbol.value;
 }
@@ -54,7 +57,9 @@ node_ptr Interpreter::eval_const_decl_multiple(node_ptr node) {
         if (existing_symbol != nullptr) {
             error_and_exit("Variable '" + decl->ConstantDeclaration.name + "' is already defined");
         }
-        Symbol symbol = new_symbol(decl->ConstantDeclaration.name, eval_node(decl->ConstantDeclaration.value), true);
+        node_ptr value = eval_node(decl->ConstantDeclaration.value);
+        value->Meta.is_const = true;
+        Symbol symbol = new_symbol(node->ConstantDeclaration.name, value);
         add_symbol(symbol, current_symbol_table);
     }
     return new_boolean_node(true);
@@ -984,14 +989,10 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
     node_ptr right = eval_node(node->Operator.right);
 
     if (left->Operator.value == ".") {
-        node_ptr object = left->Operator.left;
-        if (object->type == NodeType::ID) {
-            Symbol symbol = get_symbol(object->ID.value, current_symbol_table);
-            if (symbol.is_const) {
-                error_and_exit("Cannot modify constant object '" + symbol.name + "'");
-            }
+        node_ptr object = eval_node(left->Operator.left);
+        if (object->Meta.is_const) {
+            error_and_exit("Cannot modify constant object");
         }
-        object = eval_node(left->Operator.left);
         node_ptr prop = left->Operator.right;
 
         if (object->type != NodeType::OBJECT) {
@@ -1013,6 +1014,10 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
     }
 
     if (left->type == NodeType::ACCESSOR) {
+        node_ptr container = eval_node(left->Accessor.container);
+        if (container->Meta.is_const) {
+            error_and_exit("Cannot modify constant");
+        }
         left = eval_node(left);
         *left = *right;
         return right;
@@ -1022,7 +1027,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
         Symbol symbol = get_symbol(left->ID.value, current_symbol_table);
         if (symbol.value != nullptr) {
             // Re-assigning, check if const
-            if (symbol.is_const) {
+            if (symbol.value->Meta.is_const) {
                 error_and_exit("Cannot modify constant '" + symbol.name + "'");
             }
 
@@ -1289,11 +1294,10 @@ void Interpreter::evaluate() {
     }
 }
 
-Symbol Interpreter::new_symbol(std::string name, node_ptr value, bool is_const, node_ptr type) {
+Symbol Interpreter::new_symbol(std::string name, node_ptr value, node_ptr type) {
     Symbol symbol;
     symbol.name = name;
     symbol.value = value;
-    symbol.is_const = is_const;
     symbol.type = type;
     return symbol;
 }

@@ -10,7 +10,6 @@ struct Symbol {
     std::string name;
     node_ptr value;
     node_ptr type;
-    bool is_const;
     std::vector<node_ptr> onChangeFunctions = std::vector<node_ptr>();
 };
 
@@ -79,7 +78,7 @@ public:
     // Builtin functions
     void builtin_print(node_ptr node);
 
-    Symbol new_symbol(std::string name, node_ptr value, bool is_const = false, node_ptr type = nullptr);
+    Symbol new_symbol(std::string name, node_ptr value, node_ptr type = nullptr);
     Symbol get_symbol(std::string name, sym_t_ptr symbol_table);
     void add_symbol(Symbol symbol, sym_t_ptr symbol_table);
     void delete_symbol(std::string name, sym_t_ptr symbol_table);

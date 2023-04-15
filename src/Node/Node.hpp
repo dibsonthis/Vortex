@@ -164,6 +164,10 @@ struct ReturnNode {
 	node_ptr value;
 };
 
+struct MetaInformation {
+	bool is_const;
+};
+
 struct Node {
 	Node() = default;
     Node(NodeType type) : type(type) {}
@@ -199,6 +203,7 @@ struct Node {
 	IfStatementNode IfStatement;
 	IfBlockNode IfBlock;
 	ReturnNode Return;
+	MetaInformation Meta;
 };
 
 std::string node_repr(node_ptr);
