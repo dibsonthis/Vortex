@@ -781,19 +781,190 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
                 }
                 node_ptr value = eval_node(right->FuncCall.args[0]);
 
-                for (int i = 0; i < left->List.elements.size(); i++) {
+                for (int _index = 0; _index < left->List.elements.size(); _index++) {
                     node_ptr eq_eq = new_node(NodeType::OP);
                     eq_eq->Operator.value = "==";
-                    eq_eq->Operator.left = left->List.elements[i];
+                    eq_eq->Operator.left = left->List.elements[_index];
                     eq_eq->Operator.right = value;
                     eq_eq = eval_eq_eq(eq_eq);
                     if (eq_eq->Boolean.value) {
-                        left->List.elements.erase(left->List.elements.begin() + i);
-                        i--;
+                        left->List.elements.erase(left->List.elements.begin() + _index);
+                        _index--;
                     }
                 }
 
                 return left;
+            }
+            if (prop == "remove_if") {
+                if (right->FuncCall.args.size() != 1) {
+                    error_and_exit("List function '" + prop + "' expects 1 argument");
+                }
+                
+                node_ptr function = right->FuncCall.args[0];
+
+                if (function->type != NodeType::FUNC) {
+                    error_and_exit("List function '" + prop + "' expects 1 function argument");
+                }
+
+                for (int _index = 0; _index < left->List.elements.size(); _index++) {
+                    node_ptr value = left->List.elements[_index];
+                    node_ptr func_call = new_node(NodeType::FUNC_CALL);
+                    if (function->Function.params.size() == 0) {
+                        error_and_exit("Function needs to have at least one parameter");
+                    }
+                    if (function->Function.params.size() > 0) {
+                        func_call->FuncCall.args.push_back(value);
+                    }
+                    if (function->Function.params.size() > 1) {
+                        func_call->FuncCall.args.push_back(new_number_node(_index));
+                    }
+                    if (function->Function.params.size() > 2) {
+                        func_call->FuncCall.args.push_back(left);
+                    }
+                    node_ptr res = eval_func_call(func_call, function);
+                    if (res->type != NodeType::BOOLEAN) {
+                        error_and_exit("Function must return a boolean value");
+                    }
+                    if (res->Boolean.value) {
+                        left->List.elements.erase(left->List.elements.begin() + _index);
+                        _index--;
+                    }
+                }
+
+                return left;
+            }
+
+            // Functional Operations
+
+            if (prop == "map") {
+                if (right->FuncCall.args.size() != 1) {
+                    error_and_exit("List function '" + prop + "' expects 1 argument");
+                }
+                
+                node_ptr function = right->FuncCall.args[0];
+
+                if (function->type != NodeType::FUNC) {
+                    error_and_exit("List function '" + prop + "' expects 1 function argument");
+                }
+
+                node_ptr new_list = new_node(NodeType::LIST);
+
+                for (int _index = 0; _index < left->List.elements.size(); _index++) {
+                    node_ptr value = left->List.elements[_index];
+                    node_ptr func_call = new_node(NodeType::FUNC_CALL);
+                    if (function->Function.params.size() == 0) {
+                        error_and_exit("Function needs to have at least one parameter");
+                    }
+                    if (function->Function.params.size() > 0) {
+                        func_call->FuncCall.args.push_back(value);
+                    }
+                    if (function->Function.params.size() > 1) {
+                        func_call->FuncCall.args.push_back(new_number_node(_index));
+                    }
+                    if (function->Function.params.size() > 2) {
+                        func_call->FuncCall.args.push_back(left);
+                    }
+                    node_ptr res = eval_func_call(func_call, function);
+
+                    new_list->List.elements.push_back(res);
+                }
+
+                return new_list;
+            }
+
+            if (prop == "filter") {
+                if (right->FuncCall.args.size() != 1) {
+                    error_and_exit("List function '" + prop + "' expects 1 argument");
+                }
+                
+                node_ptr function = right->FuncCall.args[0];
+
+                if (function->type != NodeType::FUNC) {
+                    error_and_exit("List function '" + prop + "' expects 1 function argument");
+                }
+
+                node_ptr new_list = new_node(NodeType::LIST);
+
+                for (int _index = 0; _index < left->List.elements.size(); _index++) {
+                    node_ptr value = left->List.elements[_index];
+                    node_ptr func_call = new_node(NodeType::FUNC_CALL);
+                    if (function->Function.params.size() == 0) {
+                        error_and_exit("Function needs to have at least one parameter");
+                    }
+                    if (function->Function.params.size() > 0) {
+                        func_call->FuncCall.args.push_back(value);
+                    }
+                    if (function->Function.params.size() > 1) {
+                        func_call->FuncCall.args.push_back(new_number_node(_index));
+                    }
+                    if (function->Function.params.size() > 2) {
+                        func_call->FuncCall.args.push_back(left);
+                    }
+                    node_ptr res = eval_func_call(func_call, function);
+
+                    if (res->type != NodeType::BOOLEAN) {
+                        error_and_exit("Function must return a boolean value");
+                    }
+
+                    if (res->Boolean.value) {
+                        new_list->List.elements.push_back(value);
+                    }
+                }
+
+                return new_list;
+            }
+
+            if (prop == "reduce") {
+                if (right->FuncCall.args.size() != 1) {
+                    error_and_exit("List function '" + prop + "' expects 1 argument");
+                }
+                
+                node_ptr function = right->FuncCall.args[0];
+
+                if (function->type != NodeType::FUNC) {
+                    error_and_exit("List function '" + prop + "' expects 1 function argument");
+                }
+
+                node_ptr new_list = new_node(NodeType::LIST);
+
+                if (left->List.elements.size() < 2) {
+                    return left;
+                }
+
+                for (int _index = 0; _index < left->List.elements.size()-1; _index++) {
+                    node_ptr func_call = new_node(NodeType::FUNC_CALL);
+                    if (function->Function.params.size() < 2) {
+                        error_and_exit("Function needs to have at least two parameters");
+                    }
+
+                    node_ptr value = left->List.elements[_index];
+                    node_ptr next_value = left->List.elements[_index + 1];
+
+                    if (new_list->List.elements.size() > 0) {
+                        value = new_list->List.elements[0];
+                    }
+
+                    func_call->FuncCall.args.push_back(value);
+                    func_call->FuncCall.args.push_back(next_value);
+
+                    if (function->Function.params.size() > 2) {
+                        func_call->FuncCall.args.push_back(new_number_node(_index));
+                    }
+                    if (function->Function.params.size() > 3) {
+                        func_call->FuncCall.args.push_back(left);
+                    }
+
+                    node_ptr res = eval_func_call(func_call, function);
+                    value = res;
+
+                    if (new_list->List.elements.size() == 0) {
+                        new_list->List.elements.push_back(res);
+                    } else {
+                        new_list->List.elements[0] = res;
+                    }
+                }
+
+                return new_list;
             }
         }
 
