@@ -724,6 +724,9 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
             std::string prop = right->FuncCall.name;
 
             if (prop == "append") {
+                if (left->Meta.is_const) {
+                    error_and_exit("Cannot modify constant list");
+                }
                 if (right->FuncCall.args.size() != 1) {
                     error_and_exit("List function '" + prop + "' expects 1 argument");
                 }
@@ -732,6 +735,9 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
                 return left;
             }
             if (prop == "prepend") {
+                if (left->Meta.is_const) {
+                    error_and_exit("Cannot modify constant list");
+                }
                 if (right->FuncCall.args.size() != 1) {
                     error_and_exit("List function '" + prop + "' expects 1 argument");
                 }
@@ -740,6 +746,9 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
                 return left;
             }
             if (prop == "insert") {
+                if (left->Meta.is_const) {
+                    error_and_exit("Cannot modify constant list");
+                }
                 if (right->FuncCall.args.size() != 2) {
                     error_and_exit("List function '" + prop + "' expects 2 arguments");
                 }
@@ -762,6 +771,9 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
                 return left;
             }
             if (prop == "remove_at") {
+                if (left->Meta.is_const) {
+                    error_and_exit("Cannot modify constant list");
+                }
                 if (left->List.elements.size() == 0) {
                     return left;
                 }
@@ -788,6 +800,9 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
                 return left;
             }
             if (prop == "remove") {
+                if (left->Meta.is_const) {
+                    error_and_exit("Cannot modify constant list");
+                }
                 if (right->FuncCall.args.size() != 1) {
                     error_and_exit("List function '" + prop + "' expects 1 argument");
                 }
@@ -808,6 +823,9 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
                 return left;
             }
             if (prop == "remove_if") {
+                if (left->Meta.is_const) {
+                    error_and_exit("Cannot modify constant list");
+                }
                 if (right->FuncCall.args.size() != 1) {
                     error_and_exit("List function '" + prop + "' expects 1 argument");
                 }

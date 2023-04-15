@@ -1,8 +1,7 @@
 // import [PI, e] : "../imports/math";
 
-//const list = [1, 2, 3, 4, 5]
+const list = [1, 2, 3, 4, 5]
 // const newList = list + 200
 // println(list, newList)
-
-const blah = 9
-blah = 19
+// list.append(10)
+list = 10
