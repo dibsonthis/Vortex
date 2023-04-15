@@ -3,16 +3,11 @@
 var xPos = 0
 var yPos = 10
 
-[xPos, yPos]::onChange = () => {
-	if (xPos < yPos) {
-		print("xPos < yPos\n")
-	} else if (xPos == yPos) {
-		print("xPos == yPos\n")
-	} else {
-		print("xPos > yPos\n")
-	}
+[xPos, yPos]::onChange = (curr, old, name, info) => {
+	println(name + " changed from " + string(old) + " to " + string(curr) + " on line " + string(info.line) + ", column " + string(info.column) + " in file '" + info.filename + "'")
 }
 
-for (1..15) {
-	xPos = xPos + 1
+for (1..15, i, v) {
+	xPos = xPos + v
+	yPos = yPos - v
 }

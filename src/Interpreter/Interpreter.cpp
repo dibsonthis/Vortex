@@ -137,6 +137,18 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         }
         return new_node(NodeType::NONE);
     }
+    if (node->FuncCall.name == "println") {
+        if (node->FuncCall.args.size() == 1) {
+            builtin_print(eval_node(node->FuncCall.args[0]));
+            std::cout << "\n";
+        } else {
+            for (node_ptr arg : node->FuncCall.args) {
+                builtin_print(eval_node(arg));
+                std::cout << '\n';
+            }
+        }
+        return new_node(NodeType::NONE);
+    }
     if (node->FuncCall.name == "string") {
         if (node->FuncCall.args.size() != 1) {
             error_and_exit("Function " + node->FuncCall.name + " expects 1 argument");
@@ -670,8 +682,21 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                 node_ptr function_call = new_node(NodeType::FUNC_CALL);
                 function_call->FuncCall.name = function->Function.name;
                 function_call->FuncCall.args = std::vector<node_ptr>();
-                if (function->Function.params.size() == 1) {
+                if (function->Function.params.size() > 0) {
+                    function_call->FuncCall.args.push_back(symbol.value);
+                }
+                if (function->Function.params.size() > 1) {
                     function_call->FuncCall.args.push_back(old_value);
+                }
+                if (function->Function.params.size() > 2) {
+                    function_call->FuncCall.args.push_back(new_string_node(symbol.name));
+                }
+                if (function->Function.params.size() > 3) {
+                    node_ptr file_info = new_node(NodeType::OBJECT);
+                    file_info->Object.properties["filename"] = new_string_node(file_name);
+                    file_info->Object.properties["line"] = new_number_node(line);
+                    file_info->Object.properties["column"] = new_number_node(column);
+                    function_call->FuncCall.args.push_back(file_info);
                 }
                 eval_func_call(function_call, function);
             }
@@ -777,6 +802,9 @@ void Interpreter::builtin_print(node_ptr node) {
 }
 
 node_ptr Interpreter::eval_node(node_ptr node) {
+    line = node->line;
+    column = node->column;
+
     if (node->type == NodeType::NUMBER 
     || node->type == NodeType::STRING 
     || node->type == NodeType::BOOLEAN) {
@@ -786,7 +814,7 @@ node_ptr Interpreter::eval_node(node_ptr node) {
         return eval_list(node);
     }
     if (node->type == NodeType::OBJECT) {
-        if (node->Object.elements.size() == 1 && node->Object.elements[0]->type == NodeType::COMMA_LIST || node->Object.elements[0]->Operator.value == ":") {
+        if (node->Object.elements.size() == 1 && (node->Object.elements[0]->type == NodeType::COMMA_LIST || node->Object.elements[0]->Operator.value == ":")) {
             return eval_object(node);
         }
     }
