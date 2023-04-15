@@ -1,13 +1,28 @@
 // import [PI, e] : "../imports/math";
 
-var xPos = 0
-var yPos = 10
+// var xPos = 0
+// var yPos = 10
 
-[xPos, yPos]::onChange = (curr, old, name, info) => {
-	println(name + " changed from " + string(old) + " to " + string(curr) + " on line " + string(info.line) + ", column " + string(info.column) + " in file '" + info.filename + "'")
-}
+// const printDebugInfo = (curr, old, name, line, column, filename) => {
+// 	println(name + " changed from " + string(old) + " to " + string(curr) + " on line " + string(line) + ", column " + string(column) + " in file '" + filename + "'")
+// }
 
-for (1..15, i, v) {
-	xPos = xPos + v
-	yPos = yPos - v
+// [xPos, yPos]::onChange = (curr, old, name, info) => 
+// 	printDebugInfo(curr, old, name, info.line, info.column, info.filename)
+
+// for (1..15, i, v) {
+// 	xPos = xPos + v
+// 	yPos = yPos - v
+// }
+
+const x = {
+	name: "John",
+	age: 34,
+	address: {
+		street: "123 Fake St.",
+		state: "VIC",
+		adjacent: ["123 Real St.", "345 Fake St."]
+	}
 }
+const g = x["address"]["adjacent"][1]
+println(g)

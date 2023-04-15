@@ -407,6 +407,41 @@ node_ptr Interpreter::eval_while_loop(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
+node_ptr Interpreter::eval_accessor(node_ptr node) {
+    node_ptr container = eval_node(node->Accessor.container);
+    node_ptr accessor = eval_node(node->Accessor.accessor);
+
+    if (accessor->List.elements.size() != 1) {
+        error_and_exit("Malformed accessor");
+    }
+
+    if (container->type == NodeType::LIST) {
+        node_ptr index_node = accessor->List.elements[0];
+        if (index_node->type != NodeType::NUMBER) {
+            error_and_exit("List accessor expects a number");
+        }
+        int index = index_node->Number.value;
+        if (index >= container->List.elements.size() || index < 0) {
+            return new_node(NodeType::NONE);
+        }
+        return container->List.elements[index];
+    }
+
+    if (container->type == NodeType::OBJECT) {
+        node_ptr prop_node = accessor->List.elements[0];
+        if (prop_node->type != NodeType::STRING) {
+            error_and_exit("Object accessor expects a string");
+        }
+        std::string prop = prop_node->String.value;
+        if (container->Object.properties.contains(prop)) {
+            return container->Object.properties[prop];
+        }
+        return new_node(NodeType::NONE);
+    }
+
+    error_and_exit("Value of type '" + node_repr(container) + "' is not accessable");
+}
+
 // Operations
 
 node_ptr Interpreter::eval_pos_neg(node_ptr node) {
@@ -791,6 +826,9 @@ std::string Interpreter::printable(node_ptr node) {
             res += "}";
             return res;
         }
+        case NodeType::NONE: {
+            return "None";
+        }
         default: {
             return "<not implemented>";
         }
@@ -857,6 +895,9 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     }
     if (node->type == NodeType::FOR_LOOP) {
         return eval_for_loop(node);
+    }
+    if (node->type == NodeType::ACCESSOR) {
+        return eval_accessor(node);
     }
     if ((node->Operator.value == "+" || node->Operator.value == "-") 
         && node->Operator.left == nullptr) {

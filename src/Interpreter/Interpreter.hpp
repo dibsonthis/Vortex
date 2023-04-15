@@ -57,6 +57,7 @@ public:
     node_ptr eval_return(node_ptr node);
     node_ptr eval_for_loop(node_ptr node);
     node_ptr eval_while_loop(node_ptr node);
+    node_ptr eval_accessor(node_ptr node);
     // Operations
     node_ptr eval_pos_neg(node_ptr node);
     node_ptr eval_add(node_ptr node);
