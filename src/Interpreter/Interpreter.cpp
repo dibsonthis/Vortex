@@ -650,40 +650,145 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = node->Operator.right;
 
-    if (left->type != NodeType::OBJECT) {
-        error_and_exit("Left hand side of '.' must be an object");
-    }
+    if (left->type == NodeType::OBJECT) {
 
-    if (right->type != NodeType::ID && right->type != NodeType::FUNC_CALL && right->type != NodeType::ACCESSOR) {
+        if (right->type == NodeType::ID) {
+            if (left->Object.properties.contains(right->ID.value)) {
+                return left->Object.properties[right->ID.value];
+            }
+            return new_node(NodeType::NONE);
+        }
+
+        if (right->type == NodeType::FUNC_CALL) {
+            right->FuncCall.caller = left;
+            return eval_func_call(right);
+        }
+
+        if (right->type == NodeType::ACCESSOR) {
+            node_ptr left_side = new_node(NodeType::OP);
+            left_side->Operator.value = ".";
+            left_side->Operator.left = left;
+            if (right->Accessor.container->type != NodeType::ID) {
+                error_and_exit("Malformed '.' operation");
+            }
+            left_side->Operator.right = right->Accessor.container;
+            left_side = eval_dot(left_side);
+
+            node_ptr res = new_node(NodeType::ACCESSOR);
+            res->Accessor.container = left_side;
+            res->Accessor.accessor = right->Accessor.accessor;
+            return eval_accessor(res);
+        }
+
         error_and_exit("Right hand side of '.' must be an identifier, function call or accessor");
     }
 
-    if (right->type == NodeType::ID) {
-        if (left->Object.properties.contains(right->ID.value)) {
-            return left->Object.properties[right->ID.value];
+    if (left->type == NodeType::LIST) {
+        
+        // List Properties
+        if (right->type == NodeType::ID) {
+            std::string prop = right->ID.value;
+
+            if (prop == "length") {
+                return new_number_node(left->List.elements.size());
+            }
+            if (prop == "empty") {
+                return new_boolean_node(left->List.elements.empty());
+            }
+
+            error_and_exit("List does not have property '" + prop + "'");
         }
-        return new_node(NodeType::NONE);
-    }
 
-    if (right->type == NodeType::FUNC_CALL) {
-        right->FuncCall.caller = left;
-        return eval_func_call(right);
-    }
+        if (right->type == NodeType::FUNC_CALL) {
+            std::string prop = right->FuncCall.name;
 
-    if (right->type == NodeType::ACCESSOR) {
-        node_ptr left_side = new_node(NodeType::OP);
-        left_side->Operator.value = ".";
-        left_side->Operator.left = left;
-        if (right->Accessor.container->type != NodeType::ID) {
-            error_and_exit("Malformed '.' operation");
+            if (prop == "append") {
+                if (right->FuncCall.args.size() != 1) {
+                    error_and_exit("List function '" + prop + "' expects 1 argument");
+                }
+                node_ptr arg = right->FuncCall.args[0];
+                left->List.elements.push_back(eval_node(arg));
+                return left;
+            }
+            if (prop == "prepend") {
+                if (right->FuncCall.args.size() != 1) {
+                    error_and_exit("List function '" + prop + "' expects 1 argument");
+                }
+                node_ptr arg = right->FuncCall.args[0];
+                left->List.elements.insert(left->List.elements.begin(), eval_node(arg));
+                return left;
+            }
+            if (prop == "insert") {
+                if (right->FuncCall.args.size() != 2) {
+                    error_and_exit("List function '" + prop + "' expects 2 arguments");
+                }
+                node_ptr value = eval_node(right->FuncCall.args[0]);
+                node_ptr index_node = eval_node(right->FuncCall.args[1]);
+
+                if (index_node->type != NodeType::NUMBER) {
+                    error_and_exit("List function '" + prop + "' expects second argument to be a number");
+                }
+
+                int index = index_node->Number.value;
+
+                if (index < 0) {
+                    index = 0;
+                } else if (index > left->List.elements.size()) {
+                    index = left->List.elements.size();
+                }
+
+                left->List.elements.insert(left->List.elements.begin() + index, value);
+                return left;
+            }
+            if (prop == "remove_at") {
+                if (left->List.elements.size() == 0) {
+                    return left;
+                }
+
+                if (right->FuncCall.args.size() != 1) {
+                    error_and_exit("List function '" + prop + "' expects 1 argument");
+                }
+
+                node_ptr index_node = eval_node(right->FuncCall.args[0]);
+
+                if (index_node->type != NodeType::NUMBER) {
+                    error_and_exit("List function '" + prop + "' expects argument to be a number");
+                }
+
+                int index = index_node->Number.value;
+
+                if (index < 0) {
+                    index = 0;
+                } else if (index > left->List.elements.size()-1) {
+                    index = left->List.elements.size()-1;
+                }
+
+                left->List.elements.erase(left->List.elements.begin() + index);
+                return left;
+            }
+            if (prop == "remove") {
+                if (right->FuncCall.args.size() != 1) {
+                    error_and_exit("List function '" + prop + "' expects 1 argument");
+                }
+                node_ptr value = eval_node(right->FuncCall.args[0]);
+
+                for (int i = 0; i < left->List.elements.size(); i++) {
+                    node_ptr eq_eq = new_node(NodeType::OP);
+                    eq_eq->Operator.value = "==";
+                    eq_eq->Operator.left = left->List.elements[i];
+                    eq_eq->Operator.right = value;
+                    eq_eq = eval_eq_eq(eq_eq);
+                    if (eq_eq->Boolean.value) {
+                        left->List.elements.erase(left->List.elements.begin() + i);
+                        i--;
+                    }
+                }
+
+                return left;
+            }
         }
-        left_side->Operator.right = right->Accessor.container;
-        left_side = eval_dot(left_side);
 
-        node_ptr res = new_node(NodeType::ACCESSOR);
-        res->Accessor.container = left_side;
-        res->Accessor.accessor = right->Accessor.accessor;
-        return eval_accessor(res);
+        error_and_exit("Right hand side of '.' must be an identifier or function call");
     }
 }
 

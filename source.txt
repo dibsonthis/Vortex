@@ -32,14 +32,7 @@
 // index = -30
 // println(curr)
 
-var obj = {
-	name: "John",
-	stuff: {
-		nums: [1, 2, 3]
-	}
-}
-
-for (0..3, i, v) {
-	obj["stuff"].nums[i] = 200 + v
-}
-print(obj)
+const list = [1, 2, 3, 3, 4, 5]
+const x = 3
+list.remove(x)
+println(list)
