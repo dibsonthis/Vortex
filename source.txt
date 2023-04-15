@@ -9,15 +9,17 @@
 // 	print("Name was changed from " + old + " to " + curr)
 // }
 
-var person = {
-	name: "John"
+var lexer = {
+	index: 0,
+	tokens: ["const", "x", "=", "5"],
+	currentNode: this.tokens[this.index]
 }
 
-person.name::onChange = (curr, old) => {
-	println("name changed from " + string(old) + " to " + string(curr))
-}
-person::onChange = (curr, old) => {
-	println("person changed from " + string(old) + " to " + string(curr))
+lexer.index::onChange = (curr) => {
+	lexer.currentNode = lexer.tokens[curr]
 }
 
-person = "Allan"
+println(lexer)
+lexer.index = 3
+println(lexer)
+println(4.5323)

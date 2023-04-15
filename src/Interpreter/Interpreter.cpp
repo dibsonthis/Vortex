@@ -106,6 +106,8 @@ node_ptr Interpreter::eval_list(node_ptr node) {
 node_ptr Interpreter::eval_object(node_ptr node) {
     node_ptr object = new_node();
     object->type = NodeType::OBJECT;
+    // inject current object into scope as "this"
+    add_symbol(new_symbol("this", object), current_symbol_table);
     if (node->Object.elements[0]->type != NodeType::COMMA_LIST) {
         node_ptr prop = node->Object.elements[0];
         if (prop->Operator.value != ":") {
@@ -125,6 +127,8 @@ node_ptr Interpreter::eval_object(node_ptr node) {
         }
         object->Object.properties[prop->Operator.left->ID.value] = eval_node(prop->Operator.right);
     }
+    // remove "this" from scope
+    delete_symbol("this", current_symbol_table);
     return object;
 }
 
@@ -1213,7 +1217,10 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
 std::string Interpreter::printable(node_ptr node) {
     switch (node->type) {
         case NodeType::NUMBER: {
-            return std::to_string(node->Number.value);
+            std::string num_str = std::to_string(node->Number.value);
+            num_str.erase(num_str.find_last_not_of('0') + 1, std::string::npos);
+            num_str.erase(num_str.find_last_not_of('.') + 1, std::string::npos);
+            return num_str;
         }
         case NodeType::BOOLEAN: {
             return node->Boolean.value ? "true" : "false";
