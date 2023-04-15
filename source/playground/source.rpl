@@ -1,0 +1,7 @@
+import [someList, someValue, someObject] : "./import_test"
+
+println(someList)
+someValue += 10
+someValue += 10
+println(someList)
+println(someObject)

@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 {
     if (type == Type::DEV)
     {
-        std::filesystem::current_path("../../../source");
+        std::filesystem::current_path("../../../source/playground");
         Lexer lexer("source.rpl");
         lexer.tokenize();
 

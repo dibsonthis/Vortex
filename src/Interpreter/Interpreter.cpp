@@ -467,6 +467,9 @@ node_ptr Interpreter::eval_import(node_ptr node) {
         error_and_exit("Import target must be a string");
     }
 
+    auto parent_path = std::filesystem::path(node->Import.target->String.value).parent_path();
+    std::filesystem::current_path(parent_path);
+
     std::string path = node->Import.target->String.value + ".rpl";
 
     if (node->Import.module->type == NodeType::ID) {
