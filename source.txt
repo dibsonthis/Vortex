@@ -15,14 +15,29 @@
 // 	yPos = yPos - v
 // }
 
-const x = {
+// const list = [1, 2, 3, 4]
+// var index = 0
+// var curr = list[index]
+
+// index::onChange = () => {
+// 	if (index > 3) {
+// 		index = 3
+// 	}
+// 	if (index < 0) {
+// 		index = 0
+// 	}
+// 	curr = list[index]
+// }
+
+// index = -30
+// println(curr)
+
+var obj = {
 	name: "John",
-	age: 34,
-	address: {
-		street: "123 Fake St.",
-		state: "VIC",
-		adjacent: ["123 Real St.", "345 Fake St."]
+	stuff: {
+		nums: [1, 2, 3]
 	}
 }
-const g = x.address.adjacent[0]
-println(g)
+
+obj["stuff"].nums[0] = 200
+print(obj)

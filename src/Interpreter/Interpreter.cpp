@@ -686,8 +686,8 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
 }
 
 node_ptr Interpreter::eval_eq(node_ptr node) {
-    node_ptr right = eval_node(node->Operator.right);
     node_ptr left = node->Operator.left;
+    node_ptr right = eval_node(node->Operator.right);
 
     if (left->Operator.value == ".") {
         node_ptr object = left->Operator.left;
@@ -704,12 +704,24 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             error_and_exit("Left hand side of '.' must be an object");
         }
 
-        if (prop->type != NodeType::ID) {
+        if (prop->type != NodeType::ID && prop->type != NodeType::ACCESSOR) {
             error_and_exit("Right hand side of '.' must be an identifier");
+        }
+
+        if (prop->type == NodeType::ACCESSOR) {
+            node_ptr accessed_value = eval_dot(left);
+            *accessed_value = *right;
+            return object;
         }
 
         object->Object.properties[prop->ID.value] = right;
         return object;
+    }
+
+    if (left->type == NodeType::ACCESSOR) {
+        left = eval_node(left);
+        *left = *right;
+        return right;
     }
 
     if (left->type == NodeType::ID) {
