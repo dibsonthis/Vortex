@@ -462,6 +462,75 @@ node_ptr Interpreter::eval_accessor(node_ptr node) {
     error_and_exit("Value of type '" + node_repr(container) + "' is not accessable");
 }
 
+node_ptr Interpreter::eval_import(node_ptr node) {
+    if (node->Import.target->type != NodeType::STRING) {
+        error_and_exit("Import target must be a string");
+    }
+
+    std::string path = node->Import.target->String.value + ".rpl";
+
+    if (node->Import.module->type == NodeType::ID) {
+        std::string module_name = node->Import.module->ID.value;
+        node_ptr import_obj = new_node(NodeType::OBJECT);
+
+        Lexer import_lexer(path);
+        import_lexer.tokenize();
+
+        Parser import_parser(import_lexer.nodes, import_lexer.file_name);
+        import_parser.parse(0, "_");
+        import_parser.remove_op_node(";");
+
+        Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
+        import_interpreter.evaluate();
+
+        for (auto& symbol : import_interpreter.symbol_table->symbols) {
+            import_obj->Object.properties[symbol.first] = symbol.second.value;
+        }
+
+        add_symbol(new_symbol(module_name, import_obj), current_symbol_table);
+        return new_node(NodeType::NONE);
+    }
+
+    if (node->Import.module->type == NodeType::LIST) {
+        // Before we import, we'll check to see if the import list
+        // contains only IDs
+        if (node->Import.module->List.elements.size() == 1 && node->Import.module->List.elements[0]->type == NodeType::COMMA_LIST) {
+            node->Import.module = node->Import.module->List.elements[0];
+        }
+        for (node_ptr elem : node->Import.module->List.elements) {
+            if (elem->type != NodeType::ID) {
+                error_and_exit("Import list must contain identifiers");
+            }
+        }
+
+        Lexer import_lexer(path);
+        import_lexer.tokenize();
+
+        Parser import_parser(import_lexer.nodes, import_lexer.file_name);
+        import_parser.parse(0, "_");
+        import_parser.remove_op_node(";");
+
+        Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
+        import_interpreter.evaluate();
+
+        std::unordered_map<std::string, node_ptr> imported_variables;
+
+        for (auto& symbol : import_interpreter.symbol_table->symbols) {
+            imported_variables[symbol.first] = symbol.second.value;
+        }
+
+        for (node_ptr elem : node->Import.module->List.elements) {
+            if (imported_variables.contains(elem->ID.value)) {
+                add_symbol(import_interpreter.symbol_table->symbols[elem->ID.value], current_symbol_table);
+            } else {
+                error_and_exit("Cannot import value '" + elem->ID.value + "' - variable undefined");
+            }
+        }
+
+        return new_node(NodeType::NONE);
+    }
+}
+
 // Operations
 
 node_ptr Interpreter::eval_pos_neg(node_ptr node) {
@@ -1377,6 +1446,9 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     }
     if (node->type == NodeType::ACCESSOR) {
         return eval_accessor(node);
+    }
+    if (node->type == NodeType::IMPORT) {
+        return eval_import(node);
     }
     if ((node->Operator.value == "+" || node->Operator.value == "-") 
         && node->Operator.left == nullptr) {

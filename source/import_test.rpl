@@ -1,0 +1,6 @@
+var someValue = 0
+var someList = []
+
+someValue::onChange = (curr, old) => {
+	someList += ["someValue changed from " + string(old) + " to " + string(curr)]
+}

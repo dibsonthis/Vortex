@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include "src/Lexer/Lexer.hpp"
 #include "src/Parser/Parser.hpp"
 #include "src/Interpreter/Interpreter.hpp"
@@ -16,7 +17,8 @@ int main(int argc, char** argv)
 {
     if (type == Type::DEV)
     {
-        Lexer lexer("../../../source.txt");
+        std::filesystem::current_path("../../../source");
+        Lexer lexer("source.rpl");
         lexer.tokenize();
 
         Parser parser(lexer.nodes, lexer.file_name);

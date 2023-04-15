@@ -5,6 +5,8 @@
 #include <cmath>
 #include <unordered_map>
 #include "../Node/Node.hpp"
+#include "../Lexer/Lexer.hpp"
+#include "../Parser/Parser.hpp"
 #include "../utils/utils.hpp"
 struct Symbol {
     std::string name;
@@ -56,6 +58,7 @@ public:
     node_ptr eval_for_loop(node_ptr node);
     node_ptr eval_while_loop(node_ptr node);
     node_ptr eval_accessor(node_ptr node);
+    node_ptr eval_import(node_ptr node);
     // Operations
     node_ptr eval_pos_neg(node_ptr node);
     node_ptr eval_not(node_ptr node);
