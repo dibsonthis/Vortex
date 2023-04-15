@@ -83,8 +83,7 @@ node_ptr Interpreter::eval_var_decl_multiple(node_ptr node) {
 }
 
 node_ptr Interpreter::eval_list(node_ptr node) {
-    node_ptr list = new_node();
-    list->type = NodeType::LIST;
+    node_ptr list = new_node(NodeType::LIST);
     if (node->List.elements.size() == 1) {
         if (node->List.elements[0]->type == NodeType::COMMA_LIST) {
             for (auto elem : node->List.elements[0]->List.elements) {
@@ -93,6 +92,8 @@ node_ptr Interpreter::eval_list(node_ptr node) {
         } else {
             list->List.elements.push_back(eval_node(node->List.elements[0]));
         }
+    } else {
+        list = node;
     }
     return list;
 }
@@ -653,8 +654,8 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
         error_and_exit("Left hand side of '.' must be an object");
     }
 
-    if (right->type != NodeType::ID && right->type != NodeType::FUNC_CALL) {
-        error_and_exit("Right hand side of '.' must be an identifier or function call");
+    if (right->type != NodeType::ID && right->type != NodeType::FUNC_CALL && right->type != NodeType::ACCESSOR) {
+        error_and_exit("Right hand side of '.' must be an identifier, function call or accessor");
     }
 
     if (right->type == NodeType::ID) {
@@ -667,6 +668,20 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
     if (right->type == NodeType::FUNC_CALL) {
         right->FuncCall.caller = left;
         return eval_func_call(right);
+    }
+
+    if (right->type == NodeType::ACCESSOR) {
+        node_ptr left_side = new_node(NodeType::OP);
+        left_side->Operator.value = ".";
+        left_side->Operator.left = left;
+        if (right->Accessor.container->type != NodeType::ID) {
+            error_and_exit("Malformed '.' operation");
+        }
+        left_side->Operator.right = right->Accessor.container;
+        left_side = eval_dot(left_side);
+
+        right->Accessor.container = left_side;
+        return eval_accessor(right);
     }
 }
 
@@ -811,9 +826,12 @@ std::string Interpreter::printable(node_ptr node) {
             return res;
         }
         case NodeType::LIST: {
-            std::string res = "[ ";
-            for (node_ptr elem : node->List.elements) {
-                res += printable(node) + " ";
+            std::string res = "[";
+            for (int i = 0; i < node->List.elements.size(); i++) {
+                res += printable(node->List.elements[i]);
+                if (i < node->List.elements.size()-1) {
+                    res += ", ";
+                }
             }
             res += "]";
             return res;
