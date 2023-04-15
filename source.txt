@@ -32,7 +32,8 @@
 // index = -30
 // println(curr)
 
-const list = [1, 2, 3, 3, 4, 5]
-const x = 3
-list.remove(x)
-println(list)
+// const list = [1, 2, 3, 3, 4, 5]
+// const x = 3
+// list.remove(x)
+// println(list)
+print(!true)

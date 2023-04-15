@@ -459,6 +459,15 @@ node_ptr Interpreter::eval_pos_neg(node_ptr node) {
     return node;
 }
 
+node_ptr Interpreter::eval_not(node_ptr node) {
+    node_ptr value = eval_node(node->Operator.right);
+    if (value->type != NodeType::BOOLEAN) {
+        error_and_exit("Cannot negate a non-boolean");
+    }
+
+    return new_boolean_node(!value->Boolean.value);
+}
+
 node_ptr Interpreter::eval_add(node_ptr node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
@@ -1054,6 +1063,9 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     }
     if (node->Operator.value == "^") {
         return eval_pow(node);
+    }
+    if (node->Operator.value == "!") {
+        return eval_not(node);
     }
     if (node->Operator.value == "==") {
         return eval_eq_eq(node);

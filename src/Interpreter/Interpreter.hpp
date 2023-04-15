@@ -60,6 +60,7 @@ public:
     node_ptr eval_accessor(node_ptr node);
     // Operations
     node_ptr eval_pos_neg(node_ptr node);
+    node_ptr eval_not(node_ptr node);
     node_ptr eval_add(node_ptr node);
     node_ptr eval_sub(node_ptr node);
     node_ptr eval_mul(node_ptr node);
