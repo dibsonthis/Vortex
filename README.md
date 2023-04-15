@@ -39,4 +39,42 @@ L: 8.000000 - A: 64.000000 - D: 15.000000
 L: 9.000000 - A: 81.000000 - D: 17.000000
 ```
 
-More to come soon...
+## Slightly more complex example
+
+```
+var lexer = {
+	index: -1,
+	tokens: ["const", "x", "=", 9, 10, "5", [1, 2, 3]],
+	currentNode: this.tokens[0]
+}
+
+lexer.index::onChange = (curr) => {
+	lexer.currentNode = lexer.tokens[curr]
+}
+
+lexer.currentNode::onChange = (curr) => {
+	if (curr != string(curr)) {
+		println("[Removing non-string token: " + string(curr) + "]")
+		lexer.tokens.remove_at(lexer.index)
+		lexer.index -= 1
+	}
+}
+
+println(lexer)
+
+for (0..(lexer.tokens.length)) {
+	lexer.index += 1
+}
+
+println(lexer)
+```
+
+## Output
+
+```
+{ currentNode: const tokens: [const, x, =, 9, 10, 5, [1, 2, 3]] index: -1 }
+[Removing non-string token: 9]
+[Removing non-string token: 10]
+[Removing non-string token: [1, 2, 3]]
+{ currentNode: 5 tokens: [const, x, =, 5] index: 3 }
+```

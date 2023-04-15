@@ -74,6 +74,8 @@ public:
     node_ptr eval_or(node_ptr node);
     node_ptr eval_eq(node_ptr node);
     node_ptr eval_dot(node_ptr node);
+    node_ptr eval_plus_eq(node_ptr node);
+    node_ptr eval_minus_eq(node_ptr node);
     // Builtin functions
     void builtin_print(node_ptr node);
 

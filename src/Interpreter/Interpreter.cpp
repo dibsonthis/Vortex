@@ -357,8 +357,18 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
 
         return new_node(NodeType::NONE);
     }
+
+    node_ptr start_node = eval_node(node->ForLoop.start);
+    node_ptr end_node = eval_node(node->ForLoop.end);
+
+    if (start_node->type != NodeType::NUMBER && end_node->type != NodeType::NUMBER) {
+        error_and_exit("For loop range expects two numbers");
+    }
+
+    int start = start_node->Number.value;
+    int end = end_node->Number.value;
     
-    for (int i = node->ForLoop.start->Number.value; i < node->ForLoop.end->Number.value; i++) {
+    for (int i = start; i < end; i++) {
         int index = i-node->ForLoop.start->Number.value;
         if (node->ForLoop.index_name) {
             add_symbol(new_symbol(node->ForLoop.index_name->ID.value, new_number_node(index)), current_symbol_table);
@@ -669,6 +679,44 @@ node_ptr Interpreter::eval_or(node_ptr node) {
     }
 
     error_and_exit("Cannot perform operation '||' on types: " + node_repr(left) + ", " + node_repr(right));
+}
+
+node_ptr Interpreter::eval_plus_eq(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    node_ptr plus_node = new_node(NodeType::OP);
+    plus_node->Operator.value = "+";
+    plus_node->Operator.left = left;
+    plus_node->Operator.right = right;
+    plus_node = eval_add(plus_node);
+
+    node_ptr eq_node = new_node(NodeType::OP);
+    eq_node->Operator.value = "=";
+    eq_node->Operator.left = node->Operator.left;
+    eq_node->Operator.right = plus_node;
+    eq_node = eval_eq(eq_node);
+
+    return eq_node;
+}
+
+node_ptr Interpreter::eval_minus_eq(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    node_ptr minus_node = new_node(NodeType::OP);
+    minus_node->Operator.value = "-";
+    minus_node->Operator.left = left;
+    minus_node->Operator.right = right;
+    minus_node = eval_sub(minus_node);
+
+    node_ptr eq_node = new_node(NodeType::OP);
+    eq_node->Operator.value = "=";
+    eq_node->Operator.left = node->Operator.left;
+    eq_node->Operator.right = minus_node;
+    eq_node = eval_eq(eq_node);
+
+    return eq_node;
 }
 
 node_ptr Interpreter::eval_dot(node_ptr node) {
@@ -1100,7 +1148,9 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
 
     if (left->type == NodeType::ID) {
         Symbol symbol = get_symbol(left->ID.value, current_symbol_table);
-        if (symbol.value != nullptr) {
+        if (symbol.value == nullptr) {
+            error_and_exit("Variable '" + left->ID.value + "' is undefined");
+        } else {
             // Re-assigning, check if const
             if (symbol.value->Meta.is_const) {
                 error_and_exit("Cannot modify constant '" + symbol.name + "'");
@@ -1373,6 +1423,12 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     }
     if (node->Operator.value == "||") {
         return eval_or(node);
+    }
+    if (node->Operator.value == "+=") {
+        return eval_plus_eq(node);
+    }
+    if (node->Operator.value == "-=") {
+        return eval_minus_eq(node);
     }
     if (node->Operator.value == ".") {
         return eval_dot(node);

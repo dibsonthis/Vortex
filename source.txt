@@ -1,25 +1,27 @@
 // import [PI, e] : "../imports/math";
 
-// var person = {
-// 	name: "John",
-// 	age: 23
-// }
-
-// person.name::onChange = (curr, old) => {
-// 	print("Name was changed from " + old + " to " + curr)
-// }
-
 var lexer = {
-	index: 0,
-	tokens: ["const", "x", "=", "5"],
-	currentNode: this.tokens[this.index]
+	index: -1,
+	tokens: ["const", "x", "=", 9, 10, "5", [1, 2, 3]],
+	currentNode: this.tokens[0]
 }
 
 lexer.index::onChange = (curr) => {
 	lexer.currentNode = lexer.tokens[curr]
 }
 
+lexer.currentNode::onChange = (curr) => {
+	if (curr != string(curr)) {
+		println("[Removing non-string token: " + string(curr) + "]")
+		lexer.tokens.remove_at(lexer.index)
+		lexer.index -= 1
+	}
+}
+
 println(lexer)
-lexer.index = 3
+
+for (0..(lexer.tokens.length)) {
+	lexer.index += 1
+}
+
 println(lexer)
-println(4.5323)
