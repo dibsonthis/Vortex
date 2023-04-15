@@ -686,18 +686,43 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
         node_ptr target = left->Operator.left;
         node_ptr prop = left->Operator.right;
 
-        if (target->type != NodeType::ID && prop->type != NodeType::ID) {
-            error_and_exit("Hook expects two identifiers");
+        if (target->type != NodeType::ID && target->type != NodeType::LIST) {
+            error_and_exit("Hook expects either an identifier or a list of identifiers");
         }
 
-        Symbol symbol = get_symbol(target->ID.value, current_symbol_table);
+        if (prop->type != NodeType::ID) {
+            error_and_exit("Hook expects an identifier");
+        }
 
-        if (prop->ID.value == "onChange") {
-            if (right->type != NodeType::FUNC) {
-                error_and_exit("onChange hook expects a function");
+        if (target->type == NodeType::ID) {
+            Symbol symbol = get_symbol(target->ID.value, current_symbol_table);
+
+            if (prop->ID.value == "onChange") {
+                if (right->type != NodeType::FUNC) {
+                    error_and_exit("onChange hook expects a function");
+                }
+                symbol.onChangeFunctions.push_back(right);
+                add_symbol(symbol, current_symbol_table);
             }
-            symbol.onChangeFunctions.push_back(right);
-            add_symbol(symbol, current_symbol_table);
+        } else {
+            if (target->List.elements.size() == 1 && target->List.elements[0]->type == NodeType::COMMA_LIST) {
+                target = target->List.elements[0];
+            }
+            for (node_ptr elem : target->List.elements) {
+                if (elem->type != NodeType::ID) {
+                    error_and_exit("Hook expects either an identifier or a list of identifiers");
+                }
+
+                Symbol symbol = get_symbol(elem->ID.value, current_symbol_table);
+
+                if (prop->ID.value == "onChange") {
+                    if (right->type != NodeType::FUNC) {
+                        error_and_exit("onChange hook expects a function");
+                    }
+                    symbol.onChangeFunctions.push_back(right);
+                    add_symbol(symbol, current_symbol_table);
+                }
+            }
         }
 
         return new_node(NodeType::NONE);
