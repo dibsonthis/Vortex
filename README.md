@@ -13,8 +13,8 @@ length::onChange = () => {
 	area = length ^ 2
 }
 
-area::onChange = (old) => {
-	diff = area - old
+area::onChange = (curr, old) => {
+	diff = curr - old
 }
 
 for (1..10) {
