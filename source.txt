@@ -39,5 +39,7 @@ var obj = {
 	}
 }
 
-obj["stuff"].nums[0] = 200
+for (0..3, i, v) {
+	obj["stuff"].nums[i] = 200 + v
+}
 print(obj)

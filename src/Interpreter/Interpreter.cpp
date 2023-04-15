@@ -680,8 +680,10 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
         left_side->Operator.right = right->Accessor.container;
         left_side = eval_dot(left_side);
 
-        right->Accessor.container = left_side;
-        return eval_accessor(right);
+        node_ptr res = new_node(NodeType::ACCESSOR);
+        res->Accessor.container = left_side;
+        res->Accessor.accessor = right->Accessor.accessor;
+        return eval_accessor(res);
     }
 }
 
