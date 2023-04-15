@@ -480,6 +480,13 @@ node_ptr Interpreter::eval_add(node_ptr node) {
         return new_string_node(left->String.value + right->String.value);
     }
 
+    if (left->type == NodeType::LIST && right->type == NodeType::LIST) {
+        node_ptr result = new_node(NodeType::LIST);
+        result->List.elements.insert(result->List.elements.end(), left->List.elements.begin(), left->List.elements.end());
+        result->List.elements.insert(result->List.elements.end(), right->List.elements.begin(), right->List.elements.end());
+        return result;
+    }
+
     error_and_exit("Cannot perform operation '+' on types: " + node_repr(left) + ", " + node_repr(right));
 }
 

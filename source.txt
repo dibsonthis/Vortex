@@ -1,37 +1,5 @@
 // import [PI, e] : "../imports/math";
 
-// var xPos = 0
-// var yPos = 10
-
-// const printDebugInfo = (curr, old, name, line, column, filename) => {
-// 	println(name + " changed from " + string(old) + " to " + string(curr) + " on line " + string(line) + ", column " + string(column) + " in file '" + filename + "'")
-// }
-
-// [xPos, yPos]::onChange = (curr, old, name, info) => 
-// 	printDebugInfo(curr, old, name, info.line, info.column, info.filename)
-
-// for (1..15, i, v) {
-// 	xPos = xPos + v
-// 	yPos = yPos - v
-// }
-
-// const list = [1, 2, 3, 4]
-// var index = 0
-// var curr = list[index]
-
-// index::onChange = () => {
-// 	if (index > 3) {
-// 		index = 3
-// 	}
-// 	if (index < 0) {
-// 		index = 0
-// 	}
-// 	curr = list[index]
-// }
-
-// index = -30
-// println(curr)
-
 const list = [1, 2, 3, 4, 5]
-const newList = list.reduce((a, b, index) => string(a) + "_" + string(b))
+const newList = list + 200
 println(list, newList)

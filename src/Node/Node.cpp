@@ -6,16 +6,19 @@ std::string node_repr(node_ptr node) {
             return node->ID.value;
         }
         case NodeType::NUMBER: {
-            return std::to_string(node->Number.value);
+            return "Number";
         }
         case NodeType::STRING: {
-            return node->String.value;
-        }
-        case NodeType::OP: {
-            return node->Operator.value;
+            return "String";
         }
         case NodeType::BOOLEAN: {
-            return node->Boolean.value ? "true" : "false";
+            return "Boolean";
+        }
+        case NodeType::LIST: {
+            return "List";
+        }
+        case NodeType::OBJECT: {
+            return "Object";
         }
         case NodeType::START_OF_FILE: {
             return "SOF";
