@@ -10,7 +10,6 @@ struct Symbol {
     std::string name;
     node_ptr value;
     node_ptr type;
-    std::vector<node_ptr> onChangeFunctions = std::vector<node_ptr>();
 };
 
 struct SymbolTable {

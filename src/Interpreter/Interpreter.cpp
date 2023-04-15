@@ -730,8 +730,8 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
                 if (right->FuncCall.args.size() != 1) {
                     error_and_exit("List function '" + prop + "' expects 1 argument");
                 }
-                node_ptr arg = right->FuncCall.args[0];
-                left->List.elements.push_back(eval_node(arg));
+                node_ptr arg = eval_node(right->FuncCall.args[0]);
+                left->List.elements.push_back(arg);
                 return left;
             }
             if (prop == "prepend") {
@@ -1023,11 +1023,61 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
 
         if (prop->type == NodeType::ACCESSOR) {
             node_ptr accessed_value = eval_dot(left);
+            node_ptr old_value = std::make_shared<Node>(*accessed_value);
+            std::vector<node_ptr> onChangeFunctions = accessed_value->Hooks.onChange;
             *accessed_value = *right;
+            accessed_value->Hooks.onChange = onChangeFunctions;
+
+            for (node_ptr function : onChangeFunctions) {
+                node_ptr function_call = new_node(NodeType::FUNC_CALL);
+                function_call->FuncCall.name = function->Function.name;
+                function_call->FuncCall.args = std::vector<node_ptr>();
+                if (function->Function.params.size() > 0) {
+                    function_call->FuncCall.args.push_back(accessed_value);
+                }
+                if (function->Function.params.size() > 1) {
+                    function_call->FuncCall.args.push_back(old_value);
+                }
+                if (function->Function.params.size() > 2) {
+                    node_ptr file_info = new_node(NodeType::OBJECT);
+                    file_info->Object.properties["filename"] = new_string_node(file_name);
+                    file_info->Object.properties["line"] = new_number_node(line);
+                    file_info->Object.properties["column"] = new_number_node(column);
+                    function_call->FuncCall.args.push_back(file_info);
+                }
+                eval_func_call(function_call, function);
+            }
+
             return object;
         }
 
+        node_ptr accessed_value = object->Object.properties[prop->ID.value];
+        node_ptr old_value = std::make_shared<Node>(*accessed_value);
+        std::vector<node_ptr> onChangeFunctions = old_value->Hooks.onChange;
+
         object->Object.properties[prop->ID.value] = right;
+        object->Object.properties[prop->ID.value]->Hooks.onChange = onChangeFunctions;
+
+        for (node_ptr function : onChangeFunctions) {
+            node_ptr function_call = new_node(NodeType::FUNC_CALL);
+            function_call->FuncCall.name = function->Function.name;
+            function_call->FuncCall.args = std::vector<node_ptr>();
+            if (function->Function.params.size() > 0) {
+                function_call->FuncCall.args.push_back(object->Object.properties[prop->ID.value]);
+            }
+            if (function->Function.params.size() > 1) {
+                function_call->FuncCall.args.push_back(old_value);
+            }
+            if (function->Function.params.size() > 2) {
+                node_ptr file_info = new_node(NodeType::OBJECT);
+                file_info->Object.properties["filename"] = new_string_node(file_name);
+                file_info->Object.properties["line"] = new_number_node(line);
+                file_info->Object.properties["column"] = new_number_node(column);
+                function_call->FuncCall.args.push_back(file_info);
+            }
+            eval_func_call(function_call, function);
+        }
+
         return object;
     }
 
@@ -1037,6 +1087,9 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             error_and_exit("Cannot modify constant");
         }
         left = eval_node(left);
+        if (left->Meta.is_const) {
+            error_and_exit("Cannot modify constant");
+        }
         *left = *right;
         return right;
     }
@@ -1049,15 +1102,18 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                 error_and_exit("Cannot modify constant '" + symbol.name + "'");
             }
 
-            // In case we need to feed this back to the onChange functions
-
             node_ptr old_value = std::make_shared<Node>(*symbol.value);
 
+            // Extract onChange functions from value
+
+            std::vector<node_ptr> onChangeFunctions = symbol.value->Hooks.onChange;
+
             *symbol.value = *right;
+            symbol.value->Hooks.onChange = onChangeFunctions;
             
             // Call onChange functions
 
-            for (node_ptr function : symbol.onChangeFunctions) {
+            for (node_ptr function : onChangeFunctions) {
                 node_ptr function_call = new_node(NodeType::FUNC_CALL);
                 function_call->FuncCall.name = function->Function.name;
                 function_call->FuncCall.args = std::vector<node_ptr>();
@@ -1090,9 +1146,9 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
         node_ptr target = left->Operator.left;
         node_ptr prop = left->Operator.right;
 
-        if (target->type != NodeType::ID && target->type != NodeType::LIST) {
-            error_and_exit("Hook expects either an identifier or a list of identifiers");
-        }
+        // if (target->type != NodeType::ID && target->type != NodeType::LIST) {
+        //     error_and_exit("Hook expects either an identifier or a list of identifiers");
+        // }
 
         if (prop->type != NodeType::ID) {
             error_and_exit("Hook expects an identifier");
@@ -1105,13 +1161,18 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                 if (right->type != NodeType::FUNC) {
                     error_and_exit("onChange hook expects a function");
                 }
-                symbol.onChangeFunctions.push_back(right);
+                symbol.value->Hooks.onChange.push_back(right);
                 add_symbol(symbol, current_symbol_table);
             }
-        } else {
+
+            return new_node(NodeType::NONE);
+        }
+
+        if (target->type == NodeType::LIST) {
             if (target->List.elements.size() == 1 && target->List.elements[0]->type == NodeType::COMMA_LIST) {
                 target = target->List.elements[0];
             }
+
             for (node_ptr elem : target->List.elements) {
                 if (elem->type != NodeType::ID) {
                     error_and_exit("Hook expects either an identifier or a list of identifiers");
@@ -1123,14 +1184,28 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                     if (right->type != NodeType::FUNC) {
                         error_and_exit("onChange hook expects a function");
                     }
-                    symbol.onChangeFunctions.push_back(right);
+                    symbol.value->Hooks.onChange.push_back(right);
                     add_symbol(symbol, current_symbol_table);
                 }
             }
+
+            return new_node(NodeType::NONE);
         }
 
-        return new_node(NodeType::NONE);
+        if (target->Operator.value == ".") {
+            target = eval_dot(target);
+            if (prop->ID.value == "onChange") {
+                if (right->type != NodeType::FUNC) {
+                    error_and_exit("onChange hook expects a function");
+                }
+                target->Hooks.onChange.push_back(right);
+            }
+
+            return new_node(NodeType::NONE);
+        }
     }
+
+    return new_node(NodeType::NONE);
 }
 
 // Builtin functions
@@ -1166,9 +1241,9 @@ std::string Interpreter::printable(node_ptr node) {
             return res;
         }
         case NodeType::OBJECT: {
-            std::string res = "{\n\n";
+            std::string res = "{ ";
             for (auto const& elem : node->Object.properties) {
-                res += elem.first + ": " + printable(elem.second) + '\n';
+                res += elem.first + ": " + printable(elem.second) + ' ';
             }
             res += "}";
             return res;

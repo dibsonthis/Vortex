@@ -168,6 +168,10 @@ struct MetaInformation {
 	bool is_const;
 };
 
+struct Hooks {
+	std::vector<node_ptr> onChange;
+};
+
 struct Node {
 	Node() = default;
     Node(NodeType type) : type(type) {}
@@ -204,6 +208,7 @@ struct Node {
 	IfBlockNode IfBlock;
 	ReturnNode Return;
 	MetaInformation Meta;
+	Hooks Hooks;
 };
 
 std::string node_repr(node_ptr);

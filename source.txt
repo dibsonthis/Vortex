@@ -1,7 +1,23 @@
 // import [PI, e] : "../imports/math";
 
-const list = [1, 2, 3, 4, 5]
-// const newList = list + 200
-// println(list, newList)
-// list.append(10)
-list = 10
+// var person = {
+// 	name: "John",
+// 	age: 23
+// }
+
+// person.name::onChange = (curr, old) => {
+// 	print("Name was changed from " + old + " to " + curr)
+// }
+
+var person = {
+	name: "John"
+}
+
+person.name::onChange = (curr, old) => {
+	println("name changed from " + string(old) + " to " + string(curr))
+}
+person::onChange = (curr, old) => {
+	println("person changed from " + string(old) + " to " + string(curr))
+}
+
+person = "Allan"
