@@ -151,7 +151,7 @@ lexer.currentNode::onChange = (curr) => {
     	println("[Removing non-string token: " + string(curr) + "]")
     	lexer.tokens.remove_at(lexer.index)
     	lexer.index -= 1
-}
+    }
 }
 
 println(lexer)
