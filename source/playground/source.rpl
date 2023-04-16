@@ -1,7 +1,13 @@
-const _print = (arg) => println(arg)
-
-_print::onCall = (info) => {
-	println(info)
+var x, y = 0
+var z = {
+	inner: {
+		name: "John"
+	}
 }
 
-_print("hello")
+z::onChange = (new, old, info) => {
+	println(info.name + ": " + string(old) + " -> " + string(new))
+}
+
+z = "Allan"
+println(z)

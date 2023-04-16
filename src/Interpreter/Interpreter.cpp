@@ -675,6 +675,10 @@ node_ptr Interpreter::eval_eq_eq(node_ptr node) {
         return new_boolean_node(left->Boolean.value == right->Boolean.value);
     }
 
+    if (left->type == NodeType::NONE) {
+        return new_boolean_node(true);
+    }
+
     // TODO: Extend to lists and objects
 
     return new_boolean_node(false);
@@ -698,6 +702,10 @@ node_ptr Interpreter::eval_not_eq(node_ptr node) {
 
     if (left->type == NodeType::BOOLEAN) {
         return new_boolean_node(left->Boolean.value != right->Boolean.value);
+    }
+
+    if (left->type == NodeType::NONE) {
+        return new_boolean_node(false);
     }
 
     // TODO: Extend to lists and objects
@@ -1194,6 +1202,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                 }
                 if (function->Function.params.size() > 2) {
                     node_ptr file_info = new_node(NodeType::OBJECT);
+                    file_info->Object.properties["name"] = new_string_node(printable(left->Operator.left) + "." + printable(prop));
                     file_info->Object.properties["filename"] = new_string_node(file_name);
                     file_info->Object.properties["line"] = new_number_node(line);
                     file_info->Object.properties["column"] = new_number_node(column);
@@ -1224,6 +1233,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             }
             if (function->Function.params.size() > 2) {
                 node_ptr file_info = new_node(NodeType::OBJECT);
+                file_info->Object.properties["name"] = new_string_node(printable(left->Operator.left) + "." + printable(prop));
                 file_info->Object.properties["filename"] = new_string_node(file_name);
                 file_info->Object.properties["line"] = new_number_node(line);
                 file_info->Object.properties["column"] = new_number_node(column);
@@ -1280,10 +1290,8 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                     function_call->FuncCall.args.push_back(old_value);
                 }
                 if (function->Function.params.size() > 2) {
-                    function_call->FuncCall.args.push_back(new_string_node(symbol.name));
-                }
-                if (function->Function.params.size() > 3) {
                     node_ptr file_info = new_node(NodeType::OBJECT);
+                    file_info->Object.properties["name"] = new_string_node(symbol.name);
                     file_info->Object.properties["filename"] = new_string_node(file_name);
                     file_info->Object.properties["line"] = new_number_node(line);
                     file_info->Object.properties["column"] = new_number_node(column);
@@ -1428,6 +1436,18 @@ std::string Interpreter::printable(node_ptr node) {
         }
         case NodeType::NONE: {
             return "None";
+        }
+        case NodeType::ID: {
+            return node->ID.value;
+        }
+        case NodeType::OP: {
+            if (node->Operator.value == ".") {
+                return printable(node->Operator.left) + "." + printable(node->Operator.right);
+            }
+            return node->Operator.value;
+        }
+        case NodeType::ACCESSOR: {
+            return printable(node->Accessor.container) + printable(node->Accessor.accessor);
         }
         default: {
             return "<not implemented>";

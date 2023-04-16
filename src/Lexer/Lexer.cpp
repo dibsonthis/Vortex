@@ -61,11 +61,14 @@ void Lexer::build_identifier()
 		node->type = NodeType::BOOLEAN;
 		node->Boolean.value = true;
 	}
-
 	else if (name == "false")
 	{
 		node->type = NodeType::BOOLEAN;
 		node->Boolean.value = false;
+	}
+	else if (name == "None")
+	{
+		node->type = NodeType::NONE;
 	}
 	else
 	{
