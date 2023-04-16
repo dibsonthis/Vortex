@@ -171,6 +171,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.args = std::vector<node_ptr>(func->Function.args);
         function->Function.params = std::vector<node_ptr>(func->Function.params);
         function->Function.body = func->Function.body;
+        function->Function.is_hook = func->Function.is_hook;
         function->Hooks.onCall = func->Hooks.onCall;
     } else if (node->FuncCall.caller == nullptr) {
         Symbol function_symbol = get_symbol(node->FuncCall.name, current_symbol_table);
@@ -181,6 +182,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.args = std::vector<node_ptr>(function_symbol.value->Function.args);
         function->Function.params = std::vector<node_ptr>(function_symbol.value->Function.params);
         function->Function.body = function_symbol.value->Function.body;
+        function->Function.is_hook = function_symbol.value->Function.is_hook;
         function->Hooks.onCall = function_symbol.value->Hooks.onCall;
     } else {
         node_ptr method = node->FuncCall.caller->Object.properties[node->FuncCall.name];
@@ -191,6 +193,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.args = std::vector<node_ptr>(method->Function.args);
         function->Function.params = std::vector<node_ptr>(method->Function.params);
         function->Function.body = method->Function.body;
+        function->Function.is_hook = method->Function.is_hook;
         function->Hooks.onCall = method->Hooks.onCall;
     }
 
@@ -266,22 +269,28 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         }
     }
 
-    for (node_ptr func : function->Hooks.onCall) {
-        node_ptr function_call = new_node(NodeType::FUNC_CALL);
-        function_call->FuncCall.name = func->Function.name;
-        function_call->FuncCall.args = std::vector<node_ptr>();
-        if (func->Function.params.size() > 0) {
-            node_ptr file_info = new_node(NodeType::OBJECT);
-            file_info->Object.properties["name"] = new_string_node(function->Function.name);
-            node_ptr args_list = new_node(NodeType::LIST);
-            for (node_ptr arg : args) {
-                args_list->List.elements.push_back(arg);
+    auto allOnCallFunctionsLists = {std::cref(function->Hooks.onCall), std::cref(global_symbol_table->globalHooks_onCall)};
+
+    if (!function->Function.is_hook) {      
+        for (const auto& function_list : allOnCallFunctionsLists) {
+            for (node_ptr func : function_list.get()) {
+                node_ptr function_call = new_node(NodeType::FUNC_CALL);
+                function_call->FuncCall.name = func->Function.name;
+                function_call->FuncCall.args = std::vector<node_ptr>();
+                if (func->Function.params.size() > 0) {
+                    node_ptr file_info = new_node(NodeType::OBJECT);
+                    file_info->Object.properties["name"] = new_string_node(function->Function.name);
+                    node_ptr args_list = new_node(NodeType::LIST);
+                    for (node_ptr arg : args) {
+                        args_list->List.elements.push_back(arg);
+                    }
+                    file_info->Object.properties["args"] = args_list;
+                    file_info->Object.properties["result"] = res;
+                    function_call->FuncCall.args.push_back(file_info);
+                }
+                eval_func_call(function_call, func);
             }
-            file_info->Object.properties["args"] = args_list;
-            file_info->Object.properties["result"] = res;
-            function_call->FuncCall.args.push_back(file_info);
         }
-        eval_func_call(function_call, func);
     }
 
     current_symbol_table = current_symbol_table->parent;
@@ -1321,6 +1330,8 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
     if (left->Operator.value == "::") {
         node_ptr target = left->Operator.left;
         node_ptr prop = left->Operator.right;
+
+        right->Function.is_hook = true;
 
         if (prop->type != NodeType::ID) {
             error_and_exit("Hook expects an identifier");

@@ -9,5 +9,12 @@ var z = {
 	println(info.name + ": " + string(old) + " -> " + string(new))
 }
 
+[]::onCall = (info) => {
+	println(info.name + " was called: " + string(info.result))
+}
+
+const add = (a, b) => a + b
+
 z = "Allan"
 x += 10
+add(10, 20)

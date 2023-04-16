@@ -91,6 +91,7 @@ struct FuncNode {
 	std::vector<node_ptr> args;
 	std::vector<node_ptr> params;
 	node_ptr body;
+	bool is_hook;
 };
 
 struct AccessorNode {
