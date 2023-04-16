@@ -81,7 +81,7 @@ y = -54 // y has changed
 **onChange parameters**: *new*: The new value, *old*: The old value, *info*: An object containing further information about the variable and context, the properties are (*name*: Name of the variable, *filename*: Name of the file, *line*: File line number, *column*: File column number)
 
 **onCall**: This hook will fire whenever a function is called.\
-**onCall parameters**: *info*: An object containing further information about the variable and context, the properties are (*name*: Name of the variable, *args*: A list containing the arguments the function was called with, *result*: The result of the function call)
+**onCall parameters**: *info*: An object containing further information about the variable and context, the properties are (*name*: Name of the function, *args*: A list containing the arguments the function was called with, *result*: The result of the function call, *filename*: Name of the file, *line*: File line number, *column*: File column number)
 ## Development Roadmap
 
 - [x] Basic operations

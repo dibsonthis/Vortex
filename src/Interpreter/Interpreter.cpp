@@ -286,6 +286,9 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
                     }
                     file_info->Object.properties["args"] = args_list;
                     file_info->Object.properties["result"] = res;
+                    file_info->Object.properties["filename"] = new_string_node(file_name);
+                    file_info->Object.properties["line"] = new_number_node(line);
+                    file_info->Object.properties["column"] = new_number_node(column);
                     function_call->FuncCall.args.push_back(file_info);
                 }
                 eval_func_call(function_call, func);
