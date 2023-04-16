@@ -59,7 +59,7 @@ node_ptr Interpreter::eval_const_decl_multiple(node_ptr node) {
         }
         node_ptr value = eval_node(decl->ConstantDeclaration.value);
         value->Meta.is_const = true;
-        Symbol symbol = new_symbol(node->ConstantDeclaration.name, value);
+        Symbol symbol = new_symbol(decl->ConstantDeclaration.name, value);
         add_symbol(symbol, current_symbol_table);
     }
     return new_boolean_node(true);
