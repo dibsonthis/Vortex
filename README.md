@@ -14,7 +14,7 @@ For example, if we wanted automatically increment variable y whenever variable x
 var x, y = 0
 
 x::onChange = () => {
-	y += 1
+    y += 1
 }
 
 x = 2 // y == 1
@@ -25,11 +25,11 @@ We could also implement hooks for object properties:
 
 ```
 var person = {
-	name: "John"
+    name: "John"
 }
 
 person.name::onChange = () => {
-	println("Person's name has changed!")
+    println("Person's name has changed!")
 }
 
 person.name = "Allan" // Person's name has changed!
@@ -114,8 +114,8 @@ length::onChange = () => {
 }
 
 for (1..10) {
-	length += 1
-	print("L: " + string(length) + "\tA: " + string(area))
+    length += 1
+    print("L: " + string(length) + "\tA: " + string(area))
 }
 ```
 
@@ -137,27 +137,27 @@ L: 9    A: 81
 
 ```
 var lexer = {
-	index: -1,
-	tokens: ["const", "x", "=", 9, 10, "5", [1, 2, 3]],
-	currentNode: this.tokens[0]
+    index: -1,
+    tokens: ["const", "x", "=", 9, 10, "5", [1, 2, 3]],
+    currentNode: this.tokens[0]
 }
 
 lexer.index::onChange = (curr) => {
-	lexer.currentNode = lexer.tokens[curr]
+    lexer.currentNode = lexer.tokens[curr]
 }
 
 lexer.currentNode::onChange = (curr) => {
-	if (curr != string(curr)) {
-		println("[Removing non-string token: " + string(curr) + "]")
-		lexer.tokens.remove_at(lexer.index)
-		lexer.index -= 1
-	}
+    if (curr != string(curr)) {
+    	println("[Removing non-string token: " + string(curr) + "]")
+    	lexer.tokens.remove_at(lexer.index)
+    	lexer.index -= 1
+}
 }
 
 println(lexer)
 
 for (0..(lexer.tokens.length)) {
-	lexer.index += 1
+    lexer.index += 1
 }
 
 println(lexer)
