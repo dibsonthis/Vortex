@@ -77,7 +77,7 @@ y = -54 // y has changed
 
 ### Hook types
 
-**onChange**: This hook will fire whenever a variable changes.
+**onChange**: This hook will fire whenever a variable changes.\
 **onChange parameters**: *new*: The new value, *old*: The old value, *info*: An object containing further information about the variable and context, the properties are (*name*: Name of the variable, *filename*: Name of the file, *line*: File line number, *column*: File column number)
 
 **onCall**: This hook will fire whenever a function is called.
