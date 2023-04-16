@@ -1,13 +1,13 @@
-var x, y = 0
+var x = 0
 var z = {
 	inner: {
 		name: "John"
 	}
 }
 
-z::onChange = (new, old, info) => {
+[]::onChange = (new, old, info) => {
 	println(info.name + ": " + string(old) + " -> " + string(new))
 }
 
 z = "Allan"
-println(z)
+x += 10

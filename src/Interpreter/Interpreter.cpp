@@ -24,7 +24,7 @@ void Interpreter::reset(int idx) {
 void Interpreter::eval_const_functions() {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->type == NodeType::CONSTANT_DECLARATION && current_node->ConstantDeclaration.value->type == NodeType::FUNC) {
-            node_ptr existing_symbol = get_symbol(current_node->ConstantDeclaration.name, symbol_table).value;
+            node_ptr existing_symbol = get_symbol(current_node->ConstantDeclaration.name, current_symbol_table).value;
             if (existing_symbol != nullptr) {
                 error_and_exit("Function '" + current_node->ConstantDeclaration.name + "' is already defined");
             }
@@ -40,7 +40,7 @@ void Interpreter::eval_const_functions() {
 }
 
 node_ptr Interpreter::eval_const_decl(node_ptr node) {
-    node_ptr existing_symbol = get_symbol(node->ConstantDeclaration.name, symbol_table).value;
+    node_ptr existing_symbol = get_symbol(node->ConstantDeclaration.name, current_symbol_table).value;
     if (existing_symbol != nullptr) {
         error_and_exit("Variable '" + node->ConstantDeclaration.name + "' is already defined");
     }
@@ -53,7 +53,7 @@ node_ptr Interpreter::eval_const_decl(node_ptr node) {
 
 node_ptr Interpreter::eval_const_decl_multiple(node_ptr node) {
     for (node_ptr& decl : node->ConstantDeclarationMultiple.constant_declarations) {
-        node_ptr existing_symbol = get_symbol(decl->ConstantDeclaration.name, symbol_table).value;
+        node_ptr existing_symbol = get_symbol(decl->ConstantDeclaration.name, current_symbol_table).value;
         if (existing_symbol != nullptr) {
             error_and_exit("Variable '" + decl->ConstantDeclaration.name + "' is already defined");
         }
@@ -66,7 +66,7 @@ node_ptr Interpreter::eval_const_decl_multiple(node_ptr node) {
 }
 
 node_ptr Interpreter::eval_var_decl(node_ptr node) {
-    node_ptr existing_symbol = get_symbol(node->VariableDeclaration.name, symbol_table).value;
+    node_ptr existing_symbol = get_symbol(node->VariableDeclaration.name, current_symbol_table).value;
     if (existing_symbol != nullptr) {
         error_and_exit("Variable '" + node->VariableDeclaration.name + "' is already defined");
     }
@@ -77,7 +77,7 @@ node_ptr Interpreter::eval_var_decl(node_ptr node) {
 
 node_ptr Interpreter::eval_var_decl_multiple(node_ptr node) {
     for (node_ptr& decl : node->VariableDeclarationMultiple.variable_declarations) {
-        node_ptr existing_symbol = get_symbol(decl->VariableDeclaration.name, symbol_table).value;
+        node_ptr existing_symbol = get_symbol(decl->VariableDeclaration.name, current_symbol_table).value;
         if (existing_symbol != nullptr) {
             error_and_exit("Variable '" + decl->VariableDeclaration.name + "' is already defined");
         }
@@ -173,7 +173,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.body = func->Function.body;
         function->Hooks.onCall = func->Hooks.onCall;
     } else if (node->FuncCall.caller == nullptr) {
-        Symbol function_symbol = get_symbol(node->FuncCall.name, symbol_table);
+        Symbol function_symbol = get_symbol(node->FuncCall.name, current_symbol_table);
         if (function_symbol.value == nullptr) {
             error_and_exit("Function '" + node->FuncCall.name + "' is undefined");
         }
@@ -510,7 +510,7 @@ node_ptr Interpreter::eval_import(node_ptr node) {
 
         std::filesystem::current_path(current_path);
 
-        for (auto& symbol : import_interpreter.symbol_table->symbols) {
+        for (auto& symbol : import_interpreter.global_symbol_table->symbols) {
             import_obj->Object.properties[symbol.first] = symbol.second.value;
         }
 
@@ -548,13 +548,13 @@ node_ptr Interpreter::eval_import(node_ptr node) {
 
         std::unordered_map<std::string, node_ptr> imported_variables;
 
-        for (auto& symbol : import_interpreter.symbol_table->symbols) {
+        for (auto& symbol : import_interpreter.global_symbol_table->symbols) {
             imported_variables[symbol.first] = symbol.second.value;
         }
 
         for (node_ptr elem : node->Import.module->List.elements) {
             if (imported_variables.contains(elem->ID.value)) {
-                add_symbol(import_interpreter.symbol_table->symbols[elem->ID.value], current_symbol_table);
+                add_symbol(import_interpreter.global_symbol_table->symbols[elem->ID.value], current_symbol_table);
             } else {
                 error_and_exit("Cannot import value '" + elem->ID.value + "' - variable undefined");
             }
@@ -1190,12 +1190,50 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             *accessed_value = *right;
             accessed_value->Hooks.onChange = onChangeFunctions;
 
-            for (node_ptr function : onChangeFunctions) {
+            auto allOnChangeFunctionsLists = {std::cref(onChangeFunctions), std::cref(global_symbol_table->globalHooks_onChange)};
+            
+            for (const auto& function_list : allOnChangeFunctionsLists) {
+                for (auto function : function_list.get()) {
+                    node_ptr function_call = new_node(NodeType::FUNC_CALL);
+                    function_call->FuncCall.name = function->Function.name;
+                    function_call->FuncCall.args = std::vector<node_ptr>();
+                    if (function->Function.params.size() > 0) {
+                        function_call->FuncCall.args.push_back(accessed_value);
+                    }
+                    if (function->Function.params.size() > 1) {
+                        function_call->FuncCall.args.push_back(old_value);
+                    }
+                    if (function->Function.params.size() > 2) {
+                        node_ptr file_info = new_node(NodeType::OBJECT);
+                        file_info->Object.properties["name"] = new_string_node(printable(left->Operator.left) + "." + printable(prop));
+                        file_info->Object.properties["filename"] = new_string_node(file_name);
+                        file_info->Object.properties["line"] = new_number_node(line);
+                        file_info->Object.properties["column"] = new_number_node(column);
+                        function_call->FuncCall.args.push_back(file_info);
+                    }
+                    eval_func_call(function_call, function);
+                }
+            }
+
+            return object;
+        }
+
+        node_ptr accessed_value = object->Object.properties[prop->ID.value];
+        node_ptr old_value = std::make_shared<Node>(*accessed_value);
+        std::vector<node_ptr> onChangeFunctions = old_value->Hooks.onChange;
+
+        object->Object.properties[prop->ID.value] = right;
+        object->Object.properties[prop->ID.value]->Hooks.onChange = onChangeFunctions;
+
+        auto allOnChangeFunctionsLists = {std::cref(onChangeFunctions), std::cref(global_symbol_table->globalHooks_onChange)};
+            
+        for (const auto& function_list : allOnChangeFunctionsLists) {
+            for (node_ptr function : function_list.get()) {
                 node_ptr function_call = new_node(NodeType::FUNC_CALL);
                 function_call->FuncCall.name = function->Function.name;
                 function_call->FuncCall.args = std::vector<node_ptr>();
                 if (function->Function.params.size() > 0) {
-                    function_call->FuncCall.args.push_back(accessed_value);
+                    function_call->FuncCall.args.push_back(object->Object.properties[prop->ID.value]);
                 }
                 if (function->Function.params.size() > 1) {
                     function_call->FuncCall.args.push_back(old_value);
@@ -1210,36 +1248,6 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                 }
                 eval_func_call(function_call, function);
             }
-
-            return object;
-        }
-
-        node_ptr accessed_value = object->Object.properties[prop->ID.value];
-        node_ptr old_value = std::make_shared<Node>(*accessed_value);
-        std::vector<node_ptr> onChangeFunctions = old_value->Hooks.onChange;
-
-        object->Object.properties[prop->ID.value] = right;
-        object->Object.properties[prop->ID.value]->Hooks.onChange = onChangeFunctions;
-
-        for (node_ptr function : onChangeFunctions) {
-            node_ptr function_call = new_node(NodeType::FUNC_CALL);
-            function_call->FuncCall.name = function->Function.name;
-            function_call->FuncCall.args = std::vector<node_ptr>();
-            if (function->Function.params.size() > 0) {
-                function_call->FuncCall.args.push_back(object->Object.properties[prop->ID.value]);
-            }
-            if (function->Function.params.size() > 1) {
-                function_call->FuncCall.args.push_back(old_value);
-            }
-            if (function->Function.params.size() > 2) {
-                node_ptr file_info = new_node(NodeType::OBJECT);
-                file_info->Object.properties["name"] = new_string_node(printable(left->Operator.left) + "." + printable(prop));
-                file_info->Object.properties["filename"] = new_string_node(file_name);
-                file_info->Object.properties["line"] = new_number_node(line);
-                file_info->Object.properties["column"] = new_number_node(column);
-                function_call->FuncCall.args.push_back(file_info);
-            }
-            eval_func_call(function_call, function);
         }
 
         return object;
@@ -1279,25 +1287,29 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             
             // Call onChange functions
 
-            for (node_ptr function : onChangeFunctions) {
-                node_ptr function_call = new_node(NodeType::FUNC_CALL);
-                function_call->FuncCall.name = function->Function.name;
-                function_call->FuncCall.args = std::vector<node_ptr>();
-                if (function->Function.params.size() > 0) {
-                    function_call->FuncCall.args.push_back(symbol.value);
+            auto allOnChangeFunctionsLists = {std::cref(onChangeFunctions), std::cref(global_symbol_table->globalHooks_onChange)};
+            
+            for (const auto& function_list : allOnChangeFunctionsLists) {
+                for (node_ptr function : function_list.get()) {
+                    node_ptr function_call = new_node(NodeType::FUNC_CALL);
+                    function_call->FuncCall.name = function->Function.name;
+                    function_call->FuncCall.args = std::vector<node_ptr>();
+                    if (function->Function.params.size() > 0) {
+                        function_call->FuncCall.args.push_back(symbol.value);
+                    }
+                    if (function->Function.params.size() > 1) {
+                        function_call->FuncCall.args.push_back(old_value);
+                    }
+                    if (function->Function.params.size() > 2) {
+                        node_ptr file_info = new_node(NodeType::OBJECT);
+                        file_info->Object.properties["name"] = new_string_node(symbol.name);
+                        file_info->Object.properties["filename"] = new_string_node(file_name);
+                        file_info->Object.properties["line"] = new_number_node(line);
+                        file_info->Object.properties["column"] = new_number_node(column);
+                        function_call->FuncCall.args.push_back(file_info);
+                    }
+                    eval_func_call(function_call, function);
                 }
-                if (function->Function.params.size() > 1) {
-                    function_call->FuncCall.args.push_back(old_value);
-                }
-                if (function->Function.params.size() > 2) {
-                    node_ptr file_info = new_node(NodeType::OBJECT);
-                    file_info->Object.properties["name"] = new_string_node(symbol.name);
-                    file_info->Object.properties["filename"] = new_string_node(file_name);
-                    file_info->Object.properties["line"] = new_number_node(line);
-                    file_info->Object.properties["column"] = new_number_node(column);
-                    function_call->FuncCall.args.push_back(file_info);
-                }
-                eval_func_call(function_call, function);
             }
 
             return right;
@@ -1337,6 +1349,25 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
         }
 
         if (target->type == NodeType::LIST) {
+            // Global hook
+            if (target->List.elements.size() == 0) {
+                if (prop->ID.value == "onChange") {
+                    if (right->type != NodeType::FUNC) {
+                        error_and_exit("onChange hook expects a function");
+                    }
+                    global_symbol_table->globalHooks_onChange.push_back(right);
+                } else if (prop->ID.value == "onCall") {
+                    if (right->type != NodeType::FUNC) {
+                        error_and_exit("onCall hook expects a function");
+                    }
+                    global_symbol_table->globalHooks_onCall.push_back(right);
+                } else {
+                    error_and_exit("Unknown hook '" + prop->ID.value + "'");
+                }
+
+                return new_node(NodeType::NONE);
+            }
+
             if (target->List.elements.size() == 1 && target->List.elements[0]->type == NodeType::COMMA_LIST) {
                 target = target->List.elements[0];
             }

@@ -18,6 +18,8 @@ struct SymbolTable {
     std::unordered_map<std::string, Symbol> symbols;
     sym_t_ptr parent = nullptr;
     sym_t_ptr child = nullptr;
+    std::vector<node_ptr> globalHooks_onChange;
+    std::vector<node_ptr> globalHooks_onCall;
 };
 
 class Interpreter {
@@ -27,8 +29,8 @@ public:
     int index = 0;
     std::string file_name;
     int line, column;
-    sym_t_ptr symbol_table = std::make_shared<SymbolTable>();
-    sym_t_ptr current_symbol_table = symbol_table;
+    sym_t_ptr global_symbol_table = std::make_shared<SymbolTable>();
+    sym_t_ptr current_symbol_table = global_symbol_table;
 
 public:
     Interpreter() = default;
