@@ -523,6 +523,16 @@ node_ptr Interpreter::eval_import(node_ptr node) {
             import_obj->Object.properties[symbol.first] = symbol.second.value;
         }
 
+        // We also want to import hooks into the current scope
+
+        for (auto& hook : import_interpreter.global_symbol_table->globalHooks_onChange) {
+            current_symbol_table->globalHooks_onChange.push_back(hook);
+        }
+
+        for (auto& hook : import_interpreter.global_symbol_table->globalHooks_onCall) {
+            current_symbol_table->globalHooks_onCall.push_back(hook);
+        }
+
         add_symbol(new_symbol(module_name, import_obj), current_symbol_table);
         return new_node(NodeType::NONE);
     }
@@ -1686,6 +1696,7 @@ void Interpreter::erase_curr() {
 
 node_ptr Interpreter::new_number_node(double value) {
     auto node = std::make_shared<Node>(NodeType::NUMBER);
+    node->Meta.is_const = false;
     node->Number.value = value;
     node->line = line;
     node->column = column;
@@ -1694,6 +1705,7 @@ node_ptr Interpreter::new_number_node(double value) {
 
 node_ptr Interpreter::new_string_node(std::string value) {
     auto node = std::make_shared<Node>(NodeType::STRING);
+    node->Meta.is_const = false;
     node->String.value = value;
     node->line = line;
     node->column = column;
@@ -1702,6 +1714,7 @@ node_ptr Interpreter::new_string_node(std::string value) {
 
 node_ptr Interpreter::new_boolean_node(bool value) {
     auto node = std::make_shared<Node>(NodeType::BOOLEAN);
+    node->Meta.is_const = false;
     node->Boolean.value = value;
     node->line = line;
     node->column = column;
@@ -1710,6 +1723,7 @@ node_ptr Interpreter::new_boolean_node(bool value) {
 
 node_ptr Interpreter::new_accessor_node() {
     auto node = std::make_shared<Node>(NodeType::ACCESSOR);
+    node->Meta.is_const = false;
     node->line = line;
     node->column = column;
     return node;
@@ -1717,6 +1731,7 @@ node_ptr Interpreter::new_accessor_node() {
 
 node_ptr Interpreter::new_node(NodeType type) {
     auto node = std::make_shared<Node>(type);
+    node->Meta.is_const = false;
     node->line = line;
     node->column = column;
     return node;
@@ -1724,6 +1739,7 @@ node_ptr Interpreter::new_node(NodeType type) {
 
 node_ptr Interpreter::new_node() {
     auto node = std::make_shared<Node>();
+    node->Meta.is_const = false;
     node->line = line;
     node->column = column;
     return node;

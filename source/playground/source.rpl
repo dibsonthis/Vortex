@@ -1,24 +1,16 @@
-// var x = 0
-// var z = {
-// 	inner: {
-// 		name: "John"
-// 	}
-// }
+var radius, area = 0
 
-// []::onChange = (new, old, info) => {
-// 	println(info.name + ": " + string(old) + " -> " + string(new))
-// }
+radius::onChange = (r) => {
+	area = 3.14 * r ^ 2
+	//println("Radius: " + string(radius), "Area: " + string(area))
+}
 
-// []::onCall = (info) => {
-// 	println(info.name + " was called: " + string(info.result))
-// }
+const setOnChange = () => {
+	[]::onChange = (new, old, info) => println(info.name + ": " + string(old) + " -> " + string(new))
+}
 
-// const add = (a, b) => a + b
+setOnChange()
 
-// z = "Allan"
-// x += 10
-// add(10, 20)
-
-const x, y, z = 0
-
-x += 1
+for (1..100) {
+	radius += 2.7
+}
