@@ -8,7 +8,7 @@ It heavily relies on side effects, and as such it would fall under the Disfuncti
 
 Ripple's main focus is on what we call "hooks". Hooks allow the user to bind variables to functions in the context of specific events. 
 
-For example, if I wanted automatically increment variable y whenever variable x changes, I could use the onChange hook to do so:
+For example, if we wanted automatically increment variable y whenever variable x changes, we could use the onChange hook to do so:
 
 ```
 var x, y = 0
