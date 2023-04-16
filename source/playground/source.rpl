@@ -1,7 +1,7 @@
-import [someList, someValue, someObject] : "./import_test"
+const _print = (arg) => println(arg)
 
-println(someList)
-someValue += 10
-someValue += 10
-println(someList)
-println(someObject)
+_print::onCall = (info) => {
+	println(info)
+}
+
+_print("hello")

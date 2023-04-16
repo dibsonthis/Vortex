@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include "src/libs/JSON/json.hpp"
 #include "src/Lexer/Lexer.hpp"
 #include "src/Parser/Parser.hpp"
 #include "src/Interpreter/Interpreter.hpp"
@@ -37,7 +38,7 @@ int main(int argc, char** argv)
     {
         if (argc == 1)
         {
-            std::cout << "You must enter a source path e.g: glide \"main.gl\"\n";
+            std::cout << "You must enter a source path e.g: ripple \"dev/main.rpl\"\n";
             return 1;
         }
 
@@ -52,6 +53,18 @@ int main(int argc, char** argv)
         Lexer lexer(path);
         lexer.tokenize();
 
+        Parser parser(lexer.nodes, lexer.file_name);
+        parser.parse(0, "_");
+        parser.remove_op_node(";");
+        auto ast = parser.nodes;
+
+        auto parent_path = std::filesystem::path(path).parent_path();
+        std::filesystem::current_path(parent_path);
+
+        Interpreter interpreter(parser.nodes, parser.file_name);
+        interpreter.evaluate();
+
+        std::cin.get();
         exit(0);
     }
 }

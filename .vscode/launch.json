@@ -57,7 +57,7 @@
       "name": "C/C++: clang++ build interpreter",
       "type": "lldb",
       "request": "launch",
-      "program": "${workspaceFolder}/bin/build/interp/interp",
+      "program": "${workspaceFolder}/bin/build/interp/ripple",
       "args": [],
       "cwd": "${workspaceFolder}/bin/build/interp",
       "preLaunchTask": "C/C++: clang++ build interpreter"

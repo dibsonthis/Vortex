@@ -170,6 +170,7 @@ struct MetaInformation {
 
 struct Hooks {
 	std::vector<node_ptr> onChange;
+	std::vector<node_ptr> onCall;
 };
 
 struct Node {

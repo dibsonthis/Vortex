@@ -171,6 +171,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.args = std::vector<node_ptr>(func->Function.args);
         function->Function.params = std::vector<node_ptr>(func->Function.params);
         function->Function.body = func->Function.body;
+        function->Hooks.onCall = func->Hooks.onCall;
     } else if (node->FuncCall.caller == nullptr) {
         Symbol function_symbol = get_symbol(node->FuncCall.name, symbol_table);
         if (function_symbol.value == nullptr) {
@@ -180,6 +181,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.args = std::vector<node_ptr>(function_symbol.value->Function.args);
         function->Function.params = std::vector<node_ptr>(function_symbol.value->Function.params);
         function->Function.body = function_symbol.value->Function.body;
+        function->Hooks.onCall = function_symbol.value->Hooks.onCall;
     } else {
         node_ptr method = node->FuncCall.caller->Object.properties[node->FuncCall.name];
         if (method->type == NodeType::NONE) {
@@ -189,6 +191,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.args = std::vector<node_ptr>(method->Function.args);
         function->Function.params = std::vector<node_ptr>(method->Function.params);
         function->Function.body = method->Function.body;
+        function->Hooks.onCall = method->Hooks.onCall;
     }
 
     std::vector<node_ptr> args;
@@ -261,6 +264,24 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
                 }
             }
         }
+    }
+
+    for (node_ptr func : function->Hooks.onCall) {
+        node_ptr function_call = new_node(NodeType::FUNC_CALL);
+        function_call->FuncCall.name = func->Function.name;
+        function_call->FuncCall.args = std::vector<node_ptr>();
+        if (func->Function.params.size() > 0) {
+            node_ptr file_info = new_node(NodeType::OBJECT);
+            file_info->Object.properties["name"] = new_string_node(function->Function.name);
+            node_ptr args_list = new_node(NodeType::LIST);
+            for (node_ptr arg : args) {
+                args_list->List.elements.push_back(arg);
+            }
+            file_info->Object.properties["args"] = args_list;
+            file_info->Object.properties["result"] = res;
+            function_call->FuncCall.args.push_back(file_info);
+        }
+        eval_func_call(function_call, func);
     }
 
     current_symbol_table = current_symbol_table->parent;
@@ -467,9 +488,6 @@ node_ptr Interpreter::eval_import(node_ptr node) {
         error_and_exit("Import target must be a string");
     }
 
-    auto parent_path = std::filesystem::path(node->Import.target->String.value).parent_path();
-    std::filesystem::current_path(parent_path);
-
     std::string path = node->Import.target->String.value + ".rpl";
 
     if (node->Import.module->type == NodeType::ID) {
@@ -482,9 +500,15 @@ node_ptr Interpreter::eval_import(node_ptr node) {
         Parser import_parser(import_lexer.nodes, import_lexer.file_name);
         import_parser.parse(0, "_");
         import_parser.remove_op_node(";");
+        
+        auto current_path = std::filesystem::current_path();
+        auto parent_path = std::filesystem::path(path).parent_path();
+        std::filesystem::current_path(parent_path);
 
         Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
         import_interpreter.evaluate();
+
+        std::filesystem::current_path(current_path);
 
         for (auto& symbol : import_interpreter.symbol_table->symbols) {
             import_obj->Object.properties[symbol.first] = symbol.second.value;
@@ -513,8 +537,14 @@ node_ptr Interpreter::eval_import(node_ptr node) {
         import_parser.parse(0, "_");
         import_parser.remove_op_node(";");
 
+        auto current_path = std::filesystem::current_path();
+        auto parent_path = std::filesystem::path(path).parent_path();
+        std::filesystem::current_path(parent_path);
+
         Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
         import_interpreter.evaluate();
+
+        std::filesystem::current_path(current_path);
 
         std::unordered_map<std::string, node_ptr> imported_variables;
 
@@ -1272,10 +1302,6 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
         node_ptr target = left->Operator.left;
         node_ptr prop = left->Operator.right;
 
-        // if (target->type != NodeType::ID && target->type != NodeType::LIST) {
-        //     error_and_exit("Hook expects either an identifier or a list of identifiers");
-        // }
-
         if (prop->type != NodeType::ID) {
             error_and_exit("Hook expects an identifier");
         }
@@ -1288,8 +1314,16 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                     error_and_exit("onChange hook expects a function");
                 }
                 symbol.value->Hooks.onChange.push_back(right);
-                add_symbol(symbol, current_symbol_table);
+            } else if (prop->ID.value == "onCall") {
+                if (right->type != NodeType::FUNC && symbol.value->type != NodeType::FUNC) {
+                    error_and_exit("onCall hook expects a function");
+                }
+                symbol.value->Hooks.onCall.push_back(right);
+            } else {
+                error_and_exit("Unknown hook '" + prop->ID.value + "'");
             }
+
+            add_symbol(symbol, current_symbol_table);
 
             return new_node(NodeType::NONE);
         }
@@ -1311,8 +1345,16 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                         error_and_exit("onChange hook expects a function");
                     }
                     symbol.value->Hooks.onChange.push_back(right);
-                    add_symbol(symbol, current_symbol_table);
+                } else if (prop->ID.value == "onCall") {
+                    if (right->type != NodeType::FUNC && symbol.value->type != NodeType::FUNC) {
+                        error_and_exit("onCall hook expects a function");
+                    }
+                    symbol.value->Hooks.onCall.push_back(right);
+                } else {
+                    error_and_exit("Unknown hook '" + prop->ID.value + "'");
                 }
+
+                add_symbol(symbol, current_symbol_table);
             }
 
             return new_node(NodeType::NONE);
@@ -1325,6 +1367,13 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                     error_and_exit("onChange hook expects a function");
                 }
                 target->Hooks.onChange.push_back(right);
+            } else if (prop->ID.value == "onCall") {
+                if (right->type != NodeType::FUNC && target->type != NodeType::FUNC) {
+                    error_and_exit("onCall hook expects a function");
+                }
+                target->Hooks.onCall.push_back(right);
+            } else {
+                error_and_exit("Unknown hook '" + prop->ID.value + "'");
             }
 
             return new_node(NodeType::NONE);
