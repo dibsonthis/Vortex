@@ -153,11 +153,11 @@ const res = PI * e + fib(20)
 
 Ripple's imports use relative paths to retrieve modules.
 
-### Further Reading
+## Further Reading
 
 TBA - A more detailed and broken down guide to Ripple syntax, keywords, builtins and other information is in the works. The link will appear here.
 
-### How to start using Ripple
+## How to start using Ripple
 
 TBA - You can by all means fork this repo and tinker with it, however a proper guide on how to get started with Ripple is on the way.
 ## Development Roadmap
