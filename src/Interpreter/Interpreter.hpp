@@ -20,6 +20,9 @@ struct SymbolTable {
     sym_t_ptr child = nullptr;
     std::vector<node_ptr> globalHooks_onChange;
     std::vector<node_ptr> globalHooks_onCall;
+
+    // Scope info
+    std::string filename;
 };
 
 class Interpreter {

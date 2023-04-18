@@ -1,9 +1,4 @@
-var x = 12
-
-var someFunc_ = () => {
-	ret x
-}
-
-var someFunc = () => {
-	ret someFunc_()
+const logOnCall = () => {
+	[mapElems]::onCall = (info) => 
+		println(info.name + " was called - args:" + string(info.args) + ", result: " + string(info.result))
 }

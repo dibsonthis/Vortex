@@ -213,6 +213,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
     }
 
     current_symbol_table = function_symbol_table;
+    current_symbol_table->filename = function->Function.name;
     
     // Inject closure into current scope
 
@@ -306,6 +307,11 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
     }
 
     current_symbol_table = current_symbol_table->parent;
+
+    if (res->type == NodeType::FUNC) {
+        for (auto& elem : current_symbol_table->symbols)
+        res->Function.closure[elem.first] = elem.second.value;
+    }
 
     return res;
 }
@@ -1072,7 +1078,7 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
                     error_and_exit("List function '" + prop + "' expects 1 argument");
                 }
                 
-                node_ptr function = right->FuncCall.args[0];
+                node_ptr function = eval_node(right->FuncCall.args[0]);
 
                 if (function->type != NodeType::FUNC) {
                     error_and_exit("List function '" + prop + "' expects 1 function argument");
@@ -1108,7 +1114,7 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
                     error_and_exit("List function '" + prop + "' expects 1 argument");
                 }
                 
-                node_ptr function = right->FuncCall.args[0];
+                node_ptr function = eval_node(right->FuncCall.args[0]);
 
                 if (function->type != NodeType::FUNC) {
                     error_and_exit("List function '" + prop + "' expects 1 function argument");
@@ -1150,7 +1156,7 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
                     error_and_exit("List function '" + prop + "' expects 1 argument");
                 }
                 
-                node_ptr function = right->FuncCall.args[0];
+                node_ptr function = eval_node(right->FuncCall.args[0]);
 
                 if (function->type != NodeType::FUNC) {
                     error_and_exit("List function '" + prop + "' expects 1 function argument");
@@ -1195,7 +1201,7 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
                     }
                 }
 
-                return new_list;
+                return new_list->List.elements[0];
             }
         }
 
@@ -1437,6 +1443,9 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                 }
 
                 Symbol symbol = get_symbol(elem->ID.value, current_symbol_table);
+                if (symbol.value == nullptr) {
+                    error_and_exit("Variable '" + elem->ID.value + "' is undefined");
+                }
 
                 if (prop->ID.value == "onChange") {
                     if (right->type != NodeType::FUNC) {
@@ -1790,5 +1799,9 @@ void Interpreter::error_and_exit(std::string message)
 {
     std::string error_message = "Error in '" + file_name + "' @ (" + std::to_string(line) + ", " + std::to_string(column) + "): " + message;
 	std::cout << error_message << "\n";
+    while (current_symbol_table->parent != nullptr) {
+        std::cout << "In '" + current_symbol_table->filename + "'" << "\n";
+        current_symbol_table = current_symbol_table->parent;
+    }
     exit(1);
 }

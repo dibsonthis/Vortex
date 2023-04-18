@@ -1,2 +1,13 @@
-import [someFunc] : "./import_test"
-print(someFunc())
+import [logOnCall] : "./import_test"
+
+logOnCall()
+var list = [1, 2, 3, 4, 5]
+var mapElems = (x) => x * 2.5
+var filterElems = (x) => x > 7
+var reduceElems = (a, b) => a + b
+var newList = list
+				.map(mapElems)
+				.filter(filterElems)
+				.reduce(reduceElems)
+
+println(newList)
