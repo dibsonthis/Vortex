@@ -113,19 +113,19 @@ node_ptr Interpreter::eval_object(node_ptr node) {
         if (prop->Operator.value != ":") {
             error_and_exit("Object must contain properties separated with ':'");
         }
-        if (prop->Operator.left->type != NodeType::ID) {
-            error_and_exit("Propertiy names must be identifiers");
+        if (prop->Operator.left->type != NodeType::ID && prop->Operator.left->type != NodeType::STRING) {
+            error_and_exit("Property names must be identifiers or strings");
         }
-        object->Object.properties[prop->Operator.left->ID.value] = eval_node(prop->Operator.right);
+        object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = eval_node(prop->Operator.right);
     }
     for (node_ptr prop : node->Object.elements[0]->List.elements) {
         if (prop->Operator.value != ":") {
             error_and_exit("Object must contain properties separated with ':'");
         }
-        if (prop->Operator.left->type != NodeType::ID) {
-            error_and_exit("Propertiy names must be identifiers");
+        if (prop->Operator.left->type != NodeType::ID && prop->Operator.left->type != NodeType::STRING) {
+            error_and_exit("Property names must be identifiers or strings");
         }
-        object->Object.properties[prop->Operator.left->ID.value] = eval_node(prop->Operator.right);
+        object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = eval_node(prop->Operator.right);
     }
     // remove "this" from scope
     delete_symbol("this", current_symbol_table);
@@ -1277,14 +1277,32 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
 
     if (left->type == NodeType::ACCESSOR) {
         node_ptr container = eval_node(left->Accessor.container);
+        node_ptr accessor = eval_node(left->Accessor.accessor);
         if (container->Meta.is_const) {
             error_and_exit("Cannot modify constant");
         }
-        left = eval_node(left);
-        if (left->Meta.is_const) {
-            error_and_exit("Cannot modify constant");
+        if (container->type == NodeType::LIST) {
+            node_ptr accessed_value = eval_accessor(left);
+            if (accessed_value->type == NodeType::NONE) {
+                container->List.elements.push_back(right);
+            } else {
+                if (accessed_value->Meta.is_const) {
+                    error_and_exit("Cannot modify constant");
+                }
+                *accessed_value = *right;
+            }
+        } else if (container->type == NodeType::OBJECT) {
+            node_ptr accessed_value = eval_accessor(left);
+
+            if (accessed_value->type == NodeType::NONE) {
+                container->Object.properties[accessor->List.elements[0]->String.value] = right;
+            } else {
+                if (accessed_value->Meta.is_const) {
+                    error_and_exit("Cannot modify constant");
+                }
+                *accessed_value = *right;
+            }
         }
-        *left = *right;
         return right;
     }
 

@@ -344,7 +344,7 @@ void Parser::parse_accessor(std::string end) {
             advance();
             continue;
         }
-        while ((current_node->type == NodeType::ID || current_node->type == NodeType::LIST || current_node->type == NodeType::FUNC_CALL || current_node->type == NodeType::ACCESSOR) 
+        while ((current_node->type == NodeType::ID || current_node->type == NodeType::LIST || current_node->type == NodeType::FUNC_CALL || current_node->type == NodeType::ACCESSOR || current_node->Operator.value == ".") 
         && peek()->type == NodeType::LIST) {
             node_ptr accessor = new_accessor_node();
             accessor->Accessor.container = nodes[index];
@@ -649,11 +649,11 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_func_call(end);
     reset(start);
-    parse_accessor(end);
-    reset(start);
     parse_post_op({"?"}, end);
     reset(start);
     parse_bin_op({"."}, end);
+    reset(start);
+    parse_accessor(end);
     reset(start);
     parse_un_op({"+", "-"}, end);
     reset(start);
