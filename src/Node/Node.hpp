@@ -92,6 +92,7 @@ struct FuncNode {
 	std::vector<node_ptr> params;
 	node_ptr body;
 	bool is_hook;
+	std::unordered_map<std::string, node_ptr> closure;
 };
 
 struct AccessorNode {

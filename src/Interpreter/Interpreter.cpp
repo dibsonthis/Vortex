@@ -171,6 +171,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.args = std::vector<node_ptr>(func->Function.args);
         function->Function.params = std::vector<node_ptr>(func->Function.params);
         function->Function.body = func->Function.body;
+        function->Function.closure = func->Function.closure;
         function->Function.is_hook = func->Function.is_hook;
         function->Hooks.onCall = func->Hooks.onCall;
     } else if (node->FuncCall.caller == nullptr) {
@@ -182,6 +183,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.args = std::vector<node_ptr>(function_symbol.value->Function.args);
         function->Function.params = std::vector<node_ptr>(function_symbol.value->Function.params);
         function->Function.body = function_symbol.value->Function.body;
+        function->Function.closure = function_symbol.value->Function.closure;
         function->Function.is_hook = function_symbol.value->Function.is_hook;
         function->Hooks.onCall = function_symbol.value->Hooks.onCall;
     } else {
@@ -193,6 +195,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.args = std::vector<node_ptr>(method->Function.args);
         function->Function.params = std::vector<node_ptr>(method->Function.params);
         function->Function.body = method->Function.body;
+        function->Function.closure = method->Function.closure;
         function->Function.is_hook = method->Function.is_hook;
         function->Hooks.onCall = method->Hooks.onCall;
     }
@@ -210,6 +213,12 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
     }
 
     current_symbol_table = function_symbol_table;
+    
+    // Inject closure into current scope
+
+    for (auto& elem : function->Function.closure) {
+        add_symbol(new_symbol(elem.first, elem.second), current_symbol_table);
+    }
 
     int num_empty_args = std::count(function->Function.args.begin(), function->Function.args.end(), nullptr);
 
@@ -493,6 +502,14 @@ node_ptr Interpreter::eval_accessor(node_ptr node) {
     }
 
     error_and_exit("Value of type '" + node_repr(container) + "' is not accessable");
+}
+
+node_ptr Interpreter::eval_function(node_ptr node) {
+    // Inject current scope as closure
+    for (auto& symbol : current_symbol_table->symbols) {
+        node->Function.closure[symbol.first] = symbol.second.value;
+    }
+    return node;
 }
 
 node_ptr Interpreter::eval_import(node_ptr node) {
@@ -1561,6 +1578,9 @@ node_ptr Interpreter::eval_node(node_ptr node) {
             error_and_exit("Empty parentheses");
         }
         return eval_node(node->Paren.elements[0]);
+    }
+    if (node->type == NodeType::FUNC) {
+        return eval_function(node);
     }
     if (node->type == NodeType::CONSTANT_DECLARATION) {
         return eval_const_decl(node);

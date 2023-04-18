@@ -1,3 +1,2 @@
-var store = {"10": 48}
-store[string(9)] = 453
-print(store)
+import [someFunc] : "./import_test"
+print(someFunc())

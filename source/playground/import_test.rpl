@@ -1,14 +1,9 @@
-import [zeroValue] : "../modules/zero"
+var x = 12
 
-var someValue = zeroValue
-var someList = []
-var someObject = {
-	count: 0
+var someFunc_ = () => {
+	ret x
 }
 
-someValue::onChange = (curr, old) => {
-	someList += ["someValue changed from " + string(old) + " to " + string(curr)]
-	someObject.count += 1
+var someFunc = () => {
+	ret someFunc_()
 }
-
-someObject.count::onChange = () => println("someValue change count: " + string(someObject.count))
