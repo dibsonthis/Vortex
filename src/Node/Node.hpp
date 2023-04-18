@@ -93,6 +93,7 @@ struct FuncNode {
 	node_ptr body;
 	bool is_hook;
 	std::unordered_map<std::string, node_ptr> closure;
+	std::string decl_filename;
 };
 
 struct AccessorNode {

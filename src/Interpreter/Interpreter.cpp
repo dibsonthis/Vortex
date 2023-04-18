@@ -29,6 +29,7 @@ void Interpreter::eval_const_functions() {
                 error_and_exit("Function '" + current_node->ConstantDeclaration.name + "' is already defined");
             }
             current_node->ConstantDeclaration.value->Meta.is_const = true;
+            current_node->ConstantDeclaration.value->Function.decl_filename = file_name;
             Symbol symbol = new_symbol(current_node->ConstantDeclaration.name, current_node->ConstantDeclaration.value);
             add_symbol(symbol, current_symbol_table);
             erase_curr();
@@ -173,6 +174,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.body = func->Function.body;
         function->Function.closure = func->Function.closure;
         function->Function.is_hook = func->Function.is_hook;
+        function->Function.decl_filename = func->Function.decl_filename;
         function->Hooks.onCall = func->Hooks.onCall;
     } else if (node->FuncCall.caller == nullptr) {
         Symbol function_symbol = get_symbol(node->FuncCall.name, current_symbol_table);
@@ -185,6 +187,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.body = function_symbol.value->Function.body;
         function->Function.closure = function_symbol.value->Function.closure;
         function->Function.is_hook = function_symbol.value->Function.is_hook;
+        function->Function.decl_filename = function_symbol.value->Function.decl_filename;
         function->Hooks.onCall = function_symbol.value->Hooks.onCall;
     } else {
         node_ptr method = node->FuncCall.caller->Object.properties[node->FuncCall.name];
@@ -197,6 +200,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.body = method->Function.body;
         function->Function.closure = method->Function.closure;
         function->Function.is_hook = method->Function.is_hook;
+        function->Function.decl_filename = method->Function.decl_filename;
         function->Hooks.onCall = method->Hooks.onCall;
     }
 
@@ -213,7 +217,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
     }
 
     current_symbol_table = function_symbol_table;
-    current_symbol_table->filename = function->Function.name;
+    current_symbol_table->filename = function->Function.name + ": " + function->Function.decl_filename;
     
     // Inject closure into current scope
 
@@ -511,6 +515,7 @@ node_ptr Interpreter::eval_accessor(node_ptr node) {
 }
 
 node_ptr Interpreter::eval_function(node_ptr node) {
+    node->Function.decl_filename = file_name;
     // Inject current scope as closure
     for (auto& symbol : current_symbol_table->symbols) {
         node->Function.closure[symbol.first] = symbol.second.value;
@@ -530,6 +535,7 @@ node_ptr Interpreter::eval_import(node_ptr node) {
         node_ptr import_obj = new_node(NodeType::OBJECT);
 
         Lexer import_lexer(path);
+        import_lexer.file_name = path;
         import_lexer.tokenize();
 
         Parser import_parser(import_lexer.nodes, import_lexer.file_name);
@@ -576,6 +582,7 @@ node_ptr Interpreter::eval_import(node_ptr node) {
         }
 
         Lexer import_lexer(path);
+        import_lexer.file_name = path;
         import_lexer.tokenize();
 
         Parser import_parser(import_lexer.nodes, import_lexer.file_name);
