@@ -1,16 +1,1 @@
-var radius, area = 0
-
-radius::onChange = (r) => {
-	area = 3.14 * r ^ 2
-	//println("Radius: " + string(radius), "Area: " + string(area))
-}
-
-const setOnChange = () => {
-	[]::onChange = (new, old, info) => println(info.name + ": " + string(old) + " -> " + string(new))
-}
-
-setOnChange()
-
-for (1..100) {
-	radius += 2.7
-}
+var f = (

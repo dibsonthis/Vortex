@@ -158,6 +158,9 @@ void Parser::parse_list(std::string end) {
             parse(index, "]");
             advance(-1);
             while (peek()->Operator.value != "]") {
+                if (peek()->type == NodeType::END_OF_FILE) {
+                    error_and_exit("Missing end ']'");
+                }
                 nodes[curr_idx]->List.elements.push_back(peek());
                 erase_next();
             }
@@ -182,6 +185,9 @@ void Parser::parse_object(std::string end) {
             parse(index, "}");
             advance(-1);
             while (peek()->Operator.value != "}") {
+                if (peek()->type == NodeType::END_OF_FILE) {
+                    error_and_exit("Missing end '}'");
+                }
                 nodes[curr_idx]->Object.elements.push_back(peek());
                 erase_next();
             }
@@ -281,6 +287,9 @@ void Parser::parse_paren(std::string end) {
             parse(index, ")");
             advance(-1);
             while (peek()->Operator.value != ")") {
+                if (peek()->type == NodeType::END_OF_FILE) {
+                    error_and_exit("Missing end ')'");
+                }
                 nodes[curr_idx]->Paren.elements.push_back(peek());
                 erase_next();
             }
