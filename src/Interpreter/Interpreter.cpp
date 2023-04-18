@@ -213,6 +213,9 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         if (function_symbol.value == nullptr) {
             error_and_exit("Function '" + node->FuncCall.name + "' is undefined");
         }
+        if (function_symbol.value->type != NodeType::FUNC) {
+            error_and_exit("Variable '" + node->FuncCall.name + "' is not a function");
+        }
         function->Function.name = function_symbol.name;
         function->Function.args = std::vector<node_ptr>(function_symbol.value->Function.args);
         function->Function.params = std::vector<node_ptr>(function_symbol.value->Function.params);
@@ -225,6 +228,9 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         node_ptr method = node->FuncCall.caller->Object.properties[node->FuncCall.name];
         if (method->type == NodeType::NONE) {
             error_and_exit("Method '" + node->FuncCall.name + "' does not exist");
+        }
+        if (method->type != NodeType::FUNC) {
+            error_and_exit("Variable '" + node->FuncCall.name + "' is not a function");
         }
         function->Function.name = method->Function.name;
         function->Function.args = std::vector<node_ptr>(method->Function.args);
@@ -1270,6 +1276,7 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
         std::string name = left->Hook.name;
         node_ptr hook_func = eval_node(left->Hook.function);
         hook_func->Function.name = name;
+        hook_func->Function.is_hook = true;
 
         if (right->type == NodeType::FUNC_CALL) {
             std::string func_name = right->FuncCall.name;

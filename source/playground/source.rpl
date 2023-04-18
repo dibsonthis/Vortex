@@ -1,12 +1,2 @@
 const someHook = onChange::(new, old, info) => println(info.name + ": " + string(old) + " -> " + string(new))
-var x, y = 10
-
-someHook.attach(x)
-x = 20
-y = 100
-someHook.detach(x)
-x = 100
-y = 4
-someHook.attach([x, y])
-x = 200
-y = 75
+someHook()
