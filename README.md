@@ -75,6 +75,50 @@ x = 25  // x has changed
 y = -54 // y has changed
 ```
 
+### Named Hooks
+
+Up until now, we've only seen hooks being implemented once in a set and forget approach. But hooks can be more powerful than that. Named hooks allow the user to create hooks that can be switched on and off, either globally or for specific variables:
+
+```
+const logOnChange = onChange::(new, old, info) => 
+    println(info.name + ": " + string(old) + " -> " + string(new))
+
+var x, y, z = 0
+
+logOnChange.attach([x, z]) // This attaches the onChange hook to x and z
+
+x = 10
+y = 18
+z = 20
+
+// x: 0 -> 10
+// z: 0 -> 20
+
+logOnChange.detach(z) // This detaches the onChange hook from z
+
+x = 100
+y = 180
+z = 200
+
+// x: 20 -> 200
+
+logOnChange.attach() // This attaches the onChange hook globally
+
+x = 1000
+y = 1800
+z = 2000
+
+// x: 100 -> 1000
+// x: 100 -> 1000
+// y: 180 -> 1800
+// z: 200 -> 2000
+
+// Important note: Notice how the onChange hook fired twice for x. This is because the current implementation of named hooks simply adds that hook to the variable, and because the same hook existed on x, it fired twice. This behaviour may change in future releases. For the time being, it's best to call a global detach before a global attach.
+
+```
+
+This allows for a more programatic and strategic approach to using hooks.
+
 ### Hook types
 
 **onChange**: This hook will fire whenever a variable changes.\
@@ -97,11 +141,12 @@ y = -54 // y has changed
 - [x] Builtins
 - [x] Hook: onChange
 - [x] Hook: onCall
+- [x] Named hooks
 - [ ] Hook: onDelete
 - [ ] Hook: onUse
 - [ ] I/O
-- [ ] Named hooks
 - [ ] String interpolation
+- [ ] Garbage collector
 - [ ] C/C++ Interoperability
 
 ## Basic example
