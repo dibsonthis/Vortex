@@ -256,7 +256,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
                 node_ptr expr = function->Function.body->Object.elements[i];
                 node_ptr evaluated_expr = eval_node(expr);
                 if (evaluated_expr->type == NodeType::RETURN) {
-                    res = evaluated_expr->Return.value;
+                    res = eval_node(evaluated_expr->Return.value);
                     break;
                 } else if (i == function->Function.body->Object.elements.size()-1) {
                     res = evaluated_expr;
