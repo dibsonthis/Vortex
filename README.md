@@ -126,6 +126,40 @@ This allows for a more programatic and strategic approach to using hooks.
 
 **onCall**: This hook will fire whenever a function is called.\
 **onCall parameters**: *info*: An object containing further information about the variable and context, the properties are (*name*: Name of the function, *args*: A list containing the arguments the function was called with, *result*: The result of the function call, *filename*: Name of the file, *line*: File line number, *column*: File column number)
+
+### Imports
+
+In order to allow for best practices and modularity, Ripple allows two types of imports: module and variable
+
+## Module Import
+
+Module imports allow the user to import an entire file (module) into the current scope. The imported module can be used as an object:
+
+```
+import math : "../modules/math"
+
+const res = math.fib(10)
+```
+
+## Variable Import
+
+Variable imports allow the user to pick and choose what they want to import into the local scope:
+
+```
+import [PI, e, fib] : "../modules/math"
+
+const res = PI * e + fib(20)
+```
+
+Ripple's imports use relative paths to retrieve modules.
+
+### Further Reading
+
+TBA - A more detailed and broken down guide to Ripple syntax, keywords, builtins and other information is in the works. The link will appear here.
+
+### How to start using Ripple
+
+TBA - You can by all means fork this repo and tinker with it, however a proper guide on how to get started with Ripple is on the way.
 ## Development Roadmap
 
 - [x] Basic operations
