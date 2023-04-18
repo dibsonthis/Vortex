@@ -47,6 +47,9 @@ node_ptr Interpreter::eval_const_decl(node_ptr node) {
     }
     node_ptr value = eval_node(node->ConstantDeclaration.value);
     value->Meta.is_const = true;
+    if (value->type == NodeType::HOOK) {
+        value->Hook.name = node->ConstantDeclaration.name;
+    }
     Symbol symbol = new_symbol(node->ConstantDeclaration.name, value);
     add_symbol(symbol, current_symbol_table);
     return symbol.value;
@@ -60,6 +63,9 @@ node_ptr Interpreter::eval_const_decl_multiple(node_ptr node) {
         }
         node_ptr value = eval_node(decl->ConstantDeclaration.value);
         value->Meta.is_const = true;
+        if (value->type == NodeType::HOOK) {
+            value->Hook.name = decl->ConstantDeclaration.name;
+        }
         Symbol symbol = new_symbol(decl->ConstantDeclaration.name, value);
         add_symbol(symbol, current_symbol_table);
     }
@@ -71,7 +77,11 @@ node_ptr Interpreter::eval_var_decl(node_ptr node) {
     if (existing_symbol != nullptr) {
         error_and_exit("Variable '" + node->VariableDeclaration.name + "' is already defined");
     }
-    Symbol symbol = new_symbol(node->VariableDeclaration.name, eval_node(node->VariableDeclaration.value));
+    node_ptr value = eval_node(node->VariableDeclaration.value);
+    if (value->type == NodeType::HOOK) {
+        value->Hook.name = node->VariableDeclaration.name;
+    }
+    Symbol symbol = new_symbol(node->VariableDeclaration.name, value);
     add_symbol(symbol, current_symbol_table);
     return symbol.value;
 }
@@ -82,7 +92,11 @@ node_ptr Interpreter::eval_var_decl_multiple(node_ptr node) {
         if (existing_symbol != nullptr) {
             error_and_exit("Variable '" + decl->VariableDeclaration.name + "' is already defined");
         }
-        Symbol symbol = new_symbol(decl->VariableDeclaration.name, eval_node(decl->VariableDeclaration.value));
+        node_ptr value = eval_node(decl->VariableDeclaration.value);
+        if (value->type == NodeType::HOOK) {
+            value->Hook.name = decl->VariableDeclaration.name;
+        }
+        Symbol symbol = new_symbol(decl->VariableDeclaration.name, value);
         add_symbol(symbol, current_symbol_table);
     }
     return new_boolean_node(true);
@@ -165,6 +179,24 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
             error_and_exit("Function " + node->FuncCall.name + " expects 1 argument");
         }
         return new_string_node(printable(eval_node(node->FuncCall.args[0])));
+    }
+    if (node->FuncCall.name == "type") {
+        if (node->FuncCall.args.size() != 1) {
+            error_and_exit("Function " + node->FuncCall.name + " expects 1 argument");
+        }
+
+        node_ptr var = eval_node(node->FuncCall.args[0]);
+
+        switch(var->type) {
+            case NodeType::NONE: return new_string_node("None");
+            case NodeType::NUMBER: return new_string_node("Number");
+            case NodeType::STRING: return new_string_node("String");
+            case NodeType::BOOLEAN: return new_string_node("Boolean");
+            case NodeType::LIST: return new_string_node("List");
+            case NodeType::OBJECT: return new_string_node("Object");
+            case NodeType::FUNC: return new_string_node("Function");
+            default: return new_string_node("None");
+        }
     }
 
     if (func != nullptr) {
@@ -270,12 +302,20 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
                 node_ptr expr = function->Function.body->Object.elements[i];
                 node_ptr evaluated_expr = eval_node(expr);
                 if (evaluated_expr->type == NodeType::RETURN) {
-                    res = eval_node(evaluated_expr->Return.value);
+                    if (evaluated_expr->Return.value == nullptr) {
+                        res = new_node(NodeType::NONE);
+                    } else {
+                        res = eval_node(evaluated_expr->Return.value);
+                    }
                     break;
                 } else if (i == function->Function.body->Object.elements.size()-1) {
                     res = evaluated_expr;
                     if (res->type == NodeType::RETURN) {
-                        res = res->Return.value;
+                        if (res->Return.value == nullptr) {
+                            res = new_node(NodeType::NONE);
+                        } else {
+                            res = res->Return.value;
+                        }
                     }
                     break;
                 }
@@ -363,7 +403,11 @@ node_ptr Interpreter::eval_if_block(node_ptr node) {
 node_ptr Interpreter::eval_return(node_ptr node) {
     node_ptr ret = new_node();
     ret->type = NodeType::RETURN;
-    ret->Return.value = eval_node(node->Return.value);
+    if (ret->Return.value == nullptr) {
+        ret->Return.value = new_node(NodeType::NONE);
+    } else {
+        ret->Return.value = eval_node(node->Return.value);
+    }
     return ret;
 }
 
@@ -371,6 +415,12 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
 
     if (node->ForLoop.iterator != nullptr) {
         node_ptr iterator = eval_node(node->ForLoop.iterator);
+
+        // TODO: Implement for object looping
+
+        if (iterator->type != NodeType::LIST) {
+            error_and_exit("For loop iterator must be a list");
+        }
         
         for (int i = 0; i < iterator->List.elements.size(); i++) {
             if (node->ForLoop.index_name) {
@@ -1214,6 +1264,115 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
 
         error_and_exit("Right hand side of '.' must be an identifier or function call");
     }
+
+    if (left->type == NodeType::HOOK) {
+        std::string hook_name = left->Hook.hook_name;
+        std::string name = left->Hook.name;
+        node_ptr hook_func = eval_node(left->Hook.function);
+        hook_func->Function.name = name;
+
+        if (right->type == NodeType::FUNC_CALL) {
+            std::string func_name = right->FuncCall.name;
+
+            // TODO: Change hooks to be map
+            // Leaving as list due to current implementations
+
+            if (func_name == "attach") {
+                if (right->FuncCall.args.size() == 0) {
+                    if (hook_name == "onChange") {
+                        global_symbol_table->globalHooks_onChange.push_back(hook_func);
+                    }
+                    if (hook_name == "onCall") {
+                        global_symbol_table->globalHooks_onCall.push_back(hook_func);
+                    }
+                    return new_node(NodeType::NONE);
+                }
+                if (right->FuncCall.args.size() == 1) {
+                    node_ptr arg = eval_node(right->FuncCall.args[0]);
+
+                    if (hook_name == "onChange") {
+                        if (arg->type == NodeType::LIST) {
+                            for (auto elem : arg->List.elements) {
+                                elem->Hooks.onChange.push_back(hook_func);
+                            }
+                        } else {
+                            arg->Hooks.onChange.push_back(hook_func);
+                        }
+                    }
+                    if (hook_name == "onCall") {
+                        if (arg->type == NodeType::LIST) {
+                            for (auto elem : arg->List.elements) {
+                                elem->Hooks.onCall.push_back(hook_func);
+                            }
+                        } else {
+                            arg->Hooks.onCall.push_back(hook_func);
+                        }
+                    }
+                    return new_node(NodeType::NONE);
+                }
+            }
+            if (func_name == "detach") {
+                if (right->FuncCall.args.size() == 0) {
+                    if (hook_name == "onChange") {
+                        for (int i = 0; i < global_symbol_table->globalHooks_onChange.size(); i++) {
+                            node_ptr func = global_symbol_table->globalHooks_onChange[i];
+                            if (func->Function.name == name) {
+                                global_symbol_table->globalHooks_onChange.erase(global_symbol_table->globalHooks_onChange.begin() + i);
+                            }
+                        }
+                    }
+                    if (hook_name == "onCall") {
+                        for (int i = 0; i < global_symbol_table->globalHooks_onCall.size(); i++) {
+                            node_ptr func = global_symbol_table->globalHooks_onCall[i];
+                            if (func->Function.name == name) {
+                                global_symbol_table->globalHooks_onCall.erase(global_symbol_table->globalHooks_onCall.begin() + i);
+                            }
+                        }
+                    }
+                    return new_node(NodeType::NONE);
+                }
+                if (right->FuncCall.args.size() == 1) {
+                    node_ptr arg = eval_node(right->FuncCall.args[0]);
+
+                    if (hook_name == "onChange") {
+                        if (arg->type == NodeType::LIST) {
+                            for (auto elem : arg->List.elements) {
+                                for (int i = 0; i < elem->Hooks.onChange.size(); i++) {
+                                    if (elem->Hooks.onChange[i]->Function.name == name) {
+                                        elem->Hooks.onChange.erase(elem->Hooks.onChange.begin() + i);
+                                    }
+                                }
+                            }
+                        } else {
+                            for (int i = 0; i < arg->Hooks.onChange.size(); i++) {
+                                if (arg->Hooks.onChange[i]->Function.name == name) {
+                                    arg->Hooks.onChange.erase(arg->Hooks.onChange.begin() + i);
+                                }
+                            }
+                        }
+                    }
+                    if (hook_name == "onCall") {
+                        if (arg->type == NodeType::LIST) {
+                            for (auto elem : arg->List.elements) {
+                                for (int i = 0; i < elem->Hooks.onCall.size(); i++) {
+                                    if (elem->Hooks.onCall[i]->Function.name == name) {
+                                        elem->Hooks.onCall.erase(elem->Hooks.onCall.begin() + i);
+                                    }
+                                }
+                            }
+                        } else {
+                            for (int i = 0; i < arg->Hooks.onCall.size(); i++) {
+                                if (arg->Hooks.onCall[i]->Function.name == name) {
+                                    arg->Hooks.onCall.erase(arg->Hooks.onCall.begin() + i);
+                                }
+                            }
+                        }
+                    }
+                    return new_node(NodeType::NONE);
+                }
+            }
+        }
+    }
 }
 
 node_ptr Interpreter::eval_eq(node_ptr node) {
@@ -1400,6 +1559,9 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
 
         if (target->type == NodeType::ID) {
             Symbol symbol = get_symbol(target->ID.value, current_symbol_table);
+            if (symbol.value == nullptr) {
+                error_and_exit("Variable '" + target->ID.value + "' is undefined");
+            }
 
             if (prop->ID.value == "onChange") {
                 if (right->type != NodeType::FUNC) {

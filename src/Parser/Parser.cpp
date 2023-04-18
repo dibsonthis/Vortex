@@ -230,17 +230,16 @@ void Parser::parse_trait(std::string end) {
     }
 }
 
-void Parser::parse_trait_implementation(std::string end) {
+void Parser::parse_hook_implementation(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
             break;
         }
-        if (current_node->Operator.value == "::" && (peek(-1)->type == NodeType::ID || peek(-1)->type == NodeType::OBJECT_DECONSTRUCT) && peek()->type == NodeType::OBJECT_DECONSTRUCT) {
-            current_node->type = NodeType::TRAIT_IMPL;
+        if (current_node->Operator.value == "::" && peek(-1)->type == NodeType::ID && peek()->type == NodeType::FUNC) {
+            current_node->type = NodeType::HOOK;
             current_node->Operator.value = "";
-            current_node->TraitImplementation.implementor = peek(-1);
-            current_node->TraitImplementation.name = peek(1)->ObjectDeconstruct.name;
-            current_node->TraitImplementation.elements = peek(1)->ObjectDeconstruct.elements;
+            current_node->Hook.hook_name = peek(-1)->ID.value;
+            current_node->Hook.function = peek(1);
             erase_next();
             erase_prev();
         }
@@ -480,7 +479,7 @@ void Parser::parse_for_loop(std::string end) {
                 } else if (for_loop_config->Paren.elements[0]->Operator.value == "..") {
                     current_node->ForLoop.start = for_loop_config->Paren.elements[0]->Operator.left;
                     current_node->ForLoop.end = for_loop_config->Paren.elements[0]->Operator.right;
-                } else if (for_loop_config->Paren.elements[0]->type == NodeType::LIST) {
+                } else {
                     current_node->ForLoop.iterator = for_loop_config->Paren.elements[0];
                 }
             }
@@ -673,11 +672,11 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_object_desconstruct(end);
     reset(start);
-    parse_trait_implementation(end);
+    parse_func_def(end);
+    reset(start);
+    parse_hook_implementation(end);
     reset(start);
     parse_bin_op({"::"}, end);
-    reset(start);
-    parse_func_def(end);
     reset(start);
     parse_bin_op({"&"}, end);
     reset(start);

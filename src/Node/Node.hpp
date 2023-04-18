@@ -22,8 +22,8 @@ enum class NodeType {
 	FUNC_CALL,
 	FUNC,
 	INTERFACE,
+	HOOK,
 	TRAIT,
-	TRAIT_IMPL,
 	ACCESSOR,
 	VARIABLE_DECLARATION,
 	VARIABLE_DECLARATION_MULTIPLE,
@@ -117,6 +117,12 @@ struct TraitImplNode {
 	std::vector<node_ptr> elements;
 };
 
+struct HookNode {
+	std::string hook_name;
+	std::string name;
+	node_ptr function;
+};
+
 struct VariableDeclatationNode {
 	std::string name;
 	node_ptr value;
@@ -199,7 +205,7 @@ struct Node {
 	AccessorNode Accessor;
 	InterfaceNode Interface;
 	TraitNode Trait;
-	TraitImplNode TraitImplementation;
+	HookNode Hook;
 	VariableDeclatationNode VariableDeclaration;
 	ConstantDeclatationNode ConstantDeclaration;
 	VariableDeclatationMultipleNode VariableDeclarationMultiple;

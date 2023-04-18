@@ -1,13 +1,12 @@
-import [logOnCall] : "./import_test"
+const someHook = onChange::(new, old, info) => println(info.name + ": " + string(old) + " -> " + string(new))
+var x, y = 10
 
-logOnCall()
-var list = [1, 2, 3, 4, 5]
-var mapElems = (x) => x * 2.5
-var filterElems = (x) => x > 7
-var reduceElems = (a, b) => a + b
-var newList = list
-				.map(mapElems)
-				.filter(filterElems)
-				.reduce(reduceElems)
-
-println(newList)
+someHook.attach(x)
+x = 20
+y = 100
+someHook.detach(x)
+x = 100
+y = 4
+someHook.attach([x, y])
+x = 200
+y = 75
