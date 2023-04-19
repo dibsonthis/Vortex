@@ -1,2 +1,4 @@
-const someHook = onChange::(new, old, info) => println(info.name + ": " + string(old) + " -> " + string(new))
-someHook()
+var x = 12
+var y = x
+y += 1
+print(x, y)

@@ -50,7 +50,7 @@ node_ptr Interpreter::eval_const_decl(node_ptr node) {
     if (value->type == NodeType::HOOK) {
         value->Hook.name = node->ConstantDeclaration.name;
     }
-    Symbol symbol = new_symbol(node->ConstantDeclaration.name, value);
+    Symbol symbol = new_symbol(node->ConstantDeclaration.name, std::make_shared<Node>(*value));
     add_symbol(symbol, current_symbol_table);
     return symbol.value;
 }
@@ -66,7 +66,7 @@ node_ptr Interpreter::eval_const_decl_multiple(node_ptr node) {
         if (value->type == NodeType::HOOK) {
             value->Hook.name = decl->ConstantDeclaration.name;
         }
-        Symbol symbol = new_symbol(decl->ConstantDeclaration.name, value);
+        Symbol symbol = new_symbol(decl->ConstantDeclaration.name, std::make_shared<Node>(*value));
         add_symbol(symbol, current_symbol_table);
     }
     return new_boolean_node(true);
@@ -81,7 +81,7 @@ node_ptr Interpreter::eval_var_decl(node_ptr node) {
     if (value->type == NodeType::HOOK) {
         value->Hook.name = node->VariableDeclaration.name;
     }
-    Symbol symbol = new_symbol(node->VariableDeclaration.name, value);
+    Symbol symbol = new_symbol(node->VariableDeclaration.name, std::make_shared<Node>(*value));
     add_symbol(symbol, current_symbol_table);
     return symbol.value;
 }
@@ -96,7 +96,7 @@ node_ptr Interpreter::eval_var_decl_multiple(node_ptr node) {
         if (value->type == NodeType::HOOK) {
             value->Hook.name = decl->VariableDeclaration.name;
         }
-        Symbol symbol = new_symbol(decl->VariableDeclaration.name, value);
+        Symbol symbol = new_symbol(decl->VariableDeclaration.name, std::make_shared<Node>(*value));
         add_symbol(symbol, current_symbol_table);
     }
     return new_boolean_node(true);
@@ -427,8 +427,18 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
         if (iterator->type != NodeType::LIST) {
             error_and_exit("For loop iterator must be a list");
         }
+
+        auto current_scope = current_symbol_table;
         
         for (int i = 0; i < iterator->List.elements.size(); i++) {
+
+            auto loop_symbol_tale = std::make_shared<SymbolTable>();
+            for (auto& symbol : current_symbol_table->symbols) {
+                loop_symbol_tale->symbols[symbol.first] = symbol.second;
+            }
+
+            current_symbol_table = loop_symbol_tale;
+
             if (node->ForLoop.index_name) {
                 add_symbol(new_symbol(node->ForLoop.index_name->ID.value, new_number_node(i)), current_symbol_table);
             }
@@ -444,11 +454,13 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
                 }
                 node_ptr evaluated_expr = eval_node(expr);
                 if (evaluated_expr->type == NodeType::RETURN) {
+                    current_symbol_table = current_scope;
                     return evaluated_expr;
                 }
             }
 
             _continue:
+                current_symbol_table = current_scope;
                 continue;
             _break:
                 break;
@@ -463,6 +475,8 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
             delete_symbol(node->ForLoop.value_name->ID.value, current_symbol_table);
         }
 
+        current_symbol_table = current_scope;
+
         return new_node(NodeType::NONE);
     }
 
@@ -475,8 +489,18 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
 
     int start = start_node->Number.value;
     int end = end_node->Number.value;
+
+    auto current_scope = current_symbol_table;
     
     for (int i = start; i < end; i++) {
+
+        auto loop_symbol_tale = std::make_shared<SymbolTable>();
+        for (auto& symbol : current_symbol_table->symbols) {
+            loop_symbol_tale->symbols[symbol.first] = symbol.second;
+        }
+
+        current_symbol_table = loop_symbol_tale;
+
         int index = i-node->ForLoop.start->Number.value;
         if (node->ForLoop.index_name) {
             add_symbol(new_symbol(node->ForLoop.index_name->ID.value, new_number_node(index)), current_symbol_table);
@@ -494,11 +518,13 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
             }
             node_ptr evaluated_expr = eval_node(expr);
             if (evaluated_expr->type == NodeType::RETURN) {
+                current_symbol_table = current_scope;
                 return evaluated_expr;
             }
         }
 
         _continue2:
+            current_symbol_table = current_scope;
             continue;
         _break2:
             break;
@@ -513,6 +539,8 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
         delete_symbol(node->ForLoop.value_name->ID.value, current_symbol_table);
     }
 
+    current_symbol_table = current_scope;
+
     return new_node(NodeType::NONE);
 }
 
@@ -522,14 +550,27 @@ node_ptr Interpreter::eval_while_loop(node_ptr node) {
         error_and_exit("While loop conditional must evaluate to a boolean");
     }
 
+    auto current_scope = current_symbol_table;
+
     while (conditional->Boolean.value) {
+        auto loop_symbol_tale = std::make_shared<SymbolTable>();
+        for (auto& symbol : current_symbol_table->symbols) {
+            loop_symbol_tale->symbols[symbol.first] = symbol.second;
+        }
+
+        current_symbol_table = loop_symbol_tale;
+        
         for (node_ptr expr : node->WhileLoop.body->Object.elements) {
             node_ptr evaluated_expr = eval_node(expr);
             if (evaluated_expr->type == NodeType::RETURN) {
+                current_symbol_table = current_scope;
                 return evaluated_expr->Return.value;
             }
         }
+
         conditional = eval_node(node->WhileLoop.condition);
+
+        current_symbol_table = current_scope;
     }
 
     return new_node(NodeType::NONE);
