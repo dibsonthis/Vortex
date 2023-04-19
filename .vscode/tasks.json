@@ -46,7 +46,7 @@
         "${fileDirname}\\main.cpp",
 
         "-o",
-        "${fileDirname}\\bin\\build\\interp\\ripple.exe"
+        "${fileDirname}\\bin\\build\\interp\\vortex.exe"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -104,7 +104,7 @@
         "${fileDirname}/main.cpp",
 
         "-o",
-        "${fileDirname}/bin/build/interp/ripple"
+        "${fileDirname}/bin/build/interp/vortex"
       ],
       "options": {
         "cwd": "${workspaceFolder}"

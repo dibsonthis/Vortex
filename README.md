@@ -1,12 +1,12 @@
-# Ripple
+# Vortex
 
-Ripple is a language designed to explore links and relationships between entities.
+Vortex is a language designed to explore links and relationships between entities.
 
 It heavily relies on side effects, and as such it would fall under the Disfunctional Programming paradigm.
 
-## About Ripple
+## About Vortex
 
-Ripple's main focus is on what we call "hooks". Hooks allow the user to bind variables to functions in the context of specific events. 
+Vortex's main focus is on what we call "hooks". Hooks allow the user to bind variables to functions in the context of specific events. 
 
 For example, if we wanted automatically increment variable y whenever variable x changes, we could use the onChange hook to do so:
 
@@ -129,7 +129,7 @@ This allows for a more programatic and strategic approach to using hooks.
 
 ### Imports
 
-In order to allow for best practices and modularity, Ripple allows two types of imports: module and variable
+In order to allow for best practices and modularity, Vortex allows two types of imports: module and variable
 
 ## Module Import
 
@@ -151,15 +151,15 @@ import [PI, e, fib] : "../modules/math"
 const res = PI * e + fib(20)
 ```
 
-Ripple's imports use relative paths to retrieve modules.
+Vortex's imports use relative paths to retrieve modules.
 
 ## Further Reading
 
-TBA - A more detailed and broken down guide to Ripple syntax, keywords, builtins and other information is in the works. The link will appear here.
+TBA - A more detailed and broken down guide to Vortex syntax, keywords, builtins and other information is in the works. The link will appear here.
 
-## How to start using Ripple
+## How to start using Vortex
 
-TBA - You can by all means fork this repo and tinker with it, however a proper guide on how to get started with Ripple is on the way.
+TBA - You can by all means fork this repo and tinker with it, however a proper guide on how to get started with Vortex is on the way.
 ## Development Roadmap
 
 - [x] Basic operations

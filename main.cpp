@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     {
         if (argc == 1)
         {
-            std::cout << "You must enter a source path e.g: ripple \"dev/main.rpl\"\n";
+            std::cout << "You must enter a source path e.g: vortex \"dev/main.vtx\"\n";
             return 1;
         }
 
