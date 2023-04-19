@@ -1,9 +1,8 @@
-for (1..10, i) {
-	const x = i
-	if (i == 5) {
-		if (x == i) {
-			break
-		}
-	}
-	println(i)
+const x = 12
+const func = () => {
+	const x = 10
+	println(x)
 }
+
+func()
+println(x)

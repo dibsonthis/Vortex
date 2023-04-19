@@ -90,6 +90,7 @@ public:
 
     Symbol new_symbol(std::string name, node_ptr value, node_ptr type = nullptr);
     Symbol get_symbol(std::string name, sym_t_ptr symbol_table);
+    Symbol get_symbol_local(std::string name, sym_t_ptr symbol_table);
     void add_symbol(Symbol symbol, sym_t_ptr symbol_table);
     void delete_symbol(std::string name, sym_t_ptr symbol_table);
 

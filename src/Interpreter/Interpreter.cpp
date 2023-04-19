@@ -41,7 +41,7 @@ void Interpreter::eval_const_functions() {
 }
 
 node_ptr Interpreter::eval_const_decl(node_ptr node) {
-    node_ptr existing_symbol = get_symbol(node->ConstantDeclaration.name, current_symbol_table).value;
+    node_ptr existing_symbol = get_symbol_local(node->ConstantDeclaration.name, current_symbol_table).value;
     if (existing_symbol != nullptr) {
         error_and_exit("Variable '" + node->ConstantDeclaration.name + "' is already defined");
     }
@@ -58,7 +58,7 @@ node_ptr Interpreter::eval_const_decl(node_ptr node) {
 
 node_ptr Interpreter::eval_const_decl_multiple(node_ptr node) {
     for (node_ptr& decl : node->ConstantDeclarationMultiple.constant_declarations) {
-        node_ptr existing_symbol = get_symbol(decl->ConstantDeclaration.name, current_symbol_table).value;
+        node_ptr existing_symbol = get_symbol_local(decl->ConstantDeclaration.name, current_symbol_table).value;
         if (existing_symbol != nullptr) {
             error_and_exit("Variable '" + decl->ConstantDeclaration.name + "' is already defined");
         }
@@ -75,7 +75,7 @@ node_ptr Interpreter::eval_const_decl_multiple(node_ptr node) {
 }
 
 node_ptr Interpreter::eval_var_decl(node_ptr node) {
-    node_ptr existing_symbol = get_symbol(node->VariableDeclaration.name, current_symbol_table).value;
+    node_ptr existing_symbol = get_symbol_local(node->VariableDeclaration.name, current_symbol_table).value;
     if (existing_symbol != nullptr) {
         error_and_exit("Variable '" + node->VariableDeclaration.name + "' is already defined");
     }
@@ -91,7 +91,7 @@ node_ptr Interpreter::eval_var_decl(node_ptr node) {
 
 node_ptr Interpreter::eval_var_decl_multiple(node_ptr node) {
     for (node_ptr& decl : node->VariableDeclarationMultiple.variable_declarations) {
-        node_ptr existing_symbol = get_symbol(decl->VariableDeclaration.name, current_symbol_table).value;
+        node_ptr existing_symbol = get_symbol_local(decl->VariableDeclaration.name, current_symbol_table).value;
         if (existing_symbol != nullptr) {
             error_and_exit("Variable '" + decl->VariableDeclaration.name + "' is already defined");
         }
@@ -250,21 +250,31 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
     for (node_ptr arg : node->FuncCall.args) {
         args.push_back(eval_node(arg));
     }
-    current_symbol_table->child = std::make_shared<SymbolTable>();
-    auto function_symbol_table = current_symbol_table->child;
-    function_symbol_table->parent = current_symbol_table;
-    function_symbol_table->symbols = current_symbol_table->symbols;
+
+    auto local_scope = std::make_shared<SymbolTable>();
+    auto current_scope = std::make_shared<SymbolTable>();
+
+    current_symbol_table->child = local_scope;
+    local_scope->parent = current_symbol_table;
+
+    local_scope->child = current_scope;
+    current_scope->parent = local_scope;
+
+    // current_symbol_table 
+    //    -> local_scope 
+    //        -> current_scope
+
     if (node->FuncCall.caller != nullptr) {
-        function_symbol_table->symbols["this"] = new_symbol("this", node->FuncCall.caller);
+        current_scope->symbols["this"] = new_symbol("this", node->FuncCall.caller);
     }
 
-    current_symbol_table = function_symbol_table;
+    current_symbol_table = current_scope;
     current_symbol_table->filename = function->Function.name + ": " + function->Function.decl_filename;
     
-    // Inject closure into current scope
+    // Inject closure into local scope
 
     for (auto& elem : function->Function.closure) {
-        add_symbol(new_symbol(elem.first, elem.second), current_symbol_table);
+        add_symbol(new_symbol(elem.first, elem.second), local_scope);
     }
 
     int num_empty_args = std::count(function->Function.args.begin(), function->Function.args.end(), nullptr);
@@ -287,7 +297,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
             std::string name = function->Function.params[i]->ID.value;
             node_ptr value = function->Function.args[i];
             Symbol symbol = new_symbol(name, value);
-            add_symbol(symbol, function_symbol_table);
+            add_symbol(symbol, current_scope);
         }
     }
 
@@ -295,7 +305,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         std::string name = function->Function.params[i+start_index]->ID.value;
         node_ptr value = args[i];
         Symbol symbol = new_symbol(name, value);
-        add_symbol(symbol, function_symbol_table);
+        add_symbol(symbol, current_scope);
         function->Function.args[i+start_index] = value;
     }
 
@@ -1954,6 +1964,14 @@ Symbol Interpreter::get_symbol(std::string name, std::shared_ptr<SymbolTable> sy
         if (scope->symbols.contains(name)) {
             return scope->symbols[name];
         }
+    }
+
+    return new_symbol("_undefined_", nullptr);
+}
+
+Symbol Interpreter::get_symbol_local(std::string name, std::shared_ptr<SymbolTable> symbol_table) {
+    if (symbol_table->symbols.contains(name)) {
+        return symbol_table->symbols[name];
     }
 
     return new_symbol("_undefined_", nullptr);
