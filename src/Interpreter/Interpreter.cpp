@@ -46,11 +46,12 @@ node_ptr Interpreter::eval_const_decl(node_ptr node) {
         error_and_exit("Variable '" + node->ConstantDeclaration.name + "' is already defined");
     }
     node_ptr value = eval_node(node->ConstantDeclaration.value);
+    value = std::make_shared<Node>(*value);
     value->Meta.is_const = true;
     if (value->type == NodeType::HOOK) {
         value->Hook.name = node->ConstantDeclaration.name;
     }
-    Symbol symbol = new_symbol(node->ConstantDeclaration.name, std::make_shared<Node>(*value));
+    Symbol symbol = new_symbol(node->ConstantDeclaration.name, value);
     add_symbol(symbol, current_symbol_table);
     return symbol.value;
 }
@@ -62,11 +63,12 @@ node_ptr Interpreter::eval_const_decl_multiple(node_ptr node) {
             error_and_exit("Variable '" + decl->ConstantDeclaration.name + "' is already defined");
         }
         node_ptr value = eval_node(decl->ConstantDeclaration.value);
+        value = std::make_shared<Node>(*value);
         value->Meta.is_const = true;
         if (value->type == NodeType::HOOK) {
             value->Hook.name = decl->ConstantDeclaration.name;
         }
-        Symbol symbol = new_symbol(decl->ConstantDeclaration.name, std::make_shared<Node>(*value));
+        Symbol symbol = new_symbol(decl->ConstantDeclaration.name, value);
         add_symbol(symbol, current_symbol_table);
     }
     return new_boolean_node(true);
@@ -78,10 +80,11 @@ node_ptr Interpreter::eval_var_decl(node_ptr node) {
         error_and_exit("Variable '" + node->VariableDeclaration.name + "' is already defined");
     }
     node_ptr value = eval_node(node->VariableDeclaration.value);
+    value = std::make_shared<Node>(*value);
     if (value->type == NodeType::HOOK) {
         value->Hook.name = node->VariableDeclaration.name;
     }
-    Symbol symbol = new_symbol(node->VariableDeclaration.name, std::make_shared<Node>(*value));
+    Symbol symbol = new_symbol(node->VariableDeclaration.name, value);
     add_symbol(symbol, current_symbol_table);
     return symbol.value;
 }
@@ -93,10 +96,11 @@ node_ptr Interpreter::eval_var_decl_multiple(node_ptr node) {
             error_and_exit("Variable '" + decl->VariableDeclaration.name + "' is already defined");
         }
         node_ptr value = eval_node(decl->VariableDeclaration.value);
+        value = std::make_shared<Node>(*value);
         if (value->type == NodeType::HOOK) {
             value->Hook.name = decl->VariableDeclaration.name;
         }
-        Symbol symbol = new_symbol(decl->VariableDeclaration.name, std::make_shared<Node>(*value));
+        Symbol symbol = new_symbol(decl->VariableDeclaration.name, value);
         add_symbol(symbol, current_symbol_table);
     }
     return new_boolean_node(true);
@@ -379,6 +383,12 @@ node_ptr Interpreter::eval_if_statement(node_ptr node) {
             if (evaluated_expr->type == NodeType::RETURN) {
                 return evaluated_expr;
             }
+            if (evaluated_expr->type == NodeType::BREAK) {
+                return evaluated_expr;
+            }
+            if (evaluated_expr->type == NodeType::CONTINUE) {
+                return evaluated_expr;
+            }
         }
     }
 
@@ -395,6 +405,12 @@ node_ptr Interpreter::eval_if_block(node_ptr node) {
         } else if (statement->type == NodeType::OBJECT) {
             for (node_ptr expr : statement->Object.elements) {
                 if (expr->type == NodeType::RETURN) {
+                    return eval_node(expr);
+                }
+                if (expr->type == NodeType::BREAK) {
+                    return eval_node(expr);
+                }
+                if (expr->type == NodeType::CONTINUE) {
                     return eval_node(expr);
                 }
                 eval_node(expr);
@@ -446,16 +462,16 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
                 add_symbol(new_symbol(node->ForLoop.value_name->ID.value, iterator->List.elements[i]), current_symbol_table);
             }
             for (node_ptr expr : node->ForLoop.body->Object.elements) {
-                if (expr->ID.value == "break") {
-                    goto _break;
-                }
-                if (expr->ID.value == "continue") {
-                    goto _continue;
-                }
                 node_ptr evaluated_expr = eval_node(expr);
                 if (evaluated_expr->type == NodeType::RETURN) {
                     current_symbol_table = current_scope;
                     return evaluated_expr;
+                }
+                if (evaluated_expr->type == NodeType::BREAK) {
+                    goto _break;
+                }
+                if (evaluated_expr->type == NodeType::CONTINUE) {
+                    goto _continue;
                 }
             }
 
@@ -510,16 +526,16 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
             node->ForLoop.value_name->ID.value, new_number_node(i)), current_symbol_table);
         }
         for (node_ptr expr : node->ForLoop.body->Object.elements) {
-            if (expr->ID.value == "break") {
-                goto _break2;
-            }
-            if (expr->ID.value == "continue") {
-                goto _continue2;
-            }
             node_ptr evaluated_expr = eval_node(expr);
             if (evaluated_expr->type == NodeType::RETURN) {
                 current_symbol_table = current_scope;
                 return evaluated_expr;
+            }
+            if (evaluated_expr->type == NodeType::BREAK) {
+                goto _break2;
+            }
+            if (evaluated_expr->type == NodeType::CONTINUE) {
+                goto _continue2;
             }
         }
 
@@ -566,12 +582,18 @@ node_ptr Interpreter::eval_while_loop(node_ptr node) {
                 current_symbol_table = current_scope;
                 return evaluated_expr->Return.value;
             }
+            if (evaluated_expr->type == NodeType::BREAK) {
+                goto _break;
+            }
         }
 
         conditional = eval_node(node->WhileLoop.condition);
 
         current_symbol_table = current_scope;
     }
+
+    _break:
+        current_symbol_table = current_scope;
 
     return new_node(NodeType::NONE);
 }
@@ -625,7 +647,7 @@ node_ptr Interpreter::eval_import(node_ptr node) {
         error_and_exit("Import target must be a string");
     }
 
-    std::string path = node->Import.target->String.value + ".rpl";
+    std::string path = node->Import.target->String.value + ".vtx";
 
     if (node->Import.module->type == NodeType::ID) {
         std::string module_name = node->Import.module->ID.value;

@@ -615,6 +615,21 @@ void Parser::parse_return(std::string end) {
     }
 }
 
+void Parser::parse_keywords(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+
+        if (current_node->ID.value == "break") {
+            current_node->type = NodeType::BREAK;
+        } else if (current_node->ID.value == "continue") {
+            current_node->type = NodeType::CONTINUE;
+        }
+        advance();
+    }
+}
+
 void Parser::flatten_commas(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
@@ -637,6 +652,8 @@ void Parser::parse(int start, std::string end) {
     parse_trait(end);
     reset(start);
     parse_list(end);
+    reset(start);
+    parse_keywords(end);
     reset(start);
     parse_for_loop(end);
     reset(start);

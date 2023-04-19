@@ -1,4 +1,9 @@
-var x = 12
-var y = x
-y += 1
-print(x, y)
+for (1..10, i) {
+	const x = i
+	if (i == 5) {
+		if (x == i) {
+			break
+		}
+	}
+	println(i)
+}

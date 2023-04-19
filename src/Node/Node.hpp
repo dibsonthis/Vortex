@@ -32,6 +32,8 @@ enum class NodeType {
 	FOR_LOOP,
 	WHILE_LOOP,
 	RETURN,
+	BREAK,
+	CONTINUE,
 	IMPORT,
 	IF_STATEMENT,
 	IF_BLOCK,
