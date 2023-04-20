@@ -1,0 +1,3 @@
+import [fib] : "./import_test"
+println(10)
+print(fib(20))

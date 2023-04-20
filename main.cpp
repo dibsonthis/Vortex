@@ -19,7 +19,7 @@ int main(int argc, char** argv)
     if (type == Type::DEV)
     {
         std::filesystem::current_path("../../../source/playground");
-        Lexer lexer("source.rpl");
+        Lexer lexer("source.vtx");
         lexer.tokenize();
 
         Parser parser(lexer.nodes, lexer.file_name);

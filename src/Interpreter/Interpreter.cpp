@@ -297,7 +297,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
             std::string name = function->Function.params[i]->ID.value;
             node_ptr value = function->Function.args[i];
             Symbol symbol = new_symbol(name, value);
-            add_symbol(symbol, current_scope);
+            add_symbol(symbol, current_symbol_table);
         }
     }
 
@@ -305,7 +305,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         std::string name = function->Function.params[i+start_index]->ID.value;
         node_ptr value = args[i];
         Symbol symbol = new_symbol(name, value);
-        add_symbol(symbol, current_scope);
+        add_symbol(symbol, current_symbol_table);
         function->Function.args[i+start_index] = value;
     }
 
@@ -370,7 +370,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         }
     }
 
-    current_symbol_table = current_symbol_table->parent;
+    current_symbol_table = current_symbol_table->parent->parent;
 
     if (res->type == NodeType::FUNC) {
         for (auto& elem : current_symbol_table->symbols)

@@ -1,8 +1,0 @@
-const x = 12
-const func = () => {
-	const x = 10
-	println(x)
-}
-
-func()
-println(x)

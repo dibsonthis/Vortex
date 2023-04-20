@@ -1,4 +1,0 @@
-const logOnCall = () => {
-	[mapElems]::onCall = (info) => 
-		println(info.name + " was called - args:" + string(info.args) + ", result: " + string(info.result))
-}

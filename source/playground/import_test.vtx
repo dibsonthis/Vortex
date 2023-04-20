@@ -1,0 +1,14 @@
+var _fib = (store, n) => {
+	if (n < 2) {
+		ret n
+	}
+	if (store[string(n-1)] == None) {
+		store[string(n-1)] = _fib(store, n-1)
+	}
+	if (store[string(n-2)] == None) {
+		store[string(n-2)] = _fib(store, n-2)
+	}
+	ret store[string(n-1)] + store[string(n-2)]
+}
+
+var fib = _fib({})
