@@ -39,7 +39,8 @@ enum class NodeType {
 	IF_BLOCK,
 	START_OF_FILE,
 	END_OF_FILE,
-	NONE
+	NONE,
+	LIB
 };
 
 struct IdNode {
@@ -184,6 +185,12 @@ struct Hooks {
 	std::vector<node_ptr> onCall;
 };
 
+struct LibNode {
+	typedef node_ptr (*call_function_t)(std::string name, void* handle, std::vector<node_ptr> args);
+	void* handle;
+	call_function_t call_function;
+};
+
 struct Node {
 	Node() = default;
     Node(NodeType type) : type(type) {}
@@ -221,6 +228,7 @@ struct Node {
 	ReturnNode Return;
 	MetaInformation Meta;
 	Hooks Hooks;
+	LibNode Library;
 };
 
 std::string node_repr(node_ptr);

@@ -20,6 +20,9 @@ std::string node_repr(node_ptr node) {
         case NodeType::OBJECT: {
             return "Object";
         }
+        case NodeType::LIB: {
+            return "Library";
+        }
         case NodeType::START_OF_FILE: {
             return "SOF";
         }

@@ -81,6 +81,7 @@ node_ptr Interpreter::eval_var_decl(node_ptr node) {
     }
     node_ptr value = eval_node(node->VariableDeclaration.value);
     value = std::make_shared<Node>(*value);
+    value->Meta.is_const = false;
     if (value->type == NodeType::HOOK) {
         value->Hook.name = node->VariableDeclaration.name;
     }
@@ -97,6 +98,7 @@ node_ptr Interpreter::eval_var_decl_multiple(node_ptr node) {
         }
         node_ptr value = eval_node(decl->VariableDeclaration.value);
         value = std::make_shared<Node>(*value);
+        value->Meta.is_const = false;
         if (value->type == NodeType::HOOK) {
             value->Hook.name = decl->VariableDeclaration.name;
         }
@@ -201,6 +203,9 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
             case NodeType::FUNC: return new_string_node("Function");
             default: return new_string_node("None");
         }
+    }
+    if (node->FuncCall.name == "load_lib") {
+        return eval_load_lib(node);
     }
 
     if (func != nullptr) {
@@ -652,6 +657,72 @@ node_ptr Interpreter::eval_function(node_ptr node) {
     return node;
 }
 
+node_ptr Interpreter::eval_load_lib(node_ptr node) {
+    auto args = node->FuncCall.args;
+    if (args.size() != 1) {
+        error_and_exit("Library loading expects 1 argument");
+    }
+
+    node_ptr path = eval_node(args[0]);
+
+    if (path->type != NodeType::STRING) {
+        error_and_exit("Library loading expects 1 string argument");
+    }
+
+    node_ptr lib_node = new_node(NodeType::LIB);
+
+    void* handle = dlopen(path->String.value.c_str(), RTLD_LAZY);
+    
+    if (!handle) {
+        error_and_exit("Cannot open library: " + std::string(dlerror()));
+    }
+
+    typedef void* (*load_t)();
+    typedef node_ptr (*call_function_t)(std::string name, void* handle, std::vector<node_ptr> args);
+
+    dlerror();
+
+    load_t load = (load_t) dlsym(handle, "load");
+    const char* dlsym_error_load = dlerror();
+    call_function_t call_function = (call_function_t) dlsym(handle, "call_function");
+    const char* dlsym_error_call_function = dlerror();
+
+    if (dlsym_error_load) {
+        dlclose(handle);
+        error_and_exit("Error loading symbol 'load': " + std::string(dlsym_error_load));
+    }
+
+    if (dlsym_error_call_function) {
+        dlclose(handle);
+        error_and_exit("Error loading symbol 'call_function': " + std::string(dlsym_error_call_function));
+    }
+
+    lib_node->Library.handle = load();
+    lib_node->Library.call_function = call_function;
+
+    return lib_node;
+}
+
+node_ptr Interpreter::eval_call_lib_function(node_ptr lib, node_ptr node) {
+    auto args = node->FuncCall.args;
+    if (args.size() != 2) {
+        error_and_exit("Library function calls expects 2 arguments");
+    }
+
+    node_ptr name = eval_node(args[0]);
+    node_ptr func_args = eval_node(args[1]);
+
+    if (name->type != NodeType::STRING) {
+        error_and_exit("Library function calls expects first argument to be a string");
+    }
+
+    if (func_args->type != NodeType::LIST) {
+        error_and_exit("Library function calls expects first argument to be a list");
+    }
+
+    return lib->Library.call_function(name->String.value, lib->Library.handle, func_args->List.elements);
+}
+
 node_ptr Interpreter::eval_import(node_ptr node) {
     if (node->Import.target->type != NodeType::STRING) {
         error_and_exit("Import target must be a string");
@@ -673,7 +744,11 @@ node_ptr Interpreter::eval_import(node_ptr node) {
         
         auto current_path = std::filesystem::current_path();
         auto parent_path = std::filesystem::path(path).parent_path();
-        std::filesystem::current_path(parent_path);
+        try {
+            std::filesystem::current_path(parent_path);
+        } catch(...) {
+            error_and_exit("No such file or directory: '" + parent_path.string() + "'");
+        }
 
         Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
         import_interpreter.evaluate();
@@ -720,7 +795,11 @@ node_ptr Interpreter::eval_import(node_ptr node) {
 
         auto current_path = std::filesystem::current_path();
         auto parent_path = std::filesystem::path(path).parent_path();
-        std::filesystem::current_path(parent_path);
+        try {
+            std::filesystem::current_path(parent_path);
+        } catch(...) {
+            error_and_exit("No such file or directory: '" + parent_path.string() + "'");
+        }
 
         Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
         import_interpreter.evaluate();
@@ -1453,6 +1532,16 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
             }
         }
     }
+
+    if (left->type == NodeType::LIB) {
+        if (right->type == NodeType::FUNC_CALL) {
+            if (right->FuncCall.name == "call") {
+                return eval_call_lib_function(left, right);
+            }
+        }
+
+        error_and_exit("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
+    }
 }
 
 node_ptr Interpreter::eval_eq(node_ptr node) {
@@ -1479,6 +1568,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             node_ptr old_value = std::make_shared<Node>(*accessed_value);
             std::vector<node_ptr> onChangeFunctions = accessed_value->Hooks.onChange;
             *accessed_value = *right;
+            accessed_value->Meta.is_const = false;
             accessed_value->Hooks.onChange = onChangeFunctions;
 
             auto allOnChangeFunctionsLists = {std::cref(onChangeFunctions), std::cref(global_symbol_table->globalHooks_onChange)};
@@ -1559,6 +1649,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                     error_and_exit("Cannot modify constant");
                 }
                 *accessed_value = *right;
+                accessed_value->Meta.is_const = false;
             }
         } else if (container->type == NodeType::OBJECT) {
             node_ptr accessed_value = eval_accessor(left);
@@ -1592,6 +1683,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             std::vector<node_ptr> onChangeFunctions = symbol.value->Hooks.onChange;
 
             *symbol.value = *right;
+            symbol.value->Meta.is_const = false;
             symbol.value->Hooks.onChange = onChangeFunctions;
             
             // Call onChange functions

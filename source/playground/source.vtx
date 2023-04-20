@@ -1,3 +1,4 @@
-import [fib] : "./import_test"
-println(10)
-print(fib(20))
+import [getCursorPos] : "./import_test"
+
+const cursorPos = getCursorPos()
+println(cursorPos)

@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <unordered_map>
+#include <dlfcn.h>
 #include "../Node/Node.hpp"
 #include "../Lexer/Lexer.hpp"
 #include "../Parser/Parser.hpp"
@@ -87,6 +88,8 @@ public:
     node_ptr eval_minus_eq(node_ptr node);
     // Builtin functions
     void builtin_print(node_ptr node);
+    node_ptr eval_load_lib(node_ptr node);
+    node_ptr eval_call_lib_function(node_ptr lib, node_ptr node);
 
     Symbol new_symbol(std::string name, node_ptr value, node_ptr type = nullptr);
     Symbol get_symbol(std::string name, sym_t_ptr symbol_table);
