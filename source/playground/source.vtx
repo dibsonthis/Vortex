@@ -1,4 +1,15 @@
-import [getCursorPos] : "./import_test"
+import [getCursorPos, setCursorPos] : "./import_test"
 
-const cursorPos = getCursorPos()
-println(cursorPos)
+var cursorPos = {x: 0, y: 0}
+var check = false
+
+cursorPos::onChange = (new, old) => {
+	if (new.x > 600 && (!check)) {
+		println("Capping at 600")
+		setCursorPos(600, new.y)
+	}
+}
+
+while (true) {
+	cursorPos = getCursorPos()
+}

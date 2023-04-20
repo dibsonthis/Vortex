@@ -14,7 +14,7 @@ enum Type
     INTERP,
 };
 
-Type type = Type::DEV;
+Type type = Type::INTERP;
 
 int main(int argc, char** argv)
 {

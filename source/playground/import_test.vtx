@@ -1,3 +1,3 @@
-const cursor_lib = load_lib("/Users/adib/Dev/Personal/Libs/Vortex/TestLib_Vortex/bin/build/cursor_vtx.dylib")
-
+const cursor_lib = load_lib("/Users/adib/Dev/Personal/Libs/Vortex/Cursor_Vortex/bin/build/cursor_vtx.dylib")
 var getCursorPos = () => cursor_lib.call("get_cursor_pos", [])
+var setCursorPos = (xPos, yPos) => cursor_lib.call("set_cursor_pos", [xPos, yPos])

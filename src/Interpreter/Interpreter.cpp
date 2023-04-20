@@ -376,6 +376,8 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
     }
 
     current_symbol_table = current_symbol_table->parent->parent;
+    current_symbol_table->child->child = nullptr;
+    current_symbol_table->child = nullptr;
 
     if (res->type == NodeType::FUNC) {
         for (auto& elem : current_symbol_table->symbols)
