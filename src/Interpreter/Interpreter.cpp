@@ -207,6 +207,19 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
     if (node->FuncCall.name == "load_lib") {
         return eval_load_lib(node);
     }
+    if (node->FuncCall.name == "exit") {
+        if (node->FuncCall.args.size() != 1) {
+            exit(1);
+        }
+
+        node_ptr status_code = eval_node(node->FuncCall.args[0]);
+
+        if (status_code->type != NodeType::NUMBER) {
+            exit(1);
+        } else {
+            exit(status_code->Number.value);
+        }
+    }
 
     if (func != nullptr) {
         function->Function.name = func->Function.name;
@@ -705,7 +718,7 @@ node_ptr Interpreter::eval_load_lib(node_ptr node) {
     return lib_node;
 }
 
-node_ptr Interpreter::eval_call_lib_function(node_ptr lib, node_ptr node) {
+node_ptr Interpreter::eval_call_lib_function(node_ptr lib, node_ptr& node) {
     auto args = node->FuncCall.args;
     if (args.size() != 2) {
         error_and_exit("Library function calls expects 2 arguments");

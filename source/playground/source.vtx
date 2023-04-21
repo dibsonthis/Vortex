@@ -1,15 +1,12 @@
-import [getCursorPos, setCursorPos] : "./import_test"
+import [initSDL, createWindow, eventLoop] : "./import_test"
 
-var cursorPos = {x: 0, y: 0}
-var check = false
-
-cursorPos::onChange = (new, old) => {
-	if (new.x > 600 && (!check)) {
-		println("Capping at 600")
-		setCursorPos(600, new.y)
-	}
+var init = initSDL()
+if (init != 0) {
+	println("Uh oh, error")
+} else {
+	println("Initialized SDL")
 }
 
-while (true) {
-	cursorPos = getCursorPos()
-}
+const window = createWindow("Test Window", 0, 0, 600, 400)
+
+eventLoop(window)

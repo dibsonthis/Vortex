@@ -1,3 +1,10 @@
-const cursor_lib = load_lib("/Users/adib/Dev/Personal/Libs/Vortex/Cursor_Vortex/bin/build/cursor_vtx.dylib")
-var getCursorPos = () => cursor_lib.call("get_cursor_pos", [])
-var setCursorPos = (xPos, yPos) => cursor_lib.call("set_cursor_pos", [xPos, yPos])
+const lib = load_lib("/Users/adib/Dev/Personal/Libs/Vortex/SDL/bin/build/sdl")
+
+var initSDL = () 
+	=> lib.call("sdl_init", [])
+
+var createWindow = (title, xPos, yPos, width, height) 
+	=> lib.call("create_window", [title, xPos, yPos, width, height])
+
+var eventLoop = (window) 
+	=> lib.call("event_loop", [window])

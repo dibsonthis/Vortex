@@ -40,7 +40,8 @@ enum class NodeType {
 	START_OF_FILE,
 	END_OF_FILE,
 	NONE,
-	LIB
+	LIB,
+	POINTER
 };
 
 struct IdNode {
@@ -191,6 +192,10 @@ struct LibNode {
 	call_function_t call_function;
 };
 
+struct PointerNode {
+	void* value;
+};
+
 struct Node {
 	Node() = default;
     Node(NodeType type) : type(type) {}
@@ -229,6 +234,7 @@ struct Node {
 	MetaInformation Meta;
 	Hooks Hooks;
 	LibNode Library;
+	PointerNode Pointer;
 };
 
 std::string node_repr(node_ptr);
