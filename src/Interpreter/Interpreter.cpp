@@ -537,8 +537,12 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
     int end = end_node->Number.value;
 
     auto current_scope = current_symbol_table;
+
+    int for_index = -1;
     
     for (int i = start; i < end; i++) {
+
+        for_index++;
 
         auto loop_symbol_tale = std::make_shared<SymbolTable>();
         for (auto& symbol : current_symbol_table->symbols) {
@@ -549,7 +553,7 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
 
         int index = i-node->ForLoop.start->Number.value;
         if (node->ForLoop.index_name) {
-            add_symbol(new_symbol(node->ForLoop.index_name->ID.value, new_number_node(index)), current_symbol_table);
+            add_symbol(new_symbol(node->ForLoop.index_name->ID.value, new_number_node(for_index)), current_symbol_table);
         }
         if (node->ForLoop.value_name) {
         add_symbol(new_symbol(
