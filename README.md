@@ -176,12 +176,12 @@ TBA - You can by all means fork this repo and tinker with it, however a proper g
 - [x] Hook: onChange
 - [x] Hook: onCall
 - [x] Named hooks
+- [x] C/C++ Interoperability
 - [ ] Hook: onDelete
 - [ ] Hook: onUse
 - [ ] I/O
 - [ ] String interpolation
 - [ ] Garbage collector
-- [ ] C/C++ Interoperability
 
 ## Basic example
 
