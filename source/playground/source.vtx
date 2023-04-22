@@ -1,12 +1,145 @@
-import [initSDL, createWindow, eventLoop] : "./import_test"
+import sdl : "./import_test"
 
-var init = initSDL()
+const init = sdl.initSDL()
+
 if (init != 0) {
-	println("Uh oh, error")
+	println("Error initializing SDL")
+	exit(1)
 } else {
 	println("Initialized SDL")
 }
 
-const window = createWindow("Test Window", 0, 0, 600, 400)
+var windowConfig = {
+	width: 1000,
+	height: 600,
+	name: "Test Window",
+	xPos: 300,
+	yPos: 100,
+	bgColor: {r: 0, g: 0, b: 0, a: 255}
+}
 
-eventLoop(window)
+windowConfig.bgColor.r::onChange = (new) => {
+	if (new > 255) {
+		windowConfig.bgColor.r = 255
+	}
+	if (new < 0) {
+		windowConfig.bgColor.r = 0
+	}
+}
+windowConfig.bgColor.g::onChange = (new) => {
+	if (new > 255) {
+		windowConfig.bgColor.g = 255
+	}
+	if (new < 0) {
+		windowConfig.bgColor.g = 0
+	}
+}
+windowConfig.bgColor.b::onChange = (new) => {
+	if (new > 255) {
+		windowConfig.bgColor.b = 255
+	}
+	if (new < 0) {
+		windowConfig.bgColor.b = 0
+	}
+}
+
+const window = 
+	sdl.createWindow(windowConfig.name, windowConfig.xPos, windowConfig.yPos, windowConfig.width, windowConfig.height)
+const renderer = 
+	sdl.createRenderer(window, -1)
+
+const changeBackgroundColor = (renderer, color) => {
+	sdl.setRenderDrawColor(renderer, color.r, color.g, color.b, color.a)
+	sdl.renderClear(renderer)
+	sdl.renderPresent(renderer)
+}
+
+const interpolate = (value, x0, x1, y0, y1) => {
+	y0 + (value - x0) * ((y0 - y1)/(x0 - x1))
+}
+
+const onQuit = () => {
+	sdl.destroyWindow(window)
+	sdl.quitSDL()
+	println("Done")
+	exit(0)
+}
+
+const onMouseDown = (event) => {
+	println(event)
+}
+
+const onMouseUp = (event) => {
+	//println(event)
+}
+
+var selectedColor = "r"
+
+const onKeyDown = (event) => {
+	const keyStr = sdl.getKeyName(event.key.keysm.sym)
+	if (keyStr == "Escape") {
+		onQuit()
+	}
+	if (keyStr == "R") {
+		selectedColor = "r"
+	}
+	if (keyStr == "G") {
+		selectedColor = "g"
+	}
+	if (keyStr == "B") {
+		selectedColor = "b"
+	}
+
+	if (keyStr == "Up") {
+		windowConfig.bgColor[selectedColor] += 1
+	}
+	if (keyStr == "Down") {
+		windowConfig.bgColor[selectedColor] -= 1
+	}
+
+	println(windowConfig.bgColor)
+	
+	changeBackgroundColor(renderer, windowConfig.bgColor)
+	println(keyStr)
+}
+
+const onKeyUp = (event) => {
+	//println(event)
+}
+
+const onMouseMotion = (event) => {
+	// const x = event.motion.x
+	// const y = event.motion.y
+	// const xInterpol = interpolate(x, 0, windowConfig.width, 0, 255)
+	// const yInterpol = interpolate(y, 0, windowConfig.height, 0, 255)
+	// windowConfig.bgColor = {r: xInterpol, g: yInterpol, b: xInterpol, a: 255}
+	// changeBackgroundColor(renderer, windowConfig.bgColor)
+}
+
+while (true) {
+	const event = sdl.pollEvent()
+
+	if (event.type == sdl.SDL_Event_Type.SDL_QUIT) {
+		onQuit()
+	}
+	if (event.type == sdl.SDL_Event_Type.SDL_MOUSEBUTTONDOWN) {
+		onMouseDown(event)
+		continue
+	}
+	if (event.type == sdl.SDL_Event_Type.SDL_MOUSEBUTTONUP) {
+		onMouseUp(event)
+		continue
+	}
+	if (event.type == sdl.SDL_Event_Type.SDL_MOUSEMOTION) {
+		onMouseMotion(event)
+		continue
+	}
+	if (event.type == sdl.SDL_Event_Type.SDL_KEYDOWN) {
+		onKeyDown(event)
+		continue
+	}
+	if (event.type == sdl.SDL_Event_Type.SDL_KEYUP) {
+		onKeyUp(event)
+		continue
+	}
+}

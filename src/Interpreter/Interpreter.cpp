@@ -1622,8 +1622,8 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
         node_ptr old_value = std::make_shared<Node>(*accessed_value);
         std::vector<node_ptr> onChangeFunctions = old_value->Hooks.onChange;
 
-        object->Object.properties[prop->ID.value] = right;
-        object->Object.properties[prop->ID.value]->Hooks.onChange = onChangeFunctions;
+        *accessed_value = *right;
+        accessed_value->Hooks.onChange = onChangeFunctions;
 
         auto allOnChangeFunctionsLists = {std::cref(onChangeFunctions), std::cref(global_symbol_table->globalHooks_onChange)};
             
@@ -1633,7 +1633,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                 function_call->FuncCall.name = function->Function.name;
                 function_call->FuncCall.args = std::vector<node_ptr>();
                 if (function->Function.params.size() > 0) {
-                    function_call->FuncCall.args.push_back(object->Object.properties[prop->ID.value]);
+                    function_call->FuncCall.args.push_back(accessed_value);
                 }
                 if (function->Function.params.size() > 1) {
                     function_call->FuncCall.args.push_back(old_value);
@@ -1676,10 +1676,36 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             if (accessed_value->type == NodeType::NONE) {
                 container->Object.properties[accessor->List.elements[0]->String.value] = right;
             } else {
-                if (accessed_value->Meta.is_const) {
-                    error_and_exit("Cannot modify constant");
-                }
+                node_ptr old_value = std::make_shared<Node>(*accessed_value);
+                std::vector<node_ptr> onChangeFunctions = accessed_value->Hooks.onChange;
                 *accessed_value = *right;
+                accessed_value->Meta.is_const = false;
+                accessed_value->Hooks.onChange = onChangeFunctions;
+
+                auto allOnChangeFunctionsLists = {std::cref(onChangeFunctions), std::cref(global_symbol_table->globalHooks_onChange)};
+                
+                for (const auto& function_list : allOnChangeFunctionsLists) {
+                    for (auto function : function_list.get()) {
+                        node_ptr function_call = new_node(NodeType::FUNC_CALL);
+                        function_call->FuncCall.name = function->Function.name;
+                        function_call->FuncCall.args = std::vector<node_ptr>();
+                        if (function->Function.params.size() > 0) {
+                            function_call->FuncCall.args.push_back(accessed_value);
+                        }
+                        if (function->Function.params.size() > 1) {
+                            function_call->FuncCall.args.push_back(old_value);
+                        }
+                        if (function->Function.params.size() > 2) {
+                            node_ptr file_info = new_node(NodeType::OBJECT);
+                            file_info->Object.properties["name"] = new_string_node(printable(left));
+                            file_info->Object.properties["filename"] = new_string_node(file_name);
+                            file_info->Object.properties["line"] = new_number_node(line);
+                            file_info->Object.properties["column"] = new_number_node(column);
+                            function_call->FuncCall.args.push_back(file_info);
+                        }
+                        eval_func_call(function_call, function);
+                    }
+                }
             }
         }
         return right;
