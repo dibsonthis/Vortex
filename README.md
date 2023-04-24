@@ -153,13 +153,9 @@ const res = PI * e + fib(20)
 
 Vortex's imports use relative paths to retrieve modules.
 
-## Further Reading
-
-TBA - A more detailed and broken down guide to Vortex syntax, keywords, builtins and other information is in the works. The link will appear here.
-
 ## How to start using Vortex
 
-TBA - You can by all means fork this repo and tinker with it, however a proper guide on how to get started with Vortex is on the way.
+You can find the [full Vortex documentation here](https://dibs.gitbook.io/vortex-docs/). This includes steps on how to get started using Vortex on your local machine.
 ## Development Roadmap
 
 - [x] Basic operations
