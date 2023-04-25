@@ -1660,13 +1660,21 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             error_and_exit("Cannot modify constant");
         }
         if (container->type == NodeType::LIST) {
+            accessor = eval_node(accessor->List.elements[0]);
+            if (accessor->type != NodeType::NUMBER) {
+                error_and_exit("List accessor must be a number");
+            }
+
             node_ptr accessed_value = eval_accessor(left);
-            if (accessed_value->type == NodeType::NONE) {
+
+            if (accessor->Number.value < 0) {
+                container->List.elements.insert(container->List.elements.begin(), right);
+            } else if (accessor->Number.value >= container->List.elements.size()) {
                 container->List.elements.push_back(right);
             } else {
-                if (accessed_value->Meta.is_const) {
-                    error_and_exit("Cannot modify constant");
-                }
+                // if (accessed_value->Meta.is_const) {
+                //     error_and_exit("Cannot modify constant");
+                // }
                 *accessed_value = *right;
                 accessed_value->Meta.is_const = false;
             }
