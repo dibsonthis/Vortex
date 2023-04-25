@@ -10,7 +10,7 @@ Vortex's main focus is on what we call "hooks". Hooks allow the user to bind var
 
 For example, if we wanted automatically increment variable y whenever variable x changes, we could use the onChange hook to do so:
 
-```
+```go
 var x, y = 0
 
 x::onChange = () => {
@@ -23,7 +23,7 @@ x = 4 // y == 2
 
 We could also implement hooks for object properties:
 
-```
+```go
 var person = {
     name: "John"
 }
@@ -39,7 +39,7 @@ person.name = "Allan" // Person's name has changed!
 
 Hooks also expose data about the current event. For example, we can extract and use a variable's old and new values inside the onChange hook:
 
-```
+```go
 var x = 0
 
 x::onChange = (new, old, info) => println(info.name + ": " + string(old) + " -> " + string(new))
@@ -53,7 +53,7 @@ We'll cover what data can be extracted and used within each hook in a later sect
 
 For added convenience, we can also provide a list of variables for which to implement a specific hook for:
 
-```
+```go
 var xPos, yPos = 0
 
 [xPos, yPos]::onChange(old, new, info) => println(info.name + " has changed")
@@ -66,7 +66,7 @@ y = 3 // y has changed
 
 We can also set up hooks globally, meaning that the hook will apply to all variables who are bound by the hook's context (onChange, onCalled etc.). We do this by using empty brackets:
 
-```
+```go
 var x, y, z = 0
 
 []::onChange = (old, new, info) => println(info.name + " has changed")
@@ -79,7 +79,7 @@ y = -54 // y has changed
 
 Up until now, we've only seen hooks being implemented once in a set and forget approach. But hooks can be more powerful than that. Named hooks allow the user to create hooks that can be switched on and off, either globally or for specific variables:
 
-```
+```go
 const logOnChange = onChange::(new, old, info) => 
     println(info.name + ": " + string(old) + " -> " + string(new))
 
@@ -135,7 +135,7 @@ In order to allow for best practices and modularity, Vortex allows two types of 
 
 Module imports allow the user to import an entire file (module) into the current scope. The imported module can be used as an object:
 
-```
+```go
 import math : "../modules/math"
 
 const res = math.fib(10)
@@ -145,7 +145,7 @@ const res = math.fib(10)
 
 Variable imports allow the user to pick and choose what they want to import into the local scope:
 
-```
+```go
 import [PI, e, fib] : "../modules/math"
 
 const res = PI * e + fib(20)
@@ -181,7 +181,7 @@ You can find the [full Vortex documentation here](https://dibs.gitbook.io/vortex
 
 ## Basic example
 
-```
+```go
 var length, area = 0
 
 length::onChange = () => {
@@ -210,7 +210,7 @@ L: 9    A: 81
 
 ## Slightly more complex example
 
-```
+```go
 var lexer = {
     index: -1,
     tokens: ["const", "x", "=", 9, 10, "5", [1, 2, 3]],
