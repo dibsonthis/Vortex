@@ -1,4 +1,28 @@
-var list = [1, 2, 3]
-list[-1] = 100
-list[100] = 40
-println(list)
+type Color {
+	r: Number[0],
+	g: Number[0],
+	b: Number[0],
+	a: Number[255]
+}
+
+const RED = Color { r: 255 }
+const BLUE = RED { b: 255 }
+// const WHITE = Color { r: 255, g: 255, b: 255, a: 255 }
+
+// type WindowConfig {
+// 	width: Number,
+// 	height: Number,
+// 	name: String,
+// 	xPos: Number,
+// 	yPos: Number,
+// 	bgColor: Color
+// }
+
+// const windowConfig = WindowConfig {
+// 	width: 1000,
+// 	height: 600,
+// 	name: "Test Window",
+// 	xPos: 300,
+// 	yPos: 100,
+// 	bgColor: BLACK
+// }

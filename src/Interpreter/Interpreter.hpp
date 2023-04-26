@@ -66,6 +66,8 @@ public:
     node_ptr eval_while_loop(node_ptr node);
     node_ptr eval_accessor(node_ptr node);
     node_ptr eval_import(node_ptr node);
+    node_ptr eval_type(node_ptr node);
+    node_ptr eval_object_init(node_ptr node);
     // Operations
     node_ptr eval_pos_neg(node_ptr node);
     node_ptr eval_not(node_ptr node);
@@ -96,6 +98,7 @@ public:
     Symbol get_symbol_local(std::string name, sym_t_ptr symbol_table);
     void add_symbol(Symbol symbol, sym_t_ptr symbol_table);
     void delete_symbol(std::string name, sym_t_ptr symbol_table);
+    bool match_types(node_ptr nodeA, node_ptr nodeB);
 
     void erase_prev();
     void erase_next();

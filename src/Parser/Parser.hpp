@@ -34,7 +34,7 @@ public:
     void parse_func_def(std::string end);
     void parse_accessor(std::string end);
     void parse_interface(std::string end);
-    void parse_trait(std::string end);
+    void parse_type(std::string end);
     void parse_var(std::string end);
     void parse_const(std::string end);
     void parse_for_loop(std::string end);

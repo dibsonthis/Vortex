@@ -215,15 +215,15 @@ void Parser::parse_interface(std::string end) {
     }
 }
 
-void Parser::parse_trait(std::string end) {
+void Parser::parse_type(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
             break;
         }
-        if (current_node->type == NodeType::ID && current_node->ID.value == "trait" && peek()->type == NodeType::ID && peek(2)->type == NodeType::OBJECT) {
-            current_node->type = NodeType::TRAIT;
-            current_node->Trait.name = peek()->ID.value;
-            current_node->Trait.elements = peek(2)->Object.elements;
+        if (current_node->type == NodeType::ID && current_node->ID.value == "type" && peek()->type == NodeType::ID && peek(2)->type == NodeType::OBJECT) {
+            current_node->type = NodeType::TYPE;
+            current_node->Type.name = peek()->ID.value;
+            current_node->Type.body = peek(2);
             erase_next();
             erase_next();
         }
@@ -328,7 +328,7 @@ void Parser::parse_object_desconstruct(std::string end) {
         if (current_node->type == NodeType::ID && peek()->type == NodeType::OBJECT) {
             current_node->type = NodeType::OBJECT_DECONSTRUCT;
             current_node->ObjectDeconstruct.name = current_node->ID.value;
-            current_node->ObjectDeconstruct.elements = peek()->Object.elements;
+            current_node->ObjectDeconstruct.body = peek();
             erase_next();
         }
         advance();
@@ -344,8 +344,9 @@ void Parser::parse_accessor(std::string end) {
             advance();
             continue;
         }
-        while ((current_node->type == NodeType::ID || current_node->type == NodeType::LIST || current_node->type == NodeType::FUNC_CALL || current_node->type == NodeType::ACCESSOR || current_node->Operator.value == ".") 
-        && peek()->type == NodeType::LIST) {
+        // while ((current_node->type == NodeType::ID || current_node->type == NodeType::LIST || current_node->type == NodeType::FUNC_CALL || current_node->type == NodeType::ACCESSOR || current_node->Operator.value == "." || current_node->type == NodeType::NUMBER) 
+        // && peek()->type == NodeType::LIST) {
+            while (peek()->type == NodeType::LIST) {
             node_ptr accessor = new_accessor_node();
             accessor->Accessor.container = nodes[index];
             accessor->Accessor.accessor = peek();
@@ -626,6 +627,21 @@ void Parser::parse_keywords(std::string end) {
             current_node->type = NodeType::BREAK;
         } else if (current_node->ID.value == "continue") {
             current_node->type = NodeType::CONTINUE;
+        } else if (current_node->ID.value == "Number") {
+            current_node->type = NodeType::NUMBER;
+            current_node->Number.is_type = true;
+        } else if (current_node->ID.value == "String") {
+            current_node->type = NodeType::STRING;
+            current_node->String.is_type = true;
+        } else if (current_node->ID.value == "Boolean") {
+            current_node->type = NodeType::BOOLEAN;
+            current_node->Boolean.is_type = true;
+        } else if (current_node->ID.value == "List") {
+            current_node->type = NodeType::LIST;
+            current_node->List.is_type = true;
+        } else if (current_node->ID.value == "Object") {
+            current_node->type = NodeType::OBJECT;
+            current_node->Object.is_type = true;
         }
         advance();
     }
@@ -650,7 +666,7 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_interface(end);
     reset(start);
-    parse_trait(end);
+    parse_type(end);
     reset(start);
     parse_list(end);
     reset(start);

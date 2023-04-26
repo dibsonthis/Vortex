@@ -23,7 +23,7 @@ enum class NodeType {
 	FUNC,
 	INTERFACE,
 	HOOK,
-	TRAIT,
+	TYPE,
 	ACCESSOR,
 	VARIABLE_DECLARATION,
 	VARIABLE_DECLARATION_MULTIPLE,
@@ -50,14 +50,17 @@ struct IdNode {
 
 struct NumberNode {
     double value;
+	bool is_type = false;
 };
 
 struct StringNode {
     std::string value;
+	bool is_type = false;
 };
 
 struct BooleanNode {
     bool value;
+	bool is_type = false;
 };
 
 struct OpNode {
@@ -68,16 +71,19 @@ struct OpNode {
 
 struct ListNode {
 	std::vector<node_ptr> elements;
+	bool is_type = false;
 };
 
 struct ObjectNode {
 	std::vector<node_ptr> elements;
 	std::unordered_map<std::string, node_ptr> properties;
+	std::unordered_map<std::string, node_ptr> defaults;
+	bool is_type = false;
 };
 
 struct ObjectDeconstructNode {
 	std::string name;
-	std::vector<node_ptr> elements;
+	node_ptr body;
 };
 
 struct ParenNode {
@@ -98,6 +104,7 @@ struct FuncNode {
 	bool is_hook;
 	std::unordered_map<std::string, node_ptr> closure;
 	std::string decl_filename;
+	bool is_type = false;
 };
 
 struct AccessorNode {
@@ -110,9 +117,9 @@ struct InterfaceNode {
 	std::vector<node_ptr> elements;
 };
 
-struct TraitNode {
+struct TypeNode {
 	std::string name;
-	std::vector<node_ptr> elements;
+	node_ptr body;
 };
 
 struct TraitImplNode {
@@ -196,6 +203,11 @@ struct PointerNode {
 	void* value;
 };
 
+struct TypeInfoNode {
+	node_ptr type = nullptr;
+	std::string type_name;
+};
+
 struct Node {
 	Node() = default;
     Node(NodeType type) : type(type) {}
@@ -218,7 +230,7 @@ struct Node {
 	FuncNode Function;
 	AccessorNode Accessor;
 	InterfaceNode Interface;
-	TraitNode Trait;
+	TypeNode Type;
 	HookNode Hook;
 	VariableDeclatationNode VariableDeclaration;
 	ConstantDeclatationNode ConstantDeclaration;
@@ -235,6 +247,7 @@ struct Node {
 	Hooks Hooks;
 	LibNode Library;
 	PointerNode Pointer;
+	TypeInfoNode TypeInfo;
 };
 
 std::string node_repr(node_ptr);

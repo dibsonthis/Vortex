@@ -676,6 +676,131 @@ node_ptr Interpreter::eval_function(node_ptr node) {
     return node;
 }
 
+node_ptr Interpreter::eval_type(node_ptr node) {
+    node_ptr object = new_node(NodeType::OBJECT);
+
+    if (node->Type.body->Object.elements[0]->type != NodeType::COMMA_LIST) {
+        node_ptr prop = node->Type.body->Object.elements[0];
+
+        if (prop->Operator.value != ":") {
+            error_and_exit("Object must contain properties separated with ':'");
+        }
+        if (prop->Operator.left->type != NodeType::ID && prop->Operator.left->type != NodeType::STRING) {
+            error_and_exit("Property names must be identifiers or strings");
+        }
+
+        node_ptr value = prop->Operator.right;
+        if (value->type == NodeType::ACCESSOR) {
+            object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = eval_node(value->Accessor.container);
+            node_ptr default_value = eval_node(value->Accessor.accessor);
+            if (default_value->List.elements.size() != 1) {
+                error_and_exit("Default type constructor cannot be empty");
+            }
+            object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = eval_node(value->Accessor.container);
+            object->Object.defaults[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = default_value->List.elements[0];
+        } else {
+            object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = eval_node(prop->Operator.right);
+        }
+    } else {
+        for (node_ptr prop : node->Type.body->Object.elements[0]->List.elements) {
+
+            if (prop->Operator.value != ":") {
+                error_and_exit("Object must contain properties separated with ':'");
+            }
+            if (prop->Operator.left->type != NodeType::ID && prop->Operator.left->type != NodeType::STRING) {
+                error_and_exit("Property names must be identifiers or strings");
+            }
+            
+            node_ptr value = prop->Operator.right;
+            if (value->type == NodeType::ACCESSOR) {
+                object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = eval_node(value->Accessor.container);
+                node_ptr default_value = eval_node(value->Accessor.accessor);
+                if (default_value->List.elements.size() != 1) {
+                    error_and_exit("Default type constructor cannot be empty");
+                }
+                object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = eval_node(value->Accessor.container);
+                object->Object.defaults[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = default_value->List.elements[0];
+            } else {
+                object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = eval_node(prop->Operator.right);
+            }
+        }
+    }
+
+    object->Object.is_type = true;
+    object->TypeInfo.type_name = node->Type.name;
+    Symbol symbol = new_symbol(node->Type.name, object);
+    add_symbol(symbol, current_symbol_table);
+    return new_node(NodeType::NONE);
+}
+
+bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
+    if (nodeA == nullptr || nodeB == nullptr) {
+        return false;
+    }
+
+    if (nodeA->type != nodeB->type) {
+        return false;
+    }
+
+    if (nodeA->type == NodeType::OBJECT) {
+        if (nodeA->TypeInfo.type_name != nodeB->TypeInfo.type_name) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+node_ptr Interpreter::eval_object_init(node_ptr node) {
+    Symbol type_symbol = get_symbol(node->ObjectDeconstruct.name, current_symbol_table);
+    if (type_symbol.value == nullptr) {
+        error_and_exit("Type '" + node->ObjectDeconstruct.name + "' is undefined");
+    }
+    node_ptr type = type_symbol.value;
+
+    if (!type->Object.is_type) {
+        error_and_exit("Variable '" + node->ObjectDeconstruct.name + "' is not a type");
+    }
+    
+    node_ptr object = new_node(NodeType::OBJECT);
+    node_ptr init_props = eval_object(node->ObjectDeconstruct.body);
+    object->TypeInfo.type = type_symbol.value;
+
+    // Add defaults if they exist
+
+    for (auto def : type->Object.defaults) {
+        object->Object.properties[def.first] = def.second;
+    }
+
+    // Add Init props
+
+    for (auto prop : init_props->Object.properties) {
+        object->Object.properties[prop.first] = prop.second;
+    }
+
+    // Check that the value matches type
+    // TODO: comprehensive type check goes here
+    if (object->Object.properties.size() != type->Object.properties.size()) {
+        error_and_exit("Error in object initialization for type '" + node->ObjectDeconstruct.name + "': Number of properties differs between object and type");
+    }
+
+    for (auto& prop : type->Object.properties) {
+        std::string prop_name = prop.first;
+
+        node_ptr type_prop_value = prop.second;
+        node_ptr obj_prop_value = object->Object.properties[prop_name];
+
+        int match = match_types(obj_prop_value, type_prop_value);
+        if (!match) {
+            error_and_exit("Error in object initialization for type '" + node->ObjectDeconstruct.name + "': Match error in property '" + prop_name + "'");
+        }
+    }
+
+    object->TypeInfo.type = type;
+    object->TypeInfo.type_name = node->ObjectDeconstruct.name;
+    return object;
+}
+
 node_ptr Interpreter::eval_load_lib(node_ptr node) {
     auto args = node->FuncCall.args;
     if (args.size() != 1) {
@@ -2017,6 +2142,12 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     }
     if (node->type == NodeType::IMPORT) {
         return eval_import(node);
+    }
+    if (node->type == NodeType::TYPE) {
+        return eval_type(node);
+    }
+    if (node->type == NodeType::OBJECT_DECONSTRUCT) {
+        return eval_object_init(node);
     }
     if ((node->Operator.value == "+" || node->Operator.value == "-") 
         && node->Operator.left == nullptr) {
