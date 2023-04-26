@@ -2027,30 +2027,37 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             }
 
             for (node_ptr elem : target->List.elements) {
-                if (elem->type != NodeType::ID) {
-                    error_and_exit("Hook expects either an identifier or a list of identifiers");
-                }
+                // if (elem->type != NodeType::ID) {
+                //     error_and_exit("Hook expects either an identifier or a list of identifiers");
+                // }
 
-                Symbol symbol = get_symbol(elem->ID.value, current_symbol_table);
-                if (symbol.value == nullptr) {
-                    error_and_exit("Variable '" + elem->ID.value + "' is undefined");
-                }
+                elem = eval_node(elem);
+
+                // Symbol symbol = get_symbol(elem->ID.value, current_symbol_table);
+                // if (symbol.value == nullptr) {
+                //     error_and_exit("Variable '" + elem->ID.value + "' is undefined");
+                // }
 
                 if (prop->ID.value == "onChange") {
                     if (right->type != NodeType::FUNC) {
                         error_and_exit("onChange hook expects a function");
                     }
-                    symbol.value->Hooks.onChange.push_back(right);
+                    // symbol.value->Hooks.onChange.push_back(right);
+                    elem->Hooks.onChange.push_back(right);
                 } else if (prop->ID.value == "onCall") {
-                    if (right->type != NodeType::FUNC && symbol.value->type != NodeType::FUNC) {
+                    // if (right->type != NodeType::FUNC && symbol.value->type != NodeType::FUNC) {
+                    //     error_and_exit("onCall hook expects a function");
+                    // }
+                    // symbol.value->Hooks.onCall.push_back(right);
+                    if (right->type != NodeType::FUNC && elem->type != NodeType::FUNC) {
                         error_and_exit("onCall hook expects a function");
                     }
-                    symbol.value->Hooks.onCall.push_back(right);
+                    elem->Hooks.onCall.push_back(right);
                 } else {
                     error_and_exit("Unknown hook '" + prop->ID.value + "'");
                 }
 
-                add_symbol(symbol, current_symbol_table);
+                //add_symbol(symbol, current_symbol_table);
             }
 
             return new_node(NodeType::NONE);
