@@ -50,17 +50,17 @@ struct IdNode {
 
 struct NumberNode {
     double value;
-	bool is_type = false;
+	bool is_type;
 };
 
 struct StringNode {
     std::string value;
-	bool is_type = false;
+	bool is_type;
 };
 
 struct BooleanNode {
     bool value;
-	bool is_type = false;
+	bool is_type;
 };
 
 struct OpNode {
@@ -71,14 +71,14 @@ struct OpNode {
 
 struct ListNode {
 	std::vector<node_ptr> elements;
-	bool is_type = false;
+	bool is_type;
 };
 
 struct ObjectNode {
 	std::vector<node_ptr> elements;
 	std::unordered_map<std::string, node_ptr> properties;
 	std::unordered_map<std::string, node_ptr> defaults;
-	bool is_type = false;
+	bool is_type;
 };
 
 struct ObjectDeconstructNode {
@@ -104,7 +104,7 @@ struct FuncNode {
 	bool is_hook;
 	std::unordered_map<std::string, node_ptr> closure;
 	std::string decl_filename;
-	bool is_type = false;
+	bool is_type;
 };
 
 struct AccessorNode {
@@ -204,7 +204,7 @@ struct PointerNode {
 };
 
 struct TypeInfoNode {
-	node_ptr type = nullptr;
+	node_ptr type;
 	std::string type_name;
 };
 

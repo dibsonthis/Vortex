@@ -761,7 +761,7 @@ node_ptr Interpreter::eval_object_init(node_ptr node) {
     if (!type->Object.is_type) {
         error_and_exit("Variable '" + node->ObjectDeconstruct.name + "' is not a type");
     }
-    
+
     node_ptr object = new_node(NodeType::OBJECT);
     node_ptr init_props = eval_object(node->ObjectDeconstruct.body);
     object->TypeInfo.type = type_symbol.value;
