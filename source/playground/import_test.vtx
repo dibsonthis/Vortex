@@ -1,24 +1,40 @@
 const lib = load_lib("/Users/adib/Dev/Personal/Libs/Vortex/SDL/bin/build/sdl")
 
-// const SDL_Event_Type = {
-// 	SDL_QUIT: 256,
-// 	SDL_KEYDOWN: 768,
-// 	SDL_KEYUP: 769,
-// 	SDL_MOUSEMOTION: 1024,
-// 	SDL_MOUSEBUTTONDOWN: 1025,
-// 	SDL_MOUSEBUTTONUP: 1026
-// }
+type Color {
+	r: Number[0],
+	g: Number[0],
+	b: Number[0],
+	a: Number[255]
+}
 
-// const SDL_Button_Type = {
-// 	SDL_BUTTON_LEFT: 1,
-// 	SDL_BUTTON_MIDDLE: 2,
-// 	SDL_BUTTON_RIGHT: 3
-// }
+type WindowConfig {
+	width: Number[1000],
+	height: Number[600],
+	name: String["Test Window"],
+	xPos: Number[300],
+	yPos: Number[100],
+	bgColor: Color
+}
 
-// const SDL_State_Type = {
-// 	SDL_RELEASED: 0
-// 	SDL_PRESSED: 1,
-// }
+const SDL_Event_Type = {
+	SDL_QUIT: 256,
+	SDL_KEYDOWN: 768,
+	SDL_KEYUP: 769,
+	SDL_MOUSEMOTION: 1024,
+	SDL_MOUSEBUTTONDOWN: 1025,
+	SDL_MOUSEBUTTONUP: 1026
+}
+
+const SDL_Button_Type = {
+	SDL_BUTTON_LEFT: 1,
+	SDL_BUTTON_MIDDLE: 2,
+	SDL_BUTTON_RIGHT: 3
+}
+
+const SDL_State_Type = {
+	SDL_RELEASED: 0
+	SDL_PRESSED: 1,
+}
 
 var initSDL = () 
 	=> lib.call("sdl_init", [])

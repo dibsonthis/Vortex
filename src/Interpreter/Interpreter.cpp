@@ -129,6 +129,9 @@ node_ptr Interpreter::eval_object(node_ptr node) {
     object->type = NodeType::OBJECT;
     // inject current object into scope as "this"
     add_symbol(new_symbol("this", object), current_symbol_table);
+    if (node->Object.elements.size() == 0) {
+        return node;
+    }
     if (node->Object.elements[0]->type != NodeType::COMMA_LIST) {
         node_ptr prop = node->Object.elements[0];
         if (prop->Operator.value != ":") {
@@ -780,9 +783,9 @@ node_ptr Interpreter::eval_object_init(node_ptr node) {
 
     // Check that the value matches type
     // TODO: comprehensive type check goes here
-    if (object->Object.properties.size() != type->Object.properties.size()) {
-        error_and_exit("Error in object initialization for type '" + node->ObjectDeconstruct.name + "': Number of properties differs between object and type");
-    }
+    // if (object->Object.properties.size() != type->Object.properties.size()) {
+    //     error_and_exit("Error in object initialization for type '" + node->ObjectDeconstruct.name + "': Number of properties differs between object and type");
+    // }
 
     for (auto& prop : type->Object.properties) {
         std::string prop_name = prop.first;
