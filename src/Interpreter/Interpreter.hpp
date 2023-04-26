@@ -68,6 +68,7 @@ public:
     node_ptr eval_import(node_ptr node);
     node_ptr eval_type(node_ptr node);
     node_ptr eval_object_init(node_ptr node);
+    node_ptr eval_enum(node_ptr node);
     // Operations
     node_ptr eval_pos_neg(node_ptr node);
     node_ptr eval_not(node_ptr node);

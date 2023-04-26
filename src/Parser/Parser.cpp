@@ -199,15 +199,15 @@ void Parser::parse_object(std::string end) {
     }
 }
 
-void Parser::parse_interface(std::string end) {
+void Parser::parse_enum(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
             break;
         }
-        if (current_node->type == NodeType::ID && current_node->ID.value == "interface" && peek()->type == NodeType::ID && peek(2)->type == NodeType::OBJECT) {
-            current_node->type = NodeType::INTERFACE;
-            current_node->Interface.name = peek()->ID.value;
-            current_node->Interface.elements = peek(2)->Object.elements;
+        if (current_node->type == NodeType::ID && current_node->ID.value == "enum" && peek()->type == NodeType::ID && peek(2)->type == NodeType::OBJECT) {
+            current_node->type = NodeType::ENUM;
+            current_node->Enum.name = peek()->ID.value;
+            current_node->Enum.body = peek(2);
             erase_next();
             erase_next();
         }
@@ -220,7 +220,7 @@ void Parser::parse_type(std::string end) {
         if (current_node->Operator.value == end) {
             break;
         }
-        if (current_node->type == NodeType::ID && current_node->ID.value == "type" && peek()->type == NodeType::ID && peek(2)->type == NodeType::OBJECT) {
+        if (current_node->type == NodeType::ID && current_node->ID.value == "type" && (peek()->type == NodeType::ID || peek()->type == NodeType::ACCESSOR) && peek(2)->type == NodeType::OBJECT) {
             current_node->type = NodeType::TYPE;
             current_node->Type.name = peek()->ID.value;
             current_node->Type.body = peek(2);
@@ -646,6 +646,9 @@ void Parser::parse_keywords(std::string end) {
         } else if (current_node->ID.value == "Object") {
             current_node->type = NodeType::OBJECT;
             current_node->Object.is_type = true;
+        } else if (current_node->ID.value == "Function") {
+            current_node->type = NodeType::FUNC;
+            current_node->Function.is_type = true;
         }
         advance();
     }
@@ -668,9 +671,7 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_object(end);
     reset(start);
-    parse_interface(end);
-    reset(start);
-    parse_type(end);
+    parse_enum(end);
     reset(start);
     parse_list(end);
     reset(start);
@@ -691,6 +692,8 @@ void Parser::parse(int start, std::string end) {
     parse_bin_op({"."}, end);
     reset(start);
     parse_accessor(end);
+    reset(start);
+    parse_type(end);
     reset(start);
     parse_un_op({"+", "-"}, end);
     reset(start);

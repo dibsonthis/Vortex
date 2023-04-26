@@ -22,6 +22,7 @@ enum class NodeType {
 	FUNC_CALL,
 	FUNC,
 	INTERFACE,
+	ENUM,
 	HOOK,
 	TYPE,
 	ACCESSOR,
@@ -79,6 +80,7 @@ struct ObjectNode {
 	std::unordered_map<std::string, node_ptr> properties;
 	std::unordered_map<std::string, node_ptr> defaults;
 	bool is_type;
+	bool is_enum;
 };
 
 struct ObjectDeconstructNode {
@@ -118,6 +120,11 @@ struct InterfaceNode {
 };
 
 struct TypeNode {
+	std::string name;
+	node_ptr body;
+};
+
+struct EnumNode {
 	std::string name;
 	node_ptr body;
 };
@@ -248,6 +255,7 @@ struct Node {
 	LibNode Library;
 	PointerNode Pointer;
 	TypeInfoNode TypeInfo;
+	EnumNode Enum;
 };
 
 std::string node_repr(node_ptr);

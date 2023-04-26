@@ -679,6 +679,15 @@ node_ptr Interpreter::eval_function(node_ptr node) {
     return node;
 }
 
+node_ptr Interpreter::eval_enum(node_ptr node) {
+    node_ptr enum_object = eval_object(node->Enum.body);
+    enum_object->Meta.is_const = true;
+    enum_object->Object.is_enum = true;
+    Symbol symbol = new_symbol(node->Enum.name, enum_object);
+    add_symbol(symbol, current_symbol_table);
+    return new_node(NodeType::NONE);
+}
+
 node_ptr Interpreter::eval_type(node_ptr node) {
     node_ptr object = new_node(NodeType::OBJECT);
 
@@ -688,21 +697,28 @@ node_ptr Interpreter::eval_type(node_ptr node) {
         if (prop->Operator.value != ":") {
             error_and_exit("Object must contain properties separated with ':'");
         }
-        if (prop->Operator.left->type != NodeType::ID && prop->Operator.left->type != NodeType::STRING) {
-            error_and_exit("Property names must be identifiers or strings");
+        if (prop->Operator.left->type != NodeType::ID) {
+            error_and_exit("Property names must be identifiers");
         }
 
         node_ptr value = prop->Operator.right;
         if (value->type == NodeType::ACCESSOR) {
-            object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = eval_node(value->Accessor.container);
+            object->Object.properties[prop->Operator.left->ID.value] = eval_node(value->Accessor.container);
             node_ptr default_value = eval_node(value->Accessor.accessor);
             if (default_value->List.elements.size() != 1) {
                 error_and_exit("Default type constructor cannot be empty");
             }
-            object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = eval_node(value->Accessor.container);
-            object->Object.defaults[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = default_value->List.elements[0];
+            node_ptr type_val = eval_node(value->Accessor.container);
+            node_ptr def = default_value->List.elements[0];
+
+            if (!match_types(type_val, def)) {
+                error_and_exit("Default type constructor does not match type");
+            }
+
+            object->Object.properties[prop->Operator.left->ID.value] = type_val;
+            object->Object.defaults[prop->Operator.left->ID.value] = def;
         } else {
-            object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = eval_node(prop->Operator.right);
+            object->Object.properties[prop->Operator.left->ID.value] = eval_node(prop->Operator.right);
         }
     } else {
         for (node_ptr prop : node->Type.body->Object.elements[0]->List.elements) {
@@ -710,21 +726,28 @@ node_ptr Interpreter::eval_type(node_ptr node) {
             if (prop->Operator.value != ":") {
                 error_and_exit("Object must contain properties separated with ':'");
             }
-            if (prop->Operator.left->type != NodeType::ID && prop->Operator.left->type != NodeType::STRING) {
-                error_and_exit("Property names must be identifiers or strings");
+            if (prop->Operator.left->type != NodeType::ID) {
+                error_and_exit("Property names must be identifiers");
             }
             
             node_ptr value = prop->Operator.right;
             if (value->type == NodeType::ACCESSOR) {
-                object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = eval_node(value->Accessor.container);
+                object->Object.properties[prop->Operator.left->ID.value] = eval_node(value->Accessor.container);
                 node_ptr default_value = eval_node(value->Accessor.accessor);
                 if (default_value->List.elements.size() != 1) {
                     error_and_exit("Default type constructor cannot be empty");
                 }
-                object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = eval_node(value->Accessor.container);
-                object->Object.defaults[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = default_value->List.elements[0];
+                node_ptr type_val = eval_node(value->Accessor.container);
+                node_ptr def = default_value->List.elements[0];
+
+                if (!match_types(type_val, def)) {
+                    error_and_exit("Default type constructor does not match type");
+                }
+
+                object->Object.properties[prop->Operator.left->ID.value] = type_val;
+                object->Object.defaults[prop->Operator.left->ID.value] = default_value->List.elements[0];
             } else {
-                object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = eval_node(prop->Operator.right);
+                object->Object.properties[prop->Operator.left->ID.value] = eval_node(prop->Operator.right);
             }
         }
     }
@@ -749,6 +772,33 @@ bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
         if (nodeA->TypeInfo.type_name != nodeB->TypeInfo.type_name) {
             return false;
         }
+
+        for (auto& prop : nodeA->Object.properties) {
+            std::string prop_name = prop.first;
+
+            node_ptr a_prop_value = prop.second;
+            node_ptr b_prop_value = nodeB->Object.properties[prop_name];
+
+            int match = match_types(a_prop_value, b_prop_value);
+            if (!match) {
+                return false;
+            }
+        }
+        
+        for (auto& prop : nodeB->Object.properties) {
+            std::string prop_name = prop.first;
+
+            node_ptr b_prop_value = prop.second;
+            node_ptr a_prop_value = nodeB->Object.properties[prop_name];
+
+            int match = match_types(b_prop_value, a_prop_value);
+            if (!match) {
+                return false;
+            }
+        }
+
+        return true;
+        
     }
 
     return true;
@@ -783,9 +833,9 @@ node_ptr Interpreter::eval_object_init(node_ptr node) {
 
     // Check that the value matches type
     // TODO: comprehensive type check goes here
-    // if (object->Object.properties.size() != type->Object.properties.size()) {
-    //     error_and_exit("Error in object initialization for type '" + node->ObjectDeconstruct.name + "': Number of properties differs between object and type");
-    // }
+    if (object->Object.properties.size() != type->Object.properties.size()) {
+        error_and_exit("Error in object initialization for type '" + node->ObjectDeconstruct.name + "': Number of properties differs between object and type");
+    }
 
     for (auto& prop : type->Object.properties) {
         std::string prop_name = prop.first;
@@ -795,6 +845,23 @@ node_ptr Interpreter::eval_object_init(node_ptr node) {
 
         int match = match_types(obj_prop_value, type_prop_value);
         if (!match) {
+            error_and_exit("Error in object initialization for type '" + node->ObjectDeconstruct.name + "': Match error in property '" + prop_name + "'");
+        }
+
+        object->Object.properties[prop_name]->Hooks.onChange = type_prop_value->Hooks.onChange;
+        object->Object.properties[prop_name]->Hooks.onCall = type_prop_value->Hooks.onCall;
+    }
+
+    // We do a check in the other direction
+    // To see if there are more props in object than what's defined
+
+    for (auto& prop : object->Object.properties) {
+        std::string prop_name = prop.first;
+
+        node_ptr obj_prop_value = prop.second;
+        node_ptr type_prop_value = type->Object.properties[prop_name];
+
+        if (type_prop_value == nullptr) {
             error_and_exit("Error in object initialization for type '" + node->ObjectDeconstruct.name + "': Match error in property '" + prop_name + "'");
         }
     }
@@ -2148,6 +2215,9 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     }
     if (node->type == NodeType::TYPE) {
         return eval_type(node);
+    }
+    if (node->type == NodeType::ENUM) {
+        return eval_enum(node);
     }
     if (node->type == NodeType::OBJECT_DECONSTRUCT) {
         return eval_object_init(node);
