@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <unordered_map>
+#include <memory>
 
 #define node_ptr std::shared_ptr<Node>
 

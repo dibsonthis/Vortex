@@ -23,7 +23,10 @@
       "compilerPath": "C:/msys64/mingw64/bin/g++.exe",
       "cStandard": "c17",
       "cppStandard": "c++17",
-      "intelliSenseMode": "windows-gcc-x64"
+      "intelliSenseMode": "windows-gcc-x64",
+      "browse": {
+        "path": ["${workspaceFolder}/**", "C:/msys64/mingw64/include/c++/12.2.0", "C:/Program Files (x86)/Windows Kits/10/Include/10.0.17763.0/um"]
+      }
     }
   ],
   "version": 4

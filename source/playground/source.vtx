@@ -1,4 +1,2 @@
-var list = [1, 2, 3]
-list[-1] = 100
-list[100] = 40
-println(list)
+const lib = load_lib("C:/dev/Vortex/Libs/TestLib/lib.dll")
+lib.call("sayHi", [])

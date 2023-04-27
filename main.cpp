@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
-#include <dlfcn.h>
 #include <iomanip>
 #include "src/libs/JSON/json.hpp"
 #include "src/Lexer/Lexer.hpp"

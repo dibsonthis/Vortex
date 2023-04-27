@@ -2,9 +2,17 @@
 
 #define sym_t_ptr std::shared_ptr<SymbolTable>
 
+#if __apple__
+    #include <dlfcn.h>
+#else
+    #include <windows.h>
+#endif
+
+// #include <windows.h>
+
 #include <cmath>
 #include <unordered_map>
-#include <dlfcn.h>
+#include <algorithm>
 #include "../Node/Node.hpp"
 #include "../Lexer/Lexer.hpp"
 #include "../Parser/Parser.hpp"

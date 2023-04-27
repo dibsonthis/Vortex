@@ -690,34 +690,66 @@ node_ptr Interpreter::eval_load_lib(node_ptr node) {
 
     node_ptr lib_node = new_node(NodeType::LIB);
 
-    void* handle = dlopen(path->String.value.c_str(), RTLD_LAZY);
+    #if __apple__
+        void* handle = dlopen(path->String.value.c_str(), RTLD_LAZY);
+        
+        if (!handle) {
+            error_and_exit("Cannot open library: " + std::string(dlerror()));
+        }
+
+        typedef void* (*load_t)();
+        typedef node_ptr (*call_function_t)(std::string name, void* handle, std::vector<node_ptr> args);
+
+        dlerror();
+
+        load_t load = (load_t) dlsym(handle, "load");
+        const char* dlsym_error_load = dlerror();
+        call_function_t call_function = (call_function_t) dlsym(handle, "call_function");
+        const char* dlsym_error_call_function = dlerror();
+
+        if (dlsym_error_load) {
+            dlclose(handle);
+            error_and_exit("Error loading symbol 'load': " + std::string(dlsym_error_load));
+        }
+
+        if (dlsym_error_call_function) {
+            dlclose(handle);
+            error_and_exit("Error loading symbol 'call_function': " + std::string(dlsym_error_call_function));
+        }
+
+        lib_node->Library.handle = load();
+        lib_node->Library.call_function = call_function;
+
+    #else
+
+        typedef void* (__cdecl *load_t)();
+        typedef node_ptr (__cdecl *call_function_t)(std::string name, void* handle, std::vector<node_ptr> args);
+
+        HINSTANCE hinstLib; 
+        load_t loadAddress;
+        call_function_t callFuncAddress;
+
+        hinstLib = LoadLibrary(TEXT(path->String.value.c_str())); 
+
+        if (hinstLib != NULL) { 
+            loadAddress = (load_t) GetProcAddress(hinstLib, "load");
+            callFuncAddress = (call_function_t) GetProcAddress(hinstLib, "call_function");
     
-    if (!handle) {
-        error_and_exit("Cannot open library: " + std::string(dlerror()));
-    }
+            if (loadAddress == NULL) {
+                error_and_exit("Error finding function 'load'");
+            }
 
-    typedef void* (*load_t)();
-    typedef node_ptr (*call_function_t)(std::string name, void* handle, std::vector<node_ptr> args);
+            if (callFuncAddress == NULL) {
+                error_and_exit("Error finding function 'call_function'");
+            }
+        }
 
-    dlerror();
+        lib_node->Library.handle = loadAddress();
+        lib_node->Library.call_function = callFuncAddress;
 
-    load_t load = (load_t) dlsym(handle, "load");
-    const char* dlsym_error_load = dlerror();
-    call_function_t call_function = (call_function_t) dlsym(handle, "call_function");
-    const char* dlsym_error_call_function = dlerror();
+        // FreeLibrary(hinstLib); 
 
-    if (dlsym_error_load) {
-        dlclose(handle);
-        error_and_exit("Error loading symbol 'load': " + std::string(dlsym_error_load));
-    }
-
-    if (dlsym_error_call_function) {
-        dlclose(handle);
-        error_and_exit("Error loading symbol 'call_function': " + std::string(dlsym_error_call_function));
-    }
-
-    lib_node->Library.handle = load();
-    lib_node->Library.call_function = call_function;
+   #endif
 
     return lib_node;
 }
