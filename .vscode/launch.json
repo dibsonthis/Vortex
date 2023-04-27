@@ -27,7 +27,7 @@
       "name": "C/C++: g++.exe build interpreter",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}\\bin\\build\\interp\\interp.exe",
+      "program": "${workspaceFolder}\\bin\\build\\interp\\vortex.exe",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}\\bin\\build\\interp",

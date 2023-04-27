@@ -49,10 +49,12 @@ OS="`uname`"
 case $OS in
   'Linux')
     OS='Linux'
+    echo "Building on Linux..."
     linBuild
     ;;
   'WindowsNT')
     OS='Windows'
+    echo "Building on Windows..."
     winBuild
     ;;
   'Darwin') 
