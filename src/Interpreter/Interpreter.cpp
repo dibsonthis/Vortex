@@ -869,7 +869,7 @@ node_ptr Interpreter::eval_object_init(node_ptr node) {
     // Add defaults if they exist
 
     for (auto def : type->Object.defaults) {
-        object->Object.properties[def.first] = def.second;
+        object->Object.properties[def.first] = std::make_shared<Node>(*def.second);
     }
 
     // Add Init props
