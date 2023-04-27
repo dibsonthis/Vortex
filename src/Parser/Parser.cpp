@@ -253,21 +253,47 @@ void Parser::parse_func_def(std::string end) {
         if (current_node->Operator.value == end) {
             break;
         }
-        if (current_node->Operator.value == "=>" && peek(-1)->type == NodeType::PAREN && peek()->type != NodeType::END_OF_FILE) {
-            current_node->type = NodeType::FUNC;
-            node_ptr params = peek(-1);
-            if (params->Paren.elements.size() == 1 && params->Paren.elements[0]->type == NodeType::COMMA_LIST) {
-                for (node_ptr& elem : params->Paren.elements[0]->List.elements) {
-                    current_node->Function.params.push_back(elem);
+        if (current_node->Operator.value == "=>" && peek()->type != NodeType::END_OF_FILE) {
+            if (peek(-1)->type == NodeType::PAREN)
+            {
+                current_node->type = NodeType::FUNC;
+                node_ptr params = peek(-1);
+                if (params->Paren.elements.size() == 1 && params->Paren.elements[0]->type == NodeType::COMMA_LIST) {
+                    for (node_ptr& elem : params->Paren.elements[0]->List.elements) {
+                        current_node->Function.params.push_back(elem);
+                        current_node->Function.args.push_back(nullptr);
+                    }
+                } else if (params->Paren.elements.size() == 1) {
+                    current_node->Function.params.push_back(params->Paren.elements[0]);
                     current_node->Function.args.push_back(nullptr);
                 }
-            } else if (params->Paren.elements.size() == 1) {
-                current_node->Function.params.push_back(params->Paren.elements[0]);
-                current_node->Function.args.push_back(nullptr);
+                current_node->Function.body = peek();
+                erase_next();
+                erase_prev();
+            } else if ( 
+                peek(-2)->Operator.value == ":" && 
+                peek(-3)->type == NodeType::PAREN)
+            {
+                current_node->type = NodeType::FUNC;
+                node_ptr return_type = peek(-1);
+                node_ptr params = peek(-3);
+
+                if (params->Paren.elements.size() == 1 && params->Paren.elements[0]->type == NodeType::COMMA_LIST) {
+                    for (node_ptr& elem : params->Paren.elements[0]->List.elements) {
+                        current_node->Function.params.push_back(elem);
+                        current_node->Function.args.push_back(nullptr);
+                    }
+                } else if (params->Paren.elements.size() == 1) {
+                    current_node->Function.params.push_back(params->Paren.elements[0]);
+                    current_node->Function.args.push_back(nullptr);
+                }
+                current_node->Function.body = peek();
+                current_node->Function.return_type = return_type;
+                erase_next();
+                erase_prev();
+                erase_prev();
+                erase_prev();
             }
-            current_node->Function.body = peek();
-            erase_next();
-            erase_prev();
         }
         advance();
     }

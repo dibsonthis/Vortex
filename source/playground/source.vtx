@@ -1,24 +1,4 @@
 //import [Vec2D] : "./import_test"
 
-type Color {
-	r: Number[0],
-	g: Number[0],
-	b: Number[0],
-	a: Number[255]
-}
-
-Color.r::onChange = () => println("here")
-
-enum Colors {
-	RED: Color { r: 255 }
-}
-
-type WindowOpts {
-	name: String["Test"],
-	color: Color[Color {}]
-}
-
-var windowOpts = WindowOpts {color: Colors.RED}
-
-windowOpts.color["r"] += 100
-println(windowOpts)
+const addNums = (a: Number, b: Number) => "hi"
+addNums(10, 10)

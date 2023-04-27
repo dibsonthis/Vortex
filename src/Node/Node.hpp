@@ -107,6 +107,8 @@ struct FuncNode {
 	std::unordered_map<std::string, node_ptr> closure;
 	std::string decl_filename;
 	bool is_type;
+	std::unordered_map<std::string, node_ptr> param_types;
+	node_ptr return_type;
 };
 
 struct AccessorNode {

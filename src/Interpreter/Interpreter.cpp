@@ -30,7 +30,7 @@ void Interpreter::eval_const_functions() {
             }
             current_node->ConstantDeclaration.value->Meta.is_const = true;
             current_node->ConstantDeclaration.value->Function.decl_filename = file_name;
-            Symbol symbol = new_symbol(current_node->ConstantDeclaration.name, current_node->ConstantDeclaration.value);
+            Symbol symbol = new_symbol(current_node->ConstantDeclaration.name, eval_node(current_node->ConstantDeclaration.value));
             add_symbol(symbol, current_symbol_table);
             erase_curr();
             continue;
@@ -233,6 +233,8 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.is_hook = func->Function.is_hook;
         function->Function.decl_filename = func->Function.decl_filename;
         function->Hooks.onCall = func->Hooks.onCall;
+        function->Function.param_types = func->Function.param_types;
+        function->Function.return_type = func->Function.return_type;
     } else if (node->FuncCall.caller == nullptr) {
         Symbol function_symbol = get_symbol(node->FuncCall.name, current_symbol_table);
         if (function_symbol.value == nullptr) {
@@ -249,6 +251,8 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.is_hook = function_symbol.value->Function.is_hook;
         function->Function.decl_filename = function_symbol.value->Function.decl_filename;
         function->Hooks.onCall = function_symbol.value->Hooks.onCall;
+        function->Function.param_types = function_symbol.value->Function.param_types;
+        function->Function.return_type = function_symbol.value->Function.return_type;
     } else {
         node_ptr method = node->FuncCall.caller->Object.properties[node->FuncCall.name];
         if (method->type == NodeType::NONE) {
@@ -265,6 +269,8 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.is_hook = method->Function.is_hook;
         function->Function.decl_filename = method->Function.decl_filename;
         function->Hooks.onCall = method->Hooks.onCall;
+        function->Function.param_types = method->Function.param_types;
+        function->Function.return_type = method->Function.return_type;
     }
 
     std::vector<node_ptr> args;
@@ -330,6 +336,19 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.args[i+start_index] = value;
     }
 
+    // Type check parameters
+
+    for (auto& param_type : function->Function.param_types) {
+        node_ptr var = get_symbol(param_type.first, current_symbol_table).value;
+        if (!var) {
+            continue;
+        }
+        node_ptr type = param_type.second;
+        if (!match_types(var, type)) {
+            error_and_exit("Type Error in '" + function->Function.name + "': Argument '" + param_type.first + "' does not match defined parameter type");
+        }
+    }
+
     node_ptr res = function;
 
     // Check if function's args vector has any nullptrs
@@ -360,6 +379,13 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
                     }
                     break;
                 }
+            }
+        }
+
+        // Check against return type
+        if (function->Function.return_type) {
+            if (!match_types(res, function->Function.return_type)) {
+                error_and_exit("Type Error in '" + function->Function.name + "': Return type does not match defined return type");
             }
         }
     }
@@ -672,6 +698,17 @@ node_ptr Interpreter::eval_accessor(node_ptr node) {
 
 node_ptr Interpreter::eval_function(node_ptr node) {
     node->Function.decl_filename = file_name;
+    if (node->Function.return_type) {
+        node->Function.return_type = eval_node(node->Function.return_type);
+    }
+    // Go through params to see if they are typed, and store their types
+    for (auto& param : node->Function.params) {
+        if (param->Operator.value == ":") {
+            node->Function.param_types[param->Operator.left->ID.value] 
+                = eval_node(param->Operator.right);
+            param = param->Operator.left;
+        }
+    }
     // Inject current scope as closure
     for (auto& symbol : current_symbol_table->symbols) {
         node->Function.closure[symbol.first] = symbol.second.value;
@@ -2027,28 +2064,14 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             }
 
             for (node_ptr elem : target->List.elements) {
-                // if (elem->type != NodeType::ID) {
-                //     error_and_exit("Hook expects either an identifier or a list of identifiers");
-                // }
-
                 elem = eval_node(elem);
-
-                // Symbol symbol = get_symbol(elem->ID.value, current_symbol_table);
-                // if (symbol.value == nullptr) {
-                //     error_and_exit("Variable '" + elem->ID.value + "' is undefined");
-                // }
 
                 if (prop->ID.value == "onChange") {
                     if (right->type != NodeType::FUNC) {
                         error_and_exit("onChange hook expects a function");
                     }
-                    // symbol.value->Hooks.onChange.push_back(right);
                     elem->Hooks.onChange.push_back(right);
                 } else if (prop->ID.value == "onCall") {
-                    // if (right->type != NodeType::FUNC && symbol.value->type != NodeType::FUNC) {
-                    //     error_and_exit("onCall hook expects a function");
-                    // }
-                    // symbol.value->Hooks.onCall.push_back(right);
                     if (right->type != NodeType::FUNC && elem->type != NodeType::FUNC) {
                         error_and_exit("onCall hook expects a function");
                     }
@@ -2056,8 +2079,6 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                 } else {
                     error_and_exit("Unknown hook '" + prop->ID.value + "'");
                 }
-
-                //add_symbol(symbol, current_symbol_table);
             }
 
             return new_node(NodeType::NONE);
@@ -2155,6 +2176,11 @@ void Interpreter::builtin_print(node_ptr node) {
 }
 
 node_ptr Interpreter::eval_node(node_ptr node) {
+
+    if (node == nullptr) {
+        return nullptr;
+    }
+
     line = node->line;
     column = node->column;
 
