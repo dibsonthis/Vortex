@@ -1,18 +1,27 @@
 #pragma once
 
+#define GCC_COMPILER (defined(__GNUC__) && !defined(__clang__))
+
 #define sym_t_ptr std::shared_ptr<SymbolTable>
 
-#if __apple__
-    #include <dlfcn.h>
+#if GCC_COMPILER
+    #if __apple__
+        #include <dlfcn.h>
+    #else
+        #include <windows.h>
+    #endif
 #else
-    #include <windows.h>
+    #if defined(__APPLE__)
+        #include <dlfcn.h>
+    #else
+        #include <windows.h>
+    #endif
 #endif
-
-// #include <windows.h>
 
 #include <cmath>
 #include <unordered_map>
 #include <algorithm>
+#include <sstream>
 #include "../Node/Node.hpp"
 #include "../Lexer/Lexer.hpp"
 #include "../Parser/Parser.hpp"
