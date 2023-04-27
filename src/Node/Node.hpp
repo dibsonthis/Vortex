@@ -206,10 +206,12 @@ struct LibNode {
 	typedef node_ptr (*call_function_t)(std::string name, void* handle, std::vector<node_ptr> args);
 	void* handle;
 	call_function_t call_function;
+	bool is_type;
 };
 
 struct PointerNode {
 	void* value;
+	bool is_type;
 };
 
 struct TypeInfoNode {

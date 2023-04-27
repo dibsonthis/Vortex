@@ -204,6 +204,8 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
             case NodeType::LIST: return new_string_node("List");
             case NodeType::OBJECT: return new_string_node("Object");
             case NodeType::FUNC: return new_string_node("Function");
+            case NodeType::POINTER: return new_string_node("Pointer");
+            case NodeType::LIB: return new_string_node("Library");
             default: return new_string_node("None");
         }
     }
@@ -752,6 +754,10 @@ node_ptr Interpreter::eval_type(node_ptr node) {
                 error_and_exit("Default type constructor does not match type");
             }
 
+            if (def->type == NodeType::FUNC) {
+                def->Function.name = prop->Operator.left->ID.value;
+            }
+
             object->Object.properties[prop->Operator.left->ID.value] = type_val;
             object->Object.defaults[prop->Operator.left->ID.value] = def;
         } else {
@@ -779,6 +785,10 @@ node_ptr Interpreter::eval_type(node_ptr node) {
 
                 if (!match_types(type_val, def)) {
                     error_and_exit("Default type constructor does not match type");
+                }
+
+                if (def->type == NodeType::FUNC) {
+                    def->Function.name = prop->Operator.left->ID.value;
                 }
 
                 object->Object.properties[prop->Operator.left->ID.value] = type_val;
@@ -1818,6 +1828,12 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             node_ptr accessed_value = eval_dot(left);
             node_ptr old_value = std::make_shared<Node>(*accessed_value);
             std::vector<node_ptr> onChangeFunctions = accessed_value->Hooks.onChange;
+
+            // Type check
+            if (accessed_value->type != NodeType::NONE && !match_types(accessed_value, right)) {
+                error_and_exit("Cannot modify object property type");
+            }
+
             *accessed_value = *right;
             accessed_value->Meta.is_const = false;
             accessed_value->Hooks.onChange = onChangeFunctions;
@@ -1853,6 +1869,11 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
         node_ptr accessed_value = object->Object.properties[prop->ID.value];
         node_ptr old_value = std::make_shared<Node>(*accessed_value);
         std::vector<node_ptr> onChangeFunctions = old_value->Hooks.onChange;
+
+        // Type check
+        if (accessed_value->type != NodeType::NONE && !match_types(accessed_value, right)) {
+            error_and_exit("Cannot modify object property type");
+        }
 
         *accessed_value = *right;
         accessed_value->Hooks.onChange = onChangeFunctions;
@@ -1918,6 +1939,12 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             } else {
                 node_ptr old_value = std::make_shared<Node>(*accessed_value);
                 std::vector<node_ptr> onChangeFunctions = accessed_value->Hooks.onChange;
+
+                // Type check
+                if (accessed_value->type != NodeType::NONE && !match_types(accessed_value, right)) {
+                    error_and_exit("Cannot modify object property type");
+                }
+
                 *accessed_value = *right;
                 accessed_value->Meta.is_const = false;
                 accessed_value->Hooks.onChange = onChangeFunctions;
@@ -1959,6 +1986,11 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             // Re-assigning, check if const
             if (symbol.value->Meta.is_const) {
                 error_and_exit("Cannot modify constant '" + symbol.name + "'");
+            }
+
+            // Type check
+            if (symbol.value->type != NodeType::NONE && !match_types(symbol.value, right)) {
+                error_and_exit("Cannot modify type of variable '" + symbol.name + "'");
             }
 
             node_ptr old_value = std::make_shared<Node>(*symbol.value);
@@ -2149,6 +2181,16 @@ std::string Interpreter::printable(node_ptr node) {
             }
             res += "}";
             return res;
+        }
+        case NodeType::POINTER: {
+            std::stringstream buffer;
+            buffer << node->Pointer.value;
+            return buffer.str();
+        }
+        case NodeType::LIB: {
+            std::stringstream buffer;
+            buffer << node->Library.handle;
+            return buffer.str();
         }
         case NodeType::NONE: {
             return "None";

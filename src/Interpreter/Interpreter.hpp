@@ -5,6 +5,7 @@
 #include <cmath>
 #include <unordered_map>
 #include <dlfcn.h>
+#include <sstream>  
 #include "../Node/Node.hpp"
 #include "../Lexer/Lexer.hpp"
 #include "../Parser/Parser.hpp"

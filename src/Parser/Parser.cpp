@@ -675,7 +675,13 @@ void Parser::parse_keywords(std::string end) {
         } else if (current_node->ID.value == "Function") {
             current_node->type = NodeType::FUNC;
             current_node->Function.is_type = true;
-        }
+        } else if (current_node->ID.value == "Pointer") {
+            current_node->type = NodeType::POINTER;
+            current_node->Pointer.is_type = true;
+        } else if (current_node->ID.value == "Pointer") {
+            current_node->type = NodeType::LIB;
+            current_node->Library.is_type = true;
+        } 
         advance();
     }
 }
