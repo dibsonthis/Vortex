@@ -30,7 +30,7 @@
             "command": "g++",
             "label": "C/C++: g++.exe build interpreter",
             "args": [
-                "-g",
+                "-O3",
                 "-std=c++20",
                 "${fileDirname}\\src\\Node\\Node.cpp",
                 "${fileDirname}\\src\\Lexer\\Lexer.cpp",

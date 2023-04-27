@@ -1,5 +1,0 @@
-import [oneValue] : "./one"
-
-println(oneValue)
-
-var zeroValue = 0
