@@ -31,6 +31,7 @@ winBuild()
 
 linBuild()
 {
+    mkdir "$PWD"/bin/build/interp/linux
     clang++ \
     -O3 \
     -std=c++20 \
