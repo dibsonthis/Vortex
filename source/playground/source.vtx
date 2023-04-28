@@ -1,4 +1,3 @@
-//import [Vec2D] : "./import_test"
-
-const addNums = (a: Number, b: Number) => "hi"
-addNums(10, 10)
+// import [Config] : "@modules/sdl"
+import sdl
+println(sdl)

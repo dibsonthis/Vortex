@@ -475,8 +475,10 @@ void Parser::parse_import(std::string end) {
                 current_node->Import.module = peek()->Operator.left;
                 current_node->Import.target = peek()->Operator.right;
                 erase_next();
-            } else {
-                error_and_exit("Const declaration expects a value");
+            } else if (peek()->type == NodeType::ID) {
+                current_node->Import.module = peek();
+                current_node->Import.is_default = true;
+                erase_next();
             }
         }
         advance();

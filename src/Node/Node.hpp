@@ -179,6 +179,7 @@ struct WhileLoopNode {
 struct ImportNode {
 	node_ptr module;
 	node_ptr target;
+	bool is_default;
 };
 
 struct IfStatementNode {

@@ -19,7 +19,7 @@ macBuild()
     while true; do
       read -p "Do you want to add Vortex to 'usr/local/bin'? " yn
       case $yn in
-          [Yy]* ) sudo mv "$PWD"/bin/build/interp/mac/vortex /usr/local/bin; echo "Added Vortex to usr/local/bin"; break;;
+          [Yy]* ) sudo mv "$PWD"/bin/build/interp/mac/vortex /usr/local/bin; echo "Added Vortex to usr/local/bin - Important: To uninstall, you'll need to run 'rm /usr/local/bin/vortex'"; break;;
           [Nn]* ) exit;;
           * ) echo "Please answer y or n.";;
       esac
@@ -44,7 +44,7 @@ linBuild()
     while true; do
       read -p "Do you want to add Vortex to 'usr/local/bin'? " yn
       case $yn in
-          [Yy]* ) sudo mv "$PWD"/bin/build/interp/linux/vortex /usr/local/bin; echo "Added Vortex to usr/local/bin"; break;;
+          [Yy]* ) sudo mv "$PWD"/bin/build/interp/linux/vortex /usr/local/bin; echo "Added Vortex to usr/local/bin - Important: To uninstall, you'll need to run 'rm /usr/local/bin/vortex'"; break;;
           [Nn]* ) exit;;
           * ) echo "Please answer y or n.";;
       esac

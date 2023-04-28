@@ -131,5 +131,7 @@ public:
 
     std::string printable(node_ptr node);
 
+    void replaceAll(std::string& str, const std::string& from, const std::string& to);
+
     void error_and_exit(std::string message);
 };

@@ -1080,11 +1080,30 @@ node_ptr Interpreter::eval_call_lib_function(node_ptr lib, node_ptr& node) {
 }
 
 node_ptr Interpreter::eval_import(node_ptr node) {
+
+    if (node->Import.is_default) {
+        node->Import.target = new_string_node("@modules/" + node->Import.module->ID.value);
+    }
+
     if (node->Import.target->type != NodeType::STRING) {
         error_and_exit("Import target must be a string");
     }
 
     std::string path = node->Import.target->String.value + ".vtx";
+
+    #if GCC_COMPILER
+        #if __apple__ || __linux__
+            replaceAll(path, "@modules", "/usr/local/share/vortex/modules");
+        #else
+            replaceAll(path, "@modules", "C:/Program Files/Vortex/modules");
+        #endif
+    #else
+        #if defined(__APPLE__) || defined(__linux__)
+            replaceAll(path, "@modules", "/usr/local/share/vortex/modules");
+        #else
+            replaceAll(path, "@modules", "C:/Program Files/Vortex/modules");
+        #endif
+    #endif
 
     if (node->Import.module->type == NodeType::ID) {
         std::string module_name = node->Import.module->ID.value;
@@ -2586,6 +2605,16 @@ node_ptr Interpreter::new_node() {
     node->line = line;
     node->column = column;
     return node;
+}
+
+void Interpreter::replaceAll(std::string& str, const std::string& from, const std::string& to) {
+    if(from.empty())
+        return;
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
 }
 
 void Interpreter::error_and_exit(std::string message)
