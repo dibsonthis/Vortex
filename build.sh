@@ -31,7 +31,7 @@ winBuild()
 
 linBuild()
 {
-    g++ \
+    clang++ \
     -O3 \
     -std=c++20 \
     "$PWD"/src/Node/Node.cpp \
@@ -40,7 +40,7 @@ linBuild()
     "$PWD"/src/Interpreter/Interpreter.cpp \
     "$PWD"/src/utils/utils.cpp \
     "$PWD"/main.cpp \
-    -o "$PWD"/bin/build/interp/windows/vortex.exe
+    -o "$PWD"/bin/build/interp/linux/vortex
 }
 
 OS="`uname`"
