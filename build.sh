@@ -2,6 +2,7 @@
 
 macBuild()
 {
+    mkdir "$PWD"/bin/build/interp/mac
     clang++ \
     -O3 \
     -std=c++20 \
@@ -13,20 +14,6 @@ macBuild()
     "$PWD"/src/utils/utils.cpp \
     "$PWD"/main.cpp \
     -o "$PWD"/bin/build/interp/mac/vortex
-}
-
-winBuild()
-{
-    g++ \
-    -O3 \
-    -std=c++20 \
-    "$PWD"/src/Node/Node.cpp \
-    "$PWD"/src/Lexer/Lexer.cpp \
-    "$PWD"/src/Parser/Parser.cpp \
-    "$PWD"/src/Interpreter/Interpreter.cpp \
-    "$PWD"/src/utils/utils.cpp \
-    "$PWD"/main.cpp \
-    -o "$PWD"/bin/build/interp/windows/vortex.exe
 }
 
 linBuild()
@@ -50,11 +37,6 @@ case $OS in
     OS='Linux'
     echo "Building on Linux..."
     linBuild
-    ;;
-  'WindowsNT')
-    OS='Windows'
-    echo "Building on Windows..."
-    winBuild
     ;;
   'Darwin') 
     OS='Mac'
