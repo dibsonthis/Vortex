@@ -15,6 +15,15 @@ macBuild()
     "$PWD"/src/utils/utils.cpp \
     "$PWD"/main.cpp \
     -o "$PWD"/bin/build/interp/mac/vortex
+
+    while true; do
+      read -p "Do you want to add Vortex to 'usr/local/bin'? " yn
+      case $yn in
+          [Yy]* ) sudo mv "$PWD"/bin/build/interp/mac/vortex /usr/local/bin; echo "Added Vortex to usr/local/bin"; break;;
+          [Nn]* ) exit;;
+          * ) echo "Please answer y or n.";;
+      esac
+    done
 }
 
 linBuild()
@@ -31,6 +40,15 @@ linBuild()
     "$PWD"/src/utils/utils.cpp \
     "$PWD"/main.cpp \
     -o "$PWD"/bin/build/interp/linux/vortex
+
+    while true; do
+      read -p "Do you want to add Vortex to 'usr/local/bin'? " yn
+      case $yn in
+          [Yy]* ) sudo mv "$PWD"/bin/build/interp/linux/vortex /usr/local/bin; echo "Added Vortex to usr/local/bin"; break;;
+          [Nn]* ) exit;;
+          * ) echo "Please answer y or n.";;
+      esac
+    done
 }
 
 OS="`uname`"
