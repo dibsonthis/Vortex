@@ -65,8 +65,7 @@ int main(int argc, char** argv)
 
         Interpreter interpreter(parser.nodes, parser.file_name);
         interpreter.evaluate();
-
-        std::cin.get();
+        
         exit(0);
     }
 }

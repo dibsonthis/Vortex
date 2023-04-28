@@ -34,6 +34,7 @@ linBuild()
     clang++ \
     -O3 \
     -std=c++20 \
+    -ldl \
     "$PWD"/src/Node/Node.cpp \
     "$PWD"/src/Lexer/Lexer.cpp \
     "$PWD"/src/Parser/Parser.cpp \
