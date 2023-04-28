@@ -1,0 +1,120 @@
+import sdl : "@modules/sdl"
+import [WindowConfig, Color, Window] : "@modules/sdl"
+
+var init = sdl.initSDL()
+
+if (init != 0) {
+	println("Error initializing SDL")
+	exit(1)
+} else {
+	println("Initialized SDL")
+}
+
+var windowConfig = WindowConfig { color: sdl.Colors.Green }
+
+const window = sdl.createWindow(windowConfig)
+const renderer = sdl.createRenderer(window, -1)
+
+const win = Window { window: window, renderer: renderer }
+win.changeColor(sdl.Colors.Green)
+
+const onQuit = () => {
+	sdl.destroyWindow(window)
+	sdl.quitSDL()
+	println("Done")
+	exit(0)
+}
+
+const onMouseDown = (event) => {
+	//println(event)
+}
+
+const onMouseUp = (event) => {
+	//println(event)
+}
+
+const onKeyDown = (event) => {
+	const keyStr = sdl.getKeyName(event.key.keysm.sym)
+	println(keyStr)
+}
+
+const onKeyUp = (event) => {
+	//println(event)
+}
+
+const onMouseMotion = (event) => {
+	xPos = event.motion.x
+	yPos = event.motion.y
+	// const x = event.motion.x
+	// const y = event.motion.y
+	// const xInterpol = sdl.interpolate(x, 0, windowConfig.width, 0, 255)
+	// const yInterpol = sdl.interpolate(y, 0, windowConfig.height, 0, 255)
+	// windowConfig.color = Color {r: xInterpol, g: yInterpol, b: xInterpol, a: 255}
+	// sdl.changeBackgroundColor(renderer, windowConfig.color)
+}
+
+var xPos, yPos = 0
+
+while (true) {
+	var event;
+	while ((sdl.pollEvent(event)) != 0) {
+
+		if (event.type == sdl.EventType.SDL_QUIT) {
+			onQuit()
+		}
+		if (event.type == sdl.EventType.SDL_MOUSEBUTTONDOWN) {
+			onMouseDown(event)
+		}
+		if (event.type == sdl.EventType.SDL_MOUSEBUTTONUP) {
+			onMouseUp(event)
+		}
+		if (event.type == sdl.EventType.SDL_MOUSEMOTION) {
+			onMouseMotion(event)
+		}
+		if (event.type == sdl.EventType.SDL_KEYDOWN) {
+			onKeyDown(event)
+		}
+		if (event.type == sdl.EventType.SDL_KEYUP) {
+			onKeyUp(event)
+		}
+	}
+
+	const xInterpol = sdl.interpolate(xPos, 0, windowConfig.width, 0, 255)
+	const yInterpol = sdl.interpolate(yPos, 0, windowConfig.height, 0, 255)
+
+	//sdl.setRenderDrawColor(renderer, Color {r: 0, g: xInterpol, b: 0, a: 100})
+
+	sdl.renderClear(renderer)
+
+	sdl.setRenderDrawColor(renderer, Color {r: xInterpol, g: yInterpol, b: xInterpol, a: 255})
+
+	//sdl.setRenderDrawColor(renderer, Color {r:255})
+	sdl.drawLine(renderer, xPos, yPos, 0, 0)
+
+	//sdl.setRenderDrawColor(renderer, Color {b:255})
+	sdl.drawLine(renderer, xPos, yPos, windowConfig.width, windowConfig.height)
+
+	//sdl.setRenderDrawColor(renderer, Color {g:255})
+	sdl.drawLine(renderer, xPos, yPos, windowConfig.width, 0)
+
+	//sdl.setRenderDrawColor(renderer, Color {r:255, g:255, b:255})
+	sdl.drawLine(renderer, xPos, yPos, 0, windowConfig.height)
+
+	//sdl.setRenderDrawColor(renderer, Color {r:0, g:120, b:222})
+	sdl.drawLine(renderer, xPos, yPos, windowConfig.width/2, windowConfig.height)
+
+	//sdl.setRenderDrawColor(renderer, Color {r:0, g:120, b:222})
+	sdl.drawLine(renderer, xPos, yPos, windowConfig.width/2, 0)
+
+	//sdl.setRenderDrawColor(renderer, Color {r:0, g:120, b:222})
+	sdl.drawLine(renderer, xPos, yPos, windowConfig.width, windowConfig.height/2)
+
+	//sdl.setRenderDrawColor(renderer, Color {r:0, g:120, b:222})
+	sdl.drawLine(renderer, xPos, yPos, 0, windowConfig.height/2)
+
+	sdl.setRenderDrawColor(renderer, Color {})
+
+	sdl.renderPresent(renderer)
+
+	sdl.delay(20)
+}
