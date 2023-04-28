@@ -173,6 +173,7 @@ You can find the [full Vortex documentation here](https://dibs.gitbook.io/vortex
 - [x] Hook: onCall
 - [x] Named hooks
 - [x] C/C++ Interoperability
+- [ ] Hook: onInit
 - [ ] Hook: onDelete
 - [ ] Hook: onUse
 - [ ] I/O

@@ -875,7 +875,7 @@ node_ptr Interpreter::eval_object_init(node_ptr node) {
     // Add Init props
 
     for (auto prop : init_props->Object.properties) {
-        object->Object.properties[prop.first] = prop.second;
+        object->Object.properties[prop.first] = std::make_shared<Node>(*prop.second);
     }
 
     // Check that the value matches type
