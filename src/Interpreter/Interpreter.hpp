@@ -5,13 +5,13 @@
 #define sym_t_ptr std::shared_ptr<SymbolTable>
 
 #if GCC_COMPILER
-    #if __apple__
+    #if __apple__ || __linux__
         #include <dlfcn.h>
     #else
         #include <windows.h>
     #endif
 #else
-    #if defined(__APPLE__)
+    #if defined(__APPLE__) || defined(__linux__)
         #include <dlfcn.h>
     #else
         #include <windows.h>

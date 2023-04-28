@@ -933,7 +933,7 @@ node_ptr Interpreter::eval_load_lib(node_ptr node) {
     node_ptr lib_node = new_node(NodeType::LIB);
 
     #if GCC_COMPILER
-        #if __apple__
+        #if __apple__ || __linux__
             void* handle = dlopen(path->String.value.c_str(), RTLD_LAZY);
             
             if (!handle) {
@@ -994,7 +994,7 @@ node_ptr Interpreter::eval_load_lib(node_ptr node) {
 
         #endif
     #else
-        #if __APPLE__
+        #if __APPLE__ || __linux__
             void* handle = dlopen(path->String.value.c_str(), RTLD_LAZY);
             
             if (!handle) {
