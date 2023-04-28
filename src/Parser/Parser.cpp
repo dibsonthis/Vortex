@@ -14,6 +14,7 @@ node_ptr Parser::peek(int n) {
     if (idx < nodes.size()) {
         return nodes[idx];
     }
+    return nodes[nodes.size()-1];
 }
 
 void Parser::reset(int idx) {
@@ -787,6 +788,8 @@ int Parser::find_closing_index(int start, std::string opening_symbol, std::strin
             return i;
         }
     }
+
+    return 0;
 }
 
 node_ptr Parser::flatten_comma_node(node_ptr node) {

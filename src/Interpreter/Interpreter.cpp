@@ -1178,6 +1178,9 @@ node_ptr Interpreter::eval_import(node_ptr node) {
 
         return new_node(NodeType::NONE);
     }
+
+    error_and_exit("Malformed import statement");
+    return new_node(NodeType::NONE);
 }
 
 // Operations
@@ -1225,6 +1228,7 @@ node_ptr Interpreter::eval_add(node_ptr node) {
     }
 
     error_and_exit("Cannot perform operation '+' on types: " + node_repr(left) + ", " + node_repr(right));
+    return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_sub(node_ptr node) {
@@ -1236,6 +1240,7 @@ node_ptr Interpreter::eval_sub(node_ptr node) {
     }
 
     error_and_exit("Cannot perform operation '-' on types: " + node_repr(left) + ", " + node_repr(right));
+    return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_mul(node_ptr node) {
@@ -1247,6 +1252,7 @@ node_ptr Interpreter::eval_mul(node_ptr node) {
     }
 
     error_and_exit("Cannot perform operation '*' on types: " + node_repr(left) + ", " + node_repr(right));
+    return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_div(node_ptr node) {
@@ -1258,6 +1264,7 @@ node_ptr Interpreter::eval_div(node_ptr node) {
     }
 
     error_and_exit("Cannot perform operation '/' on types: " + node_repr(left) + ", " + node_repr(right));
+    return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_pow(node_ptr node) {
@@ -1269,6 +1276,7 @@ node_ptr Interpreter::eval_pow(node_ptr node) {
     }
 
     error_and_exit("Cannot perform operation '^' on types: " + node_repr(left) + ", " + node_repr(right));
+    return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_eq_eq(node_ptr node) {
@@ -1338,6 +1346,7 @@ node_ptr Interpreter::eval_lt_eq(node_ptr node) {
     }
 
     error_and_exit("Cannot perform operation '<=' on types: " + node_repr(left) + ", " + node_repr(right));
+    return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_gt_eq(node_ptr node) {
@@ -1349,6 +1358,7 @@ node_ptr Interpreter::eval_gt_eq(node_ptr node) {
     }
 
     error_and_exit("Cannot perform operation '>=' on types: " + node_repr(left) + ", " + node_repr(right));
+    return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_lt(node_ptr node) {
@@ -1360,6 +1370,7 @@ node_ptr Interpreter::eval_lt(node_ptr node) {
     }
 
     error_and_exit("Cannot perform operation '<' on types: " + node_repr(left) + ", " + node_repr(right));
+    return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_gt(node_ptr node) {
@@ -1371,6 +1382,7 @@ node_ptr Interpreter::eval_gt(node_ptr node) {
     }
 
     error_and_exit("Cannot perform operation '>' on types: " + node_repr(left) + ", " + node_repr(right));
+    return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_and(node_ptr node) {
@@ -1389,6 +1401,7 @@ node_ptr Interpreter::eval_and(node_ptr node) {
     return left;
 
     error_and_exit("Cannot perform operation '&&' on types: " + node_repr(left) + ", " + node_repr(right));
+    return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_or(node_ptr node) {
@@ -1405,6 +1418,7 @@ node_ptr Interpreter::eval_or(node_ptr node) {
     }
 
     error_and_exit("Cannot perform operation '||' on types: " + node_repr(left) + ", " + node_repr(right));
+    return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_plus_eq(node_ptr node) {
@@ -1898,6 +1912,9 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
 
         error_and_exit("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
     }
+
+    error_and_exit("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
+    return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_eq(node_ptr node) {
