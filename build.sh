@@ -2,6 +2,7 @@
 
 macBuild()
 {
+    mkdir "$PWD"/bin/build/interp
     mkdir "$PWD"/bin/build/interp/mac
     clang++ \
     -O3 \
@@ -18,6 +19,7 @@ macBuild()
 
 linBuild()
 {
+    mkdir "$PWD"/bin/build/interp
     mkdir "$PWD"/bin/build/interp/linux
     clang++ \
     -O3 \
