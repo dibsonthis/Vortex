@@ -20,7 +20,6 @@ winBuild()
     g++ \
     -O3 \
     -std=c++20 \
-    -stdlib=libc++ \
     "$PWD"/src/Node/Node.cpp \
     "$PWD"/src/Lexer/Lexer.cpp \
     "$PWD"/src/Parser/Parser.cpp \
@@ -35,7 +34,6 @@ linBuild()
     g++ \
     -O3 \
     -std=c++20 \
-    -stdlib=libc++ \
     "$PWD"/src/Node/Node.cpp \
     "$PWD"/src/Lexer/Lexer.cpp \
     "$PWD"/src/Parser/Parser.cpp \
