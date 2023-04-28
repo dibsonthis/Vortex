@@ -1,3 +1,5 @@
-// import [Config] : "@modules/sdl"
 import sdl
-println(sdl)
+import [WindowConfig] : "@modules/sdl"
+println(WindowConfig)
+// import sdl
+// println(sdl)

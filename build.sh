@@ -17,9 +17,10 @@ macBuild()
     -o "$PWD"/bin/build/interp/mac/vortex
 
     while true; do
-      read -p "Do you want to add Vortex to 'usr/local/bin'? " yn
+      read -p "Do you want to add Vortex to 'usr/local/bin' and built-in modules to 'usr/local/share'? " yn
       case $yn in
-          [Yy]* ) sudo mv "$PWD"/bin/build/interp/mac/vortex /usr/local/bin; echo "Added Vortex to usr/local/bin - Important: To uninstall, you'll need to run 'rm /usr/local/bin/vortex'"; break;;
+          [Yy]* ) sudo -s eval 'echo "Password required to access usr/local/bin"; mv "$PWD"/bin/build/interp/mac/vortex /usr/local/bin; echo "Added Vortex to usr/local/bin - Important: To uninstall, you will need to run rm /usr/local/bin/vortex"; sudo -s eval; mkdir /usr/local/share/vortex; mkdir /usr/local/share/vortex/modules; mkdir /usr/local/share/vortex/libs; cp -R "$PWD"/std/modules/* /usr/local/share/vortex/modules; cp -R "$PWD"/std/libs/* /usr/local/share/vortex/libs'
+          echo "Added Vortex and standard modules to usr/local"; break;;
           [Nn]* ) exit;;
           * ) echo "Please answer y or n.";;
       esac
@@ -42,9 +43,10 @@ linBuild()
     -o "$PWD"/bin/build/interp/linux/vortex
 
     while true; do
-      read -p "Do you want to add Vortex to 'usr/local/bin'? " yn
+      read -p "Do you want to add Vortex to 'usr/local/bin' and built-in modules to 'usr/local/share'? " yn
       case $yn in
-          [Yy]* ) sudo mv "$PWD"/bin/build/interp/linux/vortex /usr/local/bin; echo "Added Vortex to usr/local/bin - Important: To uninstall, you'll need to run 'rm /usr/local/bin/vortex'"; break;;
+          [Yy]* ) sudo -s eval 'echo "Password required to access usr/local/bin"; mv "$PWD"/bin/build/interp/linux/vortex /usr/local/bin; echo "Added Vortex to usr/local/bin - Important: To uninstall, you will need to run rm /usr/local/bin/vortex"; sudo -s eval; mkdir /usr/local/share/vortex; mkdir /usr/local/share/vortex/modules; mkdir /usr/local/share/vortex/libs; cp -R "$PWD"/std/modules/* /usr/local/share/vortex/modules; cp -R "$PWD"/std/libs/* /usr/local/share/vortex/libs'
+          echo "Added Vortex and standard modules to usr/local"; break;;
           [Nn]* ) exit;;
           * ) echo "Please answer y or n.";;
       esac

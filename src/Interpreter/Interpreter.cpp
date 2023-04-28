@@ -1080,9 +1080,13 @@ node_ptr Interpreter::eval_call_lib_function(node_ptr lib, node_ptr& node) {
 }
 
 node_ptr Interpreter::eval_import(node_ptr node) {
-
+    
     if (node->Import.is_default) {
         node->Import.target = new_string_node("@modules/" + node->Import.module->ID.value);
+    }
+
+    if (node->Import.target->type == NodeType::ID) {
+        node->Import.target = new_string_node("@modules/" + node->Import.target->ID.value);
     }
 
     if (node->Import.target->type != NodeType::STRING) {
@@ -1185,6 +1189,14 @@ node_ptr Interpreter::eval_import(node_ptr node) {
 
         for (auto& symbol : import_interpreter.global_symbol_table->symbols) {
             imported_variables[symbol.first] = symbol.second.value;
+        }
+
+        if (node->Import.module->List.elements.size() == 0) {
+            for (auto& elem : import_interpreter.global_symbol_table->symbols) {
+                add_symbol(new_symbol(elem.first, elem.second.value), current_symbol_table);
+            }
+
+            return new_node(NodeType::NONE);
         }
 
         for (node_ptr elem : node->Import.module->List.elements) {

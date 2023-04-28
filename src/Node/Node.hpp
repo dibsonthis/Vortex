@@ -52,17 +52,17 @@ struct IdNode {
 
 struct NumberNode {
     double value;
-	bool is_type;
+	bool is_type = false;
 };
 
 struct StringNode {
     std::string value;
-	bool is_type;
+	bool is_type = false;
 };
 
 struct BooleanNode {
     bool value;
-	bool is_type;
+	bool is_type = false;
 };
 
 struct OpNode {
@@ -73,15 +73,15 @@ struct OpNode {
 
 struct ListNode {
 	std::vector<node_ptr> elements;
-	bool is_type;
+	bool is_type = false;
 };
 
 struct ObjectNode {
 	std::vector<node_ptr> elements;
 	std::unordered_map<std::string, node_ptr> properties;
 	std::unordered_map<std::string, node_ptr> defaults;
-	bool is_type;
-	bool is_enum;
+	bool is_type = false;
+	bool is_enum = false;
 };
 
 struct ObjectDeconstructNode {
@@ -104,10 +104,10 @@ struct FuncNode {
 	std::vector<node_ptr> args;
 	std::vector<node_ptr> params;
 	node_ptr body;
-	bool is_hook;
+	bool is_hook = false;
 	std::unordered_map<std::string, node_ptr> closure;
 	std::string decl_filename;
-	bool is_type;
+	bool is_type = false;
 	std::unordered_map<std::string, node_ptr> param_types;
 	node_ptr return_type;
 };
@@ -179,7 +179,7 @@ struct WhileLoopNode {
 struct ImportNode {
 	node_ptr module;
 	node_ptr target;
-	bool is_default;
+	bool is_default = false;
 };
 
 struct IfStatementNode {
@@ -196,7 +196,7 @@ struct ReturnNode {
 };
 
 struct MetaInformation {
-	bool is_const;
+	bool is_const = false;
 };
 
 struct Hooks {
@@ -208,12 +208,12 @@ struct LibNode {
 	typedef node_ptr (*call_function_t)(std::string name, void* handle, std::vector<node_ptr> args);
 	void* handle;
 	call_function_t call_function;
-	bool is_type;
+	bool is_type = false;
 };
 
 struct PointerNode {
 	void* value;
-	bool is_type;
+	bool is_type = false;
 };
 
 struct TypeInfoNode {
