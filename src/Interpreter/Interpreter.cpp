@@ -1046,22 +1046,21 @@ node_ptr Interpreter::eval_call_lib_function(node_ptr lib, node_ptr& node) {
 }
 
 node_ptr Interpreter::eval_import(node_ptr node) {
-    
-    std::string target_name = "";
 
     if (node->Import.is_default) {
-        target_name = node->Import.module->ID.value;
         node->Import.target = new_string_node("@modules/" + node->Import.module->ID.value);
     }
 
     if (node->Import.target->type == NodeType::ID) {
-        target_name = node->Import.target->ID.value;
         node->Import.target = new_string_node("@modules/" + node->Import.target->ID.value);
     }
 
     if (node->Import.target->type != NodeType::STRING) {
         error_and_exit("Import target must be a string");
     }
+
+    std::string target_name = std::string(node->Import.target->String.value);
+    replaceAll(target_name, "@modules/", "");
 
     std::string path = node->Import.target->String.value + "/" + target_name + ".vtx";
 

@@ -1,7 +1,4 @@
-// import io
-
-const obj = {
-	name: "John"
-}
-
-obj.hello()
+//import sdl : "@modules/sdl"
+//import sdl
+//import [WindowConfig, Color, Window] : "@modules/sdl"
+import [WindowConfig, Color, Window] : sdl
