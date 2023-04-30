@@ -1,4 +1,4 @@
-#include <cstdlib>
+#include <random>
 #include "../../Vortex.hpp"
 
 /* Define Vars */
@@ -7,24 +7,48 @@
 
 /* Implement Lib Functions */
 
-VortexObj random_number(std::string name, void* handle, std::vector<VortexObj> args) {
+VortexObj rand(std::string name, std::vector<VortexObj> args) {
 
     if (args.size() != 0) {
         error_and_exit("Function '" + name + "' expects 0 arguments");
     }
 
-    int random_num = std::rand();
-    VortexObj num_obj = new_vortex_obj(NodeType::NUMBER);
-    num_obj->Number.value = random_num;
-    return num_obj;
+    const int range_from  = -INT_MAX;
+    const int range_to    = INT_MAX;
+    std::random_device                  rand_dev;
+    std::mt19937                        generator(rand_dev());
+    std::uniform_int_distribution<int>  distr(range_from, range_to);
 
+    return new_number_node(distr(generator));
+}
+
+VortexObj rand_range(std::string name, std::vector<VortexObj> args) {
+
+    if (args.size() != 2) {
+        error_and_exit("Function '" + name + "' expects 2 arguments");
+    }
+
+    if (args[0]->type != NodeType::NUMBER || args[1]->type != NodeType::NUMBER) {
+        error_and_exit("Function '" + name + "' expects 2 number arguments");
+    }
+
+    const int range_from  = args[0]->Number.value;
+    const int range_to    = args[1]->Number.value;
+    std::random_device                  rand_dev;
+    std::mt19937                        generator(rand_dev());
+    std::uniform_int_distribution<int>  distr(range_from, range_to);
+
+    return new_number_node(distr(generator));
 }
 
 /* Implement call_function */
 
-extern "C" VortexObj call_function(std::string name, void* handle, std::vector<VortexObj> args) {
-    if (name == "random_number") {
-        return random_number(name, handle, args);
+extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args) {
+    if (name == "rand") {
+        return rand(name, args);
+    }
+    if (name == "rand_range") {
+        return rand_range(name, args);
     }
 
     error_and_exit("Function '" + name + "' is undefined");

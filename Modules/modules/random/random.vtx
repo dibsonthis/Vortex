@@ -1,4 +1,7 @@
 const lib = load_lib("./bin/random")
 
-var randomNumber = (): Number 
-	=> lib.call("random_number", [])
+var rand = (): Number 
+	=> lib.call("rand", [])
+
+var randRange = (start: Number, end: Number): Number 
+	=> lib.call("rand_range", [start, end])
