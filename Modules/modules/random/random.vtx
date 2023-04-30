@@ -1,0 +1,4 @@
+const lib = load_lib("./bin/random")
+
+var randomNumber = (): Number 
+	=> lib.call("random_number", [])

@@ -257,7 +257,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Function.return_type = function_symbol.value->Function.return_type;
     } else {
         node_ptr method = node->FuncCall.caller->Object.properties[node->FuncCall.name];
-        if (method->type == NodeType::NONE) {
+        if (method == nullptr) {
             error_and_exit("Method '" + node->FuncCall.name + "' does not exist");
         }
         if (method->type != NodeType::FUNC) {
@@ -940,57 +940,40 @@ node_ptr Interpreter::eval_load_lib(node_ptr node) {
                 error_and_exit("Cannot open library: " + std::string(dlerror()));
             }
 
-            typedef void* (*load_t)();
-            typedef node_ptr (*call_function_t)(std::string name, void* handle, std::vector<node_ptr> args);
+            typedef node_ptr (*call_function_t)(std::string name, std::vector<node_ptr> args);
 
             dlerror();
 
-            load_t load = (load_t) dlsym(handle, "load");
-            const char* dlsym_error_load = dlerror();
             call_function_t call_function = (call_function_t) dlsym(handle, "call_function");
             const char* dlsym_error_call_function = dlerror();
-
-            if (dlsym_error_load) {
-                dlclose(handle);
-                error_and_exit("Error loading symbol 'load': " + std::string(dlsym_error_load));
-            }
 
             if (dlsym_error_call_function) {
                 dlclose(handle);
                 error_and_exit("Error loading symbol 'call_function': " + std::string(dlsym_error_call_function));
             }
 
-            lib_node->Library.handle = load();
+            lib_node->Library.handle = handle;
             lib_node->Library.call_function = call_function;
 
         #else
 
-            typedef void* (__cdecl *load_t)();
-            typedef node_ptr (__cdecl *call_function_t)(std::string name, void* handle, std::vector<node_ptr> args);
+            typedef node_ptr (__cdecl *call_function_t)(std::string name, std::vector<node_ptr> args);
 
             HINSTANCE hinstLib; 
-            load_t loadAddress;
             call_function_t callFuncAddress;
 
             hinstLib = LoadLibrary(TEXT(path->String.value.c_str())); 
 
             if (hinstLib != NULL) { 
-                loadAddress = (load_t) GetProcAddress(hinstLib, "load");
                 callFuncAddress = (call_function_t) GetProcAddress(hinstLib, "call_function");
-        
-                if (loadAddress == NULL) {
-                    error_and_exit("Error finding function 'load'");
-                }
 
                 if (callFuncAddress == NULL) {
                     error_and_exit("Error finding function 'call_function'");
                 }
             }
 
-            lib_node->Library.handle = loadAddress();
+            lib_node->Library.handle = hinstLib;
             lib_node->Library.call_function = callFuncAddress;
-
-            // FreeLibrary(hinstLib); 
 
         #endif
     #else
@@ -1001,57 +984,40 @@ node_ptr Interpreter::eval_load_lib(node_ptr node) {
                 error_and_exit("Cannot open library: " + std::string(dlerror()));
             }
 
-            typedef void* (*load_t)();
-            typedef node_ptr (*call_function_t)(std::string name, void* handle, std::vector<node_ptr> args);
+            typedef node_ptr (*call_function_t)(std::string name, std::vector<node_ptr> args);
 
             dlerror();
 
-            load_t load = (load_t) dlsym(handle, "load");
-            const char* dlsym_error_load = dlerror();
             call_function_t call_function = (call_function_t) dlsym(handle, "call_function");
             const char* dlsym_error_call_function = dlerror();
-
-            if (dlsym_error_load) {
-                dlclose(handle);
-                error_and_exit("Error loading symbol 'load': " + std::string(dlsym_error_load));
-            }
 
             if (dlsym_error_call_function) {
                 dlclose(handle);
                 error_and_exit("Error loading symbol 'call_function': " + std::string(dlsym_error_call_function));
             }
 
-            lib_node->Library.handle = load();
+            lib_node->Library.handle = handle;
             lib_node->Library.call_function = call_function;
 
         #else
 
-            typedef void* (__cdecl *load_t)();
-            typedef node_ptr (__cdecl *call_function_t)(std::string name, void* handle, std::vector<node_ptr> args);
+            typedef node_ptr (__cdecl *call_function_t)(std::string name, std::vector<node_ptr> args);
 
             HINSTANCE hinstLib; 
-            load_t loadAddress;
             call_function_t callFuncAddress;
 
             hinstLib = LoadLibrary(TEXT(path->String.value.c_str())); 
 
             if (hinstLib != NULL) { 
-                loadAddress = (load_t) GetProcAddress(hinstLib, "load");
                 callFuncAddress = (call_function_t) GetProcAddress(hinstLib, "call_function");
-        
-                if (loadAddress == NULL) {
-                    error_and_exit("Error finding function 'load'");
-                }
 
                 if (callFuncAddress == NULL) {
                     error_and_exit("Error finding function 'call_function'");
                 }
             }
 
-            lib_node->Library.handle = loadAddress();
+            lib_node->Library.handle = hinstLib;
             lib_node->Library.call_function = callFuncAddress;
-
-            // FreeLibrary(hinstLib); 
 
         #endif
     #endif
@@ -1076,16 +1042,20 @@ node_ptr Interpreter::eval_call_lib_function(node_ptr lib, node_ptr& node) {
         error_and_exit("Library function calls expects first argument to be a list");
     }
 
-    return lib->Library.call_function(name->String.value, lib->Library.handle, func_args->List.elements);
+    return lib->Library.call_function(name->String.value, func_args->List.elements);
 }
 
 node_ptr Interpreter::eval_import(node_ptr node) {
     
+    std::string target_name = "";
+
     if (node->Import.is_default) {
+        target_name = node->Import.module->ID.value;
         node->Import.target = new_string_node("@modules/" + node->Import.module->ID.value);
     }
 
     if (node->Import.target->type == NodeType::ID) {
+        target_name = node->Import.target->ID.value;
         node->Import.target = new_string_node("@modules/" + node->Import.target->ID.value);
     }
 
@@ -1093,7 +1063,7 @@ node_ptr Interpreter::eval_import(node_ptr node) {
         error_and_exit("Import target must be a string");
     }
 
-    std::string path = node->Import.target->String.value + ".vtx";
+    std::string path = node->Import.target->String.value + "/" + target_name + ".vtx";
 
     #if GCC_COMPILER
         #if __apple__ || __linux__

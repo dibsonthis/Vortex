@@ -1,5 +1,7 @@
-import sdl
-import [WindowConfig] : "@modules/sdl"
-println(WindowConfig)
-// import sdl
-// println(sdl)
+// import io
+
+const obj = {
+	name: "John"
+}
+
+obj.hello()

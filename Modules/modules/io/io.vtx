@@ -1,0 +1,10 @@
+const lib = load_lib("./bin/io")
+
+var read = (filePath: String): String 
+	=> lib.call("read", [filePath])
+
+var write = (filePath: String, content: String): None 
+	=> lib.call("write", [filePath, content])
+
+var append = (filePath: String, content: String): None 
+	=> lib.call("append", [filePath, content])
