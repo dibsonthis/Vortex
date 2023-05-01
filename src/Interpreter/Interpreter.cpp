@@ -846,7 +846,7 @@ node_ptr Interpreter::eval_type(node_ptr node) {
     object->TypeInfo.type_name = node->Type.name;
     Symbol symbol = new_symbol(node->Type.name, object);
     add_symbol(symbol, current_symbol_table);
-    return new_node(NodeType::NONE);
+    return object;
 }
 
 bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
@@ -893,6 +893,10 @@ bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
 
     if (nodeA->type == NodeType::OBJECT) {
         if (nodeA->TypeInfo.type_name != nodeB->TypeInfo.type_name) {
+            return false;
+        }
+
+        if (nodeA->Object.properties.size() != nodeB->Object.properties.size()) {
             return false;
         }
 

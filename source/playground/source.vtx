@@ -1,5 +1,5 @@
 type SomeObj {
-	nums: [Number][[]]
+	address: { street: String, postCode: Number }
 }
 
-const someObj = SomeObj { }
+const someObj = SomeObj {address: {street: "Hi"}}
