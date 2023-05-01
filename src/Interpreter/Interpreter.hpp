@@ -36,11 +36,20 @@ struct SymbolTable {
     std::unordered_map<std::string, Symbol> symbols;
     sym_t_ptr parent = nullptr;
     sym_t_ptr child = nullptr;
+
+    // Hooks
     std::vector<node_ptr> globalHooks_onChange;
     std::vector<node_ptr> globalHooks_onCall;
 
     // Scope info
     std::string filename;
+
+    // Base type extensions
+    std::unordered_map<std::string, node_ptr> StringExtensions;
+    std::unordered_map<std::string, node_ptr> NumberExtensions;
+    std::unordered_map<std::string, node_ptr> ListExtensions;
+    std::unordered_map<std::string, node_ptr> BoolExtensions;
+    std::unordered_map<std::string, node_ptr> ObjectExtensions;
 };
 
 class Interpreter {
@@ -87,6 +96,7 @@ public:
     node_ptr eval_accessor(node_ptr node);
     node_ptr eval_import(node_ptr node);
     node_ptr eval_type(node_ptr node);
+    node_ptr eval_type_ext(node_ptr node);
     node_ptr eval_object_init(node_ptr node);
     node_ptr eval_enum(node_ptr node);
     // Operations

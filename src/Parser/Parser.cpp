@@ -233,6 +233,22 @@ void Parser::parse_type(std::string end) {
     }
 }
 
+void Parser::parse_type_ext(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+        if (current_node->type == NodeType::ID && current_node->ID.value == "extend" && peek(2)->type == NodeType::OBJECT) {
+            current_node->type = NodeType::TYPE_EXT;
+            current_node->TypeExt.type = peek();
+            current_node->TypeExt.body = peek(2);
+            erase_next();
+            erase_next();
+        }
+        advance();
+    }
+}
+
 void Parser::parse_hook_implementation(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
@@ -730,6 +746,8 @@ void Parser::parse(int start, std::string end) {
     parse_accessor(end);
     reset(start);
     parse_type(end);
+    reset(start);
+    parse_type_ext(end);
     reset(start);
     parse_un_op({"+", "-"}, end);
     reset(start);

@@ -161,69 +161,71 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
     node_ptr function = new_node();
     function->type = NodeType::FUNC;
 
-    if (node->FuncCall.name == "print") {
-        if (node->FuncCall.args.size() == 1) {
-            builtin_print(eval_node(node->FuncCall.args[0]));
-        } else {
-            for (node_ptr arg : node->FuncCall.args) {
-                builtin_print(eval_node(arg));
-                std::cout << '\n';
+    if (!func) {
+        if (node->FuncCall.name == "print") {
+            if (node->FuncCall.args.size() == 1) {
+                builtin_print(eval_node(node->FuncCall.args[0]));
+            } else {
+                for (node_ptr arg : node->FuncCall.args) {
+                    builtin_print(eval_node(arg));
+                    std::cout << '\n';
+                }
+            }
+            return new_node(NodeType::NONE);
+        }
+        if (node->FuncCall.name == "println") {
+            if (node->FuncCall.args.size() == 1) {
+                builtin_print(eval_node(node->FuncCall.args[0]));
+                std::cout << "\n";
+            } else {
+                for (node_ptr arg : node->FuncCall.args) {
+                    builtin_print(eval_node(arg));
+                    std::cout << '\n';
+                }
+            }
+            return new_node(NodeType::NONE);
+        }
+        if (node->FuncCall.name == "string") {
+            if (node->FuncCall.args.size() != 1) {
+                error_and_exit("Function " + node->FuncCall.name + " expects 1 argument");
+            }
+            return new_string_node(printable(eval_node(node->FuncCall.args[0])));
+        }
+        if (node->FuncCall.name == "type") {
+            if (node->FuncCall.args.size() != 1) {
+                error_and_exit("Function " + node->FuncCall.name + " expects 1 argument");
+            }
+
+            node_ptr var = eval_node(node->FuncCall.args[0]);
+
+            switch(var->type) {
+                case NodeType::NONE: return new_string_node("None");
+                case NodeType::NUMBER: return new_string_node("Number");
+                case NodeType::STRING: return new_string_node("String");
+                case NodeType::BOOLEAN: return new_string_node("Boolean");
+                case NodeType::LIST: return new_string_node("List");
+                case NodeType::OBJECT: return new_string_node("Object");
+                case NodeType::FUNC: return new_string_node("Function");
+                case NodeType::POINTER: return new_string_node("Pointer");
+                case NodeType::LIB: return new_string_node("Library");
+                default: return new_string_node("None");
             }
         }
-        return new_node(NodeType::NONE);
-    }
-    if (node->FuncCall.name == "println") {
-        if (node->FuncCall.args.size() == 1) {
-            builtin_print(eval_node(node->FuncCall.args[0]));
-            std::cout << "\n";
-        } else {
-            for (node_ptr arg : node->FuncCall.args) {
-                builtin_print(eval_node(arg));
-                std::cout << '\n';
+        if (node->FuncCall.name == "load_lib") {
+            return eval_load_lib(node);
+        }
+        if (node->FuncCall.name == "exit") {
+            if (node->FuncCall.args.size() != 1) {
+                exit(1);
             }
-        }
-        return new_node(NodeType::NONE);
-    }
-    if (node->FuncCall.name == "string") {
-        if (node->FuncCall.args.size() != 1) {
-            error_and_exit("Function " + node->FuncCall.name + " expects 1 argument");
-        }
-        return new_string_node(printable(eval_node(node->FuncCall.args[0])));
-    }
-    if (node->FuncCall.name == "type") {
-        if (node->FuncCall.args.size() != 1) {
-            error_and_exit("Function " + node->FuncCall.name + " expects 1 argument");
-        }
 
-        node_ptr var = eval_node(node->FuncCall.args[0]);
+            node_ptr status_code = eval_node(node->FuncCall.args[0]);
 
-        switch(var->type) {
-            case NodeType::NONE: return new_string_node("None");
-            case NodeType::NUMBER: return new_string_node("Number");
-            case NodeType::STRING: return new_string_node("String");
-            case NodeType::BOOLEAN: return new_string_node("Boolean");
-            case NodeType::LIST: return new_string_node("List");
-            case NodeType::OBJECT: return new_string_node("Object");
-            case NodeType::FUNC: return new_string_node("Function");
-            case NodeType::POINTER: return new_string_node("Pointer");
-            case NodeType::LIB: return new_string_node("Library");
-            default: return new_string_node("None");
-        }
-    }
-    if (node->FuncCall.name == "load_lib") {
-        return eval_load_lib(node);
-    }
-    if (node->FuncCall.name == "exit") {
-        if (node->FuncCall.args.size() != 1) {
-            exit(1);
-        }
-
-        node_ptr status_code = eval_node(node->FuncCall.args[0]);
-
-        if (status_code->type != NodeType::NUMBER) {
-            exit(1);
-        } else {
-            exit(status_code->Number.value);
+            if (status_code->type != NodeType::NUMBER) {
+                exit(1);
+            } else {
+                exit(status_code->Number.value);
+            }
         }
     }
 
@@ -703,12 +705,23 @@ node_ptr Interpreter::eval_function(node_ptr node) {
     node->Function.decl_filename = file_name;
     if (node->Function.return_type) {
         node->Function.return_type = eval_node(node->Function.return_type);
+        if (node->Function.return_type->type == NodeType::LIST) {
+            node->Function.return_type->List.is_type = true;
+        } else if (node->Function.return_type->type == NodeType::OBJECT) {
+            node->Function.return_type->Object.is_type = true;
+        }
     }
     // Go through params to see if they are typed, and store their types
     for (auto& param : node->Function.params) {
         if (param->Operator.value == ":") {
+            node_ptr param_type = eval_node(param->Operator.right);
+            if (param_type->type == NodeType::LIST) {
+                param_type->List.is_type = true;
+            } else if (param_type->type == NodeType::OBJECT) {
+                param_type->Object.is_type = true;
+            }
             node->Function.param_types[param->Operator.left->ID.value] 
-                = eval_node(param->Operator.right);
+                = param_type;
             param = param->Operator.left;
         }
     }
@@ -847,6 +860,35 @@ node_ptr Interpreter::eval_type(node_ptr node) {
     Symbol symbol = new_symbol(node->Type.name, object);
     add_symbol(symbol, current_symbol_table);
     return object;
+}
+
+node_ptr Interpreter::eval_type_ext(node_ptr node) {
+    node_ptr type = eval_node(node->TypeExt.type);
+    node_ptr body = eval_object(node->TypeExt.body);
+
+    if (type->type == NodeType::STRING) {
+        global_symbol_table->StringExtensions.insert(body->Object.properties.begin(), body->Object.properties.end());
+        return new_node(NodeType::NONE);
+    }
+    if (type->type == NodeType::NUMBER) {
+        global_symbol_table->NumberExtensions.insert(body->Object.properties.begin(), body->Object.properties.end());
+        return new_node(NodeType::NONE);
+    }
+    if (type->type == NodeType::BOOLEAN) {
+        global_symbol_table->BoolExtensions.insert(body->Object.properties.begin(), body->Object.properties.end());
+        return new_node(NodeType::NONE);
+    }
+    if (type->type == NodeType::LIST) {
+        global_symbol_table->ListExtensions.insert(body->Object.properties.begin(), body->Object.properties.end());
+        return new_node(NodeType::NONE);
+    }
+    if (type->type == NodeType::OBJECT) {
+        global_symbol_table->ObjectExtensions.insert(body->Object.properties.begin(), body->Object.properties.end());
+        return new_node(NodeType::NONE);
+    }
+
+    error_and_exit("Malformed Type extension");
+    return new_node(NodeType::NONE);
 }
 
 bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
@@ -1634,8 +1676,37 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
         error_and_exit("Right hand side of '.' must be an identifier, function call or accessor");
     }
 
+    if (left->type == NodeType::STRING) {
+        // String Properties
+        if (right->type == NodeType::ID) {
+            std::string prop = right->ID.value;
+
+            if (prop == "length") {
+                return new_number_node(left->String.value.length());
+            }
+            if (prop == "empty") {
+                return new_boolean_node(left->String.value.empty());
+            }
+
+            error_and_exit("String does not have property '" + prop + "'");
+        }
+
+        if (right->type == NodeType::FUNC_CALL) {
+            std::string func_name = right->FuncCall.name;
+
+            if (global_symbol_table->StringExtensions.count(func_name)) {
+                node_ptr ext = std::make_shared<Node>(*global_symbol_table->StringExtensions[func_name]);
+                ext->Function.closure["self"] = left;
+                return eval_func_call(right, ext);
+            }
+
+            error_and_exit("String does not have method '" + func_name + "'");
+        }
+
+        error_and_exit("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
+    }
+
     if (left->type == NodeType::LIST) {
-        
         // List Properties
         if (right->type == NodeType::ID) {
             std::string prop = right->ID.value;
@@ -2540,6 +2611,9 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     }
     if (node->type == NodeType::TYPE) {
         return eval_type(node);
+    }
+    if (node->type == NodeType::TYPE_EXT) {
+        return eval_type_ext(node);
     }
     if (node->type == NodeType::ENUM) {
         return eval_enum(node);

@@ -26,6 +26,7 @@ enum class NodeType {
 	ENUM,
 	HOOK,
 	TYPE,
+	TYPE_EXT,
 	ACCESSOR,
 	VARIABLE_DECLARATION,
 	VARIABLE_DECLARATION_MULTIPLE,
@@ -124,6 +125,11 @@ struct InterfaceNode {
 
 struct TypeNode {
 	std::string name;
+	node_ptr body;
+};
+
+struct TypeExtNode {
+	node_ptr type;
 	node_ptr body;
 };
 
@@ -262,6 +268,7 @@ struct Node {
 	PointerNode Pointer;
 	TypeInfoNode TypeInfo;
 	EnumNode Enum;
+	TypeExtNode TypeExt;
 };
 
 std::string node_repr(node_ptr);

@@ -1,5 +1,5 @@
-type SomeObj {
-	address: { street: String, postCode: Number }
+extend String {
+	print: () => print(self)
 }
 
-const someObj = SomeObj {address: {street: "Hi"}}
+"hello".print()
