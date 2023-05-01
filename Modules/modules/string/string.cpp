@@ -49,11 +49,11 @@ VortexObj split(std::string name, std::vector<VortexObj> args) {
 VortexObj trim(std::string name, std::vector<VortexObj> args) {
 
     if (args.size() != 1) {
-        error_and_exit("Function '" + name + "' expects 1 string arguments");
+        error_and_exit("Function '" + name + "' expects 1 string argument");
     }
 
     if (args[0]->type != NodeType::STRING) {
-        error_and_exit("Function '" + name + "' expects 2 string arguments");
+        error_and_exit("Function '" + name + "' expects 1 string argument");
     }
 
     VortexObj new_string = new_string_node(args[0]->String.value);
@@ -69,6 +69,25 @@ VortexObj trim(std::string name, std::vector<VortexObj> args) {
     return new_string;
 }
 
+VortexObj chars(std::string name, std::vector<VortexObj> args) {
+    if (args.size() != 1) {
+        error_and_exit("Function '" + name + "' expects 1 string argument");
+    }
+
+    if (args[0]->type != NodeType::STRING) {
+        error_and_exit("Function '" + name + "' expects 1 string argument");
+    }
+
+    node_ptr list = new_vortex_obj(NodeType::LIST);
+
+    for (auto c : args[0]->String.value) {
+        list->List.elements.push_back(new_string_node(std::string(1, c)));
+    }
+
+    return list;
+
+}  
+
 /* Implement call_function */
 
 extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args) {
@@ -77,6 +96,9 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     }
     if (name == "trim") {
         return trim(name, args);
+    }
+    if (name == "chars") {
+        return chars(name, args);
     }
 
     error_and_exit("Function '" + name + "' is undefined");

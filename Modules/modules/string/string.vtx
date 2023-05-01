@@ -5,3 +5,14 @@ var split = (str: String, delim: String): [String]
 
 var trim = (str: String): String 
 	=> lib.call("trim", [str])
+
+var chars = (str: String): [String] 
+	=> lib.call("chars", [str])
+
+extend String {
+	split: (delim: String): [String] => split(self, delim),
+	trim: (): String => trim(self),
+	chars: (): [String] => chars(self),
+	print: () => { print(self) self },
+	println: () => { println(self) self }
+}

@@ -1,5 +1,3 @@
-extend String {
-	print: () => print(self)
-}
 
-"hello".print()
+import string
+([1,2,3][0])

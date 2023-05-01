@@ -496,6 +496,8 @@ void Parser::parse_import(std::string end) {
                 current_node->Import.module = peek();
                 current_node->Import.is_default = true;
                 erase_next();
+            } else {
+                error_and_exit("Malformed import statement");
             }
         }
         advance();
@@ -743,11 +745,11 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_bin_op({"."}, end);
     reset(start);
+    parse_type_ext(end);
+    reset(start);
     parse_accessor(end);
     reset(start);
     parse_type(end);
-    reset(start);
-    parse_type_ext(end);
     reset(start);
     parse_un_op({"+", "-"}, end);
     reset(start);

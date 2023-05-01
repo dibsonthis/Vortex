@@ -1216,19 +1216,19 @@ node_ptr Interpreter::eval_import(node_ptr node) {
     std::string target_name = std::string(node->Import.target->String.value);
     replaceAll(target_name, "@modules/", "");
 
-    std::string path = node->Import.target->String.value + "/" + target_name + ".vtx";
+    std::string path = node->Import.target->String.value + ".vtx";
 
     #if GCC_COMPILER
         #if __apple__ || __linux__
-            replaceAll(path, "@modules", "/usr/local/share/vortex/modules");
+            replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
         #else
-            replaceAll(path, "@modules", "C:/Program Files/Vortex/modules");
+            replaceAll(path, "@modules", "C:/Program Files/Vortex/modules/" + target_name);
         #endif
     #else
         #if defined(__APPLE__) || defined(__linux__)
-            replaceAll(path, "@modules", "/usr/local/share/vortex/modules");
+            replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
         #else
-            replaceAll(path, "@modules", "C:/Program Files/Vortex/modules");
+            replaceAll(path, "@modules", "C:/Program Files/Vortex/modules/" + target_name);
         #endif
     #endif
 
@@ -1271,6 +1271,18 @@ node_ptr Interpreter::eval_import(node_ptr node) {
         for (auto& hook : import_interpreter.global_symbol_table->globalHooks_onCall) {
             current_symbol_table->globalHooks_onCall.push_back(hook);
         }
+
+        // Any Type extensions must be imported to global scope
+
+        global_symbol_table->StringExtensions.insert(import_interpreter.global_symbol_table->StringExtensions.begin(), import_interpreter.global_symbol_table->StringExtensions.end());
+
+        global_symbol_table->NumberExtensions.insert(import_interpreter.global_symbol_table->NumberExtensions.begin(), import_interpreter.global_symbol_table->NumberExtensions.end());
+
+        global_symbol_table->BoolExtensions.insert(import_interpreter.global_symbol_table->BoolExtensions.begin(), import_interpreter.global_symbol_table->BoolExtensions.end());
+
+        global_symbol_table->ListExtensions.insert(import_interpreter.global_symbol_table->ListExtensions.begin(), import_interpreter.global_symbol_table->ListExtensions.end());
+
+        global_symbol_table->ObjectExtensions.insert(import_interpreter.global_symbol_table->ObjectExtensions.begin(), import_interpreter.global_symbol_table->ObjectExtensions.end());
 
         add_symbol(new_symbol(module_name, import_obj), current_symbol_table);
         return new_node(NodeType::NONE);
@@ -1653,6 +1665,15 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
         }
 
         if (right->type == NodeType::FUNC_CALL) {
+
+            std::string func_name = right->FuncCall.name;
+
+            if (global_symbol_table->ObjectExtensions.count(func_name)) {
+                node_ptr ext = std::make_shared<Node>(*global_symbol_table->ObjectExtensions[func_name]);
+                ext->Function.closure["self"] = left;
+                return eval_func_call(right, ext);
+            }
+
             right->FuncCall.caller = left;
             return eval_func_call(right);
         }
@@ -1997,6 +2018,16 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
 
                 return new_list->List.elements[0];
             }
+
+            std::string func_name = right->FuncCall.name;
+
+            if (global_symbol_table->ListExtensions.count(func_name)) {
+                node_ptr ext = std::make_shared<Node>(*global_symbol_table->ListExtensions[func_name]);
+                ext->Function.closure["self"] = left;
+                return eval_func_call(right, ext);
+            }
+
+            error_and_exit("List does not have method '" + func_name + "'");
         }
 
         error_and_exit("Right hand side of '.' must be an identifier or function call");
@@ -2120,6 +2151,34 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
         }
 
         error_and_exit("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
+    }
+
+    if (left->type == NodeType::NUMBER) {
+        if (right->type == NodeType::FUNC_CALL) {
+            std::string func_name = right->FuncCall.name;
+
+            if (global_symbol_table->NumberExtensions.count(func_name)) {
+                node_ptr ext = std::make_shared<Node>(*global_symbol_table->NumberExtensions[func_name]);
+                ext->Function.closure["self"] = left;
+                return eval_func_call(right, ext);
+            }
+
+            error_and_exit("Number does not have method '" + func_name + "'");
+        }
+    }
+
+    if (left->type == NodeType::BOOLEAN) {
+        if (right->type == NodeType::FUNC_CALL) {
+            std::string func_name = right->FuncCall.name;
+
+            if (global_symbol_table->BoolExtensions.count(func_name)) {
+                node_ptr ext = std::make_shared<Node>(*global_symbol_table->BoolExtensions[func_name]);
+                ext->Function.closure["self"] = left;
+                return eval_func_call(right, ext);
+            }
+
+            error_and_exit("Boolean does not have method '" + func_name + "'");
+        }
     }
 
     error_and_exit("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
