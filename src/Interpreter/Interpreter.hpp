@@ -50,6 +50,8 @@ struct SymbolTable {
     std::unordered_map<std::string, node_ptr> ListExtensions;
     std::unordered_map<std::string, node_ptr> BoolExtensions;
     std::unordered_map<std::string, node_ptr> ObjectExtensions;
+    std::unordered_map<std::string, node_ptr> FunctionExtensions;
+    std::unordered_map<std::string, node_ptr> NoneExtensions;
 };
 
 class Interpreter {

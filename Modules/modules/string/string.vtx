@@ -13,6 +13,7 @@ extend String {
 	split: (delim: String): [String] => split(self, delim),
 	trim: (): String => trim(self),
 	chars: (): [String] => chars(self),
+	at: (index: Number) => self[index],
 	print: () => { print(self) self },
 	println: () => { println(self) self }
 }

@@ -674,6 +674,18 @@ node_ptr Interpreter::eval_accessor(node_ptr node) {
         error_and_exit("Malformed accessor");
     }
 
+    if (container->type == NodeType::STRING) {
+        node_ptr index_node = accessor->List.elements[0];
+        if (index_node->type != NodeType::NUMBER) {
+            error_and_exit("List accessor expects a number");
+        }
+        int index = index_node->Number.value;
+        if (index >= container->String.value.length() || index < 0) {
+            return new_node(NodeType::NONE);
+        }
+        return new_string_node(std::string(1, container->String.value[index]));
+    }
+
     if (container->type == NodeType::LIST) {
         node_ptr index_node = accessor->List.elements[0];
         if (index_node->type != NodeType::NUMBER) {
@@ -884,6 +896,14 @@ node_ptr Interpreter::eval_type_ext(node_ptr node) {
     }
     if (type->type == NodeType::OBJECT) {
         global_symbol_table->ObjectExtensions.insert(body->Object.properties.begin(), body->Object.properties.end());
+        return new_node(NodeType::NONE);
+    }
+    if (type->type == NodeType::FUNC) {
+        global_symbol_table->FunctionExtensions.insert(body->Object.properties.begin(), body->Object.properties.end());
+        return new_node(NodeType::NONE);
+    }
+    if (type->type == NodeType::NONE) {
+        global_symbol_table->NoneExtensions.insert(body->Object.properties.begin(), body->Object.properties.end());
         return new_node(NodeType::NONE);
     }
 
@@ -1283,6 +1303,10 @@ node_ptr Interpreter::eval_import(node_ptr node) {
         global_symbol_table->ListExtensions.insert(import_interpreter.global_symbol_table->ListExtensions.begin(), import_interpreter.global_symbol_table->ListExtensions.end());
 
         global_symbol_table->ObjectExtensions.insert(import_interpreter.global_symbol_table->ObjectExtensions.begin(), import_interpreter.global_symbol_table->ObjectExtensions.end());
+
+        global_symbol_table->FunctionExtensions.insert(import_interpreter.global_symbol_table->FunctionExtensions.begin(), import_interpreter.global_symbol_table->FunctionExtensions.end());
+
+        global_symbol_table->NoneExtensions.insert(import_interpreter.global_symbol_table->NoneExtensions.begin(), import_interpreter.global_symbol_table->NoneExtensions.end());
 
         add_symbol(new_symbol(module_name, import_obj), current_symbol_table);
         return new_node(NodeType::NONE);
@@ -2178,6 +2202,34 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
             }
 
             error_and_exit("Boolean does not have method '" + func_name + "'");
+        }
+    }
+
+    if (left->type == NodeType::FUNC) {
+        if (right->type == NodeType::FUNC_CALL) {
+            std::string func_name = right->FuncCall.name;
+
+            if (global_symbol_table->FunctionExtensions.count(func_name)) {
+                node_ptr ext = std::make_shared<Node>(*global_symbol_table->FunctionExtensions[func_name]);
+                ext->Function.closure["self"] = left;
+                return eval_func_call(right, ext);
+            }
+
+            error_and_exit("Function does not have method '" + func_name + "'");
+        }
+    }
+
+    if (left->type == NodeType::NONE) {
+        if (right->type == NodeType::FUNC_CALL) {
+            std::string func_name = right->FuncCall.name;
+
+            if (global_symbol_table->NoneExtensions.count(func_name)) {
+                node_ptr ext = std::make_shared<Node>(*global_symbol_table->NoneExtensions[func_name]);
+                ext->Function.closure["self"] = left;
+                return eval_func_call(right, ext);
+            }
+
+            error_and_exit("None does not have method '" + func_name + "'");
         }
     }
 
