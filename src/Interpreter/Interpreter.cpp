@@ -749,6 +749,16 @@ node_ptr Interpreter::eval_type(node_ptr node) {
                 error_and_exit("Default type constructor cannot be empty");
             }
             node_ptr type_val = eval_node(value->Accessor.container);
+            // Check if container type (List or Obj) and tag it as a type
+            if (type_val->type == NodeType::LIST) {
+                if (type_val->List.elements.size() > 1) {
+                    error_and_exit("List types can only contain one type");
+                }
+                type_val->List.is_type = true;
+            } else if (type_val->type == NodeType::OBJECT) {
+                type_val->Object.is_type = true;
+            }
+
             node_ptr def = default_value->List.elements[0];
 
             if (!match_types(type_val, def)) {
@@ -762,7 +772,17 @@ node_ptr Interpreter::eval_type(node_ptr node) {
             object->Object.properties[prop->Operator.left->ID.value] = type_val;
             object->Object.defaults[prop->Operator.left->ID.value] = def;
         } else {
-            object->Object.properties[prop->Operator.left->ID.value] = eval_node(prop->Operator.right);
+            // Check if container type (List or Obj) and tag it as a type
+            node_ptr type_val = eval_node(prop->Operator.right);
+            if (type_val->type == NodeType::LIST) {
+                if (type_val->List.elements.size() > 1) {
+                    error_and_exit("List types can only contain one type");
+                }
+                type_val->List.is_type = true;
+            } else if (type_val->type == NodeType::OBJECT) {
+                type_val->Object.is_type = true;
+            }
+            object->Object.properties[prop->Operator.left->ID.value] = type_val;
         }
     } else {
         for (node_ptr prop : node->Type.body->Object.elements[0]->List.elements) {
@@ -782,6 +802,17 @@ node_ptr Interpreter::eval_type(node_ptr node) {
                     error_and_exit("Default type constructor cannot be empty");
                 }
                 node_ptr type_val = eval_node(value->Accessor.container);
+
+                // Check if container type (List or Obj) and tag it as a type
+                if (type_val->type == NodeType::LIST) {
+                    if (type_val->List.elements.size() > 1) {
+                        error_and_exit("List types can only contain one type");
+                    }
+                    type_val->List.is_type = true;
+                } else if (type_val->type == NodeType::OBJECT) {
+                    type_val->Object.is_type = true;
+                }
+
                 node_ptr def = default_value->List.elements[0];
 
                 if (!match_types(type_val, def)) {
@@ -795,7 +826,18 @@ node_ptr Interpreter::eval_type(node_ptr node) {
                 object->Object.properties[prop->Operator.left->ID.value] = type_val;
                 object->Object.defaults[prop->Operator.left->ID.value] = default_value->List.elements[0];
             } else {
-                object->Object.properties[prop->Operator.left->ID.value] = eval_node(prop->Operator.right);
+                // Check if container type (List or Obj) and tag it as a type
+                node_ptr type_val = eval_node(prop->Operator.right);
+                if (type_val->type == NodeType::LIST) {
+                    if (type_val->List.elements.size() > 1) {
+                        error_and_exit("List types can only contain one type");
+                    }
+                    type_val->List.is_type = true;
+                } else if (type_val->type == NodeType::OBJECT) {
+                    type_val->Object.is_type = true;
+                }
+
+                object->Object.properties[prop->Operator.left->ID.value] = type_val;
             }
         }
     }
@@ -814,6 +856,39 @@ bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
 
     if (nodeA->type != nodeB->type) {
         return false;
+    }
+
+    if (nodeA->type == NodeType::LIST) {
+
+        if (nodeA->List.is_type) {
+            if (nodeA->List.elements.size() == 0) {
+                return true;
+            }
+            node_ptr list_type = nodeA->List.elements[0];
+
+            for (node_ptr& elem : nodeB->List.elements) {
+                if (!match_types(elem, list_type)) {
+                    return false;
+                }
+            }
+
+            return true;
+        } else if (nodeB->List.is_type) {
+            if (nodeB->List.elements.size() == 0) {
+                return true;
+            }
+            node_ptr list_type = nodeB->List.elements[0];
+
+            for (node_ptr& elem : nodeA->List.elements) {
+                if (!match_types(elem, list_type)) {
+                    return false;
+                }
+            }
+
+            return true;
+        } else {
+            return false;
+        }
     }
 
     if (nodeA->type == NodeType::OBJECT) {

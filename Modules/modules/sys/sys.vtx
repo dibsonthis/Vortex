@@ -1,5 +1,7 @@
 const lib = load_lib("./bin/sys")
 
+var argc = lib.call("argc", [])
+var argv = lib.call("argv", [])
 
 var error = (message: String): None 
 	=> lib.call("error", [message])

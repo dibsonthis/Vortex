@@ -13,7 +13,7 @@ enum Type
     INTERP,
 };
 
-Type type = Type::INTERP;
+Type type = Type::DEV;
 
 int main(int argc, char** argv)
 {
@@ -44,13 +44,15 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        if (argc > 2)
-        {
-            std::cout << "Compiler only accepts 1 argument: source path";
-            return 1;
-        }
-
         std::string path = argv[1];
+        std::vector<std::string> args;
+
+        if (argc > 1)
+        {
+            for (int i = 1; i < argc; i++) {
+                args.push_back(argv[i]);
+            }
+        }
 
         Lexer lexer(path);
         lexer.tokenize();
@@ -64,6 +66,8 @@ int main(int argc, char** argv)
         std::filesystem::current_path(parent_path);
 
         Interpreter interpreter(parser.nodes, parser.file_name);
+        interpreter.argc = argc-1;
+        interpreter.argv = args;
         interpreter.evaluate();
         
         exit(0);

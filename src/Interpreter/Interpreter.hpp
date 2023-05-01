@@ -53,6 +53,8 @@ public:
     sym_t_ptr global_symbol_table = std::make_shared<SymbolTable>();
     sym_t_ptr current_symbol_table = global_symbol_table;
     Interpreter* global_interpreter = this;
+    int argc;
+    std::vector<std::string> argv;
 
 public:
     Interpreter() = default;

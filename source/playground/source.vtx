@@ -1,4 +1,5 @@
-//import sdl : "@modules/sdl"
-//import sdl
-//import [WindowConfig, Color, Window] : "@modules/sdl"
-import [WindowConfig, Color, Window] : sdl
+type SomeObj {
+	nums: [Number][[]]
+}
+
+const someObj = SomeObj { }

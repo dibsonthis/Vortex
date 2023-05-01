@@ -60,6 +60,18 @@ VortexObj close(std::string name, std::vector<VortexObj> args) {
     return new_vortex_obj(NodeType::NONE);
 }
 
+VortexObj input(std::string name, std::vector<VortexObj> args) {
+
+    if (args.size() != 0) {
+        error_and_exit("Function '" + name + "' expects 0 arguments");
+    }
+
+    std::string line;
+    std::getline(std::cin, line);
+
+    return new_string_node(line);
+}
+
 /* Implement call_function */
 
 extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args) {
@@ -74,6 +86,9 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     }
     if (name == "write") {
         return write(name, args);
+    }
+    if (name == "input") {
+        return input(name, args);
     }
 
     error_and_exit("Function '" + name + "' is undefined");

@@ -39,6 +39,30 @@ VortexObj error(std::string name, std::vector<VortexObj> args) {
     return new_vortex_obj(NodeType::NONE);
 }
 
+VortexObj argc(std::string name, std::vector<VortexObj> args) {
+
+    if (args.size() != 0) {
+        error_and_exit("Function '" + name + "' expects 0 argument");
+    }
+
+    return new_number_node(_interpreter_ref.get().argc);
+}
+
+VortexObj argv(std::string name, std::vector<VortexObj> args) {
+
+    if (args.size() != 0) {
+        error_and_exit("Function '" + name + "' expects 0 argument");
+    }
+
+    VortexObj argv = new_vortex_obj(NodeType::LIST);
+
+    for (std::string& arg : _interpreter_ref.get().argv) {
+        argv->List.elements.push_back(new_string_node(arg));
+    }
+
+    return argv;
+}
+
 /* Implement load [Optional] */
 
 extern "C" void load(Interpreter& interpreter) {
@@ -55,6 +79,12 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     }
     if (name == "error") {
         return error(name, args);
+    }
+    if (name == "argc") {
+        return argc(name, args);
+    }
+    if (name == "argv") {
+        return argv(name, args);
     }
 
     error_and_exit("Function '" + name + "' is undefined");
