@@ -1,3 +1,4 @@
+#pragma once
 #include "Interpreter.hpp"
 
 void Interpreter::advance(int n) {
@@ -941,6 +942,7 @@ node_ptr Interpreter::eval_load_lib(node_ptr node) {
             }
 
             typedef node_ptr (*call_function_t)(std::string name, std::vector<node_ptr> args);
+            typedef void (*load_t)(Interpreter*& interpreter);
 
             dlerror();
 
@@ -952,15 +954,24 @@ node_ptr Interpreter::eval_load_lib(node_ptr node) {
                 error_and_exit("Error loading symbol 'call_function': " + std::string(dlsym_error_call_function));
             }
 
+            load_t load = (load_t) dlsym(handle, "load");
+            const char* dlsym_error_load = dlerror();
+
+            if (!dlsym_error_load) {
+                load(this);
+            }
+
             lib_node->Library.handle = handle;
             lib_node->Library.call_function = call_function;
 
         #else
 
             typedef node_ptr (__cdecl *call_function_t)(std::string name, std::vector<node_ptr> args);
+            typedef void (__cdecl *load_t)(Interpreter*& interpreter);
 
             HINSTANCE hinstLib; 
             call_function_t callFuncAddress;
+            load_t loadFuncAddress;
 
             hinstLib = LoadLibrary(TEXT(path->String.value.c_str())); 
 
@@ -969,6 +980,12 @@ node_ptr Interpreter::eval_load_lib(node_ptr node) {
 
                 if (callFuncAddress == NULL) {
                     error_and_exit("Error finding function 'call_function'");
+                }
+
+                loadFuncAddress = (load_t) GetProcAddress(hinstLib, "load");
+
+                if (loadFuncAddress != NULL) {
+                    loadFuncAddress(this);
                 }
             }
 
@@ -985,6 +1002,7 @@ node_ptr Interpreter::eval_load_lib(node_ptr node) {
             }
 
             typedef node_ptr (*call_function_t)(std::string name, std::vector<node_ptr> args);
+            typedef void (*load_t)(Interpreter& interpreter);
 
             dlerror();
 
@@ -996,15 +1014,24 @@ node_ptr Interpreter::eval_load_lib(node_ptr node) {
                 error_and_exit("Error loading symbol 'call_function': " + std::string(dlsym_error_call_function));
             }
 
+            load_t load = (load_t) dlsym(handle, "load");
+            const char* dlsym_error_load = dlerror();
+
+            if (!dlsym_error_load) {
+                load(*this->global_interpreter);
+            }
+
             lib_node->Library.handle = handle;
             lib_node->Library.call_function = call_function;
 
         #else
 
             typedef node_ptr (__cdecl *call_function_t)(std::string name, std::vector<node_ptr> args);
+            typedef void (__cdecl *load_t)(Interpreter*& interpretet);
 
             HINSTANCE hinstLib; 
             call_function_t callFuncAddress;
+            load_t loadFuncAddress;
 
             hinstLib = LoadLibrary(TEXT(path->String.value.c_str())); 
 
@@ -1013,6 +1040,12 @@ node_ptr Interpreter::eval_load_lib(node_ptr node) {
 
                 if (callFuncAddress == NULL) {
                     error_and_exit("Error finding function 'call_function'");
+                }
+
+                loadFuncAddress = (load_t) GetProcAddress(hinstLib, "load");
+
+                if (loadFuncAddress != NULL) {
+                    loadFuncAddress(this);
                 }
             }
 
@@ -1099,6 +1132,7 @@ node_ptr Interpreter::eval_import(node_ptr node) {
         }
 
         Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
+        import_interpreter.global_interpreter = this;
         import_interpreter.evaluate();
 
         std::filesystem::current_path(current_path);
@@ -1150,6 +1184,7 @@ node_ptr Interpreter::eval_import(node_ptr node) {
         }
 
         Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
+        import_interpreter.global_interpreter = this;
         import_interpreter.evaluate();
 
         std::filesystem::current_path(current_path);
@@ -1401,6 +1436,30 @@ node_ptr Interpreter::eval_and(node_ptr node) {
     return left;
 
     error_and_exit("Cannot perform operation '&&' on types: " + node_repr(left) + ", " + node_repr(right));
+    return new_node(NodeType::NONE);
+}
+
+node_ptr Interpreter::eval_bit_and(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
+        return new_number_node((long)left->Number.value & (long)right->Number.value);
+    }
+
+    error_and_exit("Cannot perform operation '&' on types: " + node_repr(left) + ", " + node_repr(right));
+    return new_node(NodeType::NONE);
+}
+
+node_ptr Interpreter::eval_bit_or(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
+        return new_number_node((long)left->Number.value | (long)right->Number.value);
+    }
+
+    error_and_exit("Cannot perform operation '|' on types: " + node_repr(left) + ", " + node_repr(right));
     return new_node(NodeType::NONE);
 }
 
@@ -2454,6 +2513,12 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     }
     if (node->Operator.value == "||") {
         return eval_or(node);
+    }
+    if (node->Operator.value == "&") {
+        return eval_bit_and(node);
+    }
+    if (node->Operator.value == "|") {
+        return eval_bit_or(node);
     }
     if (node->Operator.value == "+=") {
         return eval_plus_eq(node);

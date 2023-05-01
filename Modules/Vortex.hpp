@@ -1,4 +1,6 @@
-#include "../src/Node/Node.hpp"
+#pragma once
+
+#include "../src/Node/Node.cpp"
 
 #define VortexObj std::shared_ptr<Node>
 

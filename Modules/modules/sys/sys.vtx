@@ -1,0 +1,8 @@
+const lib = load_lib("./bin/sys")
+
+
+var error = (message: String): None 
+	=> lib.call("error", [message])
+
+var pause = (): None 
+	=> lib.call("pause", [])

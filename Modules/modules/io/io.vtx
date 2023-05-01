@@ -1,10 +1,39 @@
 const lib = load_lib("./bin/io")
 
-var read = (filePath: String): String 
-	=> lib.call("read", [filePath])
+enum OpenMode {
+	app: 1,
+	read: 8,
+	write: 16,
+	trunc: 32,
+}
 
-var write = (filePath: String, content: String): None 
-	=> lib.call("write", [filePath, content])
+var open = (filePath: String, openMode: Number): Pointer 
+	=> lib.call("open", [filePath, openMode])
 
-var append = (filePath: String, content: String): None 
-	=> lib.call("append", [filePath, content])
+var close = (fileHandle: Pointer): None 
+	=> lib.call("close", [fileHandle])
+
+var read = (fileHandle: Pointer): String 
+	=> lib.call("read", [fileHandle])
+
+var write = (fileHandle: Pointer, content: String): None 
+	=> lib.call("write", [fileHandle, content])
+
+var readf = (filePath: String): String => {
+	const file = open(filePath, OpenMode.read)
+	const content = read(file)
+	close(file)
+	content
+}
+	
+var writef = (filePath: String, content: String): None => {
+	const file = open(filePath, OpenMode.write | OpenMode.trunc)
+	write(file, content)
+	close(file)
+}
+	
+var appendf = (filePath: String, content: String): None => {
+	const file = open(filePath, OpenMode.write | OpenMode.app)
+	write(file, content)
+	close(file)
+}

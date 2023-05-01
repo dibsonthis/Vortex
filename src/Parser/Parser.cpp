@@ -1,3 +1,4 @@
+#pragma once
 #include "Parser.hpp"
 
 void Parser::advance(int n) {
@@ -743,6 +744,8 @@ void Parser::parse(int start, std::string end) {
     parse_bin_op({"^"}, end);
     reset(start);
     parse_bin_op({"+=", "-="}, end);
+    reset(start);
+    parse_bin_op({"&", "|"}, end);
     reset(start);
     parse_bin_op({".."}, end);
     reset(start);

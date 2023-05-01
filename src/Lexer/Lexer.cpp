@@ -1,3 +1,4 @@
+#pragma once
 #include "Lexer.hpp"
 
 void Lexer::load_source(std::string filename)

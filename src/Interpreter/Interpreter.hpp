@@ -52,6 +52,7 @@ public:
     int line, column;
     sym_t_ptr global_symbol_table = std::make_shared<SymbolTable>();
     sym_t_ptr current_symbol_table = global_symbol_table;
+    Interpreter* global_interpreter = this;
 
 public:
     Interpreter() = default;
@@ -102,6 +103,8 @@ public:
     node_ptr eval_gt(node_ptr node);
     node_ptr eval_and(node_ptr node);
     node_ptr eval_or(node_ptr node);
+    node_ptr eval_bit_and(node_ptr node);
+    node_ptr eval_bit_or(node_ptr node);
     node_ptr eval_eq(node_ptr node);
     node_ptr eval_dot(node_ptr node);
     node_ptr eval_plus_eq(node_ptr node);

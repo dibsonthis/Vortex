@@ -1,3 +1,4 @@
+#pragma once
 #include "Node.hpp"
 
 std::string node_repr(node_ptr node) {
@@ -40,6 +41,12 @@ std::string node_repr(node_ptr node) {
         }
         case NodeType::VARIABLE_DECLARATION_MULTIPLE: {
             return "Variable declaration";
+        }
+        case NodeType::FUNC_CALL: {
+            return "Function call";
+        }
+        case NodeType::IMPORT: {
+            return "Import statement";
         }
         case NodeType::NONE: {
             return "None";
