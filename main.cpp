@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 {
     if (type == Type::DEV)
     {
-        std::filesystem::current_path("../../../source/playground");
+        std::filesystem::current_path("../../../playground");
 
         Lexer lexer("source.vtx");
         lexer.tokenize();
