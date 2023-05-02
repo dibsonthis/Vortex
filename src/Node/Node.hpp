@@ -62,7 +62,7 @@ struct StringNode {
 };
 
 struct BooleanNode {
-    bool value;
+    bool value = false;
 	bool is_type = false;
 };
 
