@@ -16,7 +16,7 @@ macBuild()
     "$PWD"/src/Interpreter/Interpreter.cpp \
     "$PWD"/src/utils/utils.cpp \
     "$PWD"/main.cpp \
-    -o "$PWD"/bin/build/interp/mac/vortex
+    -o "$PWD"/bin/build/interp/mac/vortex  || { echo 'Compilation failed' ; exit 1; }
 
     while true; do
       read -p "Do you want to add Vortex to 'usr/local/bin' and built-in modules to 'usr/local/share'? - this will allow you to call Vortex globally and set it up with built-in modules [y/n] " yn
@@ -47,7 +47,7 @@ linBuild()
     "$PWD"/src/Interpreter/Interpreter.cpp \
     "$PWD"/src/utils/utils.cpp \
     "$PWD"/main.cpp \
-    -o "$PWD"/bin/build/interp/linux/vortex
+    -o "$PWD"/bin/build/interp/linux/vortex || { echo 'compilation failed' ; exit 1; }
 
     while true; do
       read -p "Do you want to add Vortex to 'usr/local/bin' and built-in modules to 'usr/local/share'? - this will allow you to call Vortex globally and set it up with built-in modules [y/n] " yn
