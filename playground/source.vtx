@@ -1,3 +1,6 @@
+extend Boolean {
+	flip: () => !self,
+	print: () => print(self)
+}
 
-const x = true
-println(!true)
+true.flip()

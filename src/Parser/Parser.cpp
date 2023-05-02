@@ -783,6 +783,8 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_bin_op({".."}, end);
     reset(start);
+    parse_un_op({"!"}, end);
+    reset(start);
     parse_object_desconstruct(end);
     reset(start);
     parse_func_def(end);
@@ -790,10 +792,6 @@ void Parser::parse(int start, std::string end) {
     parse_hook_implementation(end);
     reset(start);
     parse_bin_op({"::"}, end);
-    reset(start);
-    parse_bin_op({"&"}, end);
-    reset(start);
-    parse_un_op({"!"}, end);
     reset(start);
     parse_colon(end);
     reset(start);
