@@ -2357,11 +2357,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             } else if (accessor->Number.value >= container->List.elements.size()) {
                 container->List.elements.push_back(right);
             } else {
-                // if (accessed_value->Meta.is_const) {
-                //     error_and_exit("Cannot modify constant");
-                // }
-                *accessed_value = *right;
-                accessed_value->Meta.is_const = false;
+                container->List.elements[accessor->Number.value] = right;
             }
         } else if (container->type == NodeType::OBJECT) {
             node_ptr accessed_value = eval_accessor(left);
