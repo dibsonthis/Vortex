@@ -1,6 +1,25 @@
-extend Boolean {
-	flip: () => !self,
-	print: () => print(self)
+type Color {
+	r: Number[0],
+	g: Number[0],
+	b: Number[0],
+	a: Number[255]
 }
 
-true.flip()
+extend Color {
+	print: () => {
+		println("Color:\n")
+		println("\tred:" + string(self.r))
+		println("\tgreen:" + string(self.g))
+		println("\tblue:" + string(self.b))
+		println("\talpha:" + string(self.a))
+	}
+}
+
+const c = Color { r: 255 }
+c.print()
+
+const p = {
+	name: "John"
+}
+
+p.print()

@@ -895,6 +895,16 @@ node_ptr Interpreter::eval_type_ext(node_ptr node) {
         return new_node(NodeType::NONE);
     }
     if (type->type == NodeType::OBJECT) {
+        if (type->Object.is_type) {
+            if (global_symbol_table->CustomTypeExtensions.count(type->TypeInfo.type_name)) {
+                global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name].insert(body->Object.properties.begin(), body->Object.properties.end());
+            } else {
+                global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name] = std::unordered_map<std::string, node_ptr>();
+                global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name].insert(body->Object.properties.begin(), body->Object.properties.end());
+            }
+            return new_node(NodeType::NONE);
+        }
+
         global_symbol_table->ObjectExtensions.insert(body->Object.properties.begin(), body->Object.properties.end());
         return new_node(NodeType::NONE);
     }
@@ -1372,6 +1382,8 @@ node_ptr Interpreter::eval_import(node_ptr node) {
 
         global_symbol_table->NoneExtensions.insert(import_interpreter.global_symbol_table->NoneExtensions.begin(), import_interpreter.global_symbol_table->NoneExtensions.end());
 
+        global_symbol_table->CustomTypeExtensions.insert(import_interpreter.global_symbol_table->CustomTypeExtensions.begin(), import_interpreter.global_symbol_table->CustomTypeExtensions.end());
+
         add_symbol(new_symbol(module_name, import_obj), current_symbol_table);
         return new_node(NodeType::NONE);
     }
@@ -1756,14 +1768,28 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
 
             std::string func_name = right->FuncCall.name;
 
+            if (left->TypeInfo.type) {
+                if (global_symbol_table->CustomTypeExtensions.count(left->TypeInfo.type_name)) {
+                    if (global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name].count(func_name)) {
+                        node_ptr ext = std::make_shared<Node>(*global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name][func_name]);
+                        ext->Function.closure["self"] = left;
+                        return eval_func_call(right, ext);
+                    }
+                }
+            }
+
             if (global_symbol_table->ObjectExtensions.count(func_name)) {
                 node_ptr ext = std::make_shared<Node>(*global_symbol_table->ObjectExtensions[func_name]);
                 ext->Function.closure["self"] = left;
                 return eval_func_call(right, ext);
             }
 
-            right->FuncCall.caller = left;
-            return eval_func_call(right);
+            if (left->Object.properties.count(func_name)) {
+                right->FuncCall.caller = left;
+                return eval_func_call(right);
+            }
+
+            error_and_exit("Methond '" + func_name + "' does not exist on object");
         }
 
         if (right->type == NodeType::ACCESSOR) {
