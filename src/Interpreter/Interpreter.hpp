@@ -134,6 +134,7 @@ public:
     void add_symbol(Symbol symbol, sym_t_ptr symbol_table);
     void delete_symbol(std::string name, sym_t_ptr symbol_table);
     bool match_types(node_ptr nodeA, node_ptr nodeB);
+    bool match_values(node_ptr nodeA, node_ptr nodeB);
 
     void erase_prev();
     void erase_next();

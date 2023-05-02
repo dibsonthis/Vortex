@@ -911,8 +911,72 @@ node_ptr Interpreter::eval_type_ext(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
+bool Interpreter::match_values(node_ptr nodeA, node_ptr nodeB) {
+    if (nodeA->type != nodeB->type) {
+        return false;
+    }
+
+    if (nodeA->type == NodeType::NONE) {
+        return true;
+    }
+    if (nodeA->type == NodeType::NUMBER) {
+        return nodeA->Number.value == nodeB->Number.value;
+    }
+    if (nodeA->type == NodeType::BOOLEAN) {
+        return nodeA->Boolean.value == nodeB->Boolean.value;
+    }
+    if (nodeA->type == NodeType::STRING) {
+        return nodeA->String.value == nodeB->String.value;
+    }
+    if (nodeA->type == NodeType::LIST) {
+        if (nodeA->List.elements.size() != nodeB->List.elements.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < nodeA->List.elements.size(); i++) {
+            if (!match_values(nodeA->List.elements[i], nodeB->List.elements[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+    if (nodeA->type == NodeType::OBJECT) {
+        if (nodeA->Object.properties.size() != nodeB->Object.properties.size()) {
+            return false;
+        }
+
+        for (auto& prop : nodeA->Object.properties) {
+            if (!match_values(nodeA->Object.properties[prop.first], nodeB->Object.properties[prop.first])) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
 bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
     if (nodeA == nullptr || nodeB == nullptr) {
+        return false;
+    }
+
+    // check Enums
+
+    if (nodeA->Object.is_enum) {
+        for (auto& elem : nodeA->Object.properties) {
+            if (match_values(elem.second, nodeB)) {
+                return true;
+            }
+        }
+
+        return false;
+    } else if (nodeB->Object.is_enum) {
+        for (auto& elem : nodeB->Object.properties) {
+            if (match_values(elem.second, nodeA)) {
+                return true;
+            }
+        }
+
         return false;
     }
 

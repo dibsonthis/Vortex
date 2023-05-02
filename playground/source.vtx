@@ -1,3 +1,9 @@
 
-import string
-([1,2,3][0])
+enum SomeEnum {
+	EA: 1,
+	EB: 2
+}
+
+var someFunc = (val: SomeEnum) => val * 2
+
+someFunc(SomeEnum.EA)
