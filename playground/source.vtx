@@ -1,9 +1,3 @@
 
-enum SomeEnum {
-	EA: 1,
-	EB: 2
-}
-
-var someFunc = (val: SomeEnum) => val * 2
-
-someFunc(SomeEnum.EA)
+const x = true
+println(!true)

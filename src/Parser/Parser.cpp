@@ -63,7 +63,7 @@ void Parser::parse_bin_op(std::vector<std::string> operators, std::string end) {
     }
 }
 
-void Parser::parse_un_op(std::vector<std::string> operators, std::string end) {
+void Parser::parse_un_op_amb(std::vector<std::string> operators, std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
             break;
@@ -75,6 +75,20 @@ void Parser::parse_un_op(std::vector<std::string> operators, std::string end) {
                 peek(-1)->type == NodeType::PAREN ||
                 peek(-1)->type == NodeType::LIST
             )) {
+            node_ptr right = peek(1);
+            current_node->Operator.right = right;
+            erase_next();
+        }
+        advance();
+    }
+}
+
+void Parser::parse_un_op(std::vector<std::string> operators, std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+        if (vector_contains_string(operators, current_node->Operator.value)) {
             node_ptr right = peek(1);
             current_node->Operator.right = right;
             erase_next();
@@ -751,7 +765,7 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_type(end);
     reset(start);
-    parse_un_op({"+", "-"}, end);
+    parse_un_op_amb({"+", "-"}, end);
     reset(start);
     parse_bin_op({"==", "!=", "<=", ">=", "<", ">"}, end);
     reset(start);
