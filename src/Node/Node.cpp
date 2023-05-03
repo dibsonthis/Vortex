@@ -33,7 +33,7 @@ std::string node_repr(node_ptr node) {
             if (node->TypeInfo.type) {
                 return node->TypeInfo.type_name;
             }
-            if (node->Object.is_type && node->TypeInfo.type_name != "") {
+            if (node->TypeInfo.is_type && node->TypeInfo.type_name != "") {
                 return node->TypeInfo.type_name;
             }
             if (node->Object.is_enum && node->TypeInfo.type_name != "") {
@@ -64,6 +64,12 @@ std::string node_repr(node_ptr node) {
         }
         case NodeType::FUNC_CALL: {
             return "Function call";
+        }
+        case NodeType::FUNC: {
+            if (node->Function.name != "") {
+                return node->Function.name;
+            }
+            return "Function";
         }
         case NodeType::IMPORT: {
             return "Import statement";

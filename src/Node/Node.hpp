@@ -53,17 +53,14 @@ struct IdNode {
 
 struct NumberNode {
     double value;
-	bool is_type = false;
 };
 
 struct StringNode {
     std::string value;
-	bool is_type = false;
 };
 
 struct BooleanNode {
     bool value = false;
-	bool is_type = false;
 };
 
 struct OpNode {
@@ -74,14 +71,12 @@ struct OpNode {
 
 struct ListNode {
 	std::vector<node_ptr> elements;
-	bool is_type = false;
 };
 
 struct ObjectNode {
 	std::vector<node_ptr> elements;
 	std::unordered_map<std::string, node_ptr> properties;
 	std::unordered_map<std::string, node_ptr> defaults;
-	bool is_type = false;
 	bool is_enum = false;
 };
 
@@ -108,7 +103,6 @@ struct FuncNode {
 	bool is_hook = false;
 	std::unordered_map<std::string, node_ptr> closure;
 	std::string decl_filename;
-	bool is_type = false;
 	std::unordered_map<std::string, node_ptr> param_types;
 	node_ptr return_type;
 	std::vector<node_ptr> dispatch_functions;
@@ -127,6 +121,7 @@ struct InterfaceNode {
 struct TypeNode {
 	std::string name;
 	node_ptr body;
+	node_ptr expr;
 };
 
 struct TypeExtNode {
@@ -215,17 +210,18 @@ struct LibNode {
 	typedef node_ptr (*call_function_t)(std::string name, std::vector<node_ptr> args);
 	void* handle;
 	call_function_t call_function;
-	bool is_type = false;
 };
 
 struct PointerNode {
 	void* value;
-	bool is_type = false;
 };
 
 struct TypeInfoNode {
 	node_ptr type;
 	std::string type_name;
+	bool is_type = false;
+	bool is_refinement_type = false;
+	bool is_literal_type = false;
 };
 
 struct Node {

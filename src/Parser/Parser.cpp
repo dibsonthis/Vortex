@@ -236,10 +236,20 @@ void Parser::parse_type(std::string end) {
         if (current_node->Operator.value == end) {
             break;
         }
-        if (current_node->type == NodeType::ID && current_node->ID.value == "type" && (peek()->type == NodeType::ID || peek()->type == NodeType::ACCESSOR) && peek(2)->type == NodeType::OBJECT) {
+        if (current_node->type == NodeType::ID && current_node->ID.value == "type" && (peek()->type == NodeType::OBJECT_DECONSTRUCT)) {
+            current_node->type = NodeType::TYPE;
+            current_node->Type.name = peek()->ObjectDeconstruct.name;
+            current_node->Type.body = peek()->ObjectDeconstruct.body;
+            erase_next();
+        } else if (current_node->type == NodeType::ID && current_node->ID.value == "type" && (peek()->type == NodeType::ID || peek()->type == NodeType::ACCESSOR) && peek(2)->Operator.value == "=") {
             current_node->type = NodeType::TYPE;
             current_node->Type.name = peek()->ID.value;
-            current_node->Type.body = peek(2);
+            current_node->Type.expr = peek(3);
+            current_node->Type.expr->TypeInfo.is_type = true;
+            if (current_node->Type.expr->type == NodeType::FUNC) {
+                current_node->Type.expr->Function.name = current_node->Type.name;
+            }
+            erase_next();
             erase_next();
             erase_next();
         }
@@ -695,28 +705,28 @@ void Parser::parse_keywords(std::string end) {
             current_node->type = NodeType::CONTINUE;
         } else if (current_node->ID.value == "Number") {
             current_node->type = NodeType::NUMBER;
-            current_node->Number.is_type = true;
+            current_node->TypeInfo.is_type = true;
         } else if (current_node->ID.value == "String") {
             current_node->type = NodeType::STRING;
-            current_node->String.is_type = true;
+            current_node->TypeInfo.is_type = true;
         } else if (current_node->ID.value == "Boolean") {
             current_node->type = NodeType::BOOLEAN;
-            current_node->Boolean.is_type = true;
+            current_node->TypeInfo.is_type = true;
         } else if (current_node->ID.value == "List") {
             current_node->type = NodeType::LIST;
-            current_node->List.is_type = true;
+            current_node->TypeInfo.is_type = true;
         } else if (current_node->ID.value == "Object") {
             current_node->type = NodeType::OBJECT;
-            current_node->Object.is_type = true;
+            current_node->TypeInfo.is_type = true;
         } else if (current_node->ID.value == "Function") {
             current_node->type = NodeType::FUNC;
-            current_node->Function.is_type = true;
+            current_node->TypeInfo.is_type = true;
         } else if (current_node->ID.value == "Pointer") {
             current_node->type = NodeType::POINTER;
-            current_node->Pointer.is_type = true;
+            current_node->TypeInfo.is_type = true;
         } else if (current_node->ID.value == "Pointer") {
             current_node->type = NodeType::LIB;
-            current_node->Library.is_type = true;
+            current_node->TypeInfo.is_type = true;
         } 
         advance();
     }
@@ -763,8 +773,6 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_accessor(end);
     reset(start);
-    parse_type(end);
-    reset(start);
     parse_un_op_amb({"+", "-"}, end);
     reset(start);
     parse_bin_op({"==", "!=", "<=", ">=", "<", ">"}, end);
@@ -788,6 +796,8 @@ void Parser::parse(int start, std::string end) {
     parse_object_desconstruct(end);
     reset(start);
     parse_func_def(end);
+    reset(start);
+    parse_type(end);
     reset(start);
     parse_hook_implementation(end);
     reset(start);

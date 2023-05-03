@@ -334,7 +334,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         // for (auto fx : functions) {
         //     availableFuncs += printable(fx) + "\n";
         // }
-        error_and_exit("\nDispatch error in function '" + node->FuncCall.name + "' - No function found matching args: " + argsStr + "\n\nAvailable functions:\n\n" + printable(functions[0]));
+        error_and_exit("Dispatch error in function '" + node->FuncCall.name + "' - No function found matching args: " + argsStr + "\n\nAvailable functions:\n\n" + printable(functions[0]));
     }
 
     auto local_scope = std::make_shared<SymbolTable>();
@@ -747,9 +747,9 @@ node_ptr Interpreter::eval_function(node_ptr node) {
     if (node->Function.return_type) {
         node->Function.return_type = eval_node(node->Function.return_type);
         if (node->Function.return_type->type == NodeType::LIST) {
-            node->Function.return_type->List.is_type = true;
+            node->Function.return_type->TypeInfo.is_type = true;
         } else if (node->Function.return_type->type == NodeType::OBJECT) {
-            node->Function.return_type->Object.is_type = true;
+            node->Function.return_type->TypeInfo.is_type = true;
         }
     }
     // Go through params to see if they are typed, and store their types
@@ -757,9 +757,9 @@ node_ptr Interpreter::eval_function(node_ptr node) {
         if (param->Operator.value == ":") {
             node_ptr param_type = eval_node(param->Operator.right);
             if (param_type->type == NodeType::LIST) {
-                param_type->List.is_type = true;
+                param_type->TypeInfo.is_type = true;
             } else if (param_type->type == NodeType::OBJECT) {
-                param_type->Object.is_type = true;
+                param_type->TypeInfo.is_type = true;
             }
             node->Function.param_types[param->Operator.left->ID.value] 
                 = param_type;
@@ -784,6 +784,26 @@ node_ptr Interpreter::eval_enum(node_ptr node) {
 }
 
 node_ptr Interpreter::eval_type(node_ptr node) {
+
+    if (node->Type.expr) {
+        Symbol symbol = new_symbol(node->Type.name, eval_node(std::make_shared<Node>(*node->Type.expr)));
+        // Check if type is function and if it returns a type
+        // If it does, it's a type
+        // Otherwise, it's a refinement type
+        if (symbol.value->type == NodeType::FUNC) {
+            symbol.value->Function.name = node->Type.name;
+            if (symbol.value->Function.return_type && symbol.value->Function.return_type->TypeInfo.is_type) {
+                symbol.value->TypeInfo.is_refinement_type = false;
+            } else {
+                symbol.value->TypeInfo.is_refinement_type = true;
+            }
+        } else {
+            symbol.value->TypeInfo.is_literal_type = true;
+        }
+        add_symbol(symbol, current_symbol_table);
+        return symbol.value;
+    }
+
     node_ptr object = new_node(NodeType::OBJECT);
 
     if (node->Type.body->Object.elements[0]->type != NodeType::COMMA_LIST) {
@@ -809,9 +829,9 @@ node_ptr Interpreter::eval_type(node_ptr node) {
                 if (type_val->List.elements.size() > 1) {
                     error_and_exit("List types can only contain one type");
                 }
-                type_val->List.is_type = true;
+                type_val->TypeInfo.is_type = true;
             } else if (type_val->type == NodeType::OBJECT) {
-                type_val->Object.is_type = true;
+                type_val->TypeInfo.is_type = true;
             }
 
             node_ptr def = default_value->List.elements[0];
@@ -833,9 +853,9 @@ node_ptr Interpreter::eval_type(node_ptr node) {
                 if (type_val->List.elements.size() > 1) {
                     error_and_exit("List types can only contain one type");
                 }
-                type_val->List.is_type = true;
+                type_val->TypeInfo.is_type = true;
             } else if (type_val->type == NodeType::OBJECT) {
-                type_val->Object.is_type = true;
+                type_val->TypeInfo.is_type = true;
             }
             object->Object.properties[prop->Operator.left->ID.value] = type_val;
         }
@@ -863,9 +883,9 @@ node_ptr Interpreter::eval_type(node_ptr node) {
                     if (type_val->List.elements.size() > 1) {
                         error_and_exit("List types can only contain one type");
                     }
-                    type_val->List.is_type = true;
+                    type_val->TypeInfo.is_type = true;
                 } else if (type_val->type == NodeType::OBJECT) {
-                    type_val->Object.is_type = true;
+                    type_val->TypeInfo.is_type = true;
                 }
 
                 node_ptr def = default_value->List.elements[0];
@@ -887,9 +907,9 @@ node_ptr Interpreter::eval_type(node_ptr node) {
                     if (type_val->List.elements.size() > 1) {
                         error_and_exit("List types can only contain one type");
                     }
-                    type_val->List.is_type = true;
+                    type_val->TypeInfo.is_type = true;
                 } else if (type_val->type == NodeType::OBJECT) {
-                    type_val->Object.is_type = true;
+                    type_val->TypeInfo.is_type = true;
                 }
 
                 object->Object.properties[prop->Operator.left->ID.value] = type_val;
@@ -897,7 +917,7 @@ node_ptr Interpreter::eval_type(node_ptr node) {
         }
     }
 
-    object->Object.is_type = true;
+    object->TypeInfo.is_type = true;
     object->TypeInfo.type_name = node->Type.name;
     Symbol symbol = new_symbol(node->Type.name, object);
     add_symbol(symbol, current_symbol_table);
@@ -932,7 +952,7 @@ node_ptr Interpreter::eval_type_ext(node_ptr node) {
         return new_node(NodeType::NONE);
     }
     if (type->type == NodeType::OBJECT) {
-        if (type->Object.is_type) {
+        if (type->TypeInfo.is_type) {
             if (global_symbol_table->CustomTypeExtensions.count(type->TypeInfo.type_name)) {
                 global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name].insert(body->Object.properties.begin(), body->Object.properties.end());
             } else {
@@ -1027,13 +1047,43 @@ bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
         return false;
     }
 
+    if (nodeA->type == NodeType::FUNC && nodeA->TypeInfo.is_refinement_type) {
+        node_ptr func_call = new_node(NodeType::FUNC_CALL);
+        func_call->FuncCall.name = nodeA->Function.name;
+        func_call->FuncCall.args.push_back(nodeB);
+        node_ptr res = eval_func_call(func_call, nodeA);
+        if (res->type != NodeType::BOOLEAN) {
+            error_and_exit("Refinement types must return a boolean value");
+        }
+        return res->Boolean.value;
+    }
+
+    if (nodeB->type == NodeType::FUNC && nodeB->TypeInfo.is_refinement_type) {
+        node_ptr func_call = new_node(NodeType::FUNC_CALL);
+        func_call->FuncCall.name = nodeB->Function.name;
+        func_call->FuncCall.args.push_back(nodeA);
+        node_ptr res = eval_func_call(func_call, nodeB);
+        if (res->type != NodeType::BOOLEAN) {
+            error_and_exit("Refinement types must return a boolean value");
+        }
+        return res->Boolean.value;
+    }
+
     if (nodeA->type != nodeB->type) {
         return false;
     }
 
+    if (nodeA->TypeInfo.is_literal_type) {
+        return match_values(nodeA, nodeB);
+    }
+
+    if (nodeB->TypeInfo.is_literal_type) {
+        return match_values(nodeB, nodeA);
+    }
+
     if (nodeA->type == NodeType::LIST) {
 
-        if (nodeA->List.is_type) {
+        if (nodeA->TypeInfo.is_type) {
             if (nodeA->List.elements.size() == 0) {
                 return true;
             }
@@ -1046,7 +1096,7 @@ bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
             }
 
             return true;
-        } else if (nodeB->List.is_type) {
+        } else if (nodeB->TypeInfo.is_type) {
             if (nodeB->List.elements.size() == 0) {
                 return true;
             }
@@ -1111,7 +1161,7 @@ node_ptr Interpreter::eval_object_init(node_ptr node) {
     }
     node_ptr type = type_symbol.value;
 
-    if (!type->Object.is_type) {
+    if (!type->TypeInfo.is_type) {
         error_and_exit("Variable '" + node->ObjectDeconstruct.name + "' is not a type");
     }
 
@@ -3071,7 +3121,7 @@ void Interpreter::replaceAll(std::string& str, const std::string& from, const st
 
 void Interpreter::error_and_exit(std::string message)
 {
-    std::string error_message = "Error in '" + file_name + "' @ (" + std::to_string(line) + ", " + std::to_string(column) + "): " + message;
+    std::string error_message = "\nError in '" + file_name + "' @ (" + std::to_string(line) + ", " + std::to_string(column) + "): " + message;
 	std::cout << error_message << "\n";
     while (current_symbol_table->parent != nullptr) {
         std::cout << "In '" + current_symbol_table->filename + "'" << "\n";
