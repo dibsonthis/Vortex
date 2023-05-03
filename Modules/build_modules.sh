@@ -24,5 +24,6 @@ $LIBS \
 -std=c++20 \
 -stdlib=libc++ \
 "$PWD"/$FILE/$FILE.cpp \
--o "$PWD"/$FILE/bin/$FILE
+-o "$PWD"/$FILE/bin/$FILE \
+-Wl,-rpath "$PWD"/$FILE/lib
 done

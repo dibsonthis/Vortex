@@ -1,5 +1,5 @@
 #include "../../Vortex.hpp"
-#include "include/SDL2/SDL.h"
+#include "include/SDL.h"
 
 /* Define Vars */
 

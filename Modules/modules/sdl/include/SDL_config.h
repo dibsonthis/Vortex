@@ -1,4 +1,3 @@
-/* include/SDL_config.h.  Generated from SDL_config.h.in by configure.  */
 /*
   Simple DirectMedia Layer
   Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
@@ -32,17 +31,13 @@
 /* General platform specific identifiers */
 #include "SDL_platform.h"
 
-/* Make sure that this isn't included by Visual C++ */
-#ifdef _MSC_VER
-#error You should run git checkout -f include/SDL_config.h
-#endif
-
 /* C language features */
 /* #undef const */
 /* #undef inline */
 /* #undef volatile */
 
 /* C datatypes */
+/* Define SIZEOF_VOIDP for 64/32 architectures */
 #if defined(__LP64__) || defined(_LP64) || defined(_WIN64)
 #define SIZEOF_VOIDP 8
 #else
@@ -69,6 +64,7 @@
 #define HAVE_MEMORY_H 1
 #define HAVE_SIGNAL_H 1
 #define HAVE_STDARG_H 1
+#define HAVE_STDDEF_H 1
 #define HAVE_STDINT_H 1
 #define HAVE_STDIO_H 1
 #define HAVE_STDLIB_H 1
@@ -145,11 +141,10 @@
 /* #undef HAVE__STRNICMP */
 #define HAVE_STRNCASECMP 1
 #define HAVE_STRCASESTR 1
-/* #undef HAVE_SSCANF */
+#define HAVE_SSCANF 1
 #define HAVE_VSSCANF 1
-/* #undef HAVE_SNPRINTF */
 #define HAVE_VSNPRINTF 1
-#define HAVE_M_PI /**/
+#define HAVE_M_PI 1
 #define HAVE_ACOS 1
 #define HAVE_ACOSF 1
 #define HAVE_ASIN 1
@@ -217,33 +212,45 @@
 #define HAVE_STDARG_H 1
 #define HAVE_STDDEF_H 1
 #define HAVE_STDINT_H 1
+#define HAVE_FLOAT_H 1
 #endif /* HAVE_LIBC */
 
-#define HAVE_O_CLOEXEC 1
 /* #undef HAVE_ALTIVEC_H */
 /* #undef HAVE_DBUS_DBUS_H */
 /* #undef HAVE_FCITX */
+/* #undef HAVE_IBUS_IBUS_H */
 /* #undef HAVE_SYS_INOTIFY_H */
 /* #undef HAVE_INOTIFY_INIT */
 /* #undef HAVE_INOTIFY_INIT1 */
 /* #undef HAVE_INOTIFY */
-/* #undef HAVE_IBUS_IBUS_H */
-/* #undef HAVE_IMMINTRIN_H */
-/* #undef HAVE_LIBUDEV_H */
 /* #undef HAVE_LIBUSB */
+#define HAVE_O_CLOEXEC 1
+
+/* Apple platforms might be building universal binaries, where Intel builds
+   can use immintrin.h but other architectures can't. */
+#ifdef __APPLE__
+#  if defined(__has_include) && (defined(__i386__) || defined(__x86_64))
+#    if __has_include(<immintrin.h>)
+#       define HAVE_IMMINTRIN_H 1
+#    endif
+#  endif
+#else  /* non-Apple platforms can use the normal CMake check for this. */
+/* #undef HAVE_IMMINTRIN_H */
+#endif
+
+/* #undef HAVE_LIBUDEV_H */
 /* #undef HAVE_LIBSAMPLERATE_H */
 /* #undef HAVE_LIBDECOR_H */
-/* #undef HAVE_LSXINTRIN_H */
-/* #undef HAVE_LASXINTRIN_H */
 
+/* #undef HAVE_D3D_H */
+/* #undef HAVE_D3D11_H */
+/* #undef HAVE_D3D12_H */
 /* #undef HAVE_DDRAW_H */
-/* #undef HAVE_DINPUT_H */
 /* #undef HAVE_DSOUND_H */
-/* #undef HAVE_DXGI_H */
-/* #undef HAVE_WINDOWS_GAMING_INPUT_H */
+/* #undef HAVE_DINPUT_H */
 /* #undef HAVE_XINPUT_H */
-/* #undef HAVE_XINPUT_GAMEPAD_EX */
-/* #undef HAVE_XINPUT_STATE_EX */
+/* #undef HAVE_WINDOWS_GAMING_INPUT_H */
+/* #undef HAVE_DXGI_H */
 
 /* #undef HAVE_MMDEVICEAPI_H */
 /* #undef HAVE_AUDIOCLIENT_H */
@@ -252,8 +259,13 @@
 /* #undef HAVE_ROAPI_H */
 /* #undef HAVE_SHELLSCALINGAPI_H */
 
+/* #undef HAVE_XINPUT_GAMEPAD_EX */
+/* #undef HAVE_XINPUT_STATE_EX */
+
 /* SDL internal assertion support */
+#if 0
 /* #undef SDL_DEFAULT_ASSERT_LEVEL */
+#endif
 
 /* Allow disabling of core subsystems */
 /* #undef SDL_ATOMIC_DISABLED */
@@ -276,10 +288,11 @@
 /* #undef SDL_MISC_DISABLED */
 
 /* Enable various audio drivers */
-/* #undef SDL_AUDIO_DRIVER_AAUDIO */
 /* #undef SDL_AUDIO_DRIVER_ALSA */
 /* #undef SDL_AUDIO_DRIVER_ALSA_DYNAMIC */
 /* #undef SDL_AUDIO_DRIVER_ANDROID */
+/* #undef SDL_AUDIO_DRIVER_OPENSLES */
+/* #undef SDL_AUDIO_DRIVER_AAUDIO */
 /* #undef SDL_AUDIO_DRIVER_ARTS */
 /* #undef SDL_AUDIO_DRIVER_ARTS_DYNAMIC */
 #define SDL_AUDIO_DRIVER_COREAUDIO 1
@@ -294,11 +307,9 @@
 /* #undef SDL_AUDIO_DRIVER_HAIKU */
 /* #undef SDL_AUDIO_DRIVER_JACK */
 /* #undef SDL_AUDIO_DRIVER_JACK_DYNAMIC */
-/* #undef SDL_AUDIO_DRIVER_NACL */
 /* #undef SDL_AUDIO_DRIVER_NAS */
 /* #undef SDL_AUDIO_DRIVER_NAS_DYNAMIC */
 /* #undef SDL_AUDIO_DRIVER_NETBSD */
-/* #undef SDL_AUDIO_DRIVER_OPENSLES */
 /* #undef SDL_AUDIO_DRIVER_OSS */
 /* #undef SDL_AUDIO_DRIVER_PAUDIO */
 /* #undef SDL_AUDIO_DRIVER_PIPEWIRE */
@@ -312,21 +323,24 @@
 /* #undef SDL_AUDIO_DRIVER_WASAPI */
 /* #undef SDL_AUDIO_DRIVER_WINMM */
 /* #undef SDL_AUDIO_DRIVER_OS2 */
+/* #undef SDL_AUDIO_DRIVER_VITA */
+/* #undef SDL_AUDIO_DRIVER_PSP */
+/* #undef SDL_AUDIO_DRIVER_PS2 */
+/* #undef SDL_AUDIO_DRIVER_N3DS */
 
 /* Enable various input drivers */
 /* #undef SDL_INPUT_LINUXEV */
-/* #undef SDL_INPUT_FBSDKBIO */
 /* #undef SDL_INPUT_LINUXKD */
-/* #undef SDL_INPUT_WSCONS */
+/* #undef SDL_INPUT_FBSDKBIO */
+/* #undef SDL_JOYSTICK_ANDROID */
 /* #undef SDL_JOYSTICK_HAIKU */
-/* #undef SDL_JOYSTICK_DINPUT */
 /* #undef SDL_JOYSTICK_WGI */
+/* #undef SDL_JOYSTICK_DINPUT */
 /* #undef SDL_JOYSTICK_XINPUT */
 /* #undef SDL_JOYSTICK_DUMMY */
 #define SDL_JOYSTICK_IOKIT 1
 #define SDL_JOYSTICK_MFI 1
 /* #undef SDL_JOYSTICK_LINUX */
-/* #undef SDL_JOYSTICK_ANDROID */
 /* #undef SDL_JOYSTICK_OS2 */
 /* #undef SDL_JOYSTICK_USBHID */
 /* #undef SDL_HAVE_MACHINE_JOYSTICK_H */
@@ -334,18 +348,25 @@
 /* #undef SDL_JOYSTICK_RAWINPUT */
 /* #undef SDL_JOYSTICK_EMSCRIPTEN */
 #define SDL_JOYSTICK_VIRTUAL 1
+/* #undef SDL_JOYSTICK_VITA */
+/* #undef SDL_JOYSTICK_PSP */
+/* #undef SDL_JOYSTICK_PS2 */
+/* #undef SDL_JOYSTICK_N3DS */
 /* #undef SDL_HAPTIC_DUMMY */
-/* #undef SDL_HAPTIC_ANDROID */
 /* #undef SDL_HAPTIC_LINUX */
 #define SDL_HAPTIC_IOKIT 1
 /* #undef SDL_HAPTIC_DINPUT */
 /* #undef SDL_HAPTIC_XINPUT */
+/* #undef SDL_HAPTIC_ANDROID */
+/* #undef SDL_LIBUSB_DYNAMIC */
 
 /* Enable various sensor drivers */
 /* #undef SDL_SENSOR_ANDROID */
 /* #undef SDL_SENSOR_COREMOTION */
 /* #undef SDL_SENSOR_WINDOWS */
 #define SDL_SENSOR_DUMMY 1
+/* #undef SDL_SENSOR_VITA */
+/* #undef SDL_SENSOR_N3DS */
 
 /* Enable various shared object loading systems */
 #define SDL_LOADSO_DLOPEN 1
@@ -361,6 +382,10 @@
 /* #undef SDL_THREAD_PTHREAD_RECURSIVE_MUTEX_NP */
 /* #undef SDL_THREAD_WINDOWS */
 /* #undef SDL_THREAD_OS2 */
+/* #undef SDL_THREAD_VITA */
+/* #undef SDL_THREAD_PSP */
+/* #undef SDL_THREAD_PS2 */
+/* #undef SDL_THREAD_N3DS */
 
 /* Enable various timer systems */
 /* #undef SDL_TIMER_HAIKU */
@@ -368,29 +393,45 @@
 #define SDL_TIMER_UNIX 1
 /* #undef SDL_TIMER_WINDOWS */
 /* #undef SDL_TIMER_OS2 */
+/* #undef SDL_TIMER_VITA */
+/* #undef SDL_TIMER_PSP */
+/* #undef SDL_TIMER_PS2 */
+/* #undef SDL_TIMER_N3DS */
 
 /* Enable various video drivers */
+/* #undef SDL_VIDEO_DRIVER_ANDROID */
+/* #undef SDL_VIDEO_DRIVER_EMSCRIPTEN */
 /* #undef SDL_VIDEO_DRIVER_HAIKU */
 #define SDL_VIDEO_DRIVER_COCOA 1
+/* #undef SDL_VIDEO_DRIVER_UIKIT */
 /* #undef SDL_VIDEO_DRIVER_DIRECTFB */
 /* #undef SDL_VIDEO_DRIVER_DIRECTFB_DYNAMIC */
 #define SDL_VIDEO_DRIVER_DUMMY 1
+#define SDL_VIDEO_DRIVER_OFFSCREEN 1
 /* #undef SDL_VIDEO_DRIVER_WINDOWS */
+/* #undef SDL_VIDEO_DRIVER_WINRT */
 /* #undef SDL_VIDEO_DRIVER_WAYLAND */
+/* #undef SDL_VIDEO_DRIVER_RPI */
+/* #undef SDL_VIDEO_DRIVER_VIVANTE */
+/* #undef SDL_VIDEO_DRIVER_VIVANTE_VDK */
+/* #undef SDL_VIDEO_DRIVER_OS2 */
+/* #undef SDL_VIDEO_DRIVER_QNX */
+/* #undef SDL_VIDEO_DRIVER_RISCOS */
+/* #undef SDL_VIDEO_DRIVER_PSP */
+/* #undef SDL_VIDEO_DRIVER_PS2 */
+
+/* #undef SDL_VIDEO_DRIVER_KMSDRM */
+/* #undef SDL_VIDEO_DRIVER_KMSDRM_DYNAMIC */
+/* #undef SDL_VIDEO_DRIVER_KMSDRM_DYNAMIC_GBM */
+
 /* #undef SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH */
 /* #undef SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC */
 /* #undef SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC_EGL */
 /* #undef SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC_CURSOR */
 /* #undef SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC_XKBCOMMON */
 /* #undef SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC_LIBDECOR */
+
 /* #undef SDL_VIDEO_DRIVER_X11 */
-/* #undef SDL_VIDEO_DRIVER_RPI */
-/* #undef SDL_VIDEO_DRIVER_KMSDRM */
-/* #undef SDL_VIDEO_DRIVER_KMSDRM_DYNAMIC */
-/* #undef SDL_VIDEO_DRIVER_KMSDRM_DYNAMIC_GBM */
-/* #undef SDL_VIDEO_DRIVER_ANDROID */
-/* #undef SDL_VIDEO_DRIVER_EMSCRIPTEN */
-#define SDL_VIDEO_DRIVER_OFFSCREEN 1
 /* #undef SDL_VIDEO_DRIVER_X11_DYNAMIC */
 /* #undef SDL_VIDEO_DRIVER_X11_DYNAMIC_XEXT */
 /* #undef SDL_VIDEO_DRIVER_X11_DYNAMIC_XCURSOR */
@@ -408,12 +449,8 @@
 /* #undef SDL_VIDEO_DRIVER_X11_XSHAPE */
 /* #undef SDL_VIDEO_DRIVER_X11_SUPPORTS_GENERIC_EVENTS */
 /* #undef SDL_VIDEO_DRIVER_X11_HAS_XKBKEYCODETOKEYSYM */
-/* #undef SDL_VIDEO_DRIVER_NACL */
-/* #undef SDL_VIDEO_DRIVER_VIVANTE */
-/* #undef SDL_VIDEO_DRIVER_VIVANTE_VDK */
-/* #undef SDL_VIDEO_DRIVER_OS2 */
-/* #undef SDL_VIDEO_DRIVER_QNX */
-/* #undef SDL_VIDEO_DRIVER_RISCOS */
+/* #undef SDL_VIDEO_DRIVER_VITA */
+/* #undef SDL_VIDEO_DRIVER_N3DS */
 
 /* #undef SDL_VIDEO_RENDER_D3D */
 /* #undef SDL_VIDEO_RENDER_D3D11 */
@@ -423,6 +460,9 @@
 #define SDL_VIDEO_RENDER_OGL_ES2 1
 /* #undef SDL_VIDEO_RENDER_DIRECTFB */
 #define SDL_VIDEO_RENDER_METAL 1
+/* #undef SDL_VIDEO_RENDER_VITA_GXM */
+/* #undef SDL_VIDEO_RENDER_PS2 */
+/* #undef SDL_VIDEO_RENDER_PSP */
 
 /* Enable OpenGL support */
 #define SDL_VIDEO_OPENGL 1
@@ -430,9 +470,9 @@
 #define SDL_VIDEO_OPENGL_ES2 1
 /* #undef SDL_VIDEO_OPENGL_BGL */
 #define SDL_VIDEO_OPENGL_CGL 1
-#define SDL_VIDEO_OPENGL_EGL 1
 /* #undef SDL_VIDEO_OPENGL_GLX */
 /* #undef SDL_VIDEO_OPENGL_WGL */
+#define SDL_VIDEO_OPENGL_EGL 1
 /* #undef SDL_VIDEO_OPENGL_OSMESA */
 /* #undef SDL_VIDEO_OPENGL_OSMESA_DYNAMIC */
 
@@ -443,13 +483,18 @@
 #define SDL_VIDEO_METAL 1
 
 /* Enable system power support */
+/* #undef SDL_POWER_ANDROID */
 /* #undef SDL_POWER_LINUX */
 /* #undef SDL_POWER_WINDOWS */
+/* #undef SDL_POWER_WINRT */
 #define SDL_POWER_MACOSX 1
+/* #undef SDL_POWER_UIKIT */
 /* #undef SDL_POWER_HAIKU */
-/* #undef SDL_POWER_ANDROID */
 /* #undef SDL_POWER_EMSCRIPTEN */
 /* #undef SDL_POWER_HARDWIRED */
+/* #undef SDL_POWER_VITA */
+/* #undef SDL_POWER_PSP */
+/* #undef SDL_POWER_N3DS */
 
 /* Enable system filesystem support */
 /* #undef SDL_FILESYSTEM_ANDROID */
@@ -459,12 +504,12 @@
 /* #undef SDL_FILESYSTEM_RISCOS */
 /* #undef SDL_FILESYSTEM_UNIX */
 /* #undef SDL_FILESYSTEM_WINDOWS */
-/* #undef SDL_FILESYSTEM_NACL */
 /* #undef SDL_FILESYSTEM_EMSCRIPTEN */
 /* #undef SDL_FILESYSTEM_OS2 */
 /* #undef SDL_FILESYSTEM_VITA */
 /* #undef SDL_FILESYSTEM_PSP */
 /* #undef SDL_FILESYSTEM_PS2 */
+/* #undef SDL_FILESYSTEM_N3DS */
 
 /* Enable misc subsystem */
 /* #undef SDL_MISC_DUMMY */
@@ -477,19 +522,43 @@
 /* #undef SDL_ARM_SIMD_BLITTERS */
 /* #undef SDL_ARM_NEON_BLITTERS */
 
-/* Whether SDL_DYNAMIC_API needs dlopen() */
-#define DYNAPI_NEEDS_DLOPEN 1
+/* Whether SDL_DYNAMIC_API needs dlopen */
+#define DYNAPI_NEEDS_DLOPEN  1
+
+/* Enable dynamic libsamplerate support */
+/* #undef SDL_LIBSAMPLERATE_DYNAMIC */
 
 /* Enable ime support */
 /* #undef SDL_USE_IME */
 
-/* Enable dynamic udev support */
-/* #undef SDL_UDEV_DYNAMIC */
+/* Platform specific definitions */
+/* #undef SDL_IPHONE_KEYBOARD */
+/* #undef SDL_IPHONE_LAUNCHSCREEN */
 
-/* Enable dynamic libusb support */
-/* #undef SDL_LIBUSB_DYNAMIC */
+/* #undef SDL_VIDEO_VITA_PIB */
+/* #undef SDL_VIDEO_VITA_PVR */
+/* #undef SDL_VIDEO_VITA_PVR_OGL */
 
-/* Enable dynamic libsamplerate support */
-/* #undef SDL_LIBSAMPLERATE_DYNAMIC */
+#if !defined(HAVE_STDINT_H) && !defined(_STDINT_H_)
+/* Most everything except Visual Studio 2008 and earlier has stdint.h now */
+#if defined(_MSC_VER) && (_MSC_VER < 1600)
+typedef signed __int8 int8_t;
+typedef unsigned __int8 uint8_t;
+typedef signed __int16 int16_t;
+typedef unsigned __int16 uint16_t;
+typedef signed __int32 int32_t;
+typedef unsigned __int32 uint32_t;
+typedef signed __int64 int64_t;
+typedef unsigned __int64 uint64_t;
+#ifndef _UINTPTR_T_DEFINED
+#ifdef  _WIN64
+typedef unsigned __int64 uintptr_t;
+#else
+typedef unsigned int uintptr_t;
+#endif
+#define _UINTPTR_T_DEFINED
+#endif
+#endif /* Visual Studio 2008 */
+#endif /* !_STDINT_H_ && !HAVE_STDINT_H */
 
 #endif /* SDL_config_h_ */
