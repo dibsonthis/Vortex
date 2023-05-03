@@ -36,6 +36,9 @@ std::string node_repr(node_ptr node) {
             if (node->Object.is_type && node->TypeInfo.type_name != "") {
                 return node->TypeInfo.type_name;
             }
+            if (node->Object.is_enum && node->TypeInfo.type_name != "") {
+                return node->TypeInfo.type_name;
+            }
             return "Object";
         }
         case NodeType::LIB: {

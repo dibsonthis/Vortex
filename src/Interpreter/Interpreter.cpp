@@ -330,11 +330,11 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
             argsStr += node_repr(arg) + " ";
         }
         argsStr += "]";
-        std::string availableFuncs = "";
-        for (auto fx : functions) {
-            availableFuncs += printable(fx) + "\n";
-        }
-        error_and_exit("Dispatch error in function '" + node->FuncCall.name + "' - No function found matching args: " + argsStr + "\n\nAvailable functions:\n\n" + availableFuncs);
+        // std::string availableFuncs = "";
+        // for (auto fx : functions) {
+        //     availableFuncs += printable(fx) + "\n";
+        // }
+        error_and_exit("\nDispatch error in function '" + node->FuncCall.name + "' - No function found matching args: " + argsStr + "\n\nAvailable functions:\n\n" + printable(functions[0]));
     }
 
     auto local_scope = std::make_shared<SymbolTable>();
@@ -777,6 +777,7 @@ node_ptr Interpreter::eval_enum(node_ptr node) {
     node_ptr enum_object = eval_object(node->Enum.body);
     enum_object->Meta.is_const = true;
     enum_object->Object.is_enum = true;
+    enum_object->TypeInfo.type_name = node->Enum.name;
     Symbol symbol = new_symbol(node->Enum.name, enum_object);
     add_symbol(symbol, current_symbol_table);
     return new_node(NodeType::NONE);
@@ -2727,6 +2728,12 @@ std::string Interpreter::printable(node_ptr node) {
                 res += ") => " + node_repr(node->Function.return_type);
             } else {
                 res += ") => ...";
+            }
+            if (node->Function.dispatch_functions.size() > 0) {
+                res += "\n";
+                for (auto& func : node->Function.dispatch_functions) {
+                    res += printable(func) += "\n";
+                }
             }
             return res;
         }
