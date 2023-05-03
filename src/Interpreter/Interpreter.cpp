@@ -316,7 +316,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         }
 
         // If we get here, we've found the function
-        function = fx;
+        function = std::make_shared<Node>(*fx);
         func_match = true;
         break;
 
