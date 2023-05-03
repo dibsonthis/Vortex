@@ -243,6 +243,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Hooks.onCall = func->Hooks.onCall;
         function->Function.param_types = func->Function.param_types;
         function->Function.return_type = func->Function.return_type;
+        function->Function.dispatch_functions = func->Function.dispatch_functions;
     } else if (node->FuncCall.caller == nullptr) {
         Symbol function_symbol = get_symbol(node->FuncCall.name, current_symbol_table);
         if (function_symbol.value == nullptr) {
@@ -261,6 +262,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Hooks.onCall = function_symbol.value->Hooks.onCall;
         function->Function.param_types = function_symbol.value->Function.param_types;
         function->Function.return_type = function_symbol.value->Function.return_type;
+        function->Function.dispatch_functions = function_symbol.value->Function.dispatch_functions;
     } else {
         node_ptr method = node->FuncCall.caller->Object.properties[node->FuncCall.name];
         if (method == nullptr) {
@@ -279,11 +281,60 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         function->Hooks.onCall = method->Hooks.onCall;
         function->Function.param_types = method->Function.param_types;
         function->Function.return_type = method->Function.return_type;
+        function->Function.dispatch_functions = method->Function.dispatch_functions;
     }
 
     std::vector<node_ptr> args;
     for (node_ptr arg : node->FuncCall.args) {
         args.push_back(eval_node(arg));
+    }
+
+    // Check if function args match any multiple dispatch functions
+
+    auto functions = std::vector<node_ptr>(function->Function.dispatch_functions);
+    functions.insert(functions.begin(), function);
+
+    bool func_match = false;
+
+    for (node_ptr& fx: functions) {
+
+        // If function param size does not match args size, skip
+        if (fx->Function.params.size() != args.size()) {
+            continue;
+        }
+
+        for (int i = 0; i < args.size(); i++) {
+            node_ptr param = function->Function.params[i];
+            node_ptr param_type = fx->Function.param_types[param->ID.value];
+            if (param_type) {
+                if (!match_types(args[i], param_type)) {
+                    goto not_found;
+                }
+            } else {
+                continue;
+            }
+        }
+
+        // If we get here, we've found the function
+        function = fx;
+        func_match = true;
+        break;
+
+        not_found:
+            continue;
+    }
+
+    if (!func_match) {
+        std::string argsStr = "[ ";
+        for (auto arg : args) {
+            argsStr += node_repr(arg) + " ";
+        }
+        argsStr += "]";
+        std::string availableFuncs = "";
+        for (auto fx : functions) {
+            availableFuncs += printable(fx) + "\n";
+        }
+        error_and_exit("Dispatch error in function '" + node->FuncCall.name + "' - No function found matching args: " + argsStr + "\n\nAvailable functions:\n" + availableFuncs);
     }
 
     auto local_scope = std::make_shared<SymbolTable>();
@@ -318,30 +369,12 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         error_and_exit("Function '" + node->FuncCall.name + "' expects " + std::to_string(num_empty_args) + " parameters but " + std::to_string(args.size()) + " were provided");
     }
 
-    int start_index = 0;
-
-    for (node_ptr arg : function->Function.args) {
-        if (arg == nullptr) {
-            break;
-        }
-        start_index++;
-    }
-
-    for (int i = 0; i < function->Function.args.size(); i++) {
-        if (function->Function.args[i] != nullptr) {
-            std::string name = function->Function.params[i]->ID.value;
-            node_ptr value = function->Function.args[i];
-            Symbol symbol = new_symbol(name, value);
-            add_symbol(symbol, current_symbol_table);
-        }
-    }
-
     for (int i = 0; i < args.size(); i++) {
-        std::string name = function->Function.params[i+start_index]->ID.value;
+        std::string name = function->Function.params[i]->ID.value;
         node_ptr value = args[i];
         Symbol symbol = new_symbol(name, value);
         add_symbol(symbol, current_symbol_table);
-        function->Function.args[i+start_index] = value;
+        function->Function.args[i] = value;
     }
 
     // Type check parameters
@@ -352,6 +385,9 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
             continue;
         }
         node_ptr type = param_type.second;
+        if (!type) {
+            continue;
+        }
         if (!match_types(var, type)) {
             error_and_exit("Type Error in '" + function->Function.name + "': Argument '" + param_type.first + "' does not match defined parameter type");
         }
@@ -359,42 +395,37 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
 
     node_ptr res = function;
 
-    // Check if function's args vector has any nullptrs
-    // If it does, it's curried, else we run the function
-
-    if (std::find(function->Function.args.begin(), function->Function.args.end(), nullptr) == function->Function.args.end()) {
-        if (function->Function.body->type != NodeType::OBJECT) {
-            res = eval_node(function->Function.body);
-        } else {
-            for (int i = 0; i < function->Function.body->Object.elements.size(); i++) {
-                node_ptr expr = function->Function.body->Object.elements[i];
-                node_ptr evaluated_expr = eval_node(expr);
-                if (evaluated_expr->type == NodeType::RETURN) {
-                    if (evaluated_expr->Return.value == nullptr) {
+    if (function->Function.body->type != NodeType::OBJECT) {
+        res = eval_node(function->Function.body);
+    } else {
+        for (int i = 0; i < function->Function.body->Object.elements.size(); i++) {
+            node_ptr expr = function->Function.body->Object.elements[i];
+            node_ptr evaluated_expr = eval_node(expr);
+            if (evaluated_expr->type == NodeType::RETURN) {
+                if (evaluated_expr->Return.value == nullptr) {
+                    res = new_node(NodeType::NONE);
+                } else {
+                    res = eval_node(evaluated_expr->Return.value);
+                }
+                break;
+            } else if (i == function->Function.body->Object.elements.size()-1) {
+                res = evaluated_expr;
+                if (res->type == NodeType::RETURN) {
+                    if (res->Return.value == nullptr) {
                         res = new_node(NodeType::NONE);
                     } else {
-                        res = eval_node(evaluated_expr->Return.value);
+                        res = res->Return.value;
                     }
-                    break;
-                } else if (i == function->Function.body->Object.elements.size()-1) {
-                    res = evaluated_expr;
-                    if (res->type == NodeType::RETURN) {
-                        if (res->Return.value == nullptr) {
-                            res = new_node(NodeType::NONE);
-                        } else {
-                            res = res->Return.value;
-                        }
-                    }
-                    break;
                 }
+                break;
             }
         }
+    }
 
-        // Check against return type
-        if (function->Function.return_type) {
-            if (!match_types(res, function->Function.return_type)) {
-                error_and_exit("Type Error in '" + function->Function.name + "': Return type does not match defined return type");
-            }
+    // Check against return type
+    if (function->Function.return_type) {
+        if (!match_types(res, function->Function.return_type)) {
+            error_and_exit("Type Error in '" + function->Function.name + "': Return type does not match defined return type");
         }
     }
 
@@ -428,11 +459,6 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
     current_symbol_table = current_symbol_table->parent->parent;
     current_symbol_table->child->child = nullptr;
     current_symbol_table->child = nullptr;
-
-    if (res->type == NodeType::FUNC) {
-        for (auto& elem : current_symbol_table->symbols)
-        res->Function.closure[elem.first] = elem.second.value;
-    }
 
     return res;
 }
@@ -2684,11 +2710,24 @@ std::string Interpreter::printable(node_ptr node) {
             return node->String.value;
         }
         case NodeType::FUNC: {
-            std::string res = "( ";
-            for (node_ptr param : node->Function.params) {
-                res += param->ID.value + " ";
+            std::string res = "(";
+            for (int i = 0; i < node->Function.params.size(); i++) {
+                node_ptr& param = node->Function.params[i];
+                node_ptr& type = node->Function.param_types[param->ID.value];
+                if (type) {
+                    res += param->ID.value + ": " + node_repr(type);
+                } else {
+                    res += param->ID.value;
+                }
+                if (i < node->Function.params.size()-1) {
+                    res += ", ";
+                }
             }
-            res += ") => ...";
+            if (node->Function.return_type) {
+                res += ") => " + node_repr(node->Function.return_type);
+            } else {
+                res += ") => ...";
+            }
             return res;
         }
         case NodeType::LIST: {

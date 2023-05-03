@@ -1,2 +1,6 @@
-const prnt = (x: Number) => print(x)
-const prnt = (x: String) => print(x)
+const func = (x: Number, y: String): String => string(x) + y
+const func = (): String => "hmm"
+const func = (x: Number, y: Number): String => "GOTTEM"
+println(func())
+println(func(10, "12"))
+println(func(10, 12))
