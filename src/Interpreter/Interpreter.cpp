@@ -1,4 +1,3 @@
-#pragma once
 #include "Interpreter.hpp"
 
 void Interpreter::advance(int n) {
