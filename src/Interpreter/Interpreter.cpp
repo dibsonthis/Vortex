@@ -878,6 +878,13 @@ node_ptr Interpreter::eval_type_ext(node_ptr node) {
     node_ptr type = eval_node(node->TypeExt.type);
     node_ptr body = eval_object(node->TypeExt.body);
 
+    // Check that all property values resolve to functions
+    for (auto& prop : body->Object.properties) {
+        if (prop.second->type != NodeType::FUNC) {
+            error_and_exit("Type extension properties must resolve to functions");
+        }
+    }
+
     if (type->type == NodeType::STRING) {
         global_symbol_table->StringExtensions.insert(body->Object.properties.begin(), body->Object.properties.end());
         return new_node(NodeType::NONE);

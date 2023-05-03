@@ -156,29 +156,6 @@ Vortex's imports use relative paths to retrieve modules.
 ## How to start using Vortex
 
 You can find the [full Vortex documentation here](https://dibs.gitbook.io/vortex-docs/). This includes steps on how to get started using Vortex on your local machine.
-## Development Roadmap
-
-- [x] Basic operations
-- [x] Lists
-- [x] Objects
-- [x] Functions and function calls
-- [x] Function currying
-- [x] Branching
-- [x] For loops
-- [x] While loops
-- [x] List functions
-- [x] Imports
-- [x] Builtins
-- [x] Hook: onChange
-- [x] Hook: onCall
-- [x] Named hooks
-- [x] C/C++ Interoperability
-- [x] I/O
-- [ ] Hook: onInit
-- [ ] Hook: onDelete
-- [ ] Hook: onUse
-- [ ] String interpolation
-- [ ] Garbage collector
 
 ## Basic example
 
