@@ -1,8 +1,8 @@
 #include "../../Vortex.hpp"
-#include "../../../../src/utils/utils.cpp"
-#include "../../../../src/Lexer/Lexer.cpp"
-#include "../../../../src/Parser/Parser.cpp"
-#include "../../../../src/Interpreter/Interpreter.cpp"
+#include "../../../src/utils/utils.cpp"
+#include "../../../src/Lexer/Lexer.cpp"
+#include "../../../src/Parser/Parser.cpp"
+#include "../../../src/Interpreter/Interpreter.cpp"
 
 /* Define Vars */
 

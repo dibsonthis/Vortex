@@ -111,6 +111,7 @@ struct FuncNode {
 	bool is_type = false;
 	std::unordered_map<std::string, node_ptr> param_types;
 	node_ptr return_type;
+	std::vector<node_ptr> dispatch_functions;
 };
 
 struct AccessorNode {

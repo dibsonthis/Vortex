@@ -43,7 +43,7 @@ void Interpreter::eval_const_functions() {
 
 node_ptr Interpreter::eval_const_decl(node_ptr node) {
     node_ptr existing_symbol = get_symbol_local(node->ConstantDeclaration.name, current_symbol_table).value;
-    if (existing_symbol != nullptr) {
+    if (existing_symbol != nullptr && existing_symbol->type != NodeType::FUNC) {
         error_and_exit("Variable '" + node->ConstantDeclaration.name + "' is already defined");
     }
     node_ptr value = eval_node(node->ConstantDeclaration.value);
@@ -51,6 +51,10 @@ node_ptr Interpreter::eval_const_decl(node_ptr node) {
     value->Meta.is_const = true;
     if (value->type == NodeType::HOOK) {
         value->Hook.name = node->ConstantDeclaration.name;
+    }
+    if (existing_symbol != nullptr && value->type == NodeType::FUNC) {
+        existing_symbol->Function.dispatch_functions.push_back(value);
+        return value;
     }
     Symbol symbol = new_symbol(node->ConstantDeclaration.name, value);
     add_symbol(symbol, current_symbol_table);
@@ -2894,8 +2898,8 @@ node_ptr Interpreter::eval_node(node_ptr node) {
 }
 
 void Interpreter::evaluate() {
-    eval_const_functions();
-    reset(0);
+    // eval_const_functions();
+    // reset(0);
 
     while (current_node->type != NodeType::END_OF_FILE) {
         eval_node(current_node);
