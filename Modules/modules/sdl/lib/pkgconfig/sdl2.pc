@@ -1,6 +1,6 @@
 # sdl pkg-config source file
 
-prefix=/opt/homebrew
+prefix=/Modules/modules/sdl
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
