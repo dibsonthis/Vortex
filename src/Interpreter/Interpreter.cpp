@@ -334,7 +334,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         for (auto fx : functions) {
             availableFuncs += printable(fx) + "\n";
         }
-        error_and_exit("Dispatch error in function '" + node->FuncCall.name + "' - No function found matching args: " + argsStr + "\n\nAvailable functions:\n" + availableFuncs);
+        error_and_exit("Dispatch error in function '" + node->FuncCall.name + "' - No function found matching args: " + argsStr + "\n\nAvailable functions:\n\n" + availableFuncs);
     }
 
     auto local_scope = std::make_shared<SymbolTable>();

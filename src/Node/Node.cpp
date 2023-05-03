@@ -16,9 +16,26 @@ std::string node_repr(node_ptr node) {
             return "Boolean";
         }
         case NodeType::LIST: {
-            return "List";
+            if (node->List.elements.size() == 0) {
+                return "List";
+            }
+            std::string res = "[";
+            for (int i = 0; i < node->List.elements.size(); i++) {
+                res += node_repr(node->List.elements[i]);
+                if (i < node->List.elements.size()-1) {
+                    res += ", ";
+                }
+            }
+            res += "]";
+            return res;
         }
         case NodeType::OBJECT: {
+            if (node->TypeInfo.type) {
+                return node->TypeInfo.type_name;
+            }
+            if (node->Object.is_type && node->TypeInfo.type_name != "") {
+                return node->TypeInfo.type_name;
+            }
             return "Object";
         }
         case NodeType::LIB: {
