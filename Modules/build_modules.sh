@@ -14,6 +14,10 @@ else
     LIBS="$FILE/lib/lib*"
 fi
 
+mkdir $FILE/bin
+mkdir $FILE/lib
+mkdir $FILE/include
+
 clang++ \
 -dynamiclib \
 -O3 \
