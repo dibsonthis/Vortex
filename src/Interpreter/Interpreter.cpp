@@ -330,10 +330,6 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
             argsStr += node_repr(arg) + " ";
         }
         argsStr += "]";
-        // std::string availableFuncs = "";
-        // for (auto fx : functions) {
-        //     availableFuncs += printable(fx) + "\n";
-        // }
         error_and_exit("Dispatch error in function '" + node->FuncCall.name + "' - No function found matching args: " + argsStr + "\n\nAvailable functions:\n\n" + printable(functions[0]));
     }
 
@@ -379,19 +375,19 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
 
     // Type check parameters
 
-    for (auto& param_type : function->Function.param_types) {
-        node_ptr var = get_symbol(param_type.first, current_symbol_table).value;
-        if (!var) {
-            continue;
-        }
-        node_ptr type = param_type.second;
-        if (!type) {
-            continue;
-        }
-        if (!match_types(var, type)) {
-            error_and_exit("Type Error in '" + function->Function.name + "': Argument '" + param_type.first + "' does not match defined parameter type");
-        }
-    }
+    // for (auto& param_type : function->Function.param_types) {
+    //     node_ptr var = get_symbol(param_type.first, current_symbol_table).value;
+    //     if (!var) {
+    //         continue;
+    //     }
+    //     node_ptr type = param_type.second;
+    //     if (!type) {
+    //         continue;
+    //     }
+    //     if (!match_types(var, type)) {
+    //         error_and_exit("Type Error in '" + function->Function.name + "': Argument '" + param_type.first + "' does not match defined parameter type");
+    //     }
+    // }
 
     node_ptr res = function;
 
