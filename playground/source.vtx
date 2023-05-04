@@ -1,29 +1,16 @@
-// import string
-
-// extend List {
-// 	last: () => self[self.length-1]
+// type DataObj {
+// 	id: String[""], 
+// 	firstname: String[""]
 // }
 
-// type IsCSVPath = (x: String) => x == "hello.csv"
-// type IsTXTPath = (x: String) => x == "hello.txt"
-// type IsJARPath = (x: String) => x == "hello.jar"
+// const elems: [DataObj];
 
-// const open = (x: IsCSVPath) => println("Opening csv")
-// const open = (x: IsTXTPath) => println("Opening txt")
-// const open = (x: IsJARPath) => println("Opening jar")
+// var x = DataObj {}
+// var ls = DataObjList {}
+// ls.elems.prepend("x")
 
-// open("hello.jar")
+// var elems: [DataObj]
+const hello: String = "hi"
+var someList: [Number] = []
 
-type Color {
-	r: Number[0],
-	g: Number[0],
-	b: Number[0]
-}
-
-type RedColor = Color {r: 255}
-
-const isRed = (c: RedColor) => println(true)
-const isRed = (c: Color) => println(false)
-
-isRed(Color {r: 20})
-isRed(Color {r: 255})
+someList.append(10)

@@ -46,7 +46,9 @@ node_ptr Interpreter::eval_const_decl(node_ptr node) {
         error_and_exit("Variable '" + node->ConstantDeclaration.name + "' is already defined");
     }
     node_ptr value = eval_node(node->ConstantDeclaration.value);
+    node_ptr type = eval_node(node->TypeInfo.type);
     value = std::make_shared<Node>(*value);
+    value->TypeInfo.type = type;
     value->Meta.is_const = true;
     if (value->type == NodeType::HOOK) {
         value->Hook.name = node->ConstantDeclaration.name;
@@ -84,7 +86,9 @@ node_ptr Interpreter::eval_var_decl(node_ptr node) {
         error_and_exit("Variable '" + node->VariableDeclaration.name + "' is already defined");
     }
     node_ptr value = eval_node(node->VariableDeclaration.value);
+    node_ptr type = eval_node(node->TypeInfo.type);
     value = std::make_shared<Node>(*value);
+    value->TypeInfo.type = type;
     value->Meta.is_const = false;
     if (value->type == NodeType::HOOK) {
         value->Hook.name = node->VariableDeclaration.name;
@@ -1196,6 +1200,7 @@ node_ptr Interpreter::eval_object_init(node_ptr node) {
 
         object->Object.properties[prop_name]->Hooks.onChange = type_prop_value->Hooks.onChange;
         object->Object.properties[prop_name]->Hooks.onCall = type_prop_value->Hooks.onCall;
+        object->Object.properties[prop_name]->TypeInfo.type = type_prop_value;
     }
 
     // We do a check in the other direction
@@ -1925,6 +1930,16 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
     }
 
     if (left->type == NodeType::LIST) {
+
+        node_ptr list_type = left->TypeInfo.type;
+        if (!list_type) {
+            list_type = new_node(NodeType::NONE);
+        }else if (list_type->List.elements.size() == 1) {
+            list_type = list_type->List.elements[0];
+        } else {
+            list_type = new_node(NodeType::NONE);
+        }
+
         // List Properties
         if (right->type == NodeType::ID) {
             std::string prop = right->ID.value;
@@ -1950,6 +1965,10 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
                     error_and_exit("List function '" + prop + "' expects 1 argument");
                 }
                 node_ptr arg = eval_node(right->FuncCall.args[0]);
+                // Type check
+                if (!match_types(list_type, arg)) {
+                    error_and_exit("Cannot insert value of type '" + node_repr(arg) + "' into container of type '" + node_repr(left->TypeInfo.type) + "'");
+                }
                 left->List.elements.push_back(arg);
                 return left;
             }
@@ -1960,8 +1979,12 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
                 if (right->FuncCall.args.size() != 1) {
                     error_and_exit("List function '" + prop + "' expects 1 argument");
                 }
-                node_ptr arg = right->FuncCall.args[0];
-                left->List.elements.insert(left->List.elements.begin(), eval_node(arg));
+                node_ptr arg = eval_node(right->FuncCall.args[0]);
+                // Type check
+                if (!match_types(list_type, arg)) {
+                    error_and_exit("Cannot insert value of type '" + node_repr(arg) + "' into container of type '" + node_repr(left->TypeInfo.type) + "'");
+                }
+                left->List.elements.insert(left->List.elements.begin(), arg);
                 return left;
             }
             if (prop == "insert") {
@@ -1973,6 +1996,11 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
                 }
                 node_ptr value = eval_node(right->FuncCall.args[0]);
                 node_ptr index_node = eval_node(right->FuncCall.args[1]);
+
+                // Type check
+                if (!match_types(list_type, value)) {
+                    error_and_exit("Cannot insert value of type '" + node_repr(value) + "' into container of type '" + node_repr(left->TypeInfo.type) + "'");
+                }
 
                 if (index_node->type != NodeType::NUMBER) {
                     error_and_exit("List function '" + prop + "' expects second argument to be a number");
@@ -2436,7 +2464,11 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
 
             // Type check
             if (accessed_value->type != NodeType::NONE && !match_types(accessed_value, right)) {
-                error_and_exit("Cannot modify object property type");
+                error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
+            }
+
+            if (accessed_value->type == NodeType::NONE && prop->Accessor.container->TypeInfo.type) {
+                error_and_exit("Property '" + prop->ID.value + "' does not exist on type '" + object->TypeInfo.type_name + "'");
             }
 
             *accessed_value = *right;
@@ -2472,12 +2504,19 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
         }
 
         node_ptr accessed_value = object->Object.properties[prop->ID.value];
+        if (!accessed_value) {
+            // If the object has a type and the property wasn't found, we error
+            if (object->TypeInfo.type) {
+                error_and_exit("Property '" + prop->ID.value + "' does not exist on type '" + object->TypeInfo.type_name + "'");
+            }   
+            accessed_value = new_node(NodeType::NONE);
+        }
         node_ptr old_value = std::make_shared<Node>(*accessed_value);
         std::vector<node_ptr> onChangeFunctions = old_value->Hooks.onChange;
 
         // Type check
         if (accessed_value->type != NodeType::NONE && !match_types(accessed_value, right)) {
-            error_and_exit("Cannot modify object property type");
+            error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
         }
 
         *accessed_value = *right;
@@ -2535,6 +2574,11 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
         } else if (container->type == NodeType::OBJECT) {
             node_ptr accessed_value = eval_accessor(left);
 
+            // If the object has a type and the property wasn't found, we error
+            if (container->TypeInfo.type && accessed_value->type == NodeType::NONE) {
+                error_and_exit("Property does not exist on type '" + container->TypeInfo.type_name + "'");
+            }  
+
             if (accessed_value->type == NodeType::NONE) {
                 container->Object.properties[accessor->List.elements[0]->String.value] = right;
             } else {
@@ -2543,7 +2587,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
 
                 // Type check
                 if (accessed_value->type != NodeType::NONE && !match_types(accessed_value, right)) {
-                    error_and_exit("Cannot modify object property type");
+                    error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
                 }
 
                 *accessed_value = *right;

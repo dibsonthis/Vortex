@@ -464,8 +464,23 @@ void Parser::parse_var(std::string end) {
                 erase_next();
             } else if (next->Operator.value == "=") {
                 current_node->type = NodeType::VARIABLE_DECLARATION;
+                if (next->Operator.left->Operator.value == ":") {
+                    node_ptr typed_var = next->Operator.left;
+                    current_node->VariableDeclaration.name = typed_var->Operator.left->ID.value;
+                    current_node->VariableDeclaration.value = next->Operator.right;
+                    current_node->TypeInfo.type = typed_var->Operator.right;
+                    current_node->TypeInfo.type->TypeInfo.is_type = true;
+                } else {
+                    current_node->VariableDeclaration.name = next->Operator.left->ID.value;
+                    current_node->VariableDeclaration.value = next->Operator.right;
+                }
+                erase_next();
+            } else if (next->Operator.value == ":") {
+                current_node->type = NodeType::VARIABLE_DECLARATION;
                 current_node->VariableDeclaration.name = next->Operator.left->ID.value;
-                current_node->VariableDeclaration.value = next->Operator.right;
+                current_node->VariableDeclaration.value = new_node(NodeType::NONE);
+                current_node->TypeInfo.type = next->Operator.right;
+                current_node->TypeInfo.type->TypeInfo.is_type = true;
                 erase_next();
             }
         }
@@ -493,8 +508,16 @@ void Parser::parse_const(std::string end) {
                 erase_next();
             } else if (next->Operator.value == "=") {
                 current_node->type = NodeType::CONSTANT_DECLARATION;
-                current_node->ConstantDeclaration.name = next->Operator.left->ID.value;
-                current_node->ConstantDeclaration.value = next->Operator.right;
+                if (next->Operator.left->Operator.value == ":") {
+                    node_ptr typed_var = next->Operator.left;
+                    current_node->ConstantDeclaration.name = typed_var->Operator.left->ID.value;
+                    current_node->ConstantDeclaration.value = next->Operator.right;
+                    current_node->TypeInfo.type = typed_var->Operator.right;
+                    current_node->TypeInfo.type->TypeInfo.is_type = true;
+                } else {
+                    current_node->ConstantDeclaration.name = next->Operator.left->ID.value;
+                    current_node->ConstantDeclaration.value = next->Operator.right;
+                }
                 erase_next();
             } else {
                 error_and_exit("Const declaration expects a value");
@@ -767,11 +790,11 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_post_op({"?"}, end);
     reset(start);
-    parse_bin_op({"."}, end);
-    reset(start);
     parse_type_ext(end);
     reset(start);
     parse_accessor(end);
+    reset(start);
+    parse_bin_op({"."}, end);
     reset(start);
     parse_un_op_amb({"+", "-"}, end);
     reset(start);
