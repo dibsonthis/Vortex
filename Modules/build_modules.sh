@@ -22,8 +22,8 @@ clang++ \
 -dynamiclib \
 -O3 \
 -Wno-everything \
--I $FILE/include \
--L $FILE/lib \
+-I$FILE/include \
+-L$FILE/lib \
 $LIBS \
 -std=c++20 \
 -stdlib=libc++ \
