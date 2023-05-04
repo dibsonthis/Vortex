@@ -49,6 +49,9 @@ node_ptr Interpreter::eval_const_decl(node_ptr node) {
     node_ptr type = eval_node(node->TypeInfo.type);
     value = std::make_shared<Node>(*value);
     value->TypeInfo.type = type;
+    if (type) {
+        value->TypeInfo.type_name = type->TypeInfo.type_name;
+    }
     value->Meta.is_const = true;
     if (value->type == NodeType::HOOK) {
         value->Hook.name = node->ConstantDeclaration.name;
@@ -89,6 +92,9 @@ node_ptr Interpreter::eval_var_decl(node_ptr node) {
     node_ptr type = eval_node(node->TypeInfo.type);
     value = std::make_shared<Node>(*value);
     value->TypeInfo.type = type;
+    if (type) {
+        value->TypeInfo.type_name = type->TypeInfo.type_name;
+    }
     value->Meta.is_const = false;
     if (value->type == NodeType::HOOK) {
         value->Hook.name = node->VariableDeclaration.name;
