@@ -18,6 +18,18 @@ std::string node_repr(node_ptr node) {
         case NodeType::LIST: {
             if (node->List.elements.size() == 0) {
                 return "List";
+            } else if (node->List.elements.size() == 1) {
+                return "[" + node_repr(node->List.elements[0]) + "]";
+            } else if (node->List.elements.size() > 10) {
+                std::string res = "[";
+                for (int i = 0; i < 10; i++) {
+                    res += node_repr(node->List.elements[i]);
+                    if (i != 9) {
+                        res += ", ";
+                    }
+                }
+                res += " ... ]";
+                return res;
             }
             std::string res = "[";
             for (int i = 0; i < node->List.elements.size(); i++) {
@@ -73,6 +85,9 @@ std::string node_repr(node_ptr node) {
         }
         case NodeType::IMPORT: {
             return "Import statement";
+        }
+        case NodeType::POINTER: {
+            return "Pointer";
         }
         case NodeType::NONE: {
             return "None";

@@ -49,6 +49,9 @@ node_ptr Interpreter::eval_const_decl(node_ptr node) {
     node_ptr type = eval_node(node->TypeInfo.type);
     value = std::make_shared<Node>(*value);
     value->TypeInfo.type = type;
+    if (type && !match_types(value, type)) {
+        error_and_exit("Variable '" + node->ConstantDeclaration.name + "' expects a value of type '" + node_repr(type) + "' but was instantiated with value of type '" + node_repr(value) + "'");
+    }
     if (type) {
         value->TypeInfo.type_name = type->TypeInfo.type_name;
     }
@@ -90,6 +93,9 @@ node_ptr Interpreter::eval_var_decl(node_ptr node) {
     }
     node_ptr value = eval_node(node->VariableDeclaration.value);
     node_ptr type = eval_node(node->TypeInfo.type);
+    if (type && !match_types(value, type)) {
+        error_and_exit("Variable '" + node->VariableDeclaration.name + "' expects a value of type '" + node_repr(type) + "' but was instantiated with value of type '" + node_repr(value) + "'");
+    }
     value = std::make_shared<Node>(*value);
     value->TypeInfo.type = type;
     if (type) {
@@ -124,13 +130,18 @@ node_ptr Interpreter::eval_var_decl_multiple(node_ptr node) {
 
 node_ptr Interpreter::eval_list(node_ptr node) {
     node_ptr list = new_node(NodeType::LIST);
+    list->TypeInfo = node->TypeInfo;
     if (node->List.elements.size() == 1) {
         if (node->List.elements[0]->type == NodeType::COMMA_LIST) {
             for (auto elem : node->List.elements[0]->List.elements) {
-                list->List.elements.push_back(eval_node(elem));
+                node_ptr evaluated_elem = eval_node(elem);
+                evaluated_elem->TypeInfo.is_type = list->TypeInfo.is_type;
+                list->List.elements.push_back(evaluated_elem);
             }
         } else {
-            list->List.elements.push_back(eval_node(node->List.elements[0]));
+            node_ptr evaluated_elem = eval_node(node->List.elements[0]);
+            evaluated_elem->TypeInfo.is_type = list->TypeInfo.is_type;
+            list->List.elements.push_back(eval_node(evaluated_elem));
         }
     } else {
         list = node;
@@ -141,6 +152,7 @@ node_ptr Interpreter::eval_list(node_ptr node) {
 node_ptr Interpreter::eval_object(node_ptr node) {
     node_ptr object = new_node();
     object->type = NodeType::OBJECT;
+    object->TypeInfo = node->TypeInfo;
     // inject current object into scope as "this"
     add_symbol(new_symbol("this", object), current_symbol_table);
     if (node->Object.elements.size() == 0) {
@@ -154,7 +166,9 @@ node_ptr Interpreter::eval_object(node_ptr node) {
         if (prop->Operator.left->type != NodeType::ID && prop->Operator.left->type != NodeType::STRING) {
             error_and_exit("Property names must be identifiers or strings");
         }
-        object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = eval_node(prop->Operator.right);
+        node_ptr value = eval_node(prop->Operator.right);
+        value->TypeInfo.is_type = object->TypeInfo.is_type;
+        object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = value;
     }
     for (node_ptr prop : node->Object.elements[0]->List.elements) {
         if (prop->Operator.value != ":") {
@@ -163,7 +177,9 @@ node_ptr Interpreter::eval_object(node_ptr node) {
         if (prop->Operator.left->type != NodeType::ID && prop->Operator.left->type != NodeType::STRING) {
             error_and_exit("Property names must be identifiers or strings");
         }
-        object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = eval_node(prop->Operator.right);
+        node_ptr value = eval_node(prop->Operator.right);
+        value->TypeInfo.is_type = object->TypeInfo.is_type;
+        object->Object.properties[prop->Operator.left->type == NodeType::ID ? prop->Operator.left->ID.value: prop->Operator.left->String.value] = value;
     }
     // remove "this" from scope
     delete_symbol("this", current_symbol_table);
@@ -203,6 +219,32 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
                 error_and_exit("Function " + node->FuncCall.name + " expects 1 argument");
             }
             return new_string_node(printable(eval_node(node->FuncCall.args[0])));
+        }
+        if (node->FuncCall.name == "number") {
+            if (node->FuncCall.args.size() != 1) {
+                error_and_exit("Function " + node->FuncCall.name + " expects 1 argument");
+            }
+            node_ptr var = eval_node(node->FuncCall.args[0]);
+
+            switch(var->type) {
+                case NodeType::NONE: new_number_node(0);
+                case NodeType::NUMBER: return node;
+                case NodeType::STRING: {
+                    try {
+                        return new_number_node(std::stod(var->String.value));
+                    } catch(...) {
+                        error_and_exit("Cannot convert \"" + var->String.value + "\" to a number");
+                    }
+                };
+                case NodeType::BOOLEAN: {
+                    if (var->Boolean.value) {
+                        return new_number_node(1);
+                    }
+
+                    return new_number_node(0);
+                };
+                default: return new_string_node("None");
+            }
         }
         if (node->FuncCall.name == "type") {
             if (node->FuncCall.args.size() != 1) {
@@ -335,11 +377,14 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
     }
 
     if (!func_match) {
-        std::string argsStr = "[ ";
-        for (auto arg : args) {
-            argsStr += node_repr(arg) + " ";
+        std::string argsStr = "(";
+        for (int i = 0; i < args.size(); i++) {
+            argsStr += node_repr(args[i]);
+            if (i != args.size()-1) {
+                argsStr += ", ";
+            }
         }
-        argsStr += "]";
+        argsStr += ")";
         error_and_exit("Dispatch error in function '" + node->FuncCall.name + "' - No function found matching args: " + argsStr + "\n\nAvailable functions:\n\n" + printable(functions[0]));
     }
 
