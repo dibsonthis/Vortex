@@ -40,7 +40,7 @@ unset(libdir)
 unset(includedir)
 
 set(_sdl2_libraries_in "-lSDL2")
-set(_sdl2_static_private_libs_in " -lm -liconv  -Wl,-framework,CoreAudio -Wl,-framework,AudioToolbox -Wl,-weak_framework,CoreHaptics -Wl,-weak_framework,GameController -Wl,-framework,ForceFeedback -lobjc -Wl,-framework,CoreVideo -Wl,-framework,Cocoa -Wl,-framework,Carbon -Wl,-framework,IOKit -Wl,-weak_framework,QuartzCore -Wl,-weak_framework,Metal")
+set(_sdl2_static_private_libs_in " -lm -liconv  -Wl,-framework,CoreAudio -Wl,-framework,AudioToolbox -Wl,-framework,ForceFeedback -lobjc -Wl,-framework,CoreVideo -Wl,-framework,Cocoa -Wl,-framework,Carbon -Wl,-framework,IOKit -Wl,-weak_framework,QuartzCore -Wl,-weak_framework,Metal")
 
 # Convert _sdl2_libraries to list and keep only libraries + library directories
 string(REGEX MATCHALL "-[lm]([-a-zA-Z0-9._]+)" _sdl2_libraries "${_sdl2_libraries_in}")

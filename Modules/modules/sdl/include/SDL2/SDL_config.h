@@ -324,7 +324,7 @@
 /* #undef SDL_JOYSTICK_XINPUT */
 /* #undef SDL_JOYSTICK_DUMMY */
 #define SDL_JOYSTICK_IOKIT 1
-#define SDL_JOYSTICK_MFI 1
+/* #undef SDL_JOYSTICK_MFI */
 /* #undef SDL_JOYSTICK_LINUX */
 /* #undef SDL_JOYSTICK_ANDROID */
 /* #undef SDL_JOYSTICK_OS2 */
