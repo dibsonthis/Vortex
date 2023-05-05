@@ -142,7 +142,9 @@ void Lexer::format_string()
 			source[index] = '+';
 			advance();
 			source.insert(index, "string(");
-			advance();
+			source_length += 7;
+			index += 7;
+			current_char = source[index];
 			int num_brackets = 1;
 			while (true) {
 				if (current_char == '\0') {
@@ -162,14 +164,14 @@ void Lexer::format_string()
 			source[index] = ')';
 			advance();
 			source.insert(index, "+\"");
+			source_length += 2;
+			current_char = source[index];
 			advance();
-			std::string added_str = "string()\"";
-			source_length += added_str.size();
 		}
 		advance();
 	}
 
-	index = current_index - 1;
+	index = current_index;
 	current_char = source[index];
 }
 

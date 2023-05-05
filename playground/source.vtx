@@ -1,4 +1,2 @@
-import sdl : "@modules/sdl"
-import [WindowConfig, Color, Window] : "@modules/sdl"
-
-var init: Number = sdl.initSDL()
+const window = "WINDOW123"
+println(f"Window: ${window + string(456)}")
