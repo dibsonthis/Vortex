@@ -437,17 +437,7 @@ void Parser::parse_var(std::string end) {
 
         if (current_node->ID.value == "var") {
             node_ptr next = peek();
-            if (next->type == NodeType::COMMA_LIST) {
-                current_node->type = NodeType::VARIABLE_DECLARATION_MULTIPLE;
-                for (node_ptr& element : next->List.elements) {
-                    node_ptr var_decl = new_node();
-                    var_decl->type = NodeType::VARIABLE_DECLARATION;
-                    var_decl->VariableDeclaration.name = element->ID.value;
-                    var_decl->VariableDeclaration.value = new_node(NodeType::NONE);
-                    current_node->VariableDeclarationMultiple.variable_declarations.push_back(var_decl);
-                }
-                erase_next();
-            } else if (next->Operator.value == "=" && next->Operator.left->type == NodeType::COMMA_LIST) {
+            if (next->Operator.value == "=" && next->Operator.left->type == NodeType::COMMA_LIST) {
                 current_node->type = NodeType::VARIABLE_DECLARATION_MULTIPLE;
                 for (node_ptr& element : next->Operator.left->List.elements) {
                     node_ptr var_decl = new_node();
@@ -496,17 +486,7 @@ void Parser::parse_const(std::string end) {
 
         if (current_node->ID.value == "const") {
             node_ptr next = peek();
-            if (next->Operator.value == "=" && next->Operator.left->type == NodeType::COMMA_LIST) {
-                current_node->type = NodeType::CONSTANT_DECLARATION_MULTIPLE;
-                for (node_ptr& element : next->Operator.left->List.elements) {
-                    node_ptr const_decl = new_node();
-                    const_decl->type = NodeType::CONSTANT_DECLARATION;
-                    const_decl->ConstantDeclaration.name = element->ID.value;
-                    const_decl->ConstantDeclaration.value = std::make_shared<Node>(*next->Operator.right);
-                    current_node->ConstantDeclarationMultiple.constant_declarations.push_back(const_decl);
-                }
-                erase_next();
-            } else if (next->Operator.value == "=") {
+            if (next->Operator.value == "=") {
                 current_node->type = NodeType::CONSTANT_DECLARATION;
                 if (next->Operator.left->Operator.value == ":") {
                     node_ptr typed_var = next->Operator.left;
@@ -828,11 +808,11 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_colon(end);
     reset(start);
+    parse_equals(end);
+    reset(start);
     parse_comma(end);
     reset(start);
     flatten_commas(end);
-    reset(start);
-    parse_equals(end);
     reset(start);
     parse_var(end);
     reset(start);

@@ -859,6 +859,12 @@ node_ptr Interpreter::eval_type(node_ptr node) {
 
     if (node->Type.body->Object.elements[0]->type != NodeType::COMMA_LIST) {
         node_ptr prop = node->Type.body->Object.elements[0];
+        node_ptr def_val = nullptr;
+
+        if (prop->Operator.value == "=") {
+            def_val = eval_node(prop->Operator.right);
+            prop = prop->Operator.left;
+        }
 
         if (prop->Operator.value != ":") {
             error_and_exit("Object must contain properties separated with ':'");
@@ -868,36 +874,44 @@ node_ptr Interpreter::eval_type(node_ptr node) {
         }
 
         node_ptr value = prop->Operator.right;
-        if (value->type == NodeType::ACCESSOR) {
-            object->Object.properties[prop->Operator.left->ID.value] = eval_node(value->Accessor.container);
-            node_ptr default_value = eval_node(value->Accessor.accessor);
-            if (default_value->List.elements.size() != 1) {
-                error_and_exit("Default type constructor cannot be empty");
+
+        // Check if container type (List or Obj) and tag it as a type
+        node_ptr type_val = eval_node(prop->Operator.right);
+        if (type_val->type == NodeType::LIST) {
+            if (type_val->List.elements.size() > 1) {
+                error_and_exit("List types can only contain one type");
             }
-            node_ptr type_val = eval_node(value->Accessor.container);
-            // Check if container type (List or Obj) and tag it as a type
-            if (type_val->type == NodeType::LIST) {
-                if (type_val->List.elements.size() > 1) {
-                    error_and_exit("List types can only contain one type");
-                }
-                type_val->TypeInfo.is_type = true;
-            } else if (type_val->type == NodeType::OBJECT) {
-                type_val->TypeInfo.is_type = true;
+            type_val->TypeInfo.is_type = true;
+        } else if (type_val->type == NodeType::OBJECT) {
+            type_val->TypeInfo.is_type = true;
+        }
+        object->Object.properties[prop->Operator.left->ID.value] = type_val;
+        if (def_val) {
+            if (!match_types(type_val, def_val)) {
+                error_and_exit("Default type constructor for propery '" + prop->Operator.left->ID.value + "' does not match type: Expecting value of type '" + node_repr(type_val) + "' but received value of type '" + node_repr(def_val) + "'");
+            }
+            object->Object.defaults[prop->Operator.left->ID.value] = def_val;
+        }
+
+    } else {
+        for (node_ptr prop : node->Type.body->Object.elements[0]->List.elements) {
+
+            node_ptr def_val = nullptr;
+
+            if (prop->Operator.value == "=") {
+                def_val = eval_node(prop->Operator.right);
+                prop = prop->Operator.left;
             }
 
-            node_ptr def = default_value->List.elements[0];
-
-            if (!match_types(type_val, def)) {
-                error_and_exit("Default type constructor does not match type");
+            if (prop->Operator.value != ":") {
+                error_and_exit("Object must contain properties separated with ':'");
             }
-
-            if (def->type == NodeType::FUNC) {
-                def->Function.name = prop->Operator.left->ID.value;
+            if (prop->Operator.left->type != NodeType::ID) {
+                error_and_exit("Property names must be identifiers");
             }
+            
+            node_ptr value = prop->Operator.right;
 
-            object->Object.properties[prop->Operator.left->ID.value] = type_val;
-            object->Object.defaults[prop->Operator.left->ID.value] = def;
-        } else {
             // Check if container type (List or Obj) and tag it as a type
             node_ptr type_val = eval_node(prop->Operator.right);
             if (type_val->type == NodeType::LIST) {
@@ -909,61 +923,11 @@ node_ptr Interpreter::eval_type(node_ptr node) {
                 type_val->TypeInfo.is_type = true;
             }
             object->Object.properties[prop->Operator.left->ID.value] = type_val;
-        }
-    } else {
-        for (node_ptr prop : node->Type.body->Object.elements[0]->List.elements) {
-
-            if (prop->Operator.value != ":") {
-                error_and_exit("Object must contain properties separated with ':'");
-            }
-            if (prop->Operator.left->type != NodeType::ID) {
-                error_and_exit("Property names must be identifiers");
-            }
-            
-            node_ptr value = prop->Operator.right;
-            if (value->type == NodeType::ACCESSOR) {
-                object->Object.properties[prop->Operator.left->ID.value] = eval_node(value->Accessor.container);
-                node_ptr default_value = eval_node(value->Accessor.accessor);
-                if (default_value->List.elements.size() != 1) {
-                    error_and_exit("Default type constructor cannot be empty");
+            if (def_val) {
+                if (!match_types(type_val, def_val)) {
+                    error_and_exit("Default type constructor for propery '" + prop->Operator.left->ID.value + "' does not match type: Expecting value of type '" + node_repr(type_val) + "' but received value of type '" + node_repr(def_val) + "'");
                 }
-                node_ptr type_val = eval_node(value->Accessor.container);
-
-                // Check if container type (List or Obj) and tag it as a type
-                if (type_val->type == NodeType::LIST) {
-                    if (type_val->List.elements.size() > 1) {
-                        error_and_exit("List types can only contain one type");
-                    }
-                    type_val->TypeInfo.is_type = true;
-                } else if (type_val->type == NodeType::OBJECT) {
-                    type_val->TypeInfo.is_type = true;
-                }
-
-                node_ptr def = default_value->List.elements[0];
-
-                if (!match_types(type_val, def)) {
-                    error_and_exit("Default type constructor does not match type");
-                }
-
-                if (def->type == NodeType::FUNC) {
-                    def->Function.name = prop->Operator.left->ID.value;
-                }
-
-                object->Object.properties[prop->Operator.left->ID.value] = type_val;
-                object->Object.defaults[prop->Operator.left->ID.value] = default_value->List.elements[0];
-            } else {
-                // Check if container type (List or Obj) and tag it as a type
-                node_ptr type_val = eval_node(prop->Operator.right);
-                if (type_val->type == NodeType::LIST) {
-                    if (type_val->List.elements.size() > 1) {
-                        error_and_exit("List types can only contain one type");
-                    }
-                    type_val->TypeInfo.is_type = true;
-                } else if (type_val->type == NodeType::OBJECT) {
-                    type_val->TypeInfo.is_type = true;
-                }
-
-                object->Object.properties[prop->Operator.left->ID.value] = type_val;
+                object->Object.defaults[prop->Operator.left->ID.value] = def_val;
             }
         }
     }

@@ -1,1 +1,6 @@
-var csvList: [[Number]] = [[1, 2, 3], [4, 5, 6]]
+type Color {
+	r: Number,
+	g: Number = 0,
+	b: Number = 0,
+	a: Number = 255
+}

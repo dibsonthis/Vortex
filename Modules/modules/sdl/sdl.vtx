@@ -1,10 +1,10 @@
 const lib = load_lib("./bin/sdl")
 
 type Color {
-	r: Number[0],
-	g: Number[0],
-	b: Number[0],
-	a: Number[255]
+	r: Number = 0,
+	g: Number = 0,
+	b: Number = 0,
+	a: Number = 255
 };
 
 [Color.r, Color.g, Color.b]::onChange = (color) => {
@@ -17,12 +17,12 @@ type Color {
 }
 
 type WindowConfig {
-	width: Number[1000],
-	height: Number[600],
-	title: String["Test Window"],
-	xPos: Number[300],
-	yPos: Number[100],
-	color: Color[Color {}]
+	width: Number = 1000,
+	height: Number = 600,
+	title: String = "Test Window",
+	xPos: Number = 300,
+	yPos: Number = 100,
+	color: Color = Color {}
 }
 
 enum Colors {
@@ -117,5 +117,5 @@ var interpolate = (value: Number, x0: Number, x1: Number, y0: Number, y1: Number
 type Window {
 	window: Pointer,
 	renderer: Pointer,
-	changeColor: Function[(color: Color) => changeBackgroundColor(this.renderer, color)]
+	changeColor: Function = (color: Color) => changeBackgroundColor(this.renderer, color)
 }
