@@ -214,6 +214,15 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
             }
             return new_node(NodeType::NONE);
         }
+        if (node->FuncCall.name == "error") {
+            if (node->FuncCall.args.size() != 1) {
+                error_and_exit("Function " + node->FuncCall.name + " expects 1 argument");
+            }
+            std::string message = printable(eval_node(node->FuncCall.args[0]));
+            line = node->line;
+            column = node->column;
+            error_and_exit(message);
+        }
         if (node->FuncCall.name == "string") {
             if (node->FuncCall.args.size() != 1) {
                 error_and_exit("Function " + node->FuncCall.name + " expects 1 argument");
@@ -861,6 +870,22 @@ node_ptr Interpreter::eval_type(node_ptr node) {
         node_ptr prop = node->Type.body->Object.elements[0];
         node_ptr def_val = nullptr;
 
+        if (prop->type == NodeType::ID) {
+            // This is essentually an any type
+            object->Object.properties[prop->ID.value] = new_node(NodeType::NONE);
+            object->Object.properties[prop->ID.value]->Meta.is_untyped_property = true;
+            object->Object.defaults[prop->ID.value] = new_node(NodeType::NONE);
+            goto end;
+        }
+
+        if (prop->Operator.value == "=" && prop->Operator.left->type == NodeType::ID) {
+            // This is essentually an any type
+            object->Object.properties[prop->Operator.left->ID.value] = new_node(NodeType::NONE);
+            object->Object.properties[prop->Operator.left->ID.value]->Meta.is_untyped_property = true;
+            object->Object.defaults[prop->Operator.left->ID.value] = eval_node(prop->Operator.right);
+            goto end;
+        }
+
         if (prop->Operator.value == "=") {
             def_val = eval_node(prop->Operator.right);
             prop = prop->Operator.left;
@@ -898,6 +923,22 @@ node_ptr Interpreter::eval_type(node_ptr node) {
 
             node_ptr def_val = nullptr;
 
+            if (prop->type == NodeType::ID) {
+                // This is essentually an any type
+                object->Object.properties[prop->ID.value] = new_node(NodeType::NONE);
+                object->Object.properties[prop->ID.value]->Meta.is_untyped_property = true;
+                object->Object.defaults[prop->ID.value] = new_node(NodeType::NONE);
+                continue;
+            }
+
+            if (prop->Operator.value == "=" && prop->Operator.left->type == NodeType::ID) {
+                // This is essentually an any type
+                object->Object.properties[prop->Operator.left->ID.value] = new_node(NodeType::NONE);
+                object->Object.properties[prop->Operator.left->ID.value]->Meta.is_untyped_property = true;
+                object->Object.defaults[prop->Operator.left->ID.value] = eval_node(prop->Operator.right);
+                continue;
+            }
+
             if (prop->Operator.value == "=") {
                 def_val = eval_node(prop->Operator.right);
                 prop = prop->Operator.left;
@@ -931,6 +972,8 @@ node_ptr Interpreter::eval_type(node_ptr node) {
             }
         }
     }
+
+    end:
 
     object->TypeInfo.is_type = true;
     object->TypeInfo.type_name = node->Type.name;
@@ -1084,6 +1127,10 @@ bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
         return res->Boolean.value;
     }
 
+    if (nodeA->type == NodeType::NONE || nodeB->type == NodeType::NONE) {
+        return true;
+    }
+
     if (nodeA->type != nodeB->type) {
         return false;
     }
@@ -1215,6 +1262,7 @@ node_ptr Interpreter::eval_object_init(node_ptr node) {
 
         object->Object.properties[prop_name]->Hooks.onChange = type_prop_value->Hooks.onChange;
         object->Object.properties[prop_name]->Hooks.onCall = type_prop_value->Hooks.onCall;
+        object->Object.properties[prop_name]->Meta = type_prop_value->Meta;
         object->Object.properties[prop_name]->TypeInfo.type = type_prop_value;
     }
 
@@ -2478,8 +2526,10 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             std::vector<node_ptr> onChangeFunctions = accessed_value->Hooks.onChange;
 
             // Type check
-            if (accessed_value->type != NodeType::NONE && !match_types(accessed_value, right)) {
-                error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
+            if (!accessed_value->Meta.is_untyped_property) {
+                if (accessed_value->type != NodeType::NONE && !match_types(accessed_value, right)) {
+                    error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
+                }
             }
 
             if (accessed_value->type == NodeType::NONE && prop->Accessor.container->TypeInfo.type) {
@@ -2487,6 +2537,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             }
 
             *accessed_value = *right;
+            accessed_value->Meta = old_value->Meta;
             accessed_value->Meta.is_const = false;
             accessed_value->Hooks.onChange = onChangeFunctions;
 
@@ -2530,11 +2581,14 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
         std::vector<node_ptr> onChangeFunctions = old_value->Hooks.onChange;
 
         // Type check
-        if (accessed_value->type != NodeType::NONE && !match_types(accessed_value, right)) {
-            error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
+        if (!accessed_value->Meta.is_untyped_property) {
+            if (accessed_value->type != NodeType::NONE && !match_types(accessed_value, right)) {
+                error_and_exit("Type error in property '" + prop->ID.value + "' - Cannot modify object property type '" + node_repr(accessed_value) + "'");
+            }
         }
 
         *accessed_value = *right;
+        accessed_value->Meta = old_value->Meta;
         accessed_value->Hooks.onChange = onChangeFunctions;
 
         auto allOnChangeFunctionsLists = {std::cref(onChangeFunctions), std::cref(global_symbol_table->globalHooks_onChange)};
@@ -2601,11 +2655,14 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                 std::vector<node_ptr> onChangeFunctions = accessed_value->Hooks.onChange;
 
                 // Type check
-                if (accessed_value->type != NodeType::NONE && !match_types(accessed_value, right)) {
-                    error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
+                if (!accessed_value->Meta.is_untyped_property) {
+                    if (accessed_value->type != NodeType::NONE && !match_types(accessed_value, right)) {
+                        error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
+                    }
                 }
 
                 *accessed_value = *right;
+                accessed_value->Meta = old_value->Meta;
                 accessed_value->Meta.is_const = false;
                 accessed_value->Hooks.onChange = onChangeFunctions;
 

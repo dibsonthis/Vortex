@@ -199,6 +199,7 @@ struct ReturnNode {
 
 struct MetaInformation {
 	bool is_const = false;
+	bool is_untyped_property = false;
 };
 
 struct Hooks {

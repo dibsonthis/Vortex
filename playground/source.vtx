@@ -1,6 +1,13 @@
-type Color {
-	r: Number,
-	g: Number = 0,
-	b: Number = 0,
-	a: Number = 255
+type DataObj {
+	id: 		Number = 0, 
+	firstname: 	String = "",
+	lastname:  	String = "",
+	meta,
+	something = "hi"
 }
+
+var x = DataObj {}
+x.meta = 1
+x.meta = "100"
+x.something = 100
+x.id = "j"
