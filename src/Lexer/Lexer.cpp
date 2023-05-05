@@ -328,7 +328,7 @@ void Lexer::tokenize()
 			line++;
 			advance();
 		}
-		if (current_char == 'f' && peek() == '"')
+		else if (current_char == 'f' && peek() == '"')
 		{
 			format_string();
 		}
@@ -596,6 +596,13 @@ void Lexer::tokenize()
 			advance(); // consume symbol
 		}
 		else if (current_char == '%')
+		{
+			node_ptr node(new Node(NodeType::OP, line, column));
+			node->Operator.value = current_char;
+			nodes.push_back(node);
+			advance(); // consume symbol
+		}
+		else if (current_char == '"')
 		{
 			node_ptr node(new Node(NodeType::OP, line, column));
 			node->Operator.value = current_char;

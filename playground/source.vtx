@@ -1,4 +1,4 @@
-const name = "John"
-const age = 12
-const x = f"name ${name} age ${age} and blah ${{x: 100}}"
-print(x)
+import sdl : "@modules/sdl"
+import [WindowConfig, Color, Window] : "@modules/sdl"
+
+var init: Number = sdl.initSDL()
