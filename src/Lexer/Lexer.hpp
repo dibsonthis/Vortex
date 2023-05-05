@@ -32,6 +32,8 @@ class Lexer
 
 	void build_number();
 
+	void format_string();
+
 	void build_string();
 
 	void handle_line_comment();

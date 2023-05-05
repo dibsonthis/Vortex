@@ -1,13 +1,4 @@
-type DataObj {
-	id: 		Number = 0, 
-	firstname: 	String = "",
-	lastname:  	String = "",
-	meta,
-	something = "hi"
-}
-
-var x = DataObj {}
-x.meta = 1
-x.meta = "100"
-x.something = 100
-x.id = "j"
+const name = "John"
+const age = 12
+const x = f"name ${name} age ${age} and blah ${{x: 100}}"
+print(x)

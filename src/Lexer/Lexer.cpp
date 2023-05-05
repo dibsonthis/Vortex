@@ -127,6 +127,49 @@ void Lexer::build_number()
 	nodes.push_back(node);
 }
 
+void Lexer::format_string()
+{
+	int current_index = index;
+
+	source.erase(source.begin() + index);
+	current_char = source[index];
+	advance();
+
+	while (current_char != '"') {
+		if (current_char == '$' && peek() == '{') {
+			source[index] = '"';
+			advance();
+			source[index] = '+';
+			advance();
+			source.insert(index, "string(");
+			advance();
+			int num_brackets = 1;
+			while (true) {
+				if (current_char == '{') {
+					num_brackets++;
+				}
+				if (current_char == '}') {
+					num_brackets--;
+				}
+				if (current_char == '}' && num_brackets == 0) {
+					break;
+				}
+				advance();
+			}
+			source[index] = ')';
+			advance();
+			source.insert(index, "+\"");
+			advance();
+			std::string added_str = "string()\"";
+			source_length += added_str.size();
+		}
+		advance();
+	}
+
+	index = current_index - 1;
+	current_char = source[index];
+}
+
 void Lexer::build_string()
 {
 	node_ptr node(new Node(NodeType::STRING, line, column));
@@ -281,6 +324,10 @@ void Lexer::tokenize()
 			column = 0;
 			line++;
 			advance();
+		}
+		if (current_char == 'f' && peek() == '"')
+		{
+			format_string();
 		}
 		else if (current_char == ' ' || current_char == '\t')
 		{
@@ -546,13 +593,6 @@ void Lexer::tokenize()
 			advance(); // consume symbol
 		}
 		else if (current_char == '%')
-		{
-			node_ptr node(new Node(NodeType::OP, line, column));
-			node->Operator.value = current_char;
-			nodes.push_back(node);
-			advance(); // consume symbol
-		}
-		else if (current_char == '"')
 		{
 			node_ptr node(new Node(NodeType::OP, line, column));
 			node->Operator.value = current_char;
