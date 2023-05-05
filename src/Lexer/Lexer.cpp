@@ -145,6 +145,9 @@ void Lexer::format_string()
 			advance();
 			int num_brackets = 1;
 			while (true) {
+				if (current_char == '\0') {
+					error_and_exit("Malformed string interpolation - missing '}'");
+				}
 				if (current_char == '{') {
 					num_brackets++;
 				}
