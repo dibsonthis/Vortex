@@ -24,7 +24,13 @@ if [ "$FILE" = "sdl" ]; then
     sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2-2.0.0.dylib" "$FILE/lib/libSDL2-2.0.0.dylib"
     CONFIG="-L/usr/local/share/vortex/modules/lib -I/usr/local/share/vortex/modules/SDL2 -D_THREAD_SAFE"
 else
-    CONFIG=""
+    CONFIG=$CONFIG
+fi
+
+if [ "$FILE" = "requests" ]; then
+    CONFIG="-framework CoreFoundation -framework Security"
+else
+    CONFIG=$CONFIG
 fi
 
 clang++ \

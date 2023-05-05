@@ -1,5 +1,7 @@
 {
   "files.associations": {
+    "*.rpl": "go",
+    "*.vtx": "rust",
     "array": "cpp",
     "*.tcc": "cpp",
     "cctype": "cpp",
@@ -88,7 +90,11 @@
     "ranges": "cpp",
     "span": "cpp",
     "valarray": "cpp",
-    "set": "cpp"
+    "set": "cpp",
+    "condition_variable": "cpp",
+    "csignal": "cpp",
+    "list": "cpp",
+    "__availability": "cpp"
   },
   "C_Cpp.loggingLevel": "Debug",
   "C_Cpp.errorSquiggles": "disabled"

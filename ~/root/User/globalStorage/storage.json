@@ -5,7 +5,8 @@
             "file:///Users/adib/Dev/Personal/Vortex": "__default__profile__"
         },
         "emptyWindows": {
-            "1683267463298": "__default__profile__"
+            "1683267463298": "__default__profile__",
+            "1683306876540": "__default__profile__"
         }
     },
     "profileAssociationsMigration": true,
@@ -20,6 +21,9 @@
         "emptyWindows": [
             {
                 "backupFolder": "1683267463298"
+            },
+            {
+                "backupFolder": "1683306876540"
             }
         ]
     },
@@ -1112,10 +1116,6 @@
                         }
                     },
                     {
-                        "id": "workbench.userDataSync.actions.turnOn",
-                        "label": "Turn on Settings Sync..."
-                    },
-                    {
                         "id": "vscode.menubar.separator"
                     },
                     {
@@ -1587,5 +1587,18 @@
                 "userSettingsLabel": "cmd+k cmd+t"
             }
         }
+    },
+    "windowsState": {
+        "lastActiveWindow": {
+            "backupPath": "/Users/adib/Dev/Personal/Vortex/~/root/Backups/1683306876540",
+            "uiState": {
+                "mode": 1,
+                "x": 0,
+                "y": 25,
+                "width": 1440,
+                "height": 790
+            }
+        },
+        "openedWindows": []
     }
 }

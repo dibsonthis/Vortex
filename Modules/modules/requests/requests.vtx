@@ -1,0 +1,7 @@
+const lib = load_lib("./bin/requests")
+
+var get = (url: String, endpoint: String) 
+	=> lib.call("get", [url, endpoint])
+
+var json = (jsonString: String)
+	=> lib.call("to_json", [jsonString])

@@ -136,6 +136,11 @@ void Lexer::format_string()
 	advance();
 
 	while (current_char != '"') {
+		if (current_char == '\\' && peek() == '"')
+		{
+			advance();
+			advance();
+		}
 		if (current_char == '$' && peek() == '{') {
 			source[index] = '"';
 			advance();
