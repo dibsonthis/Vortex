@@ -1116,6 +1116,10 @@
                         }
                     },
                     {
+                        "id": "workbench.userDataSync.actions.turnOn",
+                        "label": "Turn on Settings Sync..."
+                    },
+                    {
                         "id": "vscode.menubar.separator"
                     },
                     {

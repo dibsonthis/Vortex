@@ -42,7 +42,7 @@ std::string node_repr(node_ptr node) {
             return res;
         }
         case NodeType::OBJECT: {
-            if (node->TypeInfo.type) {
+            if (node->TypeInfo.type && node->TypeInfo.type_name != "") {
                 return node->TypeInfo.type_name;
             }
             if (node->TypeInfo.is_type && node->TypeInfo.type_name != "") {

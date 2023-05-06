@@ -1,7 +1,48 @@
 const lib = load_lib("./bin/requests")
+const json_lib = load_lib("../json/bin/json")
 
-var get = (url: String, endpoint: String) 
-	=> lib.call("get", [url, endpoint])
+type Response {
+	version: String,
+	status: Number,
+	body: String,
+	location: String,
+	headers: [String],
+	_json_lib: Library = json_lib,
+	toJson: Function = () => this._json_lib.call("parse", [this.body])
+}
 
-var json = (jsonString: String)
-	=> lib.call("to_json", [jsonString])
+const get = (url: String, endpoint: String): Response => { 
+	const obj = lib.call("get", [url, endpoint])
+	const res = Response {
+		version: obj.version,
+		status: obj.status,
+		body: obj.body,
+		location: obj.location,
+		headers: obj.headers
+	}
+	ret res
+}
+
+const get = (url: String): Response => { 
+	ret get(url, "/")
+}
+
+const post = (url: String, endpoint: String, payload: Object): Response => { 
+	const obj = lib.call("post", [url, endpoint, payload])
+	const res = Response {
+		version: obj.version,
+		status: obj.status,
+		body: obj.body,
+		location: obj.location,
+		headers: obj.headers
+	}
+	ret res
+}
+
+const post = (url: String, endpoint: String): Response => { 
+	ret post(url, endpoint, {})
+}
+
+const post = (url: String): Response => { 
+	ret post(url, "/", {})
+}

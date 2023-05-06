@@ -1,12 +1,15 @@
 const lib = load_lib("./bin/string")
 
-var split = (str: String, delim: String): [String] 
+const split = (str: String, delim: String): [String] 
 	=> lib.call("split", [str, delim])
 
-var trim = (str: String): String 
+const split = (str: String): [String] 
+	=> lib.call("split", [str, ""])
+
+const trim = (str: String): String 
 	=> lib.call("trim", [str])
 
-var chars = (str: String): [String] 
+const chars = (str: String): [String] 
 	=> lib.call("chars", [str])
 
 extend String {

@@ -727,7 +727,7 @@ void Parser::parse_keywords(std::string end) {
         } else if (current_node->ID.value == "Pointer") {
             current_node->type = NodeType::POINTER;
             current_node->TypeInfo.is_type = true;
-        } else if (current_node->ID.value == "Pointer") {
+        } else if (current_node->ID.value == "Library") {
             current_node->type = NodeType::LIB;
             current_node->TypeInfo.is_type = true;
         } 

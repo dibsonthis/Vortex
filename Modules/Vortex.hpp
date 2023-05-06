@@ -4,8 +4,13 @@
 
 #define VortexObj std::shared_ptr<Node>
 
-void error_and_exit(std::string message) {
-    std::cout << "Error: " << message;
+void error_and_exit(std::string message, VortexObj obj = nullptr) {
+    if (obj) {
+        std::string error_message = "\nError @ (" + std::to_string(obj->line) + ", " + std::to_string(obj->column) + "): " + message;
+	    std::cout << error_message << "\n";
+    } else {
+        std::cout << "Error: " << message;
+    }
     exit(1);
 }
 

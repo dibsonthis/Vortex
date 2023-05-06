@@ -1181,6 +1181,14 @@ bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
             return false;
         }
 
+        if (nodeA->TypeInfo.is_type && nodeA->TypeInfo.type_name == "" && nodeB->TypeInfo.type_name == "") {
+            return true;
+        }
+
+        if (nodeB->TypeInfo.is_type && nodeB->TypeInfo.type_name == "" && nodeA->TypeInfo.type_name == "") {
+            return true;
+        }
+
         if (nodeA->Object.properties.size() != nodeB->Object.properties.size()) {
             return false;
         }

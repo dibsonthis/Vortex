@@ -1,2 +1,6 @@
-const window = "WINDOW123"
-println(f"Window: ${window + string(456)}")
+type Vec {
+    x: Number = 0,
+    y: Number = 0
+}
+
+const obj : Object = Vec {x: 1}
