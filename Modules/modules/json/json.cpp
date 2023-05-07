@@ -19,6 +19,9 @@ std::string to_string(VortexObj node) {
             return '"' + node->String.value + '"';
         }
         case NodeType::LIST: {
+            if (node->List.elements.size() == 0) {
+                return "[]";
+            }
             std::string res = "";
             res += "[\n";
             indent_level++;
@@ -40,6 +43,9 @@ std::string to_string(VortexObj node) {
             return res;
         }
         case NodeType::OBJECT: {
+            if (node->Object.properties.size() == 0) {
+                return "{}";
+            }
             std::string res = "";
             res += "{\n";
             indent_level++;
