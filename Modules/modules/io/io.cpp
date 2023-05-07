@@ -30,6 +30,7 @@ VortexObj read(std::string name, std::vector<VortexObj> args) {
     std::fstream* handle = (std::fstream*)args[0]->Pointer.value;
     std::stringstream buffer;
     buffer << handle->rdbuf();
+    handle->seekp(0);
 
     return new_string_node(buffer.str());
 }
@@ -57,6 +58,7 @@ VortexObj close(std::string name, std::vector<VortexObj> args) {
 
     std::fstream* handle = (std::fstream*)args[0]->Pointer.value;
     handle->close();
+    delete handle;
     return new_vortex_obj(NodeType::NONE);
 }
 

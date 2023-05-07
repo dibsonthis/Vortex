@@ -155,8 +155,8 @@ VortexObj serialize(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects 1 argument");
     }
 
-    if (args[0]->type != NodeType::OBJECT) {
-        error_and_exit("Function '" + name + "' expects 1 object argument");
+    if (args[0]->type != NodeType::OBJECT && args[0]->type != NodeType::LIST) {
+        error_and_exit("Function '" + name + "' expects 1 object or list argument");
     }
 
     VortexObj serialized_object = new_string_node(to_string(args[0]));
