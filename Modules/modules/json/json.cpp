@@ -1,11 +1,85 @@
 #include "../include/json.hpp"
 #include "../../Vortex.hpp"
 
-/* Define Vars */
+int indent_level = 0;
+std::string indent = "    ";
 
-/* Declare Lib Functions */
-
-/* Implement Lib Functions */
+std::string to_string(VortexObj node) {
+    switch (node->type) {
+        case NodeType::NUMBER: {
+            std::string num_str = std::to_string(node->Number.value);
+            num_str.erase(num_str.find_last_not_of('0') + 1, std::string::npos);
+            num_str.erase(num_str.find_last_not_of('.') + 1, std::string::npos);
+            return num_str;
+        }
+        case NodeType::BOOLEAN: {
+            return node->Boolean.value ? "true" : "false";
+        }
+        case NodeType::STRING: {
+            return '"' + node->String.value + '"';
+        }
+        case NodeType::LIST: {
+            std::string res = "";
+            res += "[\n";
+            indent_level++;
+            for (int i = 0; i < node->List.elements.size(); i++) {
+                for (int ind = 0; ind < indent_level; ind++) {
+                    res += indent;
+                }
+                res += to_string(node->List.elements[i]);
+                if (i < node->List.elements.size()-1) {
+                    res += ",\n";
+                }
+            }
+            indent_level--;
+            res += '\n';
+            for (int i = 0; i < indent_level; i++) {
+                res += indent;
+            }
+            res += "]";
+            return res;
+        }
+        case NodeType::OBJECT: {
+            std::string res = "";
+            res += "{\n";
+            indent_level++;
+            int elem_i = 0;
+            for (auto const& elem : node->Object.properties) {
+                for (int i = 0; i < indent_level; i++) {
+                    res += indent;
+                }
+                res +=  '"' + elem.first + '"' + ": " + to_string(elem.second);
+                if (elem_i != node->Object.properties.size()-1) {
+                    res += ",\n";
+                } else {
+                    res += '\n';
+                }
+                elem_i++;
+            }
+            indent_level--;
+            for (int i = 0; i < indent_level; i++) {
+                res += indent;
+            }
+            res += "}";
+            return res;
+        }
+        case NodeType::NONE: {
+            return "null";
+        }
+        case NodeType::ID: {
+            return '"' + node->ID.value + '"';
+        }
+        case NodeType::OP: {
+            if (node->Operator.value == ".") {
+                return to_string(node->Operator.left) + "." + to_string(node->Operator.right);
+            }
+            return node->Operator.value;
+        }
+        default: {
+            return "";
+        }
+    }
+}
 
 VortexObj json_type_to_vtx_type(nlohmann::json_abi_v3_11_2::json json_obj) {
 
@@ -43,6 +117,8 @@ VortexObj json_type_to_vtx_type(nlohmann::json_abi_v3_11_2::json json_obj) {
     return new_vortex_obj(NodeType::NONE);
 }
 
+/* Implement Lib Functions */
+
 VortexObj parse(std::string name, std::vector<VortexObj> args) {
     if (args.size() != 1) {
         error_and_exit("Function '" + name + "' expects 1 argument");
@@ -68,11 +144,27 @@ VortexObj parse(std::string name, std::vector<VortexObj> args) {
     }
 }
 
+VortexObj serialize(std::string name, std::vector<VortexObj> args) {
+    if (args.size() != 1) {
+        error_and_exit("Function '" + name + "' expects 1 argument");
+    }
+
+    if (args[0]->type != NodeType::OBJECT) {
+        error_and_exit("Function '" + name + "' expects 1 object argument");
+    }
+
+    VortexObj serialized_object = new_string_node(to_string(args[0]));
+    return serialized_object;
+}
+
 /* Implement call_function */
 
 extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args) {
     if (name == "parse") {
         return parse(name, args);
+    }
+    if (name == "serialize") {
+        return serialize(name, args);
     }
 
     error_and_exit("Function '" + name + "' is undefined");
