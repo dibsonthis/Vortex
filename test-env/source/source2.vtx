@@ -1,0 +1,27 @@
+import string
+
+extend List {
+    last: () => self[self.length-1]
+}
+
+const getExt = (str: String) => str.split(".").last() 
+
+type CSVPath = (x: String) => getExt(x) == "csv"
+type TXTPath = (x: String) => getExt(x) == "txt"
+
+const open = (fileType: CSVPath) => println("Opening \"csv\" file...")
+const open = (fileType: TXTPath) => println("Opening \"txt\" file...")
+const open = (fileType) => println(f"Cannot open \"${getExt(fileType)}\" files.")
+
+open("blah.csvt")
+
+// Opening txt file...
+
+type PosNum = (num: Number) => num > 0
+type NegNum = (num: Number) => num < 0
+
+const numfunc = (num: PosNum) => println("number is pos")
+const numfunc = (num: NegNum) => println("number is neg")
+const numfunc = (num: Number) => println("number is 0")
+
+numfunc(0)

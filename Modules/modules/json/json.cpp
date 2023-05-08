@@ -138,6 +138,16 @@ VortexObj parse(std::string name, std::vector<VortexObj> args) {
 
     try {
         auto json = nlohmann::json::parse(json_body);
+        // If it's a list
+        if (json.type() == nlohmann::json::value_t::array) {
+            VortexObj json_obj = new_vortex_obj(NodeType::LIST);
+            for (auto& prop : json.items()) {
+                auto value = prop.value();
+                json_obj->List.elements.push_back(json_type_to_vtx_type(value));
+            }
+            return json_obj;
+        }
+        // Otherwise it's an object
         VortexObj json_obj = new_vortex_obj(NodeType::OBJECT);
         for (auto& prop : json.items()) {
             auto value = prop.value();

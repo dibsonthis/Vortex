@@ -1,0 +1,43 @@
+import [readf] : io
+import string
+
+var data: [[String]] = 
+	readf("../data/people.csv")
+	.split("\n")
+	.map((row: String): [String] => row.split(","))
+
+const headers: [String] = data[0]
+
+data.remove_at(0)
+
+type DataObj {
+	id: 		Number = 0, 
+	firstname: 	String = "", 
+	lastname:  	String = "",
+	email: 		String = "", 
+	date: 		String = "",
+	profession: String = ""
+}
+
+var csvList: [DataObj] = []
+
+for (data, rowI, row) {
+	var rowValue: DataObj = DataObj {};
+	for (row, rowValueI, rowVal) {
+		if (headers[rowValueI] == "id") {
+			rowValue[headers[rowValueI]] = number(rowVal)
+		} else {
+			rowValue[headers[rowValueI]] = rowVal
+		}
+	}
+	csvList.append(rowValue)
+}
+
+const selectedPeople: [String] 
+	= csvList
+	.filter((elem: DataObj): Boolean => elem.id >= 500 && elem.id <= 550)
+	.map((elem: DataObj): String => f"${elem.firstname} ${elem.lastname} (${elem.email}): ${elem.id}")
+
+for (selectedPeople, i, person) {
+	println(person)
+}
