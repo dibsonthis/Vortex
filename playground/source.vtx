@@ -1,10 +1,2 @@
-const Maybe = (T) => {
-    union MaybeT {
-        T,
-        None
-    }
-}
-
-const MaybeString = Maybe(String)
-
-var x: MaybeString = 5
+var grid: [String] = []
+grid.append("#")

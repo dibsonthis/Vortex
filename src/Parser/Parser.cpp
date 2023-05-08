@@ -68,12 +68,13 @@ void Parser::parse_un_op_amb(std::vector<std::string> operators, std::string end
         if (current_node->Operator.value == end) {
             break;
         }
+        node_ptr prev = peek(-1);
         if (vector_contains_string(operators, current_node->Operator.value) && 
             (
-                (peek(-1)->type == NodeType::OP && !has_children(peek(-1))) ||
-                peek(-1)->type == NodeType::START_OF_FILE ||
-                peek(-1)->type == NodeType::PAREN ||
-                peek(-1)->type == NodeType::LIST
+                (prev->type == NodeType::OP && !has_children(prev)) ||
+                prev->type == NodeType::START_OF_FILE ||
+                prev->type == NodeType::PAREN && prev->Paren.elements.size() == 0 ||
+                prev->type == NodeType::LIST && prev->List.elements.size() == 0
             )) {
             node_ptr right = peek(1);
             current_node->Operator.right = right;
@@ -793,11 +794,11 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_bin_op({"&&", "||"}, end);
     reset(start);
-    parse_bin_op({"*", "/"}, end);
+    parse_bin_op({"^"}, end);
+    reset(start);
+    parse_bin_op({"*", "/", "%"}, end);
     reset(start);
     parse_bin_op({"+", "-"}, end);
-    reset(start);
-    parse_bin_op({"^"}, end);
     reset(start);
     parse_bin_op({"+=", "-="}, end);
     reset(start);

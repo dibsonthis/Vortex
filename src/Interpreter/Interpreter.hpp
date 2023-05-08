@@ -22,6 +22,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <sstream>
+#include <math.h>
 #include "../Node/Node.hpp"
 #include "../Lexer/Lexer.hpp"
 #include "../Parser/Parser.hpp"
@@ -108,6 +109,7 @@ public:
     node_ptr eval_mul(node_ptr node);
     node_ptr eval_div(node_ptr node);
     node_ptr eval_pow(node_ptr node);
+    node_ptr eval_mod(node_ptr node);
     node_ptr eval_eq_eq(node_ptr node);
     node_ptr eval_not_eq(node_ptr node);
     node_ptr eval_lt_eq(node_ptr node);

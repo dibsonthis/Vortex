@@ -517,6 +517,7 @@ node_ptr Interpreter::eval_if_statement(node_ptr node) {
         for (node_ptr expr : node->IfStatement.body->Object.elements) {
             node_ptr evaluated_expr = eval_node(expr);
             if (evaluated_expr->type == NodeType::RETURN) {
+                evaluated_expr->Return.value = eval_node(evaluated_expr->Return.value);
                 return evaluated_expr;
             }
             if (evaluated_expr->type == NodeType::BREAK) {
@@ -584,12 +585,12 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
         
         for (int i = 0; i < iterator->List.elements.size(); i++) {
 
-            auto loop_symbol_tale = std::make_shared<SymbolTable>();
+            auto loop_symbol_table = std::make_shared<SymbolTable>();
             for (auto& symbol : current_symbol_table->symbols) {
-                loop_symbol_tale->symbols[symbol.first] = symbol.second;
+                loop_symbol_table->symbols[symbol.first] = symbol.second;
             }
 
-            current_symbol_table = loop_symbol_tale;
+            current_symbol_table = loop_symbol_table;
 
             if (node->ForLoop.index_name) {
                 add_symbol(new_symbol(node->ForLoop.index_name->ID.value, new_number_node(i)), current_symbol_table);
@@ -650,12 +651,13 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
 
         for_index++;
 
-        auto loop_symbol_tale = std::make_shared<SymbolTable>();
+        auto loop_symbol_table = std::make_shared<SymbolTable>();
         for (auto& symbol : current_symbol_table->symbols) {
-            loop_symbol_tale->symbols[symbol.first] = symbol.second;
+            loop_symbol_table->symbols[symbol.first] = symbol.second;
         }
 
-        current_symbol_table = loop_symbol_tale;
+        current_symbol_table = loop_symbol_table;
+        current_symbol_table->parent = current_scope;
 
         int index = i-node->ForLoop.start->Number.value;
         if (node->ForLoop.index_name) {
@@ -709,12 +711,13 @@ node_ptr Interpreter::eval_while_loop(node_ptr node) {
     auto current_scope = current_symbol_table;
 
     while (conditional->Boolean.value) {
-        auto loop_symbol_tale = std::make_shared<SymbolTable>();
+        auto loop_symbol_table = std::make_shared<SymbolTable>();
         for (auto& symbol : current_symbol_table->symbols) {
-            loop_symbol_tale->symbols[symbol.first] = symbol.second;
+            loop_symbol_table->symbols[symbol.first] = symbol.second;
         }
 
-        current_symbol_table = loop_symbol_tale;
+        current_symbol_table = loop_symbol_table;
+        current_symbol_table->parent = current_scope;
         
         for (node_ptr expr : node->WhileLoop.body->Object.elements) {
             node_ptr evaluated_expr = eval_node(expr);
@@ -1743,6 +1746,18 @@ node_ptr Interpreter::eval_pow(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
+node_ptr Interpreter::eval_mod(node_ptr node) {
+    node_ptr left = eval_node(node->Operator.left);
+    node_ptr right = eval_node(node->Operator.right);
+
+    if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
+        return new_number_node(fmod(left->Number.value, right->Number.value));
+    }
+
+    error_and_exit("Cannot perform operation '^' on types: " + node_repr(left) + ", " + node_repr(right));
+    return new_node(NodeType::NONE);
+}
+
 node_ptr Interpreter::eval_eq_eq(node_ptr node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
@@ -2041,11 +2056,11 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
 
         node_ptr list_type = left->TypeInfo.type;
         if (!list_type) {
-            list_type = new_node(NodeType::NONE);
+            list_type = new_node(NodeType::ANY);
         }else if (list_type->List.elements.size() == 1) {
             list_type = list_type->List.elements[0];
         } else {
-            list_type = new_node(NodeType::NONE);
+            list_type = new_node(NodeType::ANY);
         }
 
         // List Properties
@@ -3127,6 +3142,9 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     }
     if (node->Operator.value == "^") {
         return eval_pow(node);
+    }
+    if (node->Operator.value == "%") {
+        return eval_mod(node);
     }
     if (node->Operator.value == "!") {
         return eval_not(node);
