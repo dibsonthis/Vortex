@@ -868,9 +868,9 @@ node_ptr Interpreter::eval_type(node_ptr node) {
 
         if (prop->type == NodeType::ID) {
             // This is essentually an any type
-            object->Object.properties[prop->ID.value] = new_node(NodeType::NONE);
+            object->Object.properties[prop->ID.value] = new_node(NodeType::ANY);
             object->Object.properties[prop->ID.value]->Meta.is_untyped_property = true;
-            object->Object.defaults[prop->ID.value] = new_node(NodeType::NONE);
+            object->Object.defaults[prop->ID.value] = new_node(NodeType::ANY);
             goto end;
         }
 
@@ -921,9 +921,9 @@ node_ptr Interpreter::eval_type(node_ptr node) {
 
             if (prop->type == NodeType::ID) {
                 // This is essentually an any type
-                object->Object.properties[prop->ID.value] = new_node(NodeType::NONE);
+                object->Object.properties[prop->ID.value] = new_node(NodeType::ANY);
                 object->Object.properties[prop->ID.value]->Meta.is_untyped_property = true;
-                object->Object.defaults[prop->ID.value] = new_node(NodeType::NONE);
+                object->Object.defaults[prop->ID.value] = new_node(NodeType::ANY);
                 continue;
             }
 
@@ -1040,6 +1040,7 @@ bool Interpreter::match_values(node_ptr nodeA, node_ptr nodeB) {
     if (nodeA->type == NodeType::NONE) {
         return true;
     }
+    
     if (nodeA->type == NodeType::NUMBER) {
         return nodeA->Number.value == nodeB->Number.value;
     }
@@ -1155,10 +1156,6 @@ bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
             error_and_exit("Refinement types must return a boolean value");
         }
         return res->Boolean.value;
-    }
-
-    if (nodeA->type == NodeType::NONE || nodeB->type == NodeType::NONE) {
-        return true;
     }
 
     if (nodeA->type != nodeB->type) {
@@ -2564,8 +2561,13 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             std::vector<node_ptr> onChangeFunctions = accessed_value->Hooks.onChange;
 
             // Type check
+            // if (!accessed_value->Meta.is_untyped_property) {
+            //     if (accessed_value->type != NodeType::NONE && !match_types(accessed_value->TypeInfo.type, right)) {
+            //         error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
+            //     }
+            // }
             if (!accessed_value->Meta.is_untyped_property) {
-                if (accessed_value->type != NodeType::NONE && !match_types(accessed_value->TypeInfo.type, right)) {
+                if (!match_types(accessed_value->TypeInfo.type, right)) {
                     error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
                 }
             }
@@ -2620,8 +2622,13 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
         std::vector<node_ptr> onChangeFunctions = old_value->Hooks.onChange;
 
         // Type check
+        // if (!accessed_value->Meta.is_untyped_property) {
+        //     if (accessed_value->type != NodeType::NONE && !match_types(accessed_value->TypeInfo.type, right)) {
+        //         error_and_exit("Type error in property '" + prop->ID.value + "' - Cannot modify object property type '" + node_repr(accessed_value) + "'");
+        //     }
+        // }
         if (!accessed_value->Meta.is_untyped_property) {
-            if (accessed_value->type != NodeType::NONE && !match_types(accessed_value->TypeInfo.type, right)) {
+            if (!match_types(accessed_value->TypeInfo.type, right)) {
                 error_and_exit("Type error in property '" + prop->ID.value + "' - Cannot modify object property type '" + node_repr(accessed_value) + "'");
             }
         }
@@ -2695,8 +2702,13 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                 std::vector<node_ptr> onChangeFunctions = accessed_value->Hooks.onChange;
 
                 // Type check
+                // if (!accessed_value->Meta.is_untyped_property) {
+                //     if (accessed_value->type != NodeType::NONE && !match_types(accessed_value->TypeInfo.type, right)) {
+                //         error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
+                //     }
+                // }
                 if (!accessed_value->Meta.is_untyped_property) {
-                    if (accessed_value->type != NodeType::NONE && !match_types(accessed_value->TypeInfo.type, right)) {
+                    if (!match_types(accessed_value->TypeInfo.type, right)) {
                         error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
                     }
                 }
@@ -2747,7 +2759,10 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             }
 
             // Type check
-            if (symbol.value->type != NodeType::NONE && !match_types(symbol.value->TypeInfo.type, right)) {
+            // if (symbol.value->type != NodeType::NONE && !match_types(symbol.value->TypeInfo.type, right)) {
+            //     error_and_exit("Cannot modify type of variable '" + symbol.name + "'");
+            // }
+            if (!match_types(symbol.value->TypeInfo.type, right)) {
                 error_and_exit("Cannot modify type of variable '" + symbol.name + "'");
             }
 

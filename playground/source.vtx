@@ -1,6 +1,13 @@
-union BoolOrString {
-    Boolean,
-    String
+union MaybeString {
+    String,
+    None
 }
 
-const t: BoolOrString = ["true"]
+type SomeType {
+    x: Number,
+    y
+}
+
+var x: SomeType = SomeType {x: 10, y: "hello"}
+x.x = "12"
+x.y = 100
