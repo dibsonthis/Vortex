@@ -23,6 +23,11 @@ CONFIG=""
 if [ "$FILE" = "sdl" ]; then
     sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2-2.0.0.dylib" "$FILE/lib/libSDL2-2.0.0.dylib"
     CONFIG="-L/usr/local/share/vortex/modules/lib -I/usr/local/share/vortex/modules/SDL2 -D_THREAD_SAFE"
+elif [ "$FILE" = "requests" ]; then
+    sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libcrypto.3.dylib" "$FILE/lib/libcrypto.3.dylib"
+    sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libcrypto.dylib" "$FILE/lib/libcrypto.dylib"
+    sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libssl.3.dylib" "$FILE/lib/libssl.3.dylib"
+    sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libssl.dylib" "$FILE/lib/libssl.dylib"
 else
     CONFIG=$CONFIG
 fi

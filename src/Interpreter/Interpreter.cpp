@@ -21,25 +21,6 @@ void Interpreter::reset(int idx) {
     current_node = nodes[index];
 }
 
-void Interpreter::eval_const_functions() {
-    while (current_node->type != NodeType::END_OF_FILE) {
-        if (current_node->type == NodeType::CONSTANT_DECLARATION && current_node->ConstantDeclaration.value->type == NodeType::FUNC) {
-            node_ptr existing_symbol = get_symbol(current_node->ConstantDeclaration.name, current_symbol_table).value;
-            if (existing_symbol != nullptr) {
-                error_and_exit("Function '" + current_node->ConstantDeclaration.name + "' is already defined");
-            }
-            current_node->ConstantDeclaration.value->Meta.is_const = true;
-            current_node->ConstantDeclaration.value->Function.decl_filename = file_name;
-            Symbol symbol = new_symbol(current_node->ConstantDeclaration.name, eval_node(current_node->ConstantDeclaration.value));
-            add_symbol(symbol, current_symbol_table);
-            erase_curr();
-            continue;
-        }
-
-        advance();
-    }
-}
-
 node_ptr Interpreter::eval_const_decl(node_ptr node) {
     node_ptr existing_symbol = get_symbol_local(node->ConstantDeclaration.name, current_symbol_table).value;
     if (existing_symbol != nullptr && existing_symbol->type != NodeType::FUNC) {
@@ -51,6 +32,10 @@ node_ptr Interpreter::eval_const_decl(node_ptr node) {
     value->TypeInfo.type = type;
     if (type && !match_types(value, type)) {
         error_and_exit("Variable '" + node->ConstantDeclaration.name + "' expects a value of type '" + node_repr(type) + "' but was instantiated with value of type '" + node_repr(value) + "'");
+    }
+    if (!type) {
+        type = std::make_shared<Node>(*value);
+        type->TypeInfo.is_type = true;
     }
     if (type) {
         value->TypeInfo.type_name = type->TypeInfo.type_name;
@@ -68,24 +53,6 @@ node_ptr Interpreter::eval_const_decl(node_ptr node) {
     return symbol.value;
 }
 
-node_ptr Interpreter::eval_const_decl_multiple(node_ptr node) {
-    for (node_ptr& decl : node->ConstantDeclarationMultiple.constant_declarations) {
-        node_ptr existing_symbol = get_symbol_local(decl->ConstantDeclaration.name, current_symbol_table).value;
-        if (existing_symbol != nullptr) {
-            error_and_exit("Variable '" + decl->ConstantDeclaration.name + "' is already defined");
-        }
-        node_ptr value = eval_node(decl->ConstantDeclaration.value);
-        value = std::make_shared<Node>(*value);
-        value->Meta.is_const = true;
-        if (value->type == NodeType::HOOK) {
-            value->Hook.name = decl->ConstantDeclaration.name;
-        }
-        Symbol symbol = new_symbol(decl->ConstantDeclaration.name, value);
-        add_symbol(symbol, current_symbol_table);
-    }
-    return new_boolean_node(true);
-}
-
 node_ptr Interpreter::eval_var_decl(node_ptr node) {
     node_ptr existing_symbol = get_symbol_local(node->VariableDeclaration.name, current_symbol_table).value;
     if (existing_symbol != nullptr) {
@@ -95,6 +62,10 @@ node_ptr Interpreter::eval_var_decl(node_ptr node) {
     node_ptr type = eval_node(node->TypeInfo.type);
     if (type && !match_types(value, type)) {
         error_and_exit("Variable '" + node->VariableDeclaration.name + "' expects a value of type '" + node_repr(type) + "' but was instantiated with value of type '" + node_repr(value) + "'");
+    }
+    if (!type) {
+        type = std::make_shared<Node>(*value);
+        type->TypeInfo.is_type = true;
     }
     value = std::make_shared<Node>(*value);
     value->TypeInfo.type = type;
@@ -110,38 +81,39 @@ node_ptr Interpreter::eval_var_decl(node_ptr node) {
     return symbol.value;
 }
 
-node_ptr Interpreter::eval_var_decl_multiple(node_ptr node) {
-    for (node_ptr& decl : node->VariableDeclarationMultiple.variable_declarations) {
-        node_ptr existing_symbol = get_symbol_local(decl->VariableDeclaration.name, current_symbol_table).value;
-        if (existing_symbol != nullptr) {
-            error_and_exit("Variable '" + decl->VariableDeclaration.name + "' is already defined");
-        }
-        node_ptr value = eval_node(decl->VariableDeclaration.value);
-        value = std::make_shared<Node>(*value);
-        value->Meta.is_const = false;
-        if (value->type == NodeType::HOOK) {
-            value->Hook.name = decl->VariableDeclaration.name;
-        }
-        Symbol symbol = new_symbol(decl->VariableDeclaration.name, value);
-        add_symbol(symbol, current_symbol_table);
-    }
-    return new_boolean_node(true);
-}
-
 node_ptr Interpreter::eval_list(node_ptr node) {
     node_ptr list = new_node(NodeType::LIST);
     list->TypeInfo = node->TypeInfo;
+    node_ptr list_elem_type = new_node(NodeType::ANY);
+    list->TypeInfo.type = new_node(NodeType::LIST);
+    list->TypeInfo.type->List.elements.push_back(list_elem_type);
+
     if (node->List.elements.size() == 1) {
         if (node->List.elements[0]->type == NodeType::COMMA_LIST) {
-            for (auto elem : node->List.elements[0]->List.elements) {
+            for (int i = 0; i < node->List.elements[0]->List.elements.size(); i++) {
+                node_ptr elem = node->List.elements[0]->List.elements[i];
                 node_ptr evaluated_elem = eval_node(elem);
                 evaluated_elem->TypeInfo.is_type = list->TypeInfo.is_type;
                 list->List.elements.push_back(evaluated_elem);
+
+                if (i == 0) {
+                    list->TypeInfo.type = new_node(NodeType::LIST);
+                    list->TypeInfo.type->TypeInfo.is_type = true;
+                    list->TypeInfo.type->List.elements.push_back(evaluated_elem);
+                } else if (i == 1) {
+                    if (!match_types(list->TypeInfo.type->List.elements[0], evaluated_elem)) {
+                        list->TypeInfo.type->List.elements[0] = new_node(NodeType::ANY);
+                    }
+                }
             }
         } else {
             node_ptr evaluated_elem = eval_node(node->List.elements[0]);
             evaluated_elem->TypeInfo.is_type = list->TypeInfo.is_type;
             list->List.elements.push_back(eval_node(evaluated_elem));
+            // If one element, it becomes the type
+            list->TypeInfo.type = new_node(NodeType::LIST);
+            list->TypeInfo.type->TypeInfo.is_type = true;
+            list->TypeInfo.type->List.elements.push_back(evaluated_elem);
         }
     } else {
         list = node;
@@ -272,6 +244,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
                 case NodeType::FUNC: return new_string_node("Function");
                 case NodeType::POINTER: return new_string_node("Pointer");
                 case NodeType::LIB: return new_string_node("Library");
+                case NodeType::ANY: return new_string_node("Any");
                 default: return new_string_node("None");
             }
         }
@@ -843,6 +816,29 @@ node_ptr Interpreter::eval_enum(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
+node_ptr Interpreter::eval_union(node_ptr node) {
+    node_ptr union_body = node->Union.body;
+    node_ptr union_list = new_node(NodeType::LIST);
+    if (union_body->Object.elements.size() == 0) {
+        error_and_exit("Union cannot be empty");
+    }
+    if (union_body->Object.elements.size() == 1 && union_body->Object.elements[0]->type == NodeType::COMMA_LIST) {
+        union_body = union_body->Object.elements[0];
+        for (node_ptr elem : union_body->List.elements) {
+            union_list->List.elements.push_back(eval_node(elem));
+        }
+    } else {
+        union_list->List.elements.push_back(eval_node(union_body->Object.elements[0]));
+    }
+
+    union_list->Meta.is_const = true;
+    union_list->List.is_union = true;
+    union_list->TypeInfo.type_name = node->Union.name;
+    Symbol symbol = new_symbol(node->Union.name, union_list);
+    add_symbol(symbol, current_symbol_table);
+    return new_node(NodeType::NONE);
+}
+
 node_ptr Interpreter::eval_type(node_ptr node) {
 
     if (node->Type.expr) {
@@ -1082,6 +1078,40 @@ bool Interpreter::match_values(node_ptr nodeA, node_ptr nodeB) {
 
 bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
     if (nodeA == nullptr || nodeB == nullptr) {
+        return false;
+    }
+
+    if (nodeA->type == NodeType::ANY || nodeB->type == NodeType::ANY) {
+        return true;
+    }
+
+    // Check Union
+
+    if (nodeA->List.is_union) {
+        for (node_ptr& type : nodeA->List.elements) {
+            if (match_types(type, nodeB)) {
+                if (type->TypeInfo.is_literal_type) {
+                    if (match_values(type, nodeB)) {
+                        return true;
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    if (nodeB->List.is_union) {
+        for (node_ptr& type : nodeB->List.elements) {
+            if (match_types(type, nodeA)) {
+                if (type->TypeInfo.is_literal_type) {
+                    if (match_values(type, nodeA)) {
+                        return true;
+                    }
+                }
+                return true;
+            }
+        }
         return false;
     }
 
@@ -2535,7 +2565,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
 
             // Type check
             if (!accessed_value->Meta.is_untyped_property) {
-                if (accessed_value->type != NodeType::NONE && !match_types(accessed_value, right)) {
+                if (accessed_value->type != NodeType::NONE && !match_types(accessed_value->TypeInfo.type, right)) {
                     error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
                 }
             }
@@ -2545,6 +2575,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             }
 
             *accessed_value = *right;
+            accessed_value->TypeInfo = old_value->TypeInfo;
             accessed_value->Meta = old_value->Meta;
             accessed_value->Meta.is_const = false;
             accessed_value->Hooks.onChange = onChangeFunctions;
@@ -2590,13 +2621,14 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
 
         // Type check
         if (!accessed_value->Meta.is_untyped_property) {
-            if (accessed_value->type != NodeType::NONE && !match_types(accessed_value, right)) {
+            if (accessed_value->type != NodeType::NONE && !match_types(accessed_value->TypeInfo.type, right)) {
                 error_and_exit("Type error in property '" + prop->ID.value + "' - Cannot modify object property type '" + node_repr(accessed_value) + "'");
             }
         }
 
         *accessed_value = *right;
         accessed_value->Meta = old_value->Meta;
+        accessed_value->TypeInfo = old_value->TypeInfo;
         accessed_value->Hooks.onChange = onChangeFunctions;
 
         auto allOnChangeFunctionsLists = {std::cref(onChangeFunctions), std::cref(global_symbol_table->globalHooks_onChange)};
@@ -2664,12 +2696,13 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
 
                 // Type check
                 if (!accessed_value->Meta.is_untyped_property) {
-                    if (accessed_value->type != NodeType::NONE && !match_types(accessed_value, right)) {
+                    if (accessed_value->type != NodeType::NONE && !match_types(accessed_value->TypeInfo.type, right)) {
                         error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
                     }
                 }
 
                 *accessed_value = *right;
+                accessed_value->TypeInfo = old_value->TypeInfo;
                 accessed_value->Meta = old_value->Meta;
                 accessed_value->Meta.is_const = false;
                 accessed_value->Hooks.onChange = onChangeFunctions;
@@ -2714,7 +2747,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             }
 
             // Type check
-            if (symbol.value->type != NodeType::NONE && !match_types(symbol.value, right)) {
+            if (symbol.value->type != NodeType::NONE && !match_types(symbol.value->TypeInfo.type, right)) {
                 error_and_exit("Cannot modify type of variable '" + symbol.name + "'");
             }
 
@@ -2725,6 +2758,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             std::vector<node_ptr> onChangeFunctions = symbol.value->Hooks.onChange;
 
             *symbol.value = *right;
+            symbol.value->TypeInfo = old_value->TypeInfo;
             symbol.value->Meta.is_const = false;
             symbol.value->Hooks.onChange = onChangeFunctions;
             
@@ -2970,11 +3004,27 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     line = node->line;
     column = node->column;
 
-    if (node->type == NodeType::NUMBER 
-    || node->type == NodeType::STRING 
-    || node->type == NodeType::BOOLEAN) {
+    if (node->type == NodeType::NUMBER) {
+        node->TypeInfo.is_literal_type = true;
+        node->TypeInfo.type = new_node(NodeType::NUMBER);
+        node->TypeInfo.type->TypeInfo.is_type = true;
         return node;
     }
+
+    if (node->type == NodeType::STRING) {
+        node->TypeInfo.is_literal_type = true;
+        node->TypeInfo.type = new_node(NodeType::STRING);
+        node->TypeInfo.type->TypeInfo.is_type = true;
+        return node;
+    }
+
+    if (node->type == NodeType::BOOLEAN) {
+        node->TypeInfo.is_literal_type = true;
+        node->TypeInfo.type = new_node(NodeType::BOOLEAN);
+        node->TypeInfo.type->TypeInfo.is_type = true;
+        return node;
+    }
+
     if (node->type == NodeType::LIST) {
         return eval_list(node);
     }
@@ -3005,12 +3055,6 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     if (node->type == NodeType::VARIABLE_DECLARATION) {
         return eval_var_decl(node);
     }
-    if (node->type == NodeType::CONSTANT_DECLARATION_MULTIPLE) {
-        return eval_const_decl_multiple(node);
-    }
-    if (node->type == NodeType::VARIABLE_DECLARATION_MULTIPLE) {
-        return eval_var_decl_multiple(node);
-    }
     if (node->type == NodeType::FUNC_CALL) {
         return eval_func_call(node);
     }
@@ -3040,6 +3084,9 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     }
     if (node->type == NodeType::ENUM) {
         return eval_enum(node);
+    }
+    if (node->type == NodeType::UNION) {
+        return eval_union(node);
     }
     if (node->type == NodeType::OBJECT_DECONSTRUCT) {
         return eval_object_init(node);
@@ -3113,9 +3160,6 @@ node_ptr Interpreter::eval_node(node_ptr node) {
 }
 
 void Interpreter::evaluate() {
-    // eval_const_functions();
-    // reset(0);
-
     while (current_node->type != NodeType::END_OF_FILE) {
         eval_node(current_node);
         advance();

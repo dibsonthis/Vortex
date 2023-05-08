@@ -16,6 +16,9 @@ std::string node_repr(node_ptr node) {
             return "Boolean";
         }
         case NodeType::LIST: {
+            if (node->List.is_union) {
+                return node->TypeInfo.type_name;
+            }
             if (node->List.elements.size() == 0) {
                 return "List";
             } else if (node->List.elements.size() == 1) {
@@ -65,13 +68,7 @@ std::string node_repr(node_ptr node) {
         case NodeType::CONSTANT_DECLARATION: {
             return "Const declaration";
         }
-        case NodeType::CONSTANT_DECLARATION_MULTIPLE: {
-            return "Const declaration";
-        }
         case NodeType::VARIABLE_DECLARATION: {
-            return "Variable declaration";
-        }
-        case NodeType::VARIABLE_DECLARATION_MULTIPLE: {
             return "Variable declaration";
         }
         case NodeType::FUNC_CALL: {

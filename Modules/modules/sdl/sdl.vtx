@@ -93,7 +93,7 @@ var delay = (ms: Number): None
 so we leave the return untyped 
 -- essentially "any" */
 
-var pollEvent = (evt) => {
+var pollEvent = (evt: Any) => {
 	const eventObj = lib.call("poll_event", [])
 	evt = eventObj.event
 	eventObj.status

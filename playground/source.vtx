@@ -1,6 +1,11 @@
-type Vec {
-    x: Number = 0,
-    y: Number = 0
+union BoolOrNumber {
+    Boolean,
+    Number
 }
 
-const obj : Object = Vec {x: 1}
+union YesOrNo {
+    "yes",
+    "no"
+}
+
+var x: YesOrNo = "yesss"

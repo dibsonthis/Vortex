@@ -231,6 +231,22 @@ void Parser::parse_enum(std::string end) {
     }
 }
 
+void Parser::parse_union(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->Operator.value == end) {
+            break;
+        }
+        if (current_node->type == NodeType::ID && current_node->ID.value == "union" && peek()->type == NodeType::ID && peek(2)->type == NodeType::OBJECT) {
+            current_node->type = NodeType::UNION;
+            current_node->Union.name = peek()->ID.value;
+            current_node->Union.body = peek(2);
+            erase_next();
+            erase_next();
+        }
+        advance();
+    }
+}
+
 void Parser::parse_type(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->Operator.value == end) {
@@ -437,17 +453,7 @@ void Parser::parse_var(std::string end) {
 
         if (current_node->ID.value == "var") {
             node_ptr next = peek();
-            if (next->Operator.value == "=" && next->Operator.left->type == NodeType::COMMA_LIST) {
-                current_node->type = NodeType::VARIABLE_DECLARATION_MULTIPLE;
-                for (node_ptr& element : next->Operator.left->List.elements) {
-                    node_ptr var_decl = new_node();
-                    var_decl->type = NodeType::VARIABLE_DECLARATION;
-                    var_decl->VariableDeclaration.name = element->ID.value;
-                    var_decl->VariableDeclaration.value = std::make_shared<Node>(*next->Operator.right);
-                    current_node->VariableDeclarationMultiple.variable_declarations.push_back(var_decl);
-                }
-                erase_next();
-            } else if (next->type == NodeType::ID) {
+            if (next->type == NodeType::ID) {
                 current_node->type = NodeType::VARIABLE_DECLARATION;
                 current_node->VariableDeclaration.name = next->ID.value;
                 current_node->VariableDeclaration.value = new_node(NodeType::NONE);
@@ -730,6 +736,9 @@ void Parser::parse_keywords(std::string end) {
         } else if (current_node->ID.value == "Library") {
             current_node->type = NodeType::LIB;
             current_node->TypeInfo.is_type = true;
+        } else if (current_node->ID.value == "Any") {
+            current_node->type = NodeType::ANY;
+            current_node->TypeInfo.is_type = true;
         } 
         advance();
     }
@@ -753,6 +762,8 @@ void Parser::parse(int start, std::string end) {
     parse_object(end);
     reset(start);
     parse_enum(end);
+    reset(start);
+    parse_union(end);
     reset(start);
     parse_list(end);
     reset(start);

@@ -82,11 +82,8 @@ public:
 
     void evaluate();
     node_ptr eval_node(node_ptr node);
-    void eval_const_functions();
     node_ptr eval_const_decl(node_ptr node);
-    node_ptr eval_const_decl_multiple(node_ptr node);
     node_ptr eval_var_decl(node_ptr node);
-    node_ptr eval_var_decl_multiple(node_ptr node);
     node_ptr eval_list(node_ptr node);
     node_ptr eval_object(node_ptr node);
     node_ptr eval_function(node_ptr node);
@@ -102,6 +99,7 @@ public:
     node_ptr eval_type_ext(node_ptr node);
     node_ptr eval_object_init(node_ptr node);
     node_ptr eval_enum(node_ptr node);
+    node_ptr eval_union(node_ptr node);
     // Operations
     node_ptr eval_pos_neg(node_ptr node);
     node_ptr eval_not(node_ptr node);

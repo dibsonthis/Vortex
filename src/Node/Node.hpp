@@ -29,9 +29,7 @@ enum class NodeType {
 	TYPE_EXT,
 	ACCESSOR,
 	VARIABLE_DECLARATION,
-	VARIABLE_DECLARATION_MULTIPLE,
 	CONSTANT_DECLARATION,
-	CONSTANT_DECLARATION_MULTIPLE,
 	FOR_LOOP,
 	WHILE_LOOP,
 	RETURN,
@@ -44,7 +42,9 @@ enum class NodeType {
 	END_OF_FILE,
 	NONE,
 	LIB,
-	POINTER
+	POINTER,
+	ANY,
+	UNION
 };
 
 struct IdNode {
@@ -71,6 +71,7 @@ struct OpNode {
 
 struct ListNode {
 	std::vector<node_ptr> elements;
+	bool is_union = false;
 };
 
 struct ObjectNode {
@@ -134,6 +135,11 @@ struct EnumNode {
 	node_ptr body;
 };
 
+struct UnionNode {
+	std::string name;
+	node_ptr body;
+};
+
 struct TraitImplNode {
 	node_ptr implementor;
 	std::string name;
@@ -151,17 +157,9 @@ struct VariableDeclatationNode {
 	node_ptr value;
 };
 
-struct VariableDeclatationMultipleNode {
-	std::vector<node_ptr> variable_declarations;
-};
-
 struct ConstantDeclatationNode {
 	std::string name;
 	node_ptr value;
-};
-
-struct ConstantDeclatationMultipleNode {
-	std::vector<node_ptr> constant_declarations;
 };
 
 struct ForLoopNode {
@@ -251,8 +249,6 @@ struct Node {
 	HookNode Hook;
 	VariableDeclatationNode VariableDeclaration;
 	ConstantDeclatationNode ConstantDeclaration;
-	VariableDeclatationMultipleNode VariableDeclarationMultiple;
-	ConstantDeclatationMultipleNode ConstantDeclarationMultiple;
 	ForLoopNode ForLoop;
 	WhileLoopNode WhileLoop;
 	ObjectDeconstructNode ObjectDeconstruct;
@@ -266,6 +262,7 @@ struct Node {
 	PointerNode Pointer;
 	TypeInfoNode TypeInfo;
 	EnumNode Enum;
+	UnionNode Union;
 	TypeExtNode TypeExt;
 };
 
