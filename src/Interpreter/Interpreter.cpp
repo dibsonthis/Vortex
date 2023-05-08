@@ -1090,7 +1090,7 @@ bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
     if (nodeA->List.is_union) {
         for (node_ptr& type : nodeA->List.elements) {
             if (match_types(type, nodeB)) {
-                if (type->TypeInfo.is_literal_type) {
+                if (!type->TypeInfo.type) {
                     if (match_values(type, nodeB)) {
                         return true;
                     }
@@ -1104,7 +1104,7 @@ bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
     if (nodeB->List.is_union) {
         for (node_ptr& type : nodeB->List.elements) {
             if (match_types(type, nodeA)) {
-                if (type->TypeInfo.is_literal_type) {
+                if (!type->TypeInfo.type) {
                     if (match_values(type, nodeA)) {
                         return true;
                     }
@@ -3005,21 +3005,18 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     column = node->column;
 
     if (node->type == NodeType::NUMBER) {
-        node->TypeInfo.is_literal_type = true;
         node->TypeInfo.type = new_node(NodeType::NUMBER);
         node->TypeInfo.type->TypeInfo.is_type = true;
         return node;
     }
 
     if (node->type == NodeType::STRING) {
-        node->TypeInfo.is_literal_type = true;
         node->TypeInfo.type = new_node(NodeType::STRING);
         node->TypeInfo.type->TypeInfo.is_type = true;
         return node;
     }
 
     if (node->type == NodeType::BOOLEAN) {
-        node->TypeInfo.is_literal_type = true;
         node->TypeInfo.type = new_node(NodeType::BOOLEAN);
         node->TypeInfo.type->TypeInfo.is_type = true;
         return node;

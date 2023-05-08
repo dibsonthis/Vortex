@@ -1,11 +1,6 @@
-union BoolOrNumber {
+union BoolOrString {
     Boolean,
-    Number
+    String
 }
 
-union YesOrNo {
-    "yes",
-    "no"
-}
-
-var x: YesOrNo = "yesss"
+const t: BoolOrString = ["true"]
