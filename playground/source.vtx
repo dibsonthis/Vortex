@@ -1,13 +1,10 @@
-union MaybeString {
-    String,
-    None
+const Maybe = (T) => {
+    union MaybeT {
+        T,
+        None
+    }
 }
 
-type SomeType {
-    x: Number,
-    y
-}
+const MaybeString = Maybe(String)
 
-var x: SomeType = SomeType {x: 10, y: "hello"}
-x.x = "12"
-x.y = 100
+var x: MaybeString = 5

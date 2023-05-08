@@ -48,6 +48,11 @@ node_ptr Interpreter::eval_const_decl(node_ptr node) {
         existing_symbol->Function.dispatch_functions.push_back(value);
         return value;
     }
+
+    if (value->Object.is_enum || value->TypeInfo.is_type || value->List.is_union) {
+        value->TypeInfo.type_name = node->ConstantDeclaration.name;
+    }
+
     Symbol symbol = new_symbol(node->ConstantDeclaration.name, value);
     add_symbol(symbol, current_symbol_table);
     return symbol.value;
@@ -76,6 +81,11 @@ node_ptr Interpreter::eval_var_decl(node_ptr node) {
     if (value->type == NodeType::HOOK) {
         value->Hook.name = node->VariableDeclaration.name;
     }
+
+    if (value->Object.is_enum || value->TypeInfo.is_type || value->List.is_union) {
+        value->TypeInfo.type_name = node->VariableDeclaration.name;
+    }
+
     Symbol symbol = new_symbol(node->VariableDeclaration.name, value);
     add_symbol(symbol, current_symbol_table);
     return symbol.value;
@@ -813,7 +823,7 @@ node_ptr Interpreter::eval_enum(node_ptr node) {
     enum_object->TypeInfo.type_name = node->Enum.name;
     Symbol symbol = new_symbol(node->Enum.name, enum_object);
     add_symbol(symbol, current_symbol_table);
-    return new_node(NodeType::NONE);
+    return enum_object;
 }
 
 node_ptr Interpreter::eval_union(node_ptr node) {
@@ -836,7 +846,7 @@ node_ptr Interpreter::eval_union(node_ptr node) {
     union_list->TypeInfo.type_name = node->Union.name;
     Symbol symbol = new_symbol(node->Union.name, union_list);
     add_symbol(symbol, current_symbol_table);
-    return new_node(NodeType::NONE);
+    return union_list;
 }
 
 node_ptr Interpreter::eval_type(node_ptr node) {
@@ -2758,10 +2768,6 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                 error_and_exit("Cannot modify constant '" + symbol.name + "'");
             }
 
-            // Type check
-            // if (symbol.value->type != NodeType::NONE && !match_types(symbol.value->TypeInfo.type, right)) {
-            //     error_and_exit("Cannot modify type of variable '" + symbol.name + "'");
-            // }
             if (!match_types(symbol.value->TypeInfo.type, right)) {
                 error_and_exit("Cannot modify type of variable '" + symbol.name + "'");
             }
@@ -2776,7 +2782,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             symbol.value->TypeInfo = old_value->TypeInfo;
             symbol.value->Meta.is_const = false;
             symbol.value->Hooks.onChange = onChangeFunctions;
-            
+
             // Call onChange functions
 
             auto allOnChangeFunctionsLists = {std::cref(onChangeFunctions), std::cref(global_symbol_table->globalHooks_onChange)};
