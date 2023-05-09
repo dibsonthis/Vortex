@@ -57,7 +57,7 @@ var xPos = 0
 var yPos = 0
 
 while (true) {
-	var event;
+	var event: Any;
 	while ((sdl.pollEvent(event)) != 0) {
 
 		if (event.type == sdl.EventType.SDL_QUIT) {
@@ -87,29 +87,35 @@ while (true) {
 
 	sdl.setRenderDrawColor(renderer, Color {r: xInterpol, g: yInterpol, b: xInterpol, a: 255})
 
-	sdl.drawLine(renderer, xPos, yPos, 0, 0)
+	// sdl.drawLine(renderer, xPos, yPos, 0, 0)
 
-	sdl.drawLine(renderer, xPos, yPos, windowConfig.width, windowConfig.height)
+	// sdl.drawLine(renderer, xPos, yPos, windowConfig.width, windowConfig.height)
 
-	sdl.drawLine(renderer, xPos, yPos, windowConfig.width, 0)
+	// sdl.drawLine(renderer, xPos, yPos, windowConfig.width, 0)
 
-	sdl.drawLine(renderer, xPos, yPos, 0, windowConfig.height)
+	// sdl.drawLine(renderer, xPos, yPos, 0, windowConfig.height)
 
-	sdl.drawLine(renderer, xPos, yPos, windowConfig.width/2, windowConfig.height)
+	// sdl.drawLine(renderer, xPos, yPos, windowConfig.width/2, windowConfig.height)
 
-	sdl.drawLine(renderer, xPos, yPos, windowConfig.width/2, 0)
+	// sdl.drawLine(renderer, xPos, yPos, windowConfig.width/2, 0)
 
-	sdl.drawLine(renderer, xPos, yPos, windowConfig.width, windowConfig.height/2)
+	// sdl.drawLine(renderer, xPos, yPos, windowConfig.width, windowConfig.height/2)
 
-	sdl.drawLine(renderer, xPos, yPos, 0, windowConfig.height/2)
+	// sdl.drawLine(renderer, xPos, yPos, 0, windowConfig.height/2)
 
-	sdl.setRenderDrawColor(renderer, Color {b: 255})
+	// sdl.setRenderDrawColor(renderer, Color {b: 255})
 
-	sdl.drawLine(renderer, 0, yPos, windowConfig.width, yPos)
+	// sdl.drawLine(renderer, 0, yPos, windowConfig.width, yPos)
 
-	sdl.setRenderDrawColor(renderer, Color {r: 255})
+	// sdl.setRenderDrawColor(renderer, Color {r: 255})
 
-	sdl.drawLine(renderer, xPos, 0, xPos, windowConfig.height)
+	// sdl.drawLine(renderer, xPos, 0, xPos, windowConfig.height)
+
+	for (0..140, i) {
+		for (0..100, j) {
+			sdl.drawPoint(renderer, i, j)
+		}
+	}
 
 	sdl.setRenderDrawColor(renderer, Color {})
 

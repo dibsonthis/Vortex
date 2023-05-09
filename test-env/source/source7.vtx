@@ -1,0 +1,59 @@
+import image
+
+var interpolate = (value: Number, x0: Number, x1: Number, y0: Number, y1: Number): Number => {
+	y0 + (value - x0) * ((y0 - y1)/(x0 - x1))
+}
+
+var width = 400
+var x = -0.65
+var y = 0
+var oldX = x
+var oldY = y
+var xRange = 3.4
+var aspectRatio = 4/3
+var precision = 500
+
+var height = width / aspectRatio
+var yRange = xRange / aspectRatio
+var minX = x - xRange / 2
+var maxX = x + xRange / 2
+var minY = y - yRange / 2
+var maxY = y + yRange / 2
+
+var colors = []
+
+for (0..height, _row) {
+    var row = []
+    for (0..width, _col) {
+        x = minX + _col * xRange / width
+        y = maxY - _row * yRange / height
+        oldX = x
+        oldY = y
+
+        var index = 0
+
+        for (0..precision + 1, i) {
+            index = i
+            const a = x^2 - y^2 //real component of z^2
+            const b = 2 * x * y //imaginary component of z^2
+            x = a + oldX //real component of new z
+            y = b + oldY //imaginary component of new z
+            if ((x^2 + y^2) > 4) {
+                break
+            }
+        }
+
+        if (index < precision) {
+            const distance = (index + 1) / (precision + 1)
+            const interpol = interpolate(distance, 0, 1000, 0, 255)
+            row.append({r: 100, g: 200, b: interpol})
+        } else {
+            row.append({r: 0, g: 0, b: 0})
+        }
+    }
+
+    colors.append(row)
+    println(f"Row: ${_row}/${height}")
+}
+
+image.write("../data/mandelbrot_output.png", colors)

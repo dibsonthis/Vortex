@@ -1,6 +1,19 @@
 import [readf] : io
 import string
 
+extend String {
+	substring: (start: Number, end: Number): String => {
+		var substr = ""
+		const str = self
+		for (start..end, index, value) {
+			substr += str[value]
+		}
+		ret substr
+	},
+	startsWith: (str: String): Boolean => self.substring(0, str.length) == str,
+	endsWith: (str: String): Boolean => self.substring(self.length-str.length, self.length) == str
+}
+
 var data: [[String]] = 
 	readf("../data/people.csv")
 	.split("\n")
@@ -35,7 +48,7 @@ for (data, rowI, row) {
 
 const selectedPeople: [String] 
 	= csvList
-	.filter((elem: DataObj): Boolean => elem.id >= 500 && elem.id <= 550)
+	.filter((elem: DataObj): Boolean => elem.id >= 500 && elem.id <= 550 && elem.firstname.startsWith("Al"))
 	.map((elem: DataObj): String => f"${elem.firstname} ${elem.lastname} (${elem.email}): ${elem.id}")
 
 for (selectedPeople, i, person) {

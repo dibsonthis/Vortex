@@ -13,7 +13,7 @@ const open = (fileType: CSVPath) => println("Opening \"csv\" file...")
 const open = (fileType: TXTPath) => println("Opening \"txt\" file...")
 const open = (fileType) => println(f"Cannot open \"${getExt(fileType)}\" files.")
 
-open("blah.csvt")
+open("blah.csv")
 
 // Opening txt file...
 
@@ -24,4 +24,4 @@ const numfunc = (num: PosNum) => println("number is pos")
 const numfunc = (num: NegNum) => println("number is neg")
 const numfunc = (num: Number) => println("number is 0")
 
-numfunc(0)
+numfunc(10)
