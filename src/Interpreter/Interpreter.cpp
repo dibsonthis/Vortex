@@ -1540,7 +1540,9 @@ node_ptr Interpreter::eval_import(node_ptr node) {
         auto current_path = std::filesystem::current_path();
         auto parent_path = std::filesystem::path(path).parent_path();
         try {
-            std::filesystem::current_path(parent_path);
+            if (parent_path != "") {
+                std::filesystem::current_path(parent_path);
+            }
         } catch(...) {
             error_and_exit("No such file or directory: '" + parent_path.string() + "'");
         }
@@ -1610,7 +1612,9 @@ node_ptr Interpreter::eval_import(node_ptr node) {
         auto current_path = std::filesystem::current_path();
         auto parent_path = std::filesystem::path(path).parent_path();
         try {
-            std::filesystem::current_path(parent_path);
+            if (parent_path != "") {
+                std::filesystem::current_path(parent_path);
+            }
         } catch(...) {
             error_and_exit("No such file or directory: '" + parent_path.string() + "'");
         }

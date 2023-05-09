@@ -63,7 +63,9 @@ int main(int argc, char** argv)
         auto ast = parser.nodes;
 
         auto parent_path = std::filesystem::path(path).parent_path();
-        std::filesystem::current_path(parent_path);
+        if (parent_path != "") {
+            std::filesystem::current_path(parent_path);
+        }
 
         Interpreter interpreter(parser.nodes, parser.file_name);
         interpreter.argc = argc-1;
