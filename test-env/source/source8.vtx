@@ -20,13 +20,13 @@ var maxX = x + xRange / 2
 var minY = y - yRange / 2
 var maxY = y + yRange / 2
 
-var colors: [[Object]] = []
+var canvas = image.create(width, height)
+println(canvas)
 
-for (0..height, _row) {
-    var row = []
-    for (0..width, _col) {
-        x = minX + _col * xRange / width
-        y = maxY - _row * yRange / height
+for (0..height, row) {
+    for (0..width, col) {
+        x = minX + col * xRange / width
+        y = maxY - row * yRange / height
         oldX = x
         oldY = y
 
@@ -34,10 +34,10 @@ for (0..height, _row) {
 
         for (0..precision + 1, i) {
             index = i
-            const a = x^2 - y^2 //real component of z^2
-            const b = 2 * x * y //imaginary component of z^2
-            x = a + oldX //real component of new z
-            y = b + oldY //imaginary component of new z
+            const a = x^2 - y^2
+            const b = 2 * x * y
+            x = a + oldX
+            y = b + oldY
             if ((x^2 + y^2) > 4) {
                 break
             }
@@ -45,18 +45,14 @@ for (0..height, _row) {
 
         if (index < precision) {
             const distance = (index + 1) / (precision + 1)
-            const interpol = interpolate(distance, x, y, 0, 255)
-            row.append({r: 100, g: 55, b: interpol})
-        } else {
-            const interpol = interpolate(precision, x, y, 0, 255)
-            row.append({r: 10, g: index, b: interpol})
+            const interpol = interpolate(index, 0, distance, 255, 0)
+            image.blit(canvas, col, row, {r: index, g: interpol, b: distance})
         }
 
-        index = _row * width + _col + 1
+        index = row * width + col + 1
 
         println(f"${index}/${width * height} - ${(index / width / height * 100 * 10) / 10}%")
     }
-    colors.append(row)
 }
 
-image.write("../output/mandelbrot_output.png", colors)
+image.save(canvas, "../output/mandelbrot_output.png")

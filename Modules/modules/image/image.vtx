@@ -2,3 +2,6 @@ const lib = load_lib("./bin/image")
 
 const load = (filePath: String): Pointer => lib.call("load", [filePath])
 const write = (filePath: String, colors: [[Object]]): None => lib.call("write", [filePath, colors])
+const create = (width: Number, height: Number): Object => lib.call("create", [width, height])
+const blit = (canvas: Object, xPos: Number, yPos: Number, color: Object) => lib.call("blit", [canvas, xPos, yPos, color])
+const save = (canvas: Object, filePath: String) => lib.call("save", [canvas, filePath])
