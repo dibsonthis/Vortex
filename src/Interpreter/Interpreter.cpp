@@ -348,7 +348,8 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         }
 
         for (int i = 0; i < args.size(); i++) {
-            node_ptr param = function->Function.params[i];
+            // node_ptr param = function->Function.params[i];
+            node_ptr param = fx->Function.params[i];
             node_ptr param_type = fx->Function.param_types[param->ID.value];
             if (param_type) {
                 if (!match_types(args[i], param_type)) {
@@ -419,22 +420,6 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         add_symbol(symbol, current_symbol_table);
         function->Function.args[i] = value;
     }
-
-    // Type check parameters
-
-    // for (auto& param_type : function->Function.param_types) {
-    //     node_ptr var = get_symbol(param_type.first, current_symbol_table).value;
-    //     if (!var) {
-    //         continue;
-    //     }
-    //     node_ptr type = param_type.second;
-    //     if (!type) {
-    //         continue;
-    //     }
-    //     if (!match_types(var, type)) {
-    //         error_and_exit("Type Error in '" + function->Function.name + "': Argument '" + param_type.first + "' does not match defined parameter type");
-    //     }
-    // }
 
     node_ptr res = function;
 
@@ -1099,6 +1084,28 @@ bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
         return true;
     }
 
+    if (nodeA->type == NodeType::FUNC && nodeA->TypeInfo.is_refinement_type) {
+        node_ptr func_call = new_node(NodeType::FUNC_CALL);
+        func_call->FuncCall.name = nodeA->Function.name;
+        func_call->FuncCall.args.push_back(nodeB);
+        node_ptr res = eval_func_call(func_call, nodeA);
+        if (res->type != NodeType::BOOLEAN) {
+            error_and_exit("Refinement types must return a boolean value");
+        }
+        return res->Boolean.value;
+    }
+
+    if (nodeB->type == NodeType::FUNC && nodeB->TypeInfo.is_refinement_type) {
+        node_ptr func_call = new_node(NodeType::FUNC_CALL);
+        func_call->FuncCall.name = nodeB->Function.name;
+        func_call->FuncCall.args.push_back(nodeA);
+        node_ptr res = eval_func_call(func_call, nodeB);
+        if (res->type != NodeType::BOOLEAN) {
+            error_and_exit("Refinement types must return a boolean value");
+        }
+        return res->Boolean.value;
+    }
+
     // Check Union
 
     if (nodeA->List.is_union) {
@@ -1149,38 +1156,32 @@ bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
         return false;
     }
 
-    if (nodeA->type == NodeType::FUNC && nodeA->TypeInfo.is_refinement_type) {
-        node_ptr func_call = new_node(NodeType::FUNC_CALL);
-        func_call->FuncCall.name = nodeA->Function.name;
-        func_call->FuncCall.args.push_back(nodeB);
-        node_ptr res = eval_func_call(func_call, nodeA);
-        if (res->type != NodeType::BOOLEAN) {
-            error_and_exit("Refinement types must return a boolean value");
-        }
-        return res->Boolean.value;
-    }
-
-    if (nodeB->type == NodeType::FUNC && nodeB->TypeInfo.is_refinement_type) {
-        node_ptr func_call = new_node(NodeType::FUNC_CALL);
-        func_call->FuncCall.name = nodeB->Function.name;
-        func_call->FuncCall.args.push_back(nodeA);
-        node_ptr res = eval_func_call(func_call, nodeB);
-        if (res->type != NodeType::BOOLEAN) {
-            error_and_exit("Refinement types must return a boolean value");
-        }
-        return res->Boolean.value;
-    }
-
-    if (nodeA->type != nodeB->type) {
-        return false;
-    }
-
     if (nodeA->TypeInfo.is_literal_type) {
         return match_values(nodeA, nodeB);
     }
 
     if (nodeB->TypeInfo.is_literal_type) {
         return match_values(nodeB, nodeA);
+    }
+
+    if (nodeA->TypeInfo.type) {
+        nodeA = nodeA->TypeInfo.type;
+    }
+
+    if (nodeB->TypeInfo.type) {
+        nodeB = nodeB->TypeInfo.type;
+    }
+
+    if (nodeA->type == NodeType::ANY || nodeB->type == NodeType::ANY) {
+        return true;
+    }
+
+    if (nodeA->type != nodeB->type) {
+        return false;
+    }
+
+    if (nodeA->type == NodeType::ANY || nodeB->type == NodeType::ANY) {
+        return true;
     }
 
     if (nodeA->type == NodeType::LIST) {
@@ -2596,7 +2597,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
             //     }
             // }
             if (!accessed_value->Meta.is_untyped_property) {
-                if (!match_types(accessed_value->TypeInfo.type, right)) {
+                if (!match_types(accessed_value, right)) {
                     error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
                 }
             }
@@ -2657,7 +2658,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
         //     }
         // }
         if (!accessed_value->Meta.is_untyped_property) {
-            if (!match_types(accessed_value->TypeInfo.type, right)) {
+            if (!match_types(accessed_value, right)) {
                 error_and_exit("Type error in property '" + prop->ID.value + "' - Cannot modify object property type '" + node_repr(accessed_value) + "'");
             }
         }
@@ -2737,7 +2738,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                 //     }
                 // }
                 if (!accessed_value->Meta.is_untyped_property) {
-                    if (!match_types(accessed_value->TypeInfo.type, right)) {
+                    if (!match_types(accessed_value, right)) {
                         error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
                     }
                 }
@@ -2787,7 +2788,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
                 error_and_exit("Cannot modify constant '" + symbol.name + "'");
             }
 
-            if (!match_types(symbol.value->TypeInfo.type, right)) {
+            if (!match_types(symbol.value, right)) {
                 error_and_exit("Cannot modify type of variable '" + symbol.name + "'");
             }
 

@@ -1,4 +1,4 @@
 const lib = load_lib("./bin/image")
 
-const load = (filePath: String) => lib.call("load", [filePath])
-const write = (filePath: String, colors: List) => lib.call("write", [filePath, colors])
+const load = (filePath: String): Pointer => lib.call("load", [filePath])
+const write = (filePath: String, colors: [[Object]]): None => lib.call("write", [filePath, colors])
