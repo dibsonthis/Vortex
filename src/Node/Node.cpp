@@ -1,10 +1,13 @@
 #pragma once
 #include "Node.hpp"
 
+// #define get_val(x) (std::get<x>(node->_Node))
+
 std::string node_repr(node_ptr node) {
     switch (node->type) {
         case NodeType::ID: {
             return node->ID.value;
+            //return std::get<IdNode>(node->_Node).value;
         }
         case NodeType::NUMBER: {
             return "Number";

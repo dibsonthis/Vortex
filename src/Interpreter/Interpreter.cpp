@@ -1,5 +1,7 @@
 #include "Interpreter.hpp"
 
+node_ptr null_value = nullptr;
+
 void Interpreter::advance(int n) {
     index += n;
     if (index < nodes.size()) {
@@ -21,7 +23,7 @@ void Interpreter::reset(int idx) {
     current_node = nodes[index];
 }
 
-node_ptr Interpreter::eval_const_decl(node_ptr node) {
+node_ptr Interpreter::eval_const_decl(node_ptr& node) {
     node_ptr existing_symbol = get_symbol_local(node->ConstantDeclaration.name, current_symbol_table).value;
     if (existing_symbol != nullptr && existing_symbol->type != NodeType::FUNC) {
         error_and_exit("Variable '" + node->ConstantDeclaration.name + "' is already defined");
@@ -58,7 +60,7 @@ node_ptr Interpreter::eval_const_decl(node_ptr node) {
     return symbol.value;
 }
 
-node_ptr Interpreter::eval_var_decl(node_ptr node) {
+node_ptr Interpreter::eval_var_decl(node_ptr& node) {
     node_ptr existing_symbol = get_symbol_local(node->VariableDeclaration.name, current_symbol_table).value;
     if (existing_symbol != nullptr) {
         error_and_exit("Variable '" + node->VariableDeclaration.name + "' is already defined");
@@ -91,7 +93,7 @@ node_ptr Interpreter::eval_var_decl(node_ptr node) {
     return symbol.value;
 }
 
-node_ptr Interpreter::eval_list(node_ptr node) {
+node_ptr Interpreter::eval_list(node_ptr& node) {
     node_ptr list = new_node(NodeType::LIST);
     list->TypeInfo = node->TypeInfo;
     node_ptr list_elem_type = new_node(NodeType::ANY);
@@ -131,7 +133,7 @@ node_ptr Interpreter::eval_list(node_ptr node) {
     return list;
 }
 
-node_ptr Interpreter::eval_object(node_ptr node) {
+node_ptr Interpreter::eval_object(node_ptr& node) {
     node_ptr object = new_node();
     object->type = NodeType::OBJECT;
     object->TypeInfo = node->TypeInfo;
@@ -168,17 +170,19 @@ node_ptr Interpreter::eval_object(node_ptr node) {
     return object;
 }
 
-node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
+node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
     node_ptr function = new_node();
     function->type = NodeType::FUNC;
 
     if (!func) {
         if (node->FuncCall.name == "print") {
             if (node->FuncCall.args.size() == 1) {
-                builtin_print(eval_node(node->FuncCall.args[0]));
+                node_ptr arg = eval_node(node->FuncCall.args[0]);
+                builtin_print(arg);
             } else {
                 for (node_ptr arg : node->FuncCall.args) {
-                    builtin_print(eval_node(arg));
+                    node_ptr evaluated_arg = eval_node(arg);
+                    builtin_print(evaluated_arg);
                     std::cout << '\n';
                 }
             }
@@ -186,11 +190,13 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
         }
         if (node->FuncCall.name == "println") {
             if (node->FuncCall.args.size() == 1) {
-                builtin_print(eval_node(node->FuncCall.args[0]));
+                node_ptr arg = eval_node(node->FuncCall.args[0]);
+                builtin_print(arg);
                 std::cout << "\n";
             } else {
                 for (node_ptr arg : node->FuncCall.args) {
-                    builtin_print(eval_node(arg));
+                    node_ptr evaluated_arg = eval_node(arg);
+                    builtin_print(evaluated_arg);
                     std::cout << '\n';
                 }
             }
@@ -200,7 +206,8 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
             if (node->FuncCall.args.size() != 1) {
                 error_and_exit("Function " + node->FuncCall.name + " expects 1 argument");
             }
-            std::string message = printable(eval_node(node->FuncCall.args[0]));
+            node_ptr arg = eval_node(node->FuncCall.args[0]);
+            std::string message = printable(arg);
             line = node->line;
             column = node->column;
             error_and_exit(message);
@@ -209,7 +216,8 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
             if (node->FuncCall.args.size() != 1) {
                 error_and_exit("Function " + node->FuncCall.name + " expects 1 argument");
             }
-            return new_string_node(printable(eval_node(node->FuncCall.args[0])));
+            node_ptr arg = eval_node(node->FuncCall.args[0]);
+            return new_string_node(printable(arg));
         }
         if (node->FuncCall.name == "number") {
             if (node->FuncCall.args.size() != 1) {
@@ -491,7 +499,7 @@ node_ptr Interpreter::eval_func_call(node_ptr node, node_ptr func) {
     return res;
 }
 
-node_ptr Interpreter::eval_if_statement(node_ptr node) {
+node_ptr Interpreter::eval_if_statement(node_ptr& node) {
     node_ptr conditional = eval_node(node->IfStatement.condition);
 
     if (conditional->type != NodeType::BOOLEAN) {
@@ -517,7 +525,7 @@ node_ptr Interpreter::eval_if_statement(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_if_block(node_ptr node) {
+node_ptr Interpreter::eval_if_block(node_ptr& node) {
     for (node_ptr statement : node->IfBlock.statements) {
         if (statement->type == NodeType::IF_STATEMENT) {
             node_ptr conditional = eval_node(statement->IfStatement.condition);
@@ -544,7 +552,7 @@ node_ptr Interpreter::eval_if_block(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_return(node_ptr node) {
+node_ptr Interpreter::eval_return(node_ptr& node) {
     node_ptr ret = new_node();
     ret->type = NodeType::RETURN;
     if (ret->Return.value == nullptr) {
@@ -555,7 +563,7 @@ node_ptr Interpreter::eval_return(node_ptr node) {
     return ret;
 }
 
-node_ptr Interpreter::eval_for_loop(node_ptr node) {
+node_ptr Interpreter::eval_for_loop(node_ptr& node) {
 
     if (node->ForLoop.iterator != nullptr) {
         node_ptr iterator = eval_node(node->ForLoop.iterator);
@@ -567,18 +575,18 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
         }
 
         auto current_scope = current_symbol_table;
+
+        auto loop_symbol_table = std::make_shared<SymbolTable>();
         
         for (int i = 0; i < iterator->List.elements.size(); i++) {
 
-            auto loop_symbol_table = std::make_shared<SymbolTable>();
-            for (auto& symbol : current_symbol_table->symbols) {
-                loop_symbol_table->symbols[symbol.first] = symbol.second;
-            }
-
+            loop_symbol_table->symbols.clear();
             current_symbol_table = loop_symbol_table;
+            current_symbol_table->parent = current_scope;
 
             if (node->ForLoop.index_name) {
-                add_symbol(new_symbol(node->ForLoop.index_name->ID.value, new_number_node(i)), current_symbol_table);
+                node_ptr number_node = new_number_node(i);
+                add_symbol(new_symbol(node->ForLoop.index_name->ID.value, number_node), current_symbol_table);
             }
             if (node->ForLoop.value_name) {
                 add_symbol(new_symbol(node->ForLoop.value_name->ID.value, iterator->List.elements[i]), current_symbol_table);
@@ -598,9 +606,9 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
             }
 
             _continue:
-                current_symbol_table = current_scope;
                 continue;
             _break:
+                current_symbol_table = current_scope;
                 break;
         }
 
@@ -631,28 +639,31 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
     auto current_scope = current_symbol_table;
 
     int for_index = -1;
-    
+
+    auto loop_symbol_table = std::make_shared<SymbolTable>();
+    current_symbol_table = loop_symbol_table;
+    current_symbol_table->parent = current_scope;
+
     for (int i = start; i < end; i++) {
 
         for_index++;
 
-        auto loop_symbol_table = std::make_shared<SymbolTable>();
-        for (auto& symbol : current_symbol_table->symbols) {
-            loop_symbol_table->symbols[symbol.first] = symbol.second;
-        }
+        loop_symbol_table->symbols.clear();
 
-        current_symbol_table = loop_symbol_table;
-        current_symbol_table->parent = current_scope;
-
-        int index = i-node->ForLoop.start->Number.value;
+        int index = i - node->ForLoop.start->Number.value;
         if (node->ForLoop.index_name) {
-            add_symbol(new_symbol(node->ForLoop.index_name->ID.value, new_number_node(for_index)), current_symbol_table);
+            node_ptr index_node = new_number_node(for_index);
+            current_symbol_table->symbols[node->ForLoop.index_name->ID.value] = new_symbol(node->ForLoop.index_name->ID.value, index_node);
+            // add_symbol(new_symbol(node->ForLoop.index_name->ID.value, new_number_node(for_index)), current_symbol_table);
         }
         if (node->ForLoop.value_name) {
-        add_symbol(new_symbol(
-            node->ForLoop.value_name->ID.value, new_number_node(i)), current_symbol_table);
+            node_ptr value_node = new_number_node(i);
+            current_symbol_table->symbols[node->ForLoop.value_name->ID.value] = new_symbol(node->ForLoop.value_name->ID.value, value_node);
+            // add_symbol(new_symbol(
+            //     node->ForLoop.value_name->ID.value, new_number_node(i)), current_symbol_table
+            // );
         }
-        for (node_ptr expr : node->ForLoop.body->Object.elements) {
+        for (node_ptr& expr : node->ForLoop.body->Object.elements) {
             node_ptr evaluated_expr = eval_node(expr);
             if (evaluated_expr->type == NodeType::RETURN) {
                 current_symbol_table = current_scope;
@@ -667,9 +678,9 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
         }
 
         _continue2:
-            current_symbol_table = current_scope;
             continue;
         _break2:
+            current_symbol_table = current_scope;
             break;
     }
 
@@ -687,7 +698,7 @@ node_ptr Interpreter::eval_for_loop(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_while_loop(node_ptr node) {
+node_ptr Interpreter::eval_while_loop(node_ptr& node) {
     node_ptr conditional = eval_node(node->WhileLoop.condition);
     if (conditional->type != NodeType::BOOLEAN) {
         error_and_exit("While loop conditional must evaluate to a boolean");
@@ -726,7 +737,7 @@ node_ptr Interpreter::eval_while_loop(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_accessor(node_ptr node) {
+node_ptr Interpreter::eval_accessor(node_ptr& node) {
     node_ptr container = eval_node(node->Accessor.container);
     node_ptr accessor = eval_node(node->Accessor.accessor);
 
@@ -773,7 +784,7 @@ node_ptr Interpreter::eval_accessor(node_ptr node) {
     error_and_exit("Value of type '" + node_repr(container) + "' is not accessable");
 }
 
-node_ptr Interpreter::eval_function(node_ptr node) {
+node_ptr Interpreter::eval_function(node_ptr& node) {
     node->Function.decl_filename = file_name;
     if (node->Function.return_type) {
         node->Function.return_type = eval_node(node->Function.return_type);
@@ -804,7 +815,7 @@ node_ptr Interpreter::eval_function(node_ptr node) {
     return node;
 }
 
-node_ptr Interpreter::eval_enum(node_ptr node) {
+node_ptr Interpreter::eval_enum(node_ptr& node) {
     node_ptr enum_object = eval_object(node->Enum.body);
     enum_object->Meta.is_const = true;
     enum_object->Object.is_enum = true;
@@ -814,7 +825,7 @@ node_ptr Interpreter::eval_enum(node_ptr node) {
     return enum_object;
 }
 
-node_ptr Interpreter::eval_union(node_ptr node) {
+node_ptr Interpreter::eval_union(node_ptr& node) {
     node_ptr union_body = node->Union.body;
     node_ptr union_list = new_node(NodeType::LIST);
     if (union_body->Object.elements.size() == 0) {
@@ -837,10 +848,12 @@ node_ptr Interpreter::eval_union(node_ptr node) {
     return union_list;
 }
 
-node_ptr Interpreter::eval_type(node_ptr node) {
+node_ptr Interpreter::eval_type(node_ptr& node) {
 
     if (node->Type.expr) {
-        Symbol symbol = new_symbol(node->Type.name, eval_node(std::make_shared<Node>(*node->Type.expr)));
+        node_ptr val = std::make_shared<Node>(*node->Type.expr);
+        val = eval_node(val);
+        Symbol symbol = new_symbol(node->Type.name, val);
         // Check if type is function and if it returns a type
         // If it does, it's a type
         // Otherwise, it's a refinement type
@@ -976,7 +989,7 @@ node_ptr Interpreter::eval_type(node_ptr node) {
     return object;
 }
 
-node_ptr Interpreter::eval_type_ext(node_ptr node) {
+node_ptr Interpreter::eval_type_ext(node_ptr& node) {
     node_ptr type = eval_node(node->TypeExt.type);
     node_ptr body = eval_object(node->TypeExt.body);
 
@@ -1030,7 +1043,7 @@ node_ptr Interpreter::eval_type_ext(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-bool Interpreter::match_values(node_ptr nodeA, node_ptr nodeB) {
+bool Interpreter::match_values(node_ptr& nodeA, node_ptr& nodeB) {
     if (nodeA->type != nodeB->type) {
         return false;
     }
@@ -1075,7 +1088,11 @@ bool Interpreter::match_values(node_ptr nodeA, node_ptr nodeB) {
     return false;
 }
 
-bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
+bool Interpreter::match_types(node_ptr& _nodeA, node_ptr& _nodeB) {
+
+    node_ptr nodeA = std::make_shared<Node>(*_nodeA);
+    node_ptr nodeB = std::make_shared<Node>(*_nodeB);
+    
     if (nodeA == nullptr || nodeB == nullptr) {
         return false;
     }
@@ -1265,7 +1282,7 @@ bool Interpreter::match_types(node_ptr nodeA, node_ptr nodeB) {
     return true;
 }
 
-node_ptr Interpreter::eval_object_init(node_ptr node) {
+node_ptr Interpreter::eval_object_init(node_ptr& node) {
     Symbol type_symbol = get_symbol(node->ObjectDeconstruct.name, current_symbol_table);
     if (type_symbol.value == nullptr) {
         error_and_exit("Type '" + node->ObjectDeconstruct.name + "' is undefined");
@@ -1334,7 +1351,7 @@ node_ptr Interpreter::eval_object_init(node_ptr node) {
     return object;
 }
 
-node_ptr Interpreter::eval_load_lib(node_ptr node) {
+node_ptr Interpreter::eval_load_lib(node_ptr& node) {
     auto args = node->FuncCall.args;
     if (args.size() != 1) {
         error_and_exit("Library loading expects 1 argument");
@@ -1493,7 +1510,7 @@ node_ptr Interpreter::eval_call_lib_function(node_ptr lib, node_ptr& node) {
     return lib->Library.call_function(name->String.value, func_args->List.elements);
 }
 
-node_ptr Interpreter::eval_import(node_ptr node) {
+node_ptr Interpreter::eval_import(node_ptr& node) {
 
     if (node->Import.is_default) {
         node->Import.target = new_string_node("@modules/" + node->Import.module->ID.value);
@@ -1657,7 +1674,7 @@ node_ptr Interpreter::eval_import(node_ptr node) {
 
 // Operations
 
-node_ptr Interpreter::eval_pos_neg(node_ptr node) {
+node_ptr Interpreter::eval_pos_neg(node_ptr& node) {
     node_ptr value = eval_node(node->Operator.right);
     if (value->type != NodeType::NUMBER) {
         error_and_exit("Cannot negate a non-number");
@@ -1671,7 +1688,7 @@ node_ptr Interpreter::eval_pos_neg(node_ptr node) {
     return node;
 }
 
-node_ptr Interpreter::eval_not(node_ptr node) {
+node_ptr Interpreter::eval_not(node_ptr& node) {
     node_ptr value = eval_node(node->Operator.right);
     if (value->type != NodeType::BOOLEAN) {
         error_and_exit("Cannot negate a non-boolean");
@@ -1680,7 +1697,7 @@ node_ptr Interpreter::eval_not(node_ptr node) {
     return new_boolean_node(!value->Boolean.value);
 }
 
-node_ptr Interpreter::eval_add(node_ptr node) {
+node_ptr Interpreter::eval_add(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -1703,7 +1720,7 @@ node_ptr Interpreter::eval_add(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_sub(node_ptr node) {
+node_ptr Interpreter::eval_sub(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -1715,7 +1732,7 @@ node_ptr Interpreter::eval_sub(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_mul(node_ptr node) {
+node_ptr Interpreter::eval_mul(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -1727,7 +1744,7 @@ node_ptr Interpreter::eval_mul(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_div(node_ptr node) {
+node_ptr Interpreter::eval_div(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -1739,7 +1756,7 @@ node_ptr Interpreter::eval_div(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_pow(node_ptr node) {
+node_ptr Interpreter::eval_pow(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -1751,7 +1768,7 @@ node_ptr Interpreter::eval_pow(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_mod(node_ptr node) {
+node_ptr Interpreter::eval_mod(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -1763,7 +1780,7 @@ node_ptr Interpreter::eval_mod(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_eq_eq(node_ptr node) {
+node_ptr Interpreter::eval_eq_eq(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -1792,7 +1809,7 @@ node_ptr Interpreter::eval_eq_eq(node_ptr node) {
     return new_boolean_node(false);
 }
 
-node_ptr Interpreter::eval_not_eq(node_ptr node) {
+node_ptr Interpreter::eval_not_eq(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -1821,7 +1838,7 @@ node_ptr Interpreter::eval_not_eq(node_ptr node) {
     return new_boolean_node(true);
 }
 
-node_ptr Interpreter::eval_lt_eq(node_ptr node) {
+node_ptr Interpreter::eval_lt_eq(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -1833,7 +1850,7 @@ node_ptr Interpreter::eval_lt_eq(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_gt_eq(node_ptr node) {
+node_ptr Interpreter::eval_gt_eq(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -1845,7 +1862,7 @@ node_ptr Interpreter::eval_gt_eq(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_lt(node_ptr node) {
+node_ptr Interpreter::eval_lt(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -1857,7 +1874,7 @@ node_ptr Interpreter::eval_lt(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_gt(node_ptr node) {
+node_ptr Interpreter::eval_gt(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -1869,7 +1886,7 @@ node_ptr Interpreter::eval_gt(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_and(node_ptr node) {
+node_ptr Interpreter::eval_and(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
 
     if (left->type == NodeType::BOOLEAN && !left->Boolean.value) {
@@ -1888,7 +1905,7 @@ node_ptr Interpreter::eval_and(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_bit_and(node_ptr node) {
+node_ptr Interpreter::eval_bit_and(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -1900,7 +1917,7 @@ node_ptr Interpreter::eval_bit_and(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_bit_or(node_ptr node) {
+node_ptr Interpreter::eval_bit_or(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -1912,7 +1929,7 @@ node_ptr Interpreter::eval_bit_or(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_or(node_ptr node) {
+node_ptr Interpreter::eval_or(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
 
     if (left->type == NodeType::BOOLEAN && left->Boolean.value) {
@@ -1929,7 +1946,7 @@ node_ptr Interpreter::eval_or(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_plus_eq(node_ptr node) {
+node_ptr Interpreter::eval_plus_eq(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -1948,7 +1965,7 @@ node_ptr Interpreter::eval_plus_eq(node_ptr node) {
     return eq_node;
 }
 
-node_ptr Interpreter::eval_minus_eq(node_ptr node) {
+node_ptr Interpreter::eval_minus_eq(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = eval_node(node->Operator.right);
 
@@ -1967,7 +1984,7 @@ node_ptr Interpreter::eval_minus_eq(node_ptr node) {
     return eq_node;
 }
 
-node_ptr Interpreter::eval_dot(node_ptr node) {
+node_ptr Interpreter::eval_dot(node_ptr& node) {
     node_ptr left = eval_node(node->Operator.left);
     node_ptr right = node->Operator.right;
 
@@ -2566,7 +2583,7 @@ node_ptr Interpreter::eval_dot(node_ptr node) {
     return new_node(NodeType::NONE);
 }
 
-node_ptr Interpreter::eval_eq(node_ptr node) {
+node_ptr Interpreter::eval_eq(node_ptr& node) {
     node_ptr left = node->Operator.left;
     node_ptr right = eval_node(node->Operator.right);
 
@@ -2941,7 +2958,7 @@ node_ptr Interpreter::eval_eq(node_ptr node) {
 
 // Builtin functions
 
-std::string Interpreter::printable(node_ptr node) {
+std::string Interpreter::printable(node_ptr& node) {
     switch (node->type) {
         case NodeType::NUMBER: {
             std::string num_str = std::to_string(node->Number.value);
@@ -2996,7 +3013,8 @@ std::string Interpreter::printable(node_ptr node) {
         case NodeType::OBJECT: {
             std::string res = "{ ";
             for (auto const& elem : node->Object.properties) {
-                res += elem.first + ": " + printable(elem.second) + ' ';
+                node_ptr value = elem.second;
+                res += elem.first + ": " + printable(value) + ' ';
             }
             res += "}";
             return res;
@@ -3032,11 +3050,11 @@ std::string Interpreter::printable(node_ptr node) {
     }
 }
 
-void Interpreter::builtin_print(node_ptr node) {
+void Interpreter::builtin_print(node_ptr& node) {
     std::cout << printable(node) << std::flush;
 }
 
-node_ptr Interpreter::eval_node(node_ptr node) {
+node_ptr Interpreter::eval_node(node_ptr& node) {
 
     if (node == nullptr) {
         return nullptr;
@@ -3045,156 +3063,166 @@ node_ptr Interpreter::eval_node(node_ptr node) {
     line = node->line;
     column = node->column;
 
-    if (node->type == NodeType::NUMBER) {
-        node->TypeInfo.type = new_node(NodeType::NUMBER);
-        node->TypeInfo.type->TypeInfo.is_type = true;
-        return node;
-    }
-
-    if (node->type == NodeType::STRING) {
-        node->TypeInfo.type = new_node(NodeType::STRING);
-        node->TypeInfo.type->TypeInfo.is_type = true;
-        return node;
-    }
-
-    if (node->type == NodeType::BOOLEAN) {
-        node->TypeInfo.type = new_node(NodeType::BOOLEAN);
-        node->TypeInfo.type->TypeInfo.is_type = true;
-        return node;
-    }
-
-    if (node->type == NodeType::LIST) {
-        return eval_list(node);
-    }
-    if (node->type == NodeType::OBJECT) {
-        if (node->Object.elements.size() == 1 && (node->Object.elements[0]->type == NodeType::COMMA_LIST || node->Object.elements[0]->Operator.value == ":")) {
-            return eval_object(node);
+    switch (node->type) {
+        case NodeType::NUMBER: {
+            node->TypeInfo.type = new_node(NodeType::NUMBER);
+            node->TypeInfo.type->TypeInfo.is_type = true;
+            return node;
         }
-    }
-    if (node->type == NodeType::ID) {
-        node_ptr value = get_symbol(node->ID.value, current_symbol_table).value;
-        if (value == nullptr) {
-            error_and_exit("Variable '" + node->ID.value + "' is undefined");
+        case NodeType::STRING: {
+            node->TypeInfo.type = new_node(NodeType::STRING);
+            node->TypeInfo.type->TypeInfo.is_type = true;
+            return node;
         }
-        return value;
-    }
-    if (node->type == NodeType::PAREN) {
-        if (node->Paren.elements.size() != 1) {
-            error_and_exit("Empty parentheses");
+        case NodeType::BOOLEAN: {
+            node->TypeInfo.type = new_node(NodeType::BOOLEAN);
+            node->TypeInfo.type->TypeInfo.is_type = true;
+            return node;
         }
-        return eval_node(node->Paren.elements[0]);
-    }
-    if (node->type == NodeType::FUNC) {
-        return eval_function(node);
-    }
-    if (node->type == NodeType::CONSTANT_DECLARATION) {
-        return eval_const_decl(node);
-    }
-    if (node->type == NodeType::VARIABLE_DECLARATION) {
-        return eval_var_decl(node);
-    }
-    if (node->type == NodeType::FUNC_CALL) {
-        return eval_func_call(node);
-    }
-    if (node->type == NodeType::IF_STATEMENT) {
-        return eval_if_statement(node);
-    }
-    if (node->type == NodeType::IF_BLOCK) {
-        return eval_if_block(node);
-    }
-    if (node->type == NodeType::WHILE_LOOP) {
-        return eval_while_loop(node);
-    }
-    if (node->type == NodeType::FOR_LOOP) {
-        return eval_for_loop(node);
-    }
-    if (node->type == NodeType::ACCESSOR) {
-        return eval_accessor(node);
-    }
-    if (node->type == NodeType::IMPORT) {
-        return eval_import(node);
-    }
-    if (node->type == NodeType::TYPE) {
-        return eval_type(node);
-    }
-    if (node->type == NodeType::TYPE_EXT) {
-        return eval_type_ext(node);
-    }
-    if (node->type == NodeType::ENUM) {
-        return eval_enum(node);
-    }
-    if (node->type == NodeType::UNION) {
-        return eval_union(node);
-    }
-    if (node->type == NodeType::OBJECT_DECONSTRUCT) {
-        return eval_object_init(node);
-    }
-    if ((node->Operator.value == "+" || node->Operator.value == "-") 
-        && node->Operator.left == nullptr) {
-        return eval_pos_neg(node);
-    }
-    if (node->Operator.value == "+") {
-        return eval_add(node);
-    }
-    if (node->Operator.value == "-") {
-        return eval_sub(node);
-    }
-    if (node->Operator.value == "*") {
-        return eval_mul(node);
-    }
-    if (node->Operator.value == "/") {
-        return eval_div(node);
-    }
-    if (node->Operator.value == "^") {
-        return eval_pow(node);
-    }
-    if (node->Operator.value == "%") {
-        return eval_mod(node);
-    }
-    if (node->Operator.value == "!") {
-        return eval_not(node);
-    }
-    if (node->Operator.value == "==") {
-        return eval_eq_eq(node);
-    }
-    if (node->Operator.value == "!=") {
-        return eval_not_eq(node);
-    }
-    if (node->Operator.value == "<=") {
-        return eval_lt_eq(node);
-    }
-    if (node->Operator.value == ">=") {
-        return eval_gt_eq(node);
-    }
-    if (node->Operator.value == "<") {
-        return eval_lt(node);
-    }
-    if (node->Operator.value == ">") {
-        return eval_gt(node);
-    }
-    if (node->Operator.value == "&&") {
-        return eval_and(node);
-    }
-    if (node->Operator.value == "||") {
-        return eval_or(node);
-    }
-    if (node->Operator.value == "&") {
-        return eval_bit_and(node);
-    }
-    if (node->Operator.value == "|") {
-        return eval_bit_or(node);
-    }
-    if (node->Operator.value == "+=") {
-        return eval_plus_eq(node);
-    }
-    if (node->Operator.value == "-=") {
-        return eval_minus_eq(node);
-    }
-    if (node->Operator.value == ".") {
-        return eval_dot(node);
-    }
-    if (node->Operator.value == "=") {
-        return eval_eq(node);
+        case NodeType::LIST: {
+            return eval_list(node);
+        }
+        case NodeType::OBJECT: {
+            if (node->Object.elements.size() == 1 && (node->Object.elements[0]->type == NodeType::COMMA_LIST || node->Object.elements[0]->Operator.value == ":")) {
+                return eval_object(node);
+            }
+            return node;
+        }
+        case NodeType::ID: {
+            node_ptr value = get_symbol(node->ID.value, current_symbol_table).value;
+            if (value == nullptr) {
+                error_and_exit("Variable '" + node->ID.value + "' is undefined");
+            }
+            return value;
+        }
+        case NodeType::PAREN: {
+            if (node->Paren.elements.size() != 1) {
+                error_and_exit("Empty parentheses");
+            }
+            return eval_node(node->Paren.elements[0]);
+        }
+        case NodeType::FUNC: {
+            return eval_function(node);
+        }
+        case NodeType::CONSTANT_DECLARATION: {
+            return eval_const_decl(node);
+        }
+        case NodeType::VARIABLE_DECLARATION: {
+            return eval_var_decl(node);
+        }
+        case NodeType::FUNC_CALL: {
+            return eval_func_call(node);
+        }
+        case NodeType::IF_STATEMENT: {
+            return eval_if_statement(node);
+        }
+        case NodeType::IF_BLOCK: {
+            return eval_if_block(node);
+        }
+        case NodeType::WHILE_LOOP: {
+            return eval_while_loop(node);
+        }
+        case NodeType::FOR_LOOP: {
+            return eval_for_loop(node);
+        }
+        case NodeType::ACCESSOR: {
+            return eval_accessor(node);
+        }
+        case NodeType::IMPORT: {
+            return eval_import(node);
+        }
+        case NodeType::TYPE: {
+            return eval_type(node);
+        }
+        case NodeType::TYPE_EXT: {
+            return eval_type_ext(node);
+        }
+        case NodeType::ENUM: {
+            return eval_enum(node);
+        }
+        case NodeType::UNION: {
+            return eval_union(node);
+        }
+        case NodeType::OBJECT_DECONSTRUCT: {
+            return eval_object_init(node);
+        }
+        case NodeType::OP: {
+            if ((node->Operator.value == "+" || node->Operator.value == "-") 
+                && node->Operator.left == nullptr) {
+                return eval_pos_neg(node);
+            }
+            if (node->Operator.value == "=") {
+                return eval_eq(node);
+            }
+            if (node->Operator.value == "+") {
+                return eval_add(node);
+            }
+            if (node->Operator.value == "-") {
+                return eval_sub(node);
+            }
+            if (node->Operator.value == "*") {
+                return eval_mul(node);
+            }
+            if (node->Operator.value == "/") {
+                return eval_div(node);
+            }
+            if (node->Operator.value == "^") {
+                return eval_pow(node);
+            }
+            if (node->Operator.value == ".") {
+                return eval_dot(node);
+            }
+            if (node->Operator.value == "%") {
+                return eval_mod(node);
+            }
+            if (node->Operator.value == "!") {
+                return eval_not(node);
+            }
+            if (node->Operator.value == "==") {
+                return eval_eq_eq(node);
+            }
+            if (node->Operator.value == "!=") {
+                return eval_not_eq(node);
+            }
+            if (node->Operator.value == "<=") {
+                return eval_lt_eq(node);
+            }
+            if (node->Operator.value == ">=") {
+                return eval_gt_eq(node);
+            }
+            if (node->Operator.value == "<") {
+                return eval_lt(node);
+            }
+            if (node->Operator.value == ">") {
+                return eval_gt(node);
+            }
+            if (node->Operator.value == "&&") {
+                return eval_and(node);
+            }
+            if (node->Operator.value == "||") {
+                return eval_or(node);
+            }
+            if (node->Operator.value == "&") {
+                return eval_bit_and(node);
+            }
+            if (node->Operator.value == "|") {
+                return eval_bit_or(node);
+            }
+            if (node->Operator.value == "+=") {
+                return eval_plus_eq(node);
+            }
+            if (node->Operator.value == "-=") {
+                return eval_minus_eq(node);
+            }
+            if (node->Operator.value == ";") {
+                return node;
+            }
+            
+            error_and_exit("No such operator '" + node->Operator.value + "'");
+        }
+        default: {
+            return node;
+        }
     }
 
     return node;
@@ -3207,7 +3235,7 @@ void Interpreter::evaluate() {
     }
 }
 
-Symbol Interpreter::new_symbol(std::string name, node_ptr value, node_ptr type) {
+Symbol Interpreter::new_symbol(std::string name, node_ptr& value, node_ptr type) {
     Symbol symbol;
     symbol.name = name;
     symbol.value = value;
@@ -3215,7 +3243,7 @@ Symbol Interpreter::new_symbol(std::string name, node_ptr value, node_ptr type) 
     return symbol;
 }
 
-Symbol Interpreter::get_symbol(std::string name, std::shared_ptr<SymbolTable> symbol_table) {
+Symbol Interpreter::get_symbol(std::string name, std::shared_ptr<SymbolTable>& symbol_table) {
     sym_t_ptr scope = symbol_table;
 
     if (scope->symbols.contains(name)) {
@@ -3228,22 +3256,22 @@ Symbol Interpreter::get_symbol(std::string name, std::shared_ptr<SymbolTable> sy
         }
     }
 
-    return new_symbol("_undefined_", nullptr);
+    return new_symbol("_undefined_", null_value);
 }
 
-Symbol Interpreter::get_symbol_local(std::string name, std::shared_ptr<SymbolTable> symbol_table) {
+Symbol Interpreter::get_symbol_local(std::string name, std::shared_ptr<SymbolTable>& symbol_table) {
     if (symbol_table->symbols.contains(name)) {
         return symbol_table->symbols[name];
     }
 
-    return new_symbol("_undefined_", nullptr);
+    return new_symbol("_undefined_", null_value);
 }
 
-void Interpreter::add_symbol(Symbol symbol, std::shared_ptr<SymbolTable> symbol_table) {
+void Interpreter::add_symbol(Symbol symbol, std::shared_ptr<SymbolTable>& symbol_table) {
     symbol_table->symbols[symbol.name] = symbol;
 }
 
-void Interpreter::delete_symbol(std::string name, std::shared_ptr<SymbolTable> symbol_table) {
+void Interpreter::delete_symbol(std::string name, std::shared_ptr<SymbolTable>& symbol_table) {
     symbol_table->symbols.erase(name);
 }
 

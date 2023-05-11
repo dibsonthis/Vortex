@@ -40,7 +40,7 @@ fi
 
 clang++ \
 -dynamiclib \
--O3 \
+-Ofast \
 -Wno-everything \
 -I$FILE/include \
 -L$FILE/lib \

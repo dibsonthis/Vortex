@@ -266,4 +266,50 @@ struct Node {
 	TypeExtNode TypeExt;
 };
 
+// struct Node {
+// 	Node() = default;
+//     Node(NodeType type) : type(type) {}
+// 	Node(int line, int column) : line(line), column(column) {}
+// 	Node(NodeType type, int line, int column) : type(type), line(line), column(column) {}
+
+//     NodeType type;
+// 	int column = 1;
+// 	int line = 1;
+
+// 	std::variant<
+// 		IdNode,
+// 		NumberNode,
+// 		StringNode,
+// 		BooleanNode,
+// 		OpNode,
+// 		ListNode,
+// 		ObjectNode,
+// 		ParenNode,
+// 		FuncCallNode,
+// 		FuncNode,
+// 		AccessorNode,
+// 		InterfaceNode,
+// 		TypeNode,
+// 		HookNode,
+// 		VariableDeclatationNode,
+// 		ConstantDeclatationNode,
+// 		ForLoopNode,
+// 		WhileLoopNode,
+// 		ObjectDeconstructNode,
+// 		ImportNode,
+// 		IfStatementNode,
+// 		IfBlockNode,
+// 		ReturnNode,
+// 		LibNode,
+// 		PointerNode,
+// 		EnumNode,
+// 		UnionNode,
+// 		TypeExtNode
+// 		> _Node = {};
+
+// 	MetaInformation Meta;
+// 	Hooks Hooks;
+// 	TypeInfoNode TypeInfo;
+// };
+
 std::string node_repr(node_ptr);
