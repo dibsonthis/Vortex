@@ -78,6 +78,8 @@ struct ObjectNode {
 	std::vector<node_ptr> elements;
 	std::unordered_map<std::string, node_ptr> properties;
 	std::unordered_map<std::string, node_ptr> defaults;
+	std::vector<std::string> keys;
+	std::vector<node_ptr> values;
 	bool is_enum = false;
 };
 

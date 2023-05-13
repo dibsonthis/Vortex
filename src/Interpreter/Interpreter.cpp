@@ -152,6 +152,8 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
         node_ptr value = eval_node(prop->_Node.Op().right);
         value->TypeInfo.is_type = object->TypeInfo.is_type;
         object->_Node.Object().properties[prop->_Node.Op().left->type == NodeType::ID ? prop->_Node.Op().left->_Node.ID().value: prop->_Node.Op().left->_Node.String().value] = value;
+        object->_Node.Object().keys.push_back(prop->_Node.Op().left->type == NodeType::ID ? prop->_Node.Op().left->_Node.ID().value: prop->_Node.Op().left->_Node.String().value);
+        object->_Node.Object().values.push_back(value);
     }
     else {
         for (node_ptr prop : node->_Node.Object().elements[0]->_Node.List().elements) {
@@ -164,6 +166,8 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
             node_ptr value = eval_node(prop->_Node.Op().right);
             value->TypeInfo.is_type = object->TypeInfo.is_type;
             object->_Node.Object().properties[prop->_Node.Op().left->type == NodeType::ID ? prop->_Node.Op().left->_Node.ID().value: prop->_Node.Op().left->_Node.String().value] = value;
+            object->_Node.Object().keys.push_back(prop->_Node.Op().left->type == NodeType::ID ? prop->_Node.Op().left->_Node.ID().value: prop->_Node.Op().left->_Node.String().value);
+            object->_Node.Object().values.push_back(value);
         }
     }
     // remove "this" from scope
@@ -1246,6 +1250,14 @@ bool Interpreter::match_types(node_ptr& _nodeA, node_ptr& _nodeB) {
             return true;
         }
 
+        if (nodeA->_Node.Object().properties.count("_init_")) {
+            nodeA->_Node.Object().properties.erase("_init_");
+        }
+
+        if (nodeB->_Node.Object().properties.count("_init_")) {
+            nodeB->_Node.Object().properties.erase("_init_");
+        }
+
         if (nodeA->_Node.Object().properties.size() != nodeB->_Node.Object().properties.size()) {
             return false;
         }
@@ -1308,13 +1320,30 @@ node_ptr Interpreter::eval_object_init(node_ptr& node) {
         object->_Node.Object().properties[prop.first] = std::make_shared<Node>(*prop.second);
     }
 
+    // Call the init function if it exists
+    if (type->_Node.Object().properties.count("_init_")) {
+        node_ptr func = type->_Node.Object().properties["_init_"];
+        func->_Node.Function().closure["this"] = object;
+        node_ptr func_call = new_node(NodeType::FUNC_CALL);
+        func_call->_Node.FunctionCall().name = "_init_";
+        eval_func_call(func_call, func);
+    }
+
     // Check that the value matches type
-    // TODO: comprehensive type check goes here
-    if (object->_Node.Object().properties.size() != type->_Node.Object().properties.size()) {
+    int type_size = type->_Node.Object().properties.size();
+
+    if (type->_Node.Object().properties.count("_init_")) {
+        type_size--;
+    }
+    if (object->_Node.Object().properties.size() != type_size) {
         error_and_exit("Error in object initialization for type '" + node->_Node.ObjectDeconstruct().name + "': Number of properties differs between object and type");
     }
 
     for (auto& prop : type->_Node.Object().properties) {
+        if (prop.first == "_init_") {
+            continue;
+        }
+
         std::string prop_name = prop.first;
 
         node_ptr type_prop_value = prop.second;

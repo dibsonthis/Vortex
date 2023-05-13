@@ -1,58 +1,42 @@
-import [readf] : io
-import string
+type Matrix {
+    width: Number = 0,
+    height: Number = 0,
+    array: [[Number]] = [[]],
+    _init_: () => {
+        
+        var array = []
+        var row = []
+        for (0..this.width) {
+            row.append(0)
+        }
 
-extend String {
-	substring: (start: Number, end: Number): String => {
-		var substr = ""
-		const str = self
-		for (start..end, index, value) {
-			substr += str[value]
-		}
-		ret substr
-	},
-	startsWith: (str: String): Boolean => self.substring(0, str.length) == str,
-	endsWith: (str: String): Boolean => self.substring(self.length-str.length, self.length) == str
+        for (0..this.height) {
+            var _row = row
+            array.append(_row)
+        }
+
+        this.array = array
+    }
 }
 
-var data: [[String]] = 
-	readf("/Users/adib/Dev/Personal/Vortex/playground/data/people.csv")
-	.split("\n")
-	.map((row: String): [String] => row.split(","))
-
-println(data)
-
-const headers: [String] = data[0]
-
-data.remove_at(0)
-
-type DataObj {
-	id: 		Number = 0, 
-	firstname: 	String = "", 
-	lastname:  	String = "",
-	email: 		String = "", 
-	date: 		String = "",
-	profession: String = ""
+const mmul = (a: Number, b: Matrix) => {
+    var matrix = b
+    for (0..matrix.height, y) {
+        for (0..matrix.width, x) {
+            const arr = matrix.array
+            arr[x][y] += a
+        }
+    }
+    ret b
 }
-
-var csvList: [DataObj] = []
-
-for (data, rowI, row) {
-	var rowValue: DataObj = DataObj {};
-	for (row, rowValueI, rowVal) {
-		if (headers[rowValueI] == "id") {
-			rowValue[headers[rowValueI]] = number(rowVal)
-		} else {
-			rowValue[headers[rowValueI]] = rowVal
-		}
-	}
-	csvList.append(rowValue)
+const mmul = (a: Matrix, b: Number) => {
+    mmul(b, a)
 }
+// const mmul = (a: Matrix, b: Matrix) => {
+//     mmul(b, a)
+// }
 
-const selectedPeople: [String] 
-	= csvList
-	.filter((elem: DataObj): Boolean => elem.id >= 500 && elem.id <= 550 && elem.firstname.startsWith("Al"))
-	.map((elem: DataObj): String => f"${elem.firstname} ${elem.lastname} (${elem.email}): ${elem.id}")
-
-for (selectedPeople, i, person) {
-	println(person)
-}
+var m = Matrix {width: 20, height: 20}
+var m2 = mmul(m, 20)
+println(m2)
+println(Matrix)
