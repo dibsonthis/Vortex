@@ -1,4 +1,6 @@
-const new_matrix = (w: Number, h: Number): [[Number]] => {
+const Matrix = [[Number]]
+
+const new_matrix = (w: Number, h: Number): Matrix => {
     var matrix = []
     var row = []
 
@@ -14,7 +16,7 @@ const new_matrix = (w: Number, h: Number): [[Number]] => {
     matrix
 }
 
-const copy_matrix = (matrix: [[Number]]): [[Number]] => {
+const copy_matrix = (matrix: Matrix): Matrix => {
     const w = matrix[0].length
     const h = matrix.length
     var copy = new_matrix(w, h)
@@ -26,17 +28,7 @@ const copy_matrix = (matrix: [[Number]]): [[Number]] => {
     ret copy
 }
 
-var m1 = [  [12, 7, 3],
-            [4, 5, 6],
-            [7, 8, 9]]
-
-
-var m2 = [  [5, 8, 1, 2],
-            [6, 7, 3, 0],
-            [4, 5, 9, 1]]
-
-
-const mmul = (a: Number, b: [[Number]]) => {
+const mmul = (a: Number, b: Matrix) => {
     if (b.empty) {
         ret b
     }
@@ -49,11 +41,11 @@ const mmul = (a: Number, b: [[Number]]) => {
     ret matrix
 }
 
-const mmul = (a: [[Number]], b: Number) => {
+const mmul = (a: Matrix, b: Number) => {
     mmul(b, a)
 }
 
-const mmul = (a: [[Number]], b: [[Number]]) => {
+const mmul = (a: Matrix, b: Matrix) => {
     var h = a.length
     if (b.empty) {
         ret a
@@ -71,6 +63,15 @@ const mmul = (a: [[Number]], b: [[Number]]) => {
     }
     ret matrix
 }
+
+var m1 = [  [12, 7, 3],
+            [4, 5, 6],
+            [7, 8, 9]]
+
+
+var m2 = [  [5, 8, 1, 2],
+            [6, 7, 3, 0],
+            [4, 5, 9, 1]]
 
 println(m1, m2, "\n")
 
