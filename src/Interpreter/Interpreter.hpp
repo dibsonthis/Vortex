@@ -127,11 +127,11 @@ public:
     // Builtin functions
     void builtin_print(node_ptr& node);
     node_ptr eval_load_lib(node_ptr& node);
-    node_ptr eval_call_lib_function(node_ptr lib, node_ptr& node);
+    node_ptr eval_call_lib_function(node_ptr& lib, node_ptr& node);
 
     Symbol new_symbol(std::string name, node_ptr& value, node_ptr type = nullptr);
     Symbol get_symbol(std::string name, sym_t_ptr& symbol_table);
-    Symbol get_symbol_local(std::string name, sym_t_ptr& symbol_table);
+    Symbol get_symbol_local(std::string& name, sym_t_ptr& symbol_table);
     void add_symbol(Symbol symbol, sym_t_ptr& symbol_table);
     void delete_symbol(std::string name, sym_t_ptr& symbol_table);
     bool match_types(node_ptr& _nodeA, node_ptr& _nodeB);

@@ -1,18 +1,17 @@
-
 import image
 
 var interpolate = (value: Number, x0: Number, x1: Number, y0: Number, y1: Number): Number => {
 	y0 + (value - x0) * ((y0 - y1)/(x0 - x1))
 }
 
-var width = 600
+var width = 50
 var x = -0.65
 var y = 0
 var oldX = x
 var oldY = y
 var xRange = 3.4
 var aspectRatio = 4/3
-var precision = 500
+var precision = 20
 
 var height = width / aspectRatio
 var yRange = xRange / aspectRatio
@@ -21,13 +20,21 @@ var maxX = x + xRange / 2
 var minY = y - yRange / 2
 var maxY = y + yRange / 2
 
-var canvas = image.create(width, height)
-println(canvas)
+var grid = []
+var row = []
 
-for (0..height, row) {
-    for (0..width, col) {
-        x = minX + col * xRange / width
-        y = maxY - row * yRange / height
+for (0..width) {
+    row.append(0)
+}
+for (0..height) {
+    var _row = row
+    grid.append(_row)
+}
+
+for (0..height, _row) {
+    for (0..width, _col) {
+        x = minX + _col * xRange / width
+        y = maxY - _row * yRange / height
         oldX = x
         oldY = y
 
@@ -35,10 +42,10 @@ for (0..height, row) {
 
         for (0..precision + 1, i) {
             index = i
-            const a = x^2 - y^2
-            const b = 2 * x * y
-            x = a + oldX
-            y = b + oldY
+            const a = x^2 - y^2 //real component of z^2
+            const b = 2 * x * y //imaginary component of z^2
+            x = a + oldX //real component of new z
+            y = b + oldY //imaginary component of new z
             if ((x^2 + y^2) > 4) {
                 break
             }
@@ -46,14 +53,17 @@ for (0..height, row) {
 
         if (index < precision) {
             const distance = (index + 1) / (precision + 1)
-            const interpol = interpolate(index, 0, distance, 255, 0)
-            image.blit(canvas, col, row, {r: index, g: interpol, b: distance})
+            const interpol = interpolate(distance, x, y, 0, 255)
+            grid[_col][_row] = {r: 100, g: 55, b: interpol}
+        } else {
+            const interpol = interpolate(precision, x, y, 0, 255)
+            grid[_col][_row] = {r: 10, g: index, b: interpol}
         }
 
-        index = row * width + col + 1
-    }
+        index = _row * width + _col + 1
 
-    println(f"${row}/${height} - ${(row / height * 100 * 10) / 10}%")
+        println(f"${index}/${width * height} - ${(index / width / height * 100 * 10) / 10}%")
+    }
 }
 
-image.save(canvas, "../output/mandelbrot_output.png")
+image.write("../output/mandelbrot_output.png", grid)

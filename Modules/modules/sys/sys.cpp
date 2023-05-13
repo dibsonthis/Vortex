@@ -34,7 +34,7 @@ VortexObj error(std::string name, std::vector<VortexObj> args) {
 
     _interpreter_ref.get().line = _interpreter_ref.get().current_node->line;
     _interpreter_ref.get().column = _interpreter_ref.get().current_node->column;
-    _interpreter_ref.get().error_and_exit(args[0]->String.value);
+    _interpreter_ref.get().error_and_exit(args[0]->_Node.String().value);
 
     return new_vortex_obj(NodeType::NONE);
 }
@@ -57,7 +57,7 @@ VortexObj argv(std::string name, std::vector<VortexObj> args) {
     VortexObj argv = new_vortex_obj(NodeType::LIST);
 
     for (std::string& arg : _interpreter_ref.get().argv) {
-        argv->List.elements.push_back(new_string_node(arg));
+        argv->_Node.List().elements.push_back(new_string_node(arg));
     }
 
     return argv;

@@ -153,16 +153,18 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
         value->TypeInfo.is_type = object->TypeInfo.is_type;
         object->_Node.Object().properties[prop->_Node.Op().left->type == NodeType::ID ? prop->_Node.Op().left->_Node.ID().value: prop->_Node.Op().left->_Node.String().value] = value;
     }
-    for (node_ptr prop : node->_Node.Object().elements[0]->_Node.List().elements) {
-        if (prop->type == NodeType::OP && prop->_Node.Op().value != ":") {
-            error_and_exit("Object must contain properties separated with ':'");
+    else {
+        for (node_ptr prop : node->_Node.Object().elements[0]->_Node.List().elements) {
+            if (prop->type == NodeType::OP && prop->_Node.Op().value != ":") {
+                error_and_exit("Object must contain properties separated with ':'");
+            }
+            if (prop->type == NodeType::OP && prop->_Node.Op().left->type != NodeType::ID && prop->_Node.Op().left->type != NodeType::STRING) {
+                error_and_exit("Property names must be identifiers or strings");
+            }
+            node_ptr value = eval_node(prop->_Node.Op().right);
+            value->TypeInfo.is_type = object->TypeInfo.is_type;
+            object->_Node.Object().properties[prop->_Node.Op().left->type == NodeType::ID ? prop->_Node.Op().left->_Node.ID().value: prop->_Node.Op().left->_Node.String().value] = value;
         }
-        if (prop->type == NodeType::OP && prop->_Node.Op().left->type != NodeType::ID && prop->_Node.Op().left->type != NodeType::STRING) {
-            error_and_exit("Property names must be identifiers or strings");
-        }
-        node_ptr value = eval_node(prop->_Node.Op().right);
-        value->TypeInfo.is_type = object->TypeInfo.is_type;
-        object->_Node.Object().properties[prop->_Node.Op().left->type == NodeType::ID ? prop->_Node.Op().left->_Node.ID().value: prop->_Node.Op().left->_Node.String().value] = value;
     }
     // remove "this" from scope
     delete_symbol("this", current_symbol_table);
@@ -1487,7 +1489,7 @@ node_ptr Interpreter::eval_load_lib(node_ptr& node) {
     return lib_node;
 }
 
-node_ptr Interpreter::eval_call_lib_function(node_ptr lib, node_ptr& node) {
+node_ptr Interpreter::eval_call_lib_function(node_ptr& lib, node_ptr& node) {
     auto args = node->_Node.FunctionCall().args;
     if (args.size() != 2) {
         error_and_exit("Library function calls expects 2 arguments");
@@ -3256,7 +3258,7 @@ Symbol Interpreter::get_symbol(std::string name, std::shared_ptr<SymbolTable>& s
     return new_symbol("_undefined_", null_value);
 }
 
-Symbol Interpreter::get_symbol_local(std::string name, std::shared_ptr<SymbolTable>& symbol_table) {
+Symbol Interpreter::get_symbol_local(std::string& name, std::shared_ptr<SymbolTable>& symbol_table) {
     if (symbol_table->symbols.contains(name)) {
         return symbol_table->symbols[name];
     }

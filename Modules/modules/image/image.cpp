@@ -64,9 +64,27 @@ VortexObj write(std::string name, std::vector<VortexObj> args) {
     for (int j = height - 1; j >= 0; --j) {
         for (int i = 0; i < width; ++i) {
             VortexObj color = colors[j]->_Node.List().elements[i];
-            pixels[index++] = color->_Node.Object().properties["r"]->_Node.Number().value;
-            pixels[index++] = color->_Node.Object().properties["g"]->_Node.Number().value;
-            pixels[index++] = color->_Node.Object().properties["b"]->_Node.Number().value;
+            if (color->type != NodeType::OBJECT) {
+                error_and_exit("Malformed buffer - expecting color object");
+            }
+            
+            VortexObj r_node = color->_Node.Object().properties["r"];
+            VortexObj g_node = color->_Node.Object().properties["g"];
+            VortexObj b_node = color->_Node.Object().properties["b"];
+
+            if (!r_node || r_node->type != NodeType::NUMBER) {
+                error_and_exit("Malformed buffer - missing 'r' value");
+            }
+            if (!g_node || g_node->type != NodeType::NUMBER) {
+                error_and_exit("Malformed buffer - missing 'g' value");
+            }
+            if (!b_node || b_node->type != NodeType::NUMBER) {
+                error_and_exit("Malformed buffer - missing 'b' value");
+            }
+
+            pixels[index++] = r_node->_Node.Number().value;
+            pixels[index++] = g_node->_Node.Number().value;
+            pixels[index++] = b_node->_Node.Number().value;
         }
     }
 

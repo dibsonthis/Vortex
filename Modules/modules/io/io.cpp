@@ -15,9 +15,9 @@ VortexObj open(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects 2 string arguments");
     }
 
-    std::fstream* handle = new std::fstream(args[0]->String.value, (uint)args[1]->Number.value);
+    std::fstream* handle = new std::fstream(args[0]->_Node.String().value, (uint)args[1]->_Node.Number().value);
     VortexObj handle_ptr = new_vortex_obj(NodeType::POINTER);
-    handle_ptr->Pointer.value = handle;
+    handle_ptr->_Node.Pointer().value = handle;
     return handle_ptr;
 }
 
@@ -27,7 +27,7 @@ VortexObj read(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects 1 pointer argument");
     }
 
-    std::fstream* handle = (std::fstream*)args[0]->Pointer.value;
+    std::fstream* handle = (std::fstream*)args[0]->_Node.Pointer().value;
     std::stringstream buffer;
     buffer << handle->rdbuf();
     handle->seekp(0);
@@ -41,8 +41,8 @@ VortexObj write(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects 1 pointer and 1 string arguments");
     }
 
-    std::fstream* handle = (std::fstream*)args[0]->Pointer.value;
-    std::string content = args[1]->String.value;
+    std::fstream* handle = (std::fstream*)args[0]->_Node.Pointer().value;
+    std::string content = args[1]->_Node.String().value;
 
     (*handle) << content;
     handle->flush();
@@ -56,7 +56,7 @@ VortexObj close(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects 1 pointer argument");
     }
 
-    std::fstream* handle = (std::fstream*)args[0]->Pointer.value;
+    std::fstream* handle = (std::fstream*)args[0]->_Node.Pointer().value;
     handle->close();
     delete handle;
     return new_vortex_obj(NodeType::NONE);
