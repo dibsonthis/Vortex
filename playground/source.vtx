@@ -1,69 +1,58 @@
-import image
+import [readf] : io
+import string
 
-var interpolate = (value: Number, x0: Number, x1: Number, y0: Number, y1: Number): Number => {
-	y0 + (value - x0) * ((y0 - y1)/(x0 - x1))
+extend String {
+	substring: (start: Number, end: Number): String => {
+		var substr = ""
+		const str = self
+		for (start..end, index, value) {
+			substr += str[value]
+		}
+		ret substr
+	},
+	startsWith: (str: String): Boolean => self.substring(0, str.length) == str,
+	endsWith: (str: String): Boolean => self.substring(self.length-str.length, self.length) == str
 }
 
-var width = 50
-var x = -0.65
-var y = 0
-var oldX = x
-var oldY = y
-var xRange = 3.4
-var aspectRatio = 4/3
-var precision = 20
+var data: [[String]] = 
+	readf("/Users/adib/Dev/Personal/Vortex/playground/data/people.csv")
+	.split("\n")
+	.map((row: String): [String] => row.split(","))
 
-var height = width / aspectRatio
-var yRange = xRange / aspectRatio
-var minX = x - xRange / 2
-var maxX = x + xRange / 2
-var minY = y - yRange / 2
-var maxY = y + yRange / 2
+println(data)
 
-var grid = []
-var row = []
+const headers: [String] = data[0]
 
-for (0..width) {
-    row.append(0)
-}
-for (0..height) {
-    var _row = row
-    grid.append(_row)
+data.remove_at(0)
+
+type DataObj {
+	id: 		Number = 0, 
+	firstname: 	String = "", 
+	lastname:  	String = "",
+	email: 		String = "", 
+	date: 		String = "",
+	profession: String = ""
 }
 
-for (0..height, _row) {
-    for (0..width, _col) {
-        x = minX + _col * xRange / width
-        y = maxY - _row * yRange / height
-        oldX = x
-        oldY = y
+var csvList: [DataObj] = []
 
-        var index = 0
-
-        for (0..precision + 1, i) {
-            index = i
-            const a = x^2 - y^2 //real component of z^2
-            const b = 2 * x * y //imaginary component of z^2
-            x = a + oldX //real component of new z
-            y = b + oldY //imaginary component of new z
-            if ((x^2 + y^2) > 4) {
-                break
-            }
-        }
-
-        if (index < precision) {
-            const distance = (index + 1) / (precision + 1)
-            const interpol = interpolate(distance, x, y, 0, 255)
-            grid[_col][_row] = {r: 100, g: 55, b: interpol}
-        } else {
-            const interpol = interpolate(precision, x, y, 0, 255)
-            grid[_col][_row] = {r: 10, g: index, b: interpol}
-        }
-
-        index = _row * width + _col + 1
-
-        println(f"${index}/${width * height} - ${(index / width / height * 100 * 10) / 10}%")
-    }
+for (data, rowI, row) {
+	var rowValue: DataObj = DataObj {};
+	for (row, rowValueI, rowVal) {
+		if (headers[rowValueI] == "id") {
+			rowValue[headers[rowValueI]] = number(rowVal)
+		} else {
+			rowValue[headers[rowValueI]] = rowVal
+		}
+	}
+	csvList.append(rowValue)
 }
 
-image.write("../output/mandelbrot_output.png", grid)
+const selectedPeople: [String] 
+	= csvList
+	.filter((elem: DataObj): Boolean => elem.id >= 500 && elem.id <= 550 && elem.firstname.startsWith("Al"))
+	.map((elem: DataObj): String => f"${elem.firstname} ${elem.lastname} (${elem.email}): ${elem.id}")
+
+for (selectedPeople, i, person) {
+	println(person)
+}

@@ -649,7 +649,7 @@ node_ptr Interpreter::eval_for_loop(node_ptr& node) {
 
         loop_symbol_table->symbols.clear();
 
-        int index = i - node->_Node.ForLoop().start->_Node.Number().value;
+        int index = i - start_node->_Node.Number().value;
         if (node->_Node.ForLoop().index_name) {
             node_ptr index_node = new_number_node(for_index);
             current_symbol_table->symbols[node->_Node.ForLoop().index_name->_Node.ID().value] = new_symbol(node->_Node.ForLoop().index_name->_Node.ID().value, index_node);
@@ -795,7 +795,7 @@ node_ptr Interpreter::eval_function(node_ptr& node) {
     }
     // Go through params to see if they are typed, and store their types
     for (auto& param : node->_Node.Function().params) {
-        if (param->_Node.Op().value == ":") {
+        if (param->type == NodeType::OP && param->_Node.Op().value == ":") {
             node_ptr param_type = eval_node(param->_Node.Op().right);
             if (param_type->type == NodeType::LIST) {
                 param_type->TypeInfo.is_type = true;

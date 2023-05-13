@@ -229,6 +229,7 @@ void Parser::parse_enum(std::string end) {
         }
         if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "enum" && peek()->type == NodeType::ID && peek(2)->type == NodeType::OBJECT) {
             current_node->type = NodeType::ENUM;
+            current_node->_Node = EnumNode();
             current_node->_Node.Enum().name = peek()->_Node.ID().value;
             current_node->_Node.Enum().body = peek(2);
             erase_next();
@@ -245,6 +246,7 @@ void Parser::parse_union(std::string end) {
         }
         if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "union" && peek()->type == NodeType::ID && peek(2)->type == NodeType::OBJECT) {
             current_node->type = NodeType::UNION;
+            current_node->_Node = UnionNode();
             current_node->_Node.Union().name = peek()->_Node.ID().value;
             current_node->_Node.Union().body = peek(2);
             erase_next();
@@ -261,11 +263,13 @@ void Parser::parse_type(std::string end) {
         }
         if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "type" && (peek()->type == NodeType::OBJECT_DECONSTRUCT)) {
             current_node->type = NodeType::TYPE;
+            current_node->_Node = TypeNode();
             current_node->_Node.Type().name = peek()->_Node.ObjectDeconstruct().name;
             current_node->_Node.Type().body = peek()->_Node.ObjectDeconstruct().body;
             erase_next();
         } else if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "type" && (peek()->type == NodeType::ID || peek()->type == NodeType::ACCESSOR) && peek(2)->_Node.Op().value == "=") {
             current_node->type = NodeType::TYPE;
+            current_node->_Node = TypeNode();
             current_node->_Node.Type().name = peek()->_Node.ID().value;
             current_node->_Node.Type().expr = peek(3);
             current_node->_Node.Type().expr->TypeInfo.is_type = true;
@@ -287,6 +291,7 @@ void Parser::parse_type_ext(std::string end) {
         }
         if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "extend" && peek(2)->type == NodeType::OBJECT) {
             current_node->type = NodeType::TYPE_EXT;
+            current_node->_Node = TypeExtNode();
             current_node->_Node.TypeExt().type = peek();
             current_node->_Node.TypeExt().body = peek(2);
             erase_next();
@@ -303,6 +308,7 @@ void Parser::parse_hook_implementation(std::string end) {
         }
         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == "::" && peek(-1)->type == NodeType::ID && peek()->type == NodeType::FUNC) {
             current_node->type = NodeType::HOOK;
+            current_node->_Node = HookNode();
             current_node->_Node.Op().value = "";
             current_node->_Node.Hook().hook_name = peek(-1)->_Node.ID().value;
             current_node->_Node.Hook().function = peek(1);
@@ -424,9 +430,10 @@ void Parser::parse_object_desconstruct(std::string end) {
             break;
         }
         if (current_node->type == NodeType::ID && peek()->type == NodeType::OBJECT) {
+            std::string name = current_node->_Node.ID().value;
             current_node->type = NodeType::OBJECT_DECONSTRUCT;
             current_node->_Node = ObjectDeconstructNode();
-            current_node->_Node.ObjectDeconstruct().name = current_node->_Node.ID().value;
+            current_node->_Node.ObjectDeconstruct().name = name;
             current_node->_Node.ObjectDeconstruct().body = peek();
             erase_next();
         }
@@ -584,7 +591,7 @@ void Parser::parse_for_loop(std::string end) {
                 if (for_loop_config->_Node.Paren().elements[0]->type == NodeType::NUMBER) {
                     current_node->_Node.ForLoop().start = new_number_node(0);
                     current_node->_Node.ForLoop().end = for_loop_config->_Node.Paren().elements[0];
-                } else if (for_loop_config->_Node.Paren().elements[0]->_Node.Op().value == "..") {
+                } else if (for_loop_config->_Node.Paren().elements[0]->type == NodeType::OP && for_loop_config->_Node.Paren().elements[0]->_Node.Op().value == "..") {
                     current_node->_Node.ForLoop().start = for_loop_config->_Node.Paren().elements[0]->_Node.Op().left;
                     current_node->_Node.ForLoop().end = for_loop_config->_Node.Paren().elements[0]->_Node.Op().right;
                 } else {
@@ -715,7 +722,7 @@ void Parser::parse_return(std::string end) {
         if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "ret") {
             current_node->type = NodeType::RETURN;
             current_node->_Node = ReturnNode();
-            if (peek()->_Node.Op().value == ";" || peek()->_Node.Op().value == "}") {
+            if (peek()->type == NodeType::OP && (peek()->_Node.Op().value == ";" || peek()->_Node.Op().value == "}")) {
                 advance();
                 continue;
             } else {

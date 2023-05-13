@@ -60,6 +60,7 @@ void Lexer::build_identifier()
 	if (name == "true")
 	{
 		node->type = NodeType::BOOLEAN;
+		node->_Node = BooleanNode();
 		node->_Node.Boolean().value = true;
 	}
 	else if (name == "false")
