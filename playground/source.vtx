@@ -1,3 +1,7 @@
-import string
+union Unit {
+    "metric",
+    "imperial",
+    "standard"
+}
 
-print(None ?? None ?? "hi")
+var x: Unit = "standard"

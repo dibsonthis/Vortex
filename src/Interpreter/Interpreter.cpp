@@ -517,12 +517,15 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
 
 node_ptr Interpreter::eval_if_statement(node_ptr& node) {
     node_ptr conditional = eval_node(node->_Node.IfStatement().condition);
+    bool is_true = false;
 
-    if (conditional->type != NodeType::BOOLEAN) {
-        error_and_exit("If statement conditional must evaluate to a boolean");
+    if (conditional->type == NodeType::BOOLEAN) {
+        is_true = conditional->_Node.Boolean().value;
+    } else {
+        is_true = conditional->type != NodeType::NONE;
     }
 
-    if (conditional->_Node.Boolean().value) {
+    if (is_true) {
         for (node_ptr expr : node->_Node.IfStatement().body->_Node.Object().elements) {
             node_ptr evaluated_expr = eval_node(expr);
             if (evaluated_expr->type == NodeType::RETURN) {
@@ -1174,9 +1177,11 @@ bool Interpreter::match_types(node_ptr& _nodeA, node_ptr& _nodeB) {
     if (nodeA->type == NodeType::LIST && nodeA->_Node.List().is_union) {
         for (node_ptr& type : nodeA->_Node.List().elements) {
             if (match_types(type, nodeB)) {
-                if (!type->TypeInfo.type) {
+                if (!type->TypeInfo.is_type) {
                     if (match_values(type, nodeB)) {
                         return true;
+                    } else {
+                        continue;
                     }
                 }
                 return true;
@@ -1188,9 +1193,11 @@ bool Interpreter::match_types(node_ptr& _nodeA, node_ptr& _nodeB) {
     if (nodeB->type == NodeType::LIST && nodeB->_Node.List().is_union) {
         for (node_ptr& type : nodeB->_Node.List().elements) {
             if (match_types(type, nodeA)) {
-                if (!type->TypeInfo.type) {
+                if (!type->TypeInfo.is_type) {
                     if (match_values(type, nodeA)) {
                         return true;
+                    } else {
+                        continue;
                     }
                 }
                 return true;
@@ -1761,11 +1768,12 @@ node_ptr Interpreter::eval_pos_neg(node_ptr& node) {
 
 node_ptr Interpreter::eval_not(node_ptr& node) {
     node_ptr value = eval_node(node->_Node.Op().right);
-    if (value->type != NodeType::BOOLEAN) {
-        error_and_exit("Cannot negate a non-boolean");
+
+    if (value->type == NodeType::BOOLEAN) {
+        return new_boolean_node(!value->_Node.Boolean().value);
     }
 
-    return new_boolean_node(!value->_Node.Boolean().value);
+     return new_boolean_node(value->type == NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_add(node_ptr& node) {
@@ -1960,20 +1968,33 @@ node_ptr Interpreter::eval_gt(node_ptr& node) {
 node_ptr Interpreter::eval_and(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
 
-    if (left->type == NodeType::BOOLEAN && !left->_Node.Boolean().value) {
+    node_ptr left_bool = left;
+
+    if (left->type != NodeType::BOOLEAN) {
+        left_bool = new_boolean_node(left->type != NodeType::NONE);
+    }
+
+    if (!left_bool->_Node.Boolean().value) {
         return left;
     }
 
     node_ptr right = eval_node(node->_Node.Op().right);
+    return right;
 
-    if (right->type == NodeType::BOOLEAN && !right->_Node.Boolean().value) {
-        return right;
-    }
+    // node_ptr right_bool = right;
 
-    return left;
+    // if (right->type != NodeType::BOOLEAN) {
+    //     right_bool = new_boolean_node(right->type != NodeType::NONE);
+    // }
 
-    error_and_exit("Cannot perform operation '&&' on types: " + node_repr(left) + ", " + node_repr(right));
-    return new_node(NodeType::NONE);
+    // if (!right_bool->_Node.Boolean().value) {
+    //     return right;
+    // }
+
+    // return left;
+
+    // error_and_exit("Cannot perform operation '&&' on types: " + node_repr(left) + ", " + node_repr(right));
+    // return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_bit_and(node_ptr& node) {
@@ -2002,19 +2023,30 @@ node_ptr Interpreter::eval_bit_or(node_ptr& node) {
 
 node_ptr Interpreter::eval_or(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
+    node_ptr left_bool = left;
 
-    if (left->type == NodeType::BOOLEAN && left->_Node.Boolean().value) {
+    if (left->type != NodeType::BOOLEAN) {
+        left_bool = new_boolean_node(left->type != NodeType::NONE);
+    }
+
+    if (left_bool->_Node.Boolean().value) {
         return left;
     }
 
     node_ptr right = eval_node(node->_Node.Op().right);
+    return right;
+    // node_ptr right_bool = right;
 
-    if (left->type == NodeType::BOOLEAN && right->type == NodeType::BOOLEAN) {
-        return new_boolean_node(left->_Node.Boolean().value || right->_Node.Boolean().value);
-    }
+    // if (right->type != NodeType::BOOLEAN) {
+    //     right_bool = new_boolean_node(right->type != NodeType::NONE);
+    // }
 
-    error_and_exit("Cannot perform operation '||' on types: " + node_repr(left) + ", " + node_repr(right));
-    return new_node(NodeType::NONE);
+    // if (right_bool->type == NodeType::BOOLEAN) {
+    //     return new_boolean_node(left->_Node.Boolean().value || right->_Node.Boolean().value);
+    // }
+
+    // error_and_exit("Cannot perform operation '||' on types: " + node_repr(left) + ", " + node_repr(right));
+    // return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_null_op(node_ptr& node) {
