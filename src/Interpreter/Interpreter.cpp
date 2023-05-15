@@ -151,9 +151,15 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
         }
         node_ptr value = eval_node(prop->_Node.Op().right);
         value->TypeInfo.is_type = object->TypeInfo.is_type;
-        object->_Node.Object().properties[prop->_Node.Op().left->type == NodeType::ID ? prop->_Node.Op().left->_Node.ID().value: prop->_Node.Op().left->_Node.String().value] = value;
-        object->_Node.Object().keys.push_back(prop->_Node.Op().left->type == NodeType::ID ? prop->_Node.Op().left->_Node.ID().value: prop->_Node.Op().left->_Node.String().value);
-        object->_Node.Object().values.push_back(value);
+        std::string key = prop->_Node.Op().left->type == NodeType::ID ? prop->_Node.Op().left->_Node.ID().value: prop->_Node.Op().left->_Node.String().value;
+        // If function exists, add it as dispatch
+        if (value->type == NodeType::FUNC && object->_Node.Object().properties.count(key) && object->_Node.Object().properties[key]->type == NodeType::FUNC) {
+            object->_Node.Object().properties[key]->_Node.Function().dispatch_functions.push_back(value);
+        } else {
+            object->_Node.Object().properties[key] = value;
+            object->_Node.Object().keys.push_back(key);
+            object->_Node.Object().values.push_back(value);
+        }
     }
     else {
         for (node_ptr prop : node->_Node.Object().elements[0]->_Node.List().elements) {
@@ -165,9 +171,15 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
             }
             node_ptr value = eval_node(prop->_Node.Op().right);
             value->TypeInfo.is_type = object->TypeInfo.is_type;
-            object->_Node.Object().properties[prop->_Node.Op().left->type == NodeType::ID ? prop->_Node.Op().left->_Node.ID().value: prop->_Node.Op().left->_Node.String().value] = value;
-            object->_Node.Object().keys.push_back(prop->_Node.Op().left->type == NodeType::ID ? prop->_Node.Op().left->_Node.ID().value: prop->_Node.Op().left->_Node.String().value);
-            object->_Node.Object().values.push_back(value);
+            std::string key = prop->_Node.Op().left->type == NodeType::ID ? prop->_Node.Op().left->_Node.ID().value: prop->_Node.Op().left->_Node.String().value;
+            // If function exists, add it as dispatch
+            if (value->type == NodeType::FUNC && object->_Node.Object().properties.count(key) && object->_Node.Object().properties[key]->type == NodeType::FUNC) {
+                object->_Node.Object().properties[key]->_Node.Function().dispatch_functions.push_back(value);
+            } else {
+                object->_Node.Object().properties[key] = value;
+                object->_Node.Object().keys.push_back(key);
+                object->_Node.Object().values.push_back(value);
+            }
         }
     }
     // remove "this" from scope
@@ -890,9 +902,16 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
 
         if (prop->_Node.Op().value == "=" && prop->_Node.Op().left->type == NodeType::ID) {
             // This is essentually an any type
-            object->_Node.Object().properties[prop->_Node.Op().left->_Node.ID().value] = new_node(NodeType::NONE);
-            object->_Node.Object().properties[prop->_Node.Op().left->_Node.ID().value]->Meta.is_untyped_property = true;
-            object->_Node.Object().defaults[prop->_Node.Op().left->_Node.ID().value] = eval_node(prop->_Node.Op().right);
+            std::string name = prop->_Node.Op().left->_Node.ID().value;
+            node_ptr value = eval_node(prop->_Node.Op().right);
+
+            object->_Node.Object().properties[name] = new_node(NodeType::ANY);
+            object->_Node.Object().properties[name]->Meta.is_untyped_property = true;
+            if (value->type == NodeType::FUNC && object->_Node.Object().defaults.count(name) && object->_Node.Object().defaults[name]->type == NodeType::FUNC) {
+                object->_Node.Object().defaults[name]->_Node.Function().dispatch_functions.push_back(value);
+            } else {
+                object->_Node.Object().defaults[name] = value;
+            }
             goto end;
         }
 
@@ -920,12 +939,19 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
         } else if (type_val->type == NodeType::OBJECT) {
             type_val->TypeInfo.is_type = true;
         }
-        object->_Node.Object().properties[prop->_Node.Op().left->_Node.ID().value] = type_val;
+
+        std::string name = prop->_Node.Op().left->_Node.ID().value;
+
+        object->_Node.Object().properties[name] = type_val;
         if (def_val) {
             if (!match_types(type_val, def_val)) {
-                error_and_exit("Default type constructor for propery '" + prop->_Node.Op().left->_Node.ID().value + "' does not match type: Expecting value of type '" + node_repr(type_val) + "' but received value of type '" + node_repr(def_val) + "'");
+                error_and_exit("Default type constructor for propery '" + name + "' does not match type: Expecting value of type '" + node_repr(type_val) + "' but received value of type '" + node_repr(def_val) + "'");
             }
-            object->_Node.Object().defaults[prop->_Node.Op().left->_Node.ID().value] = def_val;
+            if (def_val->type == NodeType::FUNC && object->_Node.Object().defaults.count(name) && object->_Node.Object().defaults[name]->type == NodeType::FUNC) {
+                object->_Node.Object().defaults[name]->_Node.Function().dispatch_functions.push_back(def_val);
+            } else {
+                object->_Node.Object().defaults[name] = def_val;
+            }
         }
 
     } else {
@@ -943,9 +969,19 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
 
             if (prop->_Node.Op().value == "=" && prop->_Node.Op().left->type == NodeType::ID) {
                 // This is essentually an any type
-                object->_Node.Object().properties[prop->_Node.Op().left->_Node.ID().value] = new_node(NodeType::NONE);
-                object->_Node.Object().properties[prop->_Node.Op().left->_Node.ID().value]->Meta.is_untyped_property = true;
-                object->_Node.Object().defaults[prop->_Node.Op().left->_Node.ID().value] = eval_node(prop->_Node.Op().right);
+                std::string name = prop->_Node.Op().left->_Node.ID().value;
+                node_ptr value = eval_node(prop->_Node.Op().right);
+
+                object->_Node.Object().properties[name] = new_node(NodeType::ANY);
+                object->_Node.Object().properties[name]->Meta.is_untyped_property = true;
+                if (value->type == NodeType::FUNC && object->_Node.Object().defaults.count(name) && object->_Node.Object().defaults[name]->type == NodeType::FUNC) {
+                    object->_Node.Object().defaults[name]->_Node.Function().dispatch_functions.push_back(value);
+                } else {
+                    object->_Node.Object().defaults[name] = value;
+                }
+                // object->_Node.Object().properties[prop->_Node.Op().left->_Node.ID().value] = new_node(NodeType::NONE);
+                // object->_Node.Object().properties[prop->_Node.Op().left->_Node.ID().value]->Meta.is_untyped_property = true;
+                // object->_Node.Object().defaults[prop->_Node.Op().left->_Node.ID().value] = eval_node(prop->_Node.Op().right);
                 continue;
             }
 
@@ -963,6 +999,8 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
             
             node_ptr value = prop->_Node.Op().right;
 
+            std::string name = prop->_Node.Op().left->_Node.ID().value;
+
             // Check if container type (List or Obj) and tag it as a type
             node_ptr type_val = eval_node(prop->_Node.Op().right);
             if (type_val->type == NodeType::LIST) {
@@ -973,12 +1011,17 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
             } else if (type_val->type == NodeType::OBJECT) {
                 type_val->TypeInfo.is_type = true;
             }
-            object->_Node.Object().properties[prop->_Node.Op().left->_Node.ID().value] = type_val;
+            object->_Node.Object().properties[name] = type_val;
             if (def_val) {
                 if (!match_types(type_val, def_val)) {
-                    error_and_exit("Default type constructor for propery '" + prop->_Node.Op().left->_Node.ID().value + "' does not match type: Expecting value of type '" + node_repr(type_val) + "' but received value of type '" + node_repr(def_val) + "'");
+                    error_and_exit("Default type constructor for propery '" + name + "' does not match type: Expecting value of type '" + node_repr(type_val) + "' but received value of type '" + node_repr(def_val) + "'");
                 }
-                object->_Node.Object().defaults[prop->_Node.Op().left->_Node.ID().value] = def_val;
+                if (def_val->type == NodeType::FUNC && object->_Node.Object().defaults.count(name) && object->_Node.Object().defaults[name]->type == NodeType::FUNC) {
+                    object->_Node.Object().defaults[name]->_Node.Function().dispatch_functions.push_back(def_val);
+                } else {
+                    object->_Node.Object().defaults[name] = def_val;
+                }
+                //object->_Node.Object().defaults[name] = def_val;
             }
         }
     }
@@ -1974,6 +2017,17 @@ node_ptr Interpreter::eval_or(node_ptr& node) {
     return new_node(NodeType::NONE);
 }
 
+node_ptr Interpreter::eval_null_op(node_ptr& node) {
+    node_ptr left = eval_node(node->_Node.Op().left);
+
+    if (left->type != NodeType::NONE) {
+        return left;
+    }
+
+    node_ptr right = eval_node(node->_Node.Op().right);
+    return right;
+}
+
 node_ptr Interpreter::eval_plus_eq(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
@@ -2034,6 +2088,9 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                     if (global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name].count(func_name)) {
                         node_ptr ext = std::make_shared<Node>(*global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name][func_name]);
                         ext->_Node.Function().closure["self"] = left;
+                        for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+                            dispatch_fx->_Node.Function().closure["self"] = left;
+                        }
                         return eval_func_call(right, ext);
                     }
                 }
@@ -2042,6 +2099,9 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             if (global_symbol_table->ObjectExtensions.count(func_name)) {
                 node_ptr ext = std::make_shared<Node>(*global_symbol_table->ObjectExtensions[func_name]);
                 ext->_Node.Function().closure["self"] = left;
+                for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+                    dispatch_fx->_Node.Function().closure["self"] = left;
+                }
                 return eval_func_call(right, ext);
             }
 
@@ -2057,9 +2117,6 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             node_ptr left_side = new_node(NodeType::OP);
             left_side->_Node.Op().value = ".";
             left_side->_Node.Op().left = left;
-            if (right->_Node.Accessor().container->type != NodeType::ID) {
-                error_and_exit("Malformed '.' operation");
-            }
             left_side->_Node.Op().right = right->_Node.Accessor().container;
             left_side = eval_dot(left_side);
 
@@ -2093,6 +2150,9 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             if (global_symbol_table->StringExtensions.count(func_name)) {
                 node_ptr ext = std::make_shared<Node>(*global_symbol_table->StringExtensions[func_name]);
                 ext->_Node.Function().closure["self"] = left;
+                for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+                    dispatch_fx->_Node.Function().closure["self"] = left;
+                }
                 return eval_func_call(right, ext);
             }
 
@@ -2422,6 +2482,9 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             if (global_symbol_table->ListExtensions.count(func_name)) {
                 node_ptr ext = std::make_shared<Node>(*global_symbol_table->ListExtensions[func_name]);
                 ext->_Node.Function().closure["self"] = left;
+                for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+                    dispatch_fx->_Node.Function().closure["self"] = left;
+                }
                 return eval_func_call(right, ext);
             }
 
@@ -2558,6 +2621,9 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             if (global_symbol_table->NumberExtensions.count(func_name)) {
                 node_ptr ext = std::make_shared<Node>(*global_symbol_table->NumberExtensions[func_name]);
                 ext->_Node.Function().closure["self"] = left;
+                for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+                    dispatch_fx->_Node.Function().closure["self"] = left;
+                }
                 return eval_func_call(right, ext);
             }
 
@@ -2572,6 +2638,9 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             if (global_symbol_table->BoolExtensions.count(func_name)) {
                 node_ptr ext = std::make_shared<Node>(*global_symbol_table->BoolExtensions[func_name]);
                 ext->_Node.Function().closure["self"] = left;
+                for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+                    dispatch_fx->_Node.Function().closure["self"] = left;
+                }
                 return eval_func_call(right, ext);
             }
 
@@ -2586,6 +2655,9 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             if (global_symbol_table->FunctionExtensions.count(func_name)) {
                 node_ptr ext = std::make_shared<Node>(*global_symbol_table->FunctionExtensions[func_name]);
                 ext->_Node.Function().closure["self"] = left;
+                for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+                    dispatch_fx->_Node.Function().closure["self"] = left;
+                }
                 return eval_func_call(right, ext);
             }
 
@@ -2600,6 +2672,9 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             if (global_symbol_table->NoneExtensions.count(func_name)) {
                 node_ptr ext = std::make_shared<Node>(*global_symbol_table->NoneExtensions[func_name]);
                 ext->_Node.Function().closure["self"] = left;
+                for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+                    dispatch_fx->_Node.Function().closure["self"] = left;
+                }
                 return eval_func_call(right, ext);
             }
 
@@ -2766,7 +2841,7 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
             node_ptr accessed_value = eval_accessor(left);
 
             // If the object has a type and the property wasn't found, we error
-            if (container->TypeInfo.type && accessed_value->type == NodeType::NONE) {
+            if (container->TypeInfo.type_name != "" && accessed_value->type == NodeType::NONE) {
                 error_and_exit("Property does not exist on type '" + container->TypeInfo.type_name + "'");
             }  
 
@@ -3229,6 +3304,9 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
             }
             if (node->_Node.Op().value == "||") {
                 return eval_or(node);
+            }
+            if (node->_Node.Op().value == "??") {
+                return eval_null_op(node);
             }
             if (node->_Node.Op().value == "&") {
                 return eval_bit_and(node);

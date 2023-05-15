@@ -375,6 +375,14 @@ void Lexer::tokenize()
 			advance(); // consume .
 			advance(); // consume .
 		}
+		else if (current_char == '?' && peek() == '?')
+		{
+			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
+			node->_Node.Op().value = "??";
+			nodes.push_back(node);
+			advance(); // consume .
+			advance(); // consume .
+		}
 		else if (current_char == '.' && peek() == '.')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);

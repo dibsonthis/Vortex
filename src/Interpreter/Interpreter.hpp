@@ -118,6 +118,7 @@ public:
     node_ptr eval_gt(node_ptr& node);
     node_ptr eval_and(node_ptr& node);
     node_ptr eval_or(node_ptr& node);
+    node_ptr eval_null_op(node_ptr& node);
     node_ptr eval_bit_and(node_ptr& node);
     node_ptr eval_bit_or(node_ptr& node);
     node_ptr eval_eq(node_ptr& node);
