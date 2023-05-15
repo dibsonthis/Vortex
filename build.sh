@@ -9,7 +9,6 @@ macBuild()
     -Ofast \
     -Wno-everything \
     -std=c++20 \
-    -stdlib=libc++ \
     "$PWD"/src/Node/Node.cpp \
     "$PWD"/src/Lexer/Lexer.cpp \
     "$PWD"/src/Parser/Parser.cpp \

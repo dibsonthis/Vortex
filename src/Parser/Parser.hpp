@@ -44,6 +44,7 @@ public:
     void parse_while_loop(std::string end);
     void parse_if_statement(std::string end);
     void parse_if_block(std::string end);
+    void parse_try_catch(std::string end);
     void parse_import(std::string end);
     void parse_return(std::string end);
     void parse_keywords(std::string end);

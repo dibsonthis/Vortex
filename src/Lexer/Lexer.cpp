@@ -60,12 +60,14 @@ void Lexer::build_identifier()
 	if (name == "true")
 	{
 		node->type = NodeType::BOOLEAN;
-		node->Boolean.value = true;
+		node->_Node = BooleanNode();
+		node->_Node.Boolean().value = true;
 	}
 	else if (name == "false")
 	{
 		node->type = NodeType::BOOLEAN;
-		node->Boolean.value = false;
+		node->_Node = BooleanNode();
+		node->_Node.Boolean().value = false;
 	}
 	else if (name == "None")
 	{
@@ -73,7 +75,7 @@ void Lexer::build_identifier()
 	}
 	else
 	{
-		node->ID.value = name;
+		node->_Node.ID().value = name;
 	}
 
 	nodes.push_back(node);
@@ -112,12 +114,14 @@ void Lexer::build_number()
 	if (num_dots == 0)
 	{
 		node->type = NodeType::NUMBER;
-		node->Number.value = std::stol(value);
+		node->_Node = NumberNode();
+		node->_Node.Number().value = std::stol(value);
 	}
 	else if (num_dots == 1)
 	{
 		node->type = NodeType::NUMBER;
-		node->Number.value = std::stod(value);
+		node->_Node = NumberNode();
+		node->_Node.Number().value = std::stod(value);
 	}
 	else
 	{
@@ -220,37 +224,37 @@ void Lexer::build_string()
 
 	advance();
 
-	node->String.value = std::string();
+	node->_Node.String().value = std::string();
 
 	for (int i = 0; i < (str).length(); i++)
 	{
 		if ((str)[i] == '\\' && (str)[i + 1] == 'n')
 		{
 			(str)[i] = '\n';
-			(node->String.value).push_back('\n');
+			(node->_Node.String().value).push_back('\n');
 			i++;
 		}
 		else if ((str)[i] == '\\' && (str)[i + 1] == 'r')
 		{
 			(str)[i] = '\r';
-			(node->String.value).push_back('\r');
+			(node->_Node.String().value).push_back('\r');
 			i++;
 		}
 		else if ((str)[i] == '\\' && (str)[i + 1] == 't')
 		{
 			(str)[i] = '\t';
-			(node->String.value).push_back('\t');
+			(node->_Node.String().value).push_back('\t');
 			i++;
 		}
 		else if ((str)[i] == '\\' && (str)[i + 1] == '"')
 		{
 			(str)[i] = '\"';
-			(node->String.value).push_back('\"');
+			(node->_Node.String().value).push_back('\"');
 			i++;
 		}
 		else
 		{
-			(node->String.value).push_back((str)[i]);
+			(node->_Node.String().value).push_back((str)[i]);
 		}
 	}
 
@@ -366,16 +370,24 @@ void Lexer::tokenize()
 		else if (current_char == '.' && peek() == '.' && peek(2) == '.')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = "...";
+			node->_Node.Op().value = "...";
 			nodes.push_back(node);
 			advance(); // consume .
+			advance(); // consume .
+			advance(); // consume .
+		}
+		else if (current_char == '?' && peek() == '?')
+		{
+			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
+			node->_Node.Op().value = "??";
+			nodes.push_back(node);
 			advance(); // consume .
 			advance(); // consume .
 		}
 		else if (current_char == '.' && peek() == '.')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = "..";
+			node->_Node.Op().value = "..";
 			nodes.push_back(node);
 			advance(); // consume .
 			advance(); // consume .
@@ -383,7 +395,7 @@ void Lexer::tokenize()
 		else if (current_char == '=' && peek() == '=')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = "==";
+			node->_Node.Op().value = "==";
 			nodes.push_back(node);
 			advance(); // consume =
 			advance(); // consume =
@@ -391,7 +403,7 @@ void Lexer::tokenize()
 		else if (current_char == '!' && peek() == '=')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = "!=";
+			node->_Node.Op().value = "!=";
 			nodes.push_back(node);
 			advance(); // consume !
 			advance(); // consume =
@@ -399,7 +411,7 @@ void Lexer::tokenize()
 		else if (current_char == '<' && peek() == '=')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = "<=";
+			node->_Node.Op().value = "<=";
 			nodes.push_back(node);
 			advance(); // consume <
 			advance(); // consume =
@@ -408,7 +420,7 @@ void Lexer::tokenize()
 		{
 			//node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = ">=";
+			node->_Node.Op().value = ">=";
 			nodes.push_back(node);
 			advance(); // consume >
 			advance(); // consume =
@@ -416,7 +428,7 @@ void Lexer::tokenize()
 		else if (current_char == '+' && peek() == '=')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = "+=";
+			node->_Node.Op().value = "+=";
 			nodes.push_back(node);
 			advance(); // consume +
 			advance(); // consume =
@@ -424,7 +436,7 @@ void Lexer::tokenize()
 		else if (current_char == '-' && peek() == '=')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = "-=";
+			node->_Node.Op().value = "-=";
 			nodes.push_back(node);
 			advance(); // consume -
 			advance(); // consume =
@@ -432,7 +444,7 @@ void Lexer::tokenize()
 		else if (current_char == '=' && peek() == '>')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = "=>";
+			node->_Node.Op().value = "=>";
 			nodes.push_back(node);
 			advance(); // consume =
 			advance(); // consume >
@@ -440,7 +452,7 @@ void Lexer::tokenize()
 		else if (current_char == '-' && peek() == '>')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = "->";
+			node->_Node.Op().value = "->";
 			nodes.push_back(node);
 			advance(); // consume >
 			advance(); // consume >
@@ -448,7 +460,7 @@ void Lexer::tokenize()
 		else if (current_char == '>' && peek() == '>')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = ">>";
+			node->_Node.Op().value = ">>";
 			nodes.push_back(node);
 			advance(); // consume >
 			advance(); // consume >
@@ -456,7 +468,7 @@ void Lexer::tokenize()
 		else if (current_char == '&' && peek() == '&')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = "&&";
+			node->_Node.Op().value = "&&";
 			nodes.push_back(node);
 			advance(); // consume &
 			advance(); // consume &
@@ -464,7 +476,7 @@ void Lexer::tokenize()
 		else if (current_char == '|' && peek() == '|')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = "||";
+			node->_Node.Op().value = "||";
 			nodes.push_back(node);
 			advance(); // consume |
 			advance(); // consume |
@@ -472,7 +484,7 @@ void Lexer::tokenize()
 		else if (current_char == ':' && peek() == ':')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = "::";
+			node->_Node.Op().value = "::";
 			nodes.push_back(node);
 			advance(); // consume :
 			advance(); // consume :
@@ -480,203 +492,203 @@ void Lexer::tokenize()
 		else if (current_char == '=')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '(')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == ')')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '{')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '}')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '[')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == ']')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '<')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '>')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '.')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '\\')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '\'')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '!')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '@')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '#')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '$')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '^')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '?')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '%')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '"')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '-')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '+')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '/')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '*')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == ',')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '|')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == ':')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == ';')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}
 		else if (current_char == '&')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
-			node->Operator.value = current_char;
+			node->_Node.Op().value = current_char;
 			nodes.push_back(node);
 			advance(); // consume symbol
 		}

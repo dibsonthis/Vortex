@@ -68,6 +68,7 @@ public:
     Interpreter* global_interpreter = this;
     int argc;
     std::vector<std::string> argv;
+    bool try_catch = false;
 
 public:
     Interpreter() = default;
@@ -101,6 +102,7 @@ public:
     node_ptr eval_object_init(node_ptr& node);
     node_ptr eval_enum(node_ptr& node);
     node_ptr eval_union(node_ptr& node);
+    node_ptr eval_try_catch(node_ptr& node);
     // Operations
     node_ptr eval_pos_neg(node_ptr& node);
     node_ptr eval_not(node_ptr& node);
@@ -118,6 +120,7 @@ public:
     node_ptr eval_gt(node_ptr& node);
     node_ptr eval_and(node_ptr& node);
     node_ptr eval_or(node_ptr& node);
+    node_ptr eval_null_op(node_ptr& node);
     node_ptr eval_bit_and(node_ptr& node);
     node_ptr eval_bit_or(node_ptr& node);
     node_ptr eval_eq(node_ptr& node);
@@ -127,11 +130,11 @@ public:
     // Builtin functions
     void builtin_print(node_ptr& node);
     node_ptr eval_load_lib(node_ptr& node);
-    node_ptr eval_call_lib_function(node_ptr lib, node_ptr& node);
+    node_ptr eval_call_lib_function(node_ptr& lib, node_ptr& node);
 
     Symbol new_symbol(std::string name, node_ptr& value, node_ptr type = nullptr);
     Symbol get_symbol(std::string name, sym_t_ptr& symbol_table);
-    Symbol get_symbol_local(std::string name, sym_t_ptr& symbol_table);
+    Symbol get_symbol_local(std::string& name, sym_t_ptr& symbol_table);
     void add_symbol(Symbol symbol, sym_t_ptr& symbol_table);
     void delete_symbol(std::string name, sym_t_ptr& symbol_table);
     bool match_types(node_ptr& _nodeA, node_ptr& _nodeB);
@@ -153,4 +156,5 @@ public:
     void replaceAll(std::string& str, const std::string& from, const std::string& to);
 
     void error_and_exit(std::string message);
+    node_ptr throw_error(std::string message);
 };

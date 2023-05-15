@@ -22,7 +22,7 @@ CONFIG=""
 
 if [ "$FILE" = "sdl" ]; then
     sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2-2.0.0.dylib" "$FILE/lib/libSDL2-2.0.0.dylib"
-    CONFIG="-L/usr/local/share/vortex/modules/lib -I/usr/local/share/vortex/modules/SDL2 -D_THREAD_SAFE"
+    CONFIG="-L/usr/local/share/vortex/modules/sdl/lib -I/usr/local/share/vortex/modules/sdl/include -D_THREAD_SAFE"
 elif [ "$FILE" = "requests" ]; then
     sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libcrypto.3.dylib" "$FILE/lib/libcrypto.3.dylib"
     sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libcrypto.dylib" "$FILE/lib/libcrypto.dylib"
@@ -33,7 +33,7 @@ else
 fi
 
 if [ "$FILE" = "requests" ]; then
-    CONFIG="-framework CoreFoundation -framework Security"
+    CONFIG="-framework CoreFoundation -framework Security -L/usr/local/share/vortex/modules/requests/lib -I/usr/local/share/vortex/modules/requests/include"
 else
     CONFIG=$CONFIG
 fi
@@ -51,12 +51,5 @@ $LIBS \
 "$PWD"/$FILE/$FILE.cpp \
 -o "$PWD"/$FILE/bin/$FILE \
 -Wl,-rpath "$PWD"/$FILE/lib
-
-# if [ "$FILE" = "sdl" ]; then
-#     sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2-2.0.0.dylib" "$FILE/lib/libSDL2-2.0.0.dylib"
-#     sudo install_name_tool -change "$PWD"/$FILE/lib/libSDL2-2.0.0.dylib "/usr/local/share/vortex/modules/sdl/lib/libSDL2-2.0.0.dylib" $FILE/bin/sdl
-# else
-#     CONFIG=""
-# fi
 
 done

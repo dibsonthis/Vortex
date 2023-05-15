@@ -4,7 +4,7 @@ var interpolate = (value: Number, x0: Number, x1: Number, y0: Number, y1: Number
 	y0 + (value - x0) * ((y0 - y1)/(x0 - x1))
 }
 
-var width = 600
+var width = 1000
 var x = -0.65
 var y = 0
 var oldX = x
@@ -50,9 +50,17 @@ for (0..height, row) {
         }
 
         index = row * width + col + 1
-
-        println(f"${index}/${width * height} - ${(index / width / height * 100 * 10) / 10}%")
     }
+
+    println(f"${row}/${height} - ${(row / height * 100 * 10) / 10}%")
 }
 
 image.save(canvas, "../output/mandelbrot_output.png")
+
+// var x = 0
+// for (0..10000) {
+//     for (0..10000) {
+//         x += 1
+//     }
+//     println(f"${(x/(10000 * 10000)) * 100}%")
+// }

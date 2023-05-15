@@ -19,8 +19,8 @@ VortexObj split(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects 2 string arguments");
     }
 
-    std::string& str = args[0]->String.value;
-    std::string delim = args[1]->String.value;
+    std::string& str = args[0]->_Node.String().value;
+    std::string delim = args[1]->_Node.String().value;
 
     if (delim == "") {
         delim = " ";
@@ -37,11 +37,11 @@ VortexObj split(std::string name, std::vector<VortexObj> args) {
 
         auto str_node = new_string_node(token);
 
-        res->List.elements.push_back(str_node);
+        res->_Node.List().elements.push_back(str_node);
     }
 
     auto last_str_node = new_string_node(str.substr(pos_start));
-    res->List.elements.push_back(last_str_node);
+    res->_Node.List().elements.push_back(last_str_node);
 
     return res;
 }
@@ -56,15 +56,15 @@ VortexObj trim(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects 1 string argument");
     }
 
-    VortexObj new_string = new_string_node(args[0]->String.value);
+    VortexObj new_string = new_string_node(args[0]->_Node.String().value);
 
-    new_string->String.value.erase(new_string->String.value.begin(), std::find_if(new_string->String.value.begin(), new_string->String.value.end(), [](unsigned char ch) {
+    new_string->_Node.String().value.erase(new_string->_Node.String().value.begin(), std::find_if(new_string->_Node.String().value.begin(), new_string->_Node.String().value.end(), [](unsigned char ch) {
         return !std::isspace(ch);
     }));
 
-    new_string->String.value.erase(std::find_if(new_string->String.value.rbegin(), new_string->String.value.rend(), [](unsigned char ch) {
+    new_string->_Node.String().value.erase(std::find_if(new_string->_Node.String().value.rbegin(), new_string->_Node.String().value.rend(), [](unsigned char ch) {
         return !std::isspace(ch);
-    }).base(), new_string->String.value.end());
+    }).base(), new_string->_Node.String().value.end());
 
     return new_string;
 }
@@ -80,8 +80,8 @@ VortexObj chars(std::string name, std::vector<VortexObj> args) {
 
     node_ptr list = new_vortex_obj(NodeType::LIST);
 
-    for (auto c : args[0]->String.value) {
-        list->List.elements.push_back(new_string_node(std::string(1, c)));
+    for (auto c : args[0]->_Node.String().value) {
+        list->_Node.List().elements.push_back(new_string_node(std::string(1, c)));
     }
 
     return list;
