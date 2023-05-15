@@ -679,6 +679,44 @@ void Parser::parse_if_statement(std::string end) {
     }
 }
 
+void Parser::parse_try_catch(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
+            break;
+        }
+
+        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "try") {
+            node_ptr try_block = peek();
+            if (try_block->type != NodeType::OBJECT) {
+                error_and_exit("Malformed try-catch expression - missing 'try' block");
+            }
+            node_ptr catch_keyword = peek(2);
+            if (catch_keyword->type != NodeType::FUNC_CALL && catch_keyword->_Node.FunctionCall().name != "catch") {
+                error_and_exit("Malformed try-catch expression - missing 'catch' keyword");
+            }
+            if (catch_keyword->_Node.FunctionCall().args.size() != 1) {
+                error_and_exit("Malformed try-catch expression - 'catch' expects one argument");
+            }
+            if (catch_keyword->_Node.FunctionCall().args[0]->type != NodeType::ID) {
+                error_and_exit("Malformed try-catch expression - 'catch' expects argument to be an identifier");
+            }
+            node_ptr catch_block = peek(3);
+            if (catch_block->type != NodeType::OBJECT) {
+                error_and_exit("Malformed try-catch expression - missing 'catch' block");
+            }
+            current_node->type = NodeType::TRY_CATCH;
+            current_node->_Node = TryCatchNode();
+            current_node->_Node.TryCatch().try_body = try_block;
+            current_node->_Node.TryCatch().catch_keyword = catch_keyword;
+            current_node->_Node.TryCatch().catch_body = catch_block;
+            erase_next();
+            erase_next();
+            erase_next();
+        }
+        advance();
+    }
+}
+
 void Parser::parse_if_block(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
@@ -824,6 +862,8 @@ void Parser::parse(int start, std::string end) {
     parse_post_op({"?"}, end);
     reset(start);
     parse_type_ext(end);
+    reset(start);
+    parse_try_catch(end);
     reset(start);
     parse_accessor(end);
     reset(start);

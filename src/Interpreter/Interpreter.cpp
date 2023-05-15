@@ -26,14 +26,14 @@ void Interpreter::reset(int idx) {
 node_ptr Interpreter::eval_const_decl(node_ptr& node) {
     node_ptr existing_symbol = get_symbol_local(node->_Node.ConstantDeclatation().name, current_symbol_table).value;
     if (existing_symbol != nullptr && existing_symbol->type != NodeType::FUNC) {
-        error_and_exit("Variable '" + node->_Node.ConstantDeclatation().name + "' is already defined");
+        return throw_error("Variable '" + node->_Node.ConstantDeclatation().name + "' is already defined");
     }
     node_ptr value = eval_node(node->_Node.ConstantDeclatation().value);
     node_ptr type = eval_node(node->TypeInfo.type);
     value = std::make_shared<Node>(*value);
     value->TypeInfo.type = type;
-    if (type && !match_types(value, type)) {
-        error_and_exit("Variable '" + node->_Node.ConstantDeclatation().name + "' expects a value of type '" + node_repr(type) + "' but was instantiated with value of type '" + node_repr(value) + "'");
+    if (type && !match_types(type, value)) {
+        return throw_error("Variable '" + node->_Node.ConstantDeclatation().name + "' expects a value of type '" + node_repr(type) + "' but was instantiated with value of type '" + node_repr(value) + "'");
     }
     if (!type) {
         type = std::make_shared<Node>(*value);
@@ -63,12 +63,12 @@ node_ptr Interpreter::eval_const_decl(node_ptr& node) {
 node_ptr Interpreter::eval_var_decl(node_ptr& node) {
     node_ptr existing_symbol = get_symbol_local(node->_Node.VariableDeclaration().name, current_symbol_table).value;
     if (existing_symbol != nullptr) {
-        error_and_exit("Variable '" + node->_Node.VariableDeclaration().name + "' is already defined");
+        return throw_error("Variable '" + node->_Node.VariableDeclaration().name + "' is already defined");
     }
     node_ptr value = eval_node(node->_Node.VariableDeclaration().value);
     node_ptr type = eval_node(node->TypeInfo.type);
-    if (type && !match_types(value, type)) {
-        error_and_exit("Variable '" + node->_Node.VariableDeclaration().name + "' expects a value of type '" + node_repr(type) + "' but was instantiated with value of type '" + node_repr(value) + "'");
+    if (type && !match_types(type, value)) {
+        return throw_error("Variable '" + node->_Node.VariableDeclaration().name + "' expects a value of type '" + node_repr(type) + "' but was instantiated with value of type '" + node_repr(value) + "'");
     }
     if (!type) {
         type = std::make_shared<Node>(*value);
@@ -144,10 +144,10 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
     if (node->_Node.Object().elements[0]->type != NodeType::COMMA_LIST) {
         node_ptr prop = node->_Node.Object().elements[0];
         if (prop->_Node.Op().value != ":") {
-            error_and_exit("Object must contain properties separated with ':'");
+            return throw_error("Object must contain properties separated with ':'");
         }
         if (prop->_Node.Op().left->type != NodeType::ID && prop->_Node.Op().left->type != NodeType::STRING) {
-            error_and_exit("Property names must be identifiers or strings");
+            return throw_error("Property names must be identifiers or strings");
         }
         node_ptr value = eval_node(prop->_Node.Op().right);
         value->TypeInfo.is_type = object->TypeInfo.is_type;
@@ -164,10 +164,10 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
     else {
         for (node_ptr prop : node->_Node.Object().elements[0]->_Node.List().elements) {
             if (prop->type == NodeType::OP && prop->_Node.Op().value != ":") {
-                error_and_exit("Object must contain properties separated with ':'");
+                return throw_error("Object must contain properties separated with ':'");
             }
             if (prop->type == NodeType::OP && prop->_Node.Op().left->type != NodeType::ID && prop->_Node.Op().left->type != NodeType::STRING) {
-                error_and_exit("Property names must be identifiers or strings");
+                return throw_error("Property names must be identifiers or strings");
             }
             node_ptr value = eval_node(prop->_Node.Op().right);
             value->TypeInfo.is_type = object->TypeInfo.is_type;
@@ -220,24 +220,24 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
         }
         if (node->_Node.FunctionCall().name == "error") {
             if (node->_Node.FunctionCall().args.size() != 1) {
-                error_and_exit("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
             }
             node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
             std::string message = printable(arg);
             line = node->line;
             column = node->column;
-            error_and_exit(message);
+            return throw_error(message);
         }
         if (node->_Node.FunctionCall().name == "string") {
             if (node->_Node.FunctionCall().args.size() != 1) {
-                error_and_exit("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
             }
             node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
             return new_string_node(printable(arg));
         }
         if (node->_Node.FunctionCall().name == "number") {
             if (node->_Node.FunctionCall().args.size() != 1) {
-                error_and_exit("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
             }
             node_ptr var = eval_node(node->_Node.FunctionCall().args[0]);
 
@@ -248,7 +248,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
                     try {
                         return new_number_node(std::stod(var->_Node.String().value));
                     } catch(...) {
-                        error_and_exit("Cannot convert \"" + var->_Node.String().value + "\" to a number");
+                        return throw_error("Cannot convert \"" + var->_Node.String().value + "\" to a number");
                     }
                 };
                 case NodeType::BOOLEAN: {
@@ -263,7 +263,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
         }
         if (node->_Node.FunctionCall().name == "type") {
             if (node->_Node.FunctionCall().args.size() != 1) {
-                error_and_exit("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
             }
 
             node_ptr var = eval_node(node->_Node.FunctionCall().args[0]);
@@ -315,10 +315,10 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
     } else if (node->_Node.FunctionCall().caller == nullptr) {
         Symbol function_symbol = get_symbol(node->_Node.FunctionCall().name, current_symbol_table);
         if (function_symbol.value == nullptr) {
-            error_and_exit("Function '" + node->_Node.FunctionCall().name + "' is undefined");
+            return throw_error("Function '" + node->_Node.FunctionCall().name + "' is undefined");
         }
         if (function_symbol.value->type != NodeType::FUNC) {
-            error_and_exit("Variable '" + node->_Node.FunctionCall().name + "' is not a function");
+            return throw_error("Variable '" + node->_Node.FunctionCall().name + "' is not a function");
         }
         function->_Node.Function().name = function_symbol.name;
         function->_Node.Function().args = std::vector<node_ptr>(function_symbol.value->_Node.Function().args);
@@ -334,10 +334,10 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
     } else {
         node_ptr method = node->_Node.FunctionCall().caller->_Node.Object().properties[node->_Node.FunctionCall().name];
         if (method == nullptr) {
-            error_and_exit("Method '" + node->_Node.FunctionCall().name + "' does not exist");
+            return throw_error("Method '" + node->_Node.FunctionCall().name + "' does not exist");
         }
         if (method->type != NodeType::FUNC) {
-            error_and_exit("Variable '" + node->_Node.FunctionCall().name + "' is not a function");
+            return throw_error("Variable '" + node->_Node.FunctionCall().name + "' is not a function");
         }
         function->_Node.Function().name = method->_Node.Function().name;
         function->_Node.Function().args = std::vector<node_ptr>(method->_Node.Function().args);
@@ -376,7 +376,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
             node_ptr param = fx->_Node.Function().params[i];
             node_ptr param_type = fx->_Node.Function().param_types[param->_Node.ID().value];
             if (param_type) {
-                if (!match_types(args[i], param_type)) {
+                if (!match_types(param_type, args[i])) {
                     goto not_found;
                 }
             } else {
@@ -402,7 +402,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
             }
         }
         argsStr += ")";
-        error_and_exit("Dispatch error in function '" + node->_Node.FunctionCall().name + "' - No function found matching args: " + argsStr + "\n\nAvailable functions:\n\n" + printable(functions[0]));
+        return throw_error("Dispatch error in function '" + node->_Node.FunctionCall().name + "' - No function found matching args: " + argsStr + "\n\nAvailable functions:\n\n" + printable(functions[0]));
     }
 
     auto local_scope = std::make_shared<SymbolTable>();
@@ -434,7 +434,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
     int num_empty_args = std::count(function->_Node.Function().args.begin(), function->_Node.Function().args.end(), nullptr);
 
     if (args.size() > num_empty_args) {
-        error_and_exit("Function '" + node->_Node.FunctionCall().name + "' expects " + std::to_string(num_empty_args) + " parameters but " + std::to_string(args.size()) + " were provided");
+        return throw_error("Function '" + node->_Node.FunctionCall().name + "' expects " + std::to_string(num_empty_args) + " parameters but " + std::to_string(args.size()) + " were provided");
     }
 
     for (int i = 0; i < args.size(); i++) {
@@ -476,8 +476,8 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
 
     // Check against return type
     if (function->_Node.Function().return_type) {
-        if (!match_types(res, function->_Node.Function().return_type)) {
-            error_and_exit("Type Error in '" + function->_Node.Function().name + "': Return type does not match defined return type");
+        if (!match_types(function->_Node.Function().return_type, res)) {
+            return throw_error("Type Error in '" + function->_Node.Function().name + "': Return type does not match defined return type");
         }
     }
 
@@ -589,7 +589,7 @@ node_ptr Interpreter::eval_for_loop(node_ptr& node) {
         // TODO: Implement for object looping
 
         if (iterator->type != NodeType::LIST) {
-            error_and_exit("For loop iterator must be a list");
+            return throw_error("For loop iterator must be a list");
         }
 
         auto current_scope = current_symbol_table;
@@ -648,7 +648,7 @@ node_ptr Interpreter::eval_for_loop(node_ptr& node) {
     node_ptr end_node = eval_node(node->_Node.ForLoop().end);
 
     if (start_node->type != NodeType::NUMBER && end_node->type != NodeType::NUMBER) {
-        error_and_exit("For loop range expects two numbers");
+        return throw_error("For loop range expects two numbers");
     }
 
     int start = start_node->_Node.Number().value;
@@ -719,7 +719,7 @@ node_ptr Interpreter::eval_for_loop(node_ptr& node) {
 node_ptr Interpreter::eval_while_loop(node_ptr& node) {
     node_ptr conditional = eval_node(node->_Node.WhileLoop().condition);
     if (conditional->type != NodeType::BOOLEAN) {
-        error_and_exit("While loop conditional must evaluate to a boolean");
+        return throw_error("While loop conditional must evaluate to a boolean");
     }
 
     auto current_scope = current_symbol_table;
@@ -760,13 +760,13 @@ node_ptr Interpreter::eval_accessor(node_ptr& node) {
     node_ptr accessor = eval_node(node->_Node.Accessor().accessor);
 
     if (accessor->_Node.List().elements.size() != 1) {
-        error_and_exit("Malformed accessor");
+        return throw_error("Malformed accessor");
     }
 
     if (container->type == NodeType::STRING) {
         node_ptr index_node = accessor->_Node.List().elements[0];
         if (index_node->type != NodeType::NUMBER) {
-            error_and_exit("List accessor expects a number");
+            return throw_error("List accessor expects a number");
         }
         int index = index_node->_Node.Number().value;
         if (index >= container->_Node.String().value.length() || index < 0) {
@@ -778,7 +778,7 @@ node_ptr Interpreter::eval_accessor(node_ptr& node) {
     if (container->type == NodeType::LIST) {
         node_ptr index_node = accessor->_Node.List().elements[0];
         if (index_node->type != NodeType::NUMBER) {
-            error_and_exit("List accessor expects a number");
+            return throw_error("List accessor expects a number");
         }
         int index = index_node->_Node.Number().value;
         if (index >= container->_Node.List().elements.size() || index < 0) {
@@ -790,7 +790,7 @@ node_ptr Interpreter::eval_accessor(node_ptr& node) {
     if (container->type == NodeType::OBJECT) {
         node_ptr prop_node = accessor->_Node.List().elements[0];
         if (prop_node->type != NodeType::STRING) {
-            error_and_exit("Object accessor expects a string");
+            return throw_error("Object accessor expects a string");
         }
         std::string prop = prop_node->_Node.String().value;
         if (container->_Node.Object().properties.contains(prop)) {
@@ -799,7 +799,7 @@ node_ptr Interpreter::eval_accessor(node_ptr& node) {
         return new_node(NodeType::NONE);
     }
 
-    error_and_exit("Value of type '" + node_repr(container) + "' is not accessable");
+    return throw_error("Value of type '" + node_repr(container) + "' is not accessable");
 }
 
 node_ptr Interpreter::eval_function(node_ptr& node) {
@@ -847,7 +847,7 @@ node_ptr Interpreter::eval_union(node_ptr& node) {
     node_ptr union_body = node->_Node.Union().body;
     node_ptr union_list = new_node(NodeType::LIST);
     if (union_body->_Node.Object().elements.size() == 0) {
-        error_and_exit("Union cannot be empty");
+        return throw_error("Union cannot be empty");
     }
     if (union_body->_Node.Object().elements.size() == 1 && union_body->_Node.Object().elements[0]->type == NodeType::COMMA_LIST) {
         union_body = union_body->_Node.Object().elements[0];
@@ -861,6 +861,7 @@ node_ptr Interpreter::eval_union(node_ptr& node) {
     union_list->Meta.is_const = true;
     union_list->_Node.List().is_union = true;
     union_list->TypeInfo.type_name = node->_Node.Union().name;
+    union_list->TypeInfo.is_type = true;
     Symbol symbol = new_symbol(node->_Node.Union().name, union_list);
     add_symbol(symbol, current_symbol_table);
     return union_list;
@@ -924,10 +925,10 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
         }
 
         if (prop->_Node.Op().value != ":") {
-            error_and_exit("Object must contain properties separated with ':'");
+            return throw_error("Object must contain properties separated with ':'");
         }
         if (prop->_Node.Op().left->type != NodeType::ID) {
-            error_and_exit("Property names must be identifiers");
+            return throw_error("Property names must be identifiers");
         }
 
         node_ptr value = prop->_Node.Op().right;
@@ -936,7 +937,7 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
         node_ptr type_val = eval_node(prop->_Node.Op().right);
         if (type_val->type == NodeType::LIST) {
             if (type_val->_Node.List().elements.size() > 1) {
-                error_and_exit("List types can only contain one type");
+                return throw_error("List types can only contain one type");
             }
             type_val->TypeInfo.is_type = true;
         } else if (type_val->type == NodeType::OBJECT) {
@@ -948,7 +949,7 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
         object->_Node.Object().properties[name] = type_val;
         if (def_val) {
             if (!match_types(type_val, def_val)) {
-                error_and_exit("Default type constructor for propery '" + name + "' does not match type: Expecting value of type '" + node_repr(type_val) + "' but received value of type '" + node_repr(def_val) + "'");
+                return throw_error("Default type constructor for propery '" + name + "' does not match type: Expecting value of type '" + node_repr(type_val) + "' but received value of type '" + node_repr(def_val) + "'");
             }
             if (def_val->type == NodeType::FUNC && object->_Node.Object().defaults.count(name) && object->_Node.Object().defaults[name]->type == NodeType::FUNC) {
                 object->_Node.Object().defaults[name]->_Node.Function().dispatch_functions.push_back(def_val);
@@ -994,10 +995,10 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
             }
 
             if (prop->_Node.Op().value != ":") {
-                error_and_exit("Object must contain properties separated with ':'");
+                return throw_error("Object must contain properties separated with ':'");
             }
             if (prop->_Node.Op().left->type != NodeType::ID) {
-                error_and_exit("Property names must be identifiers");
+                return throw_error("Property names must be identifiers");
             }
             
             node_ptr value = prop->_Node.Op().right;
@@ -1008,7 +1009,7 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
             node_ptr type_val = eval_node(prop->_Node.Op().right);
             if (type_val->type == NodeType::LIST) {
                 if (type_val->_Node.List().elements.size() > 1) {
-                    error_and_exit("List types can only contain one type");
+                    return throw_error("List types can only contain one type");
                 }
                 type_val->TypeInfo.is_type = true;
             } else if (type_val->type == NodeType::OBJECT) {
@@ -1017,7 +1018,7 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
             object->_Node.Object().properties[name] = type_val;
             if (def_val) {
                 if (!match_types(type_val, def_val)) {
-                    error_and_exit("Default type constructor for propery '" + name + "' does not match type: Expecting value of type '" + node_repr(type_val) + "' but received value of type '" + node_repr(def_val) + "'");
+                    return throw_error("Default type constructor for propery '" + name + "' does not match type: Expecting value of type '" + node_repr(type_val) + "' but received value of type '" + node_repr(def_val) + "'");
                 }
                 if (def_val->type == NodeType::FUNC && object->_Node.Object().defaults.count(name) && object->_Node.Object().defaults[name]->type == NodeType::FUNC) {
                     object->_Node.Object().defaults[name]->_Node.Function().dispatch_functions.push_back(def_val);
@@ -1045,7 +1046,7 @@ node_ptr Interpreter::eval_type_ext(node_ptr& node) {
     // Check that all property values resolve to functions
     for (auto& prop : body->_Node.Object().properties) {
         if (prop.second->type != NodeType::FUNC) {
-            error_and_exit("Type extension properties must resolve to functions");
+            return throw_error("Type extension properties must resolve to functions");
         }
     }
 
@@ -1088,7 +1089,7 @@ node_ptr Interpreter::eval_type_ext(node_ptr& node) {
         return new_node(NodeType::NONE);
     }
 
-    error_and_exit("Malformed Type extension");
+    return throw_error("Malformed Type extension");
     return new_node(NodeType::NONE);
 }
 
@@ -1137,48 +1138,37 @@ bool Interpreter::match_values(node_ptr& nodeA, node_ptr& nodeB) {
     return false;
 }
 
-bool Interpreter::match_types(node_ptr& _nodeA, node_ptr& _nodeB) {
+bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
+    node_ptr type = std::make_shared<Node>(*_type);
+    if (!type->TypeInfo.is_type && type->TypeInfo.type) {
+        type = type->TypeInfo.type;
+    }
+    node_ptr value = std::make_shared<Node>(*_value);
 
-    node_ptr nodeA = std::make_shared<Node>(*_nodeA);
-    node_ptr nodeB = std::make_shared<Node>(*_nodeB);
-    
-    if (nodeA == nullptr || nodeB == nullptr) {
+    if (type == nullptr || value == nullptr) {
         return false;
     }
 
-    if (nodeA->type == NodeType::ANY || nodeB->type == NodeType::ANY) {
+    if (type->type == NodeType::ANY) {
         return true;
     }
 
-    if (nodeA->type == NodeType::FUNC && nodeA->TypeInfo.is_refinement_type) {
+    if (type->type == NodeType::FUNC && type->TypeInfo.is_refinement_type) {
         node_ptr func_call = new_node(NodeType::FUNC_CALL);
-        func_call->_Node.FunctionCall().name = nodeA->_Node.Function().name;
-        func_call->_Node.FunctionCall().args.push_back(nodeB);
-        node_ptr res = eval_func_call(func_call, nodeA);
+        func_call->_Node.FunctionCall().name = type->_Node.Function().name;
+        func_call->_Node.FunctionCall().args.push_back(value);
+        node_ptr res = eval_func_call(func_call, type);
         if (res->type != NodeType::BOOLEAN) {
             error_and_exit("Refinement types must return a boolean value");
         }
         return res->_Node.Boolean().value;
     }
 
-    if (nodeB->type == NodeType::FUNC && nodeB->TypeInfo.is_refinement_type) {
-        node_ptr func_call = new_node(NodeType::FUNC_CALL);
-        func_call->_Node.FunctionCall().name = nodeB->_Node.Function().name;
-        func_call->_Node.FunctionCall().args.push_back(nodeA);
-        node_ptr res = eval_func_call(func_call, nodeB);
-        if (res->type != NodeType::BOOLEAN) {
-            error_and_exit("Refinement types must return a boolean value");
-        }
-        return res->_Node.Boolean().value;
-    }
-
-    // Check Union
-
-    if (nodeA->type == NodeType::LIST && nodeA->_Node.List().is_union) {
-        for (node_ptr& type : nodeA->_Node.List().elements) {
-            if (match_types(type, nodeB)) {
+    if (type->type == NodeType::LIST && type->_Node.List().is_union) {
+        for (node_ptr& type : type->_Node.List().elements) {
+            if (match_types(type, value)) {
                 if (!type->TypeInfo.is_type) {
-                    if (match_values(type, nodeB)) {
+                    if (match_values(type, value)) {
                         return true;
                     } else {
                         continue;
@@ -1190,35 +1180,9 @@ bool Interpreter::match_types(node_ptr& _nodeA, node_ptr& _nodeB) {
         return false;
     }
 
-    if (nodeB->type == NodeType::LIST && nodeB->_Node.List().is_union) {
-        for (node_ptr& type : nodeB->_Node.List().elements) {
-            if (match_types(type, nodeA)) {
-                if (!type->TypeInfo.is_type) {
-                    if (match_values(type, nodeA)) {
-                        return true;
-                    } else {
-                        continue;
-                    }
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // check Enums
-
-    if (nodeA->type == NodeType::OBJECT && nodeA->_Node.Object().is_enum) {
-        for (auto& elem : nodeA->_Node.Object().properties) {
-            if (match_values(elem.second, nodeB)) {
-                return true;
-            }
-        }
-
-        return false;
-    } else if (nodeB->type == NodeType::OBJECT && nodeB->_Node.Object().is_enum) {
-        for (auto& elem : nodeB->_Node.Object().properties) {
-            if (match_values(elem.second, nodeA)) {
+    if (type->type == NodeType::OBJECT && type->_Node.Object().is_enum) {
+        for (auto& elem : type->_Node.Object().properties) {
+            if (match_values(elem.second, value)) {
                 return true;
             }
         }
@@ -1226,56 +1190,36 @@ bool Interpreter::match_types(node_ptr& _nodeA, node_ptr& _nodeB) {
         return false;
     }
 
-    if (nodeA->TypeInfo.is_literal_type) {
-        return match_values(nodeA, nodeB);
+    if (type->TypeInfo.is_literal_type) {
+        return match_values(type, value);
     }
 
-    if (nodeB->TypeInfo.is_literal_type) {
-        return match_values(nodeB, nodeA);
-    }
-
-    if (nodeA->TypeInfo.type) {
-        nodeA = nodeA->TypeInfo.type;
-    }
-
-    if (nodeB->TypeInfo.type) {
-        nodeB = nodeB->TypeInfo.type;
-    }
-
-    if (nodeA->type == NodeType::ANY || nodeB->type == NodeType::ANY) {
-        return true;
-    }
-
-    if (nodeA->type != nodeB->type) {
+    if (type->type != value->type) {
         return false;
     }
 
-    if (nodeA->type == NodeType::ANY || nodeB->type == NodeType::ANY) {
-        return true;
-    }
+    if (type->type == NodeType::LIST) {
 
-    if (nodeA->type == NodeType::LIST) {
-
-        if (nodeA->TypeInfo.is_type) {
-            if (nodeA->_Node.List().elements.size() == 0) {
+        if (type->TypeInfo.is_type) {
+            if (type->_Node.List().elements.size() == 0) {
                 return true;
             }
-            node_ptr list_type = nodeA->_Node.List().elements[0];
+            node_ptr list_type = type->_Node.List().elements[0];
 
-            for (node_ptr& elem : nodeB->_Node.List().elements) {
+            for (node_ptr& elem : value->_Node.List().elements) {
                 if (!match_types(elem, list_type)) {
                     return false;
                 }
             }
 
             return true;
-        } else if (nodeB->TypeInfo.is_type) {
-            if (nodeB->_Node.List().elements.size() == 0) {
+        } else if (value->TypeInfo.is_type) {
+            if (value->_Node.List().elements.size() == 0) {
                 return true;
             }
-            node_ptr list_type = nodeB->_Node.List().elements[0];
+            node_ptr list_type = value->_Node.List().elements[0];
 
-            for (node_ptr& elem : nodeA->_Node.List().elements) {
+            for (node_ptr& elem : type->_Node.List().elements) {
                 if (!match_types(elem, list_type)) {
                     return false;
                 }
@@ -1287,36 +1231,36 @@ bool Interpreter::match_types(node_ptr& _nodeA, node_ptr& _nodeB) {
         }
     }
 
-    if (nodeA->type == NodeType::OBJECT) {
-        if (nodeA->TypeInfo.type_name != nodeB->TypeInfo.type_name) {
+    if (type->type == NodeType::OBJECT) {
+        if (type->TypeInfo.type_name != value->TypeInfo.type_name) {
             return false;
         }
 
-        if (nodeA->TypeInfo.is_type && nodeA->TypeInfo.type_name == "" && nodeB->TypeInfo.type_name == "") {
+        if (type->TypeInfo.is_type && type->TypeInfo.type_name == "" && value->TypeInfo.type_name == "") {
             return true;
         }
 
-        if (nodeB->TypeInfo.is_type && nodeB->TypeInfo.type_name == "" && nodeA->TypeInfo.type_name == "") {
+        if (value->TypeInfo.is_type && value->TypeInfo.type_name == "" && type->TypeInfo.type_name == "") {
             return true;
         }
 
-        if (nodeA->_Node.Object().properties.count("_init_")) {
-            nodeA->_Node.Object().properties.erase("_init_");
+        if (type->_Node.Object().properties.count("_init_")) {
+            type->_Node.Object().properties.erase("_init_");
         }
 
-        if (nodeB->_Node.Object().properties.count("_init_")) {
-            nodeB->_Node.Object().properties.erase("_init_");
+        if (value->_Node.Object().properties.count("_init_")) {
+            value->_Node.Object().properties.erase("_init_");
         }
 
-        if (nodeA->_Node.Object().properties.size() != nodeB->_Node.Object().properties.size()) {
+        if (type->_Node.Object().properties.size() != value->_Node.Object().properties.size()) {
             return false;
         }
 
-        for (auto& prop : nodeA->_Node.Object().properties) {
+        for (auto& prop : type->_Node.Object().properties) {
             std::string prop_name = prop.first;
 
             node_ptr a_prop_value = prop.second;
-            node_ptr b_prop_value = nodeB->_Node.Object().properties[prop_name];
+            node_ptr b_prop_value = value->_Node.Object().properties[prop_name];
 
             int match = match_types(a_prop_value, b_prop_value);
             if (!match) {
@@ -1324,11 +1268,11 @@ bool Interpreter::match_types(node_ptr& _nodeA, node_ptr& _nodeB) {
             }
         }
         
-        for (auto& prop : nodeB->_Node.Object().properties) {
+        for (auto& prop : value->_Node.Object().properties) {
             std::string prop_name = prop.first;
 
             node_ptr b_prop_value = prop.second;
-            node_ptr a_prop_value = nodeB->_Node.Object().properties[prop_name];
+            node_ptr a_prop_value = value->_Node.Object().properties[prop_name];
 
             int match = match_types(b_prop_value, a_prop_value);
             if (!match) {
@@ -1343,15 +1287,44 @@ bool Interpreter::match_types(node_ptr& _nodeA, node_ptr& _nodeB) {
     return true;
 }
 
+node_ptr Interpreter::eval_try_catch(node_ptr& node) {
+    global_interpreter->try_catch = true;
+    std::string error = "";
+    for (node_ptr& expr : node->_Node.TryCatch().try_body->_Node.Object().elements) {
+        node_ptr evaluated_expr = eval_node(expr);
+        if (evaluated_expr->type == NodeType::ERROR) {
+            error = evaluated_expr->_Node.Error().message;
+            break;
+        }
+    }
+    if (error != "") {
+        global_interpreter->try_catch = false;
+        sym_t_ptr catch_sym_table = std::make_shared<SymbolTable>();
+        catch_sym_table->parent = current_symbol_table;
+        node_ptr error_arg = node->_Node.TryCatch().catch_keyword->_Node.FunctionCall().args[0];
+        node_ptr error_node = new_string_node(error);
+        add_symbol(new_symbol(error_arg->_Node.ID().value, error_node), catch_sym_table);
+        current_symbol_table = catch_sym_table;
+
+        for (node_ptr& expr : node->_Node.TryCatch().catch_body->_Node.Object().elements) {
+            eval_node(expr);
+        }
+
+        current_symbol_table = current_symbol_table->parent;
+    }
+
+    return new_node(NodeType::NONE);
+}
+
 node_ptr Interpreter::eval_object_init(node_ptr& node) {
     Symbol type_symbol = get_symbol(node->_Node.ObjectDeconstruct().name, current_symbol_table);
     if (type_symbol.value == nullptr) {
-        error_and_exit("Type '" + node->_Node.ObjectDeconstruct().name + "' is undefined");
+        return throw_error("Type '" + node->_Node.ObjectDeconstruct().name + "' is undefined");
     }
     node_ptr type = type_symbol.value;
 
     if (!type->TypeInfo.is_type) {
-        error_and_exit("Variable '" + node->_Node.ObjectDeconstruct().name + "' is not a type");
+        return throw_error("Variable '" + node->_Node.ObjectDeconstruct().name + "' is not a type");
     }
 
     node_ptr object = new_node(NodeType::OBJECT);
@@ -1386,7 +1359,7 @@ node_ptr Interpreter::eval_object_init(node_ptr& node) {
         type_size--;
     }
     if (object->_Node.Object().properties.size() != type_size) {
-        error_and_exit("Error in object initialization for type '" + node->_Node.ObjectDeconstruct().name + "': Number of properties differs between object and type");
+        return throw_error("Error in object initialization for type '" + node->_Node.ObjectDeconstruct().name + "': Number of properties differs between object and type");
     }
 
     for (auto& prop : type->_Node.Object().properties) {
@@ -1399,9 +1372,9 @@ node_ptr Interpreter::eval_object_init(node_ptr& node) {
         node_ptr type_prop_value = prop.second;
         node_ptr obj_prop_value = object->_Node.Object().properties[prop_name];
 
-        int match = match_types(obj_prop_value, type_prop_value);
+        int match = match_types(type_prop_value, obj_prop_value);
         if (!match) {
-            error_and_exit("Error in object initialization for type '" + node->_Node.ObjectDeconstruct().name + "': Match error in property '" + prop_name + "'");
+            return throw_error("Error in object initialization for type '" + node->_Node.ObjectDeconstruct().name + "': Match error in property '" + prop_name + "'");
         }
 
         object->_Node.Object().properties[prop_name]->Hooks.onChange = type_prop_value->Hooks.onChange;
@@ -1420,7 +1393,7 @@ node_ptr Interpreter::eval_object_init(node_ptr& node) {
         node_ptr type_prop_value = type->_Node.Object().properties[prop_name];
 
         if (type_prop_value == nullptr) {
-            error_and_exit("Error in object initialization for type '" + node->_Node.ObjectDeconstruct().name + "': Match error in property '" + prop_name + "'");
+            return throw_error("Error in object initialization for type '" + node->_Node.ObjectDeconstruct().name + "': Match error in property '" + prop_name + "'");
         }
     }
 
@@ -1432,13 +1405,13 @@ node_ptr Interpreter::eval_object_init(node_ptr& node) {
 node_ptr Interpreter::eval_load_lib(node_ptr& node) {
     auto args = node->_Node.FunctionCall().args;
     if (args.size() != 1) {
-        error_and_exit("Library loading expects 1 argument");
+        return throw_error("Library loading expects 1 argument");
     }
 
     node_ptr path = eval_node(args[0]);
 
     if (path->type != NodeType::STRING) {
-        error_and_exit("Library loading expects 1 string argument");
+        return throw_error("Library loading expects 1 string argument");
     }
 
     node_ptr lib_node = new_node(NodeType::LIB);
@@ -1448,7 +1421,7 @@ node_ptr Interpreter::eval_load_lib(node_ptr& node) {
             void* handle = dlopen(path->_Node.String().value.c_str(), RTLD_LAZY);
             
             if (!handle) {
-                error_and_exit("Cannot open library: " + std::string(dlerror()));
+                return throw_error("Cannot open library: " + std::string(dlerror()));
             }
 
             typedef node_ptr (*call_function_t)(std::string name, std::vector<node_ptr> args);
@@ -1461,7 +1434,7 @@ node_ptr Interpreter::eval_load_lib(node_ptr& node) {
 
             if (dlsym_error_call_function) {
                 dlclose(handle);
-                error_and_exit("Error loading symbol 'call_function': " + std::string(dlsym_error_call_function));
+                return throw_error("Error loading symbol 'call_function': " + std::string(dlsym_error_call_function));
             }
 
             load_t load = (load_t) dlsym(handle, "load");
@@ -1489,7 +1462,7 @@ node_ptr Interpreter::eval_load_lib(node_ptr& node) {
                 callFuncAddress = (call_function_t) GetProcAddress(hinstLib, "call_function");
 
                 if (callFuncAddress == NULL) {
-                    error_and_exit("Error finding function 'call_function'");
+                    return throw_error("Error finding function 'call_function'");
                 }
 
                 loadFuncAddress = (load_t) GetProcAddress(hinstLib, "load");
@@ -1508,7 +1481,7 @@ node_ptr Interpreter::eval_load_lib(node_ptr& node) {
             void* handle = dlopen(path->_Node.String().value.c_str(), RTLD_LAZY);
             
             if (!handle) {
-                error_and_exit("Cannot open library: " + std::string(dlerror()));
+                return throw_error("Cannot open library: " + std::string(dlerror()));
             }
 
             typedef node_ptr (*call_function_t)(std::string name, std::vector<node_ptr> args);
@@ -1521,7 +1494,7 @@ node_ptr Interpreter::eval_load_lib(node_ptr& node) {
 
             if (dlsym_error_call_function) {
                 dlclose(handle);
-                error_and_exit("Error loading symbol 'call_function': " + std::string(dlsym_error_call_function));
+                return throw_error("Error loading symbol 'call_function': " + std::string(dlsym_error_call_function));
             }
 
             load_t load = (load_t) dlsym(handle, "load");
@@ -1549,7 +1522,7 @@ node_ptr Interpreter::eval_load_lib(node_ptr& node) {
                 callFuncAddress = (call_function_t) GetProcAddress(hinstLib, "call_function");
 
                 if (callFuncAddress == NULL) {
-                    error_and_exit("Error finding function 'call_function'");
+                    return throw_error("Error finding function 'call_function'");
                 }
 
                 loadFuncAddress = (load_t) GetProcAddress(hinstLib, "load");
@@ -1571,18 +1544,18 @@ node_ptr Interpreter::eval_load_lib(node_ptr& node) {
 node_ptr Interpreter::eval_call_lib_function(node_ptr& lib, node_ptr& node) {
     auto args = node->_Node.FunctionCall().args;
     if (args.size() != 2) {
-        error_and_exit("Library function calls expects 2 arguments");
+        return throw_error("Library function calls expects 2 arguments");
     }
 
     node_ptr name = eval_node(args[0]);
     node_ptr func_args = eval_node(args[1]);
 
     if (name->type != NodeType::STRING) {
-        error_and_exit("Library function calls expects first argument to be a string");
+        return throw_error("Library function calls expects first argument to be a string");
     }
 
     if (func_args->type != NodeType::LIST) {
-        error_and_exit("Library function calls expects first argument to be a list");
+        return throw_error("Library function calls expects first argument to be a list");
     }
 
     return lib->_Node.Lib().call_function(name->_Node.String().value, func_args->_Node.List().elements);
@@ -1599,7 +1572,7 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
     }
 
     if (node->_Node.Import().target->type != NodeType::STRING) {
-        error_and_exit("Import target must be a string");
+        return throw_error("Import target must be a string");
     }
 
     std::string target_name = std::string(node->_Node.Import().target->_Node.String().value);
@@ -1640,7 +1613,7 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
                 std::filesystem::current_path(parent_path);
             }
         } catch(...) {
-            error_and_exit("No such file or directory: '" + parent_path.string() + "'");
+            return throw_error("No such file or directory: '" + parent_path.string() + "'");
         }
 
         Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
@@ -1693,7 +1666,7 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
         }
         for (node_ptr elem : node->_Node.Import().module->_Node.List().elements) {
             if (elem->type != NodeType::ID) {
-                error_and_exit("Import list must contain identifiers");
+                return throw_error("Import list must contain identifiers");
             }
         }
 
@@ -1712,7 +1685,7 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
                 std::filesystem::current_path(parent_path);
             }
         } catch(...) {
-            error_and_exit("No such file or directory: '" + parent_path.string() + "'");
+            return throw_error("No such file or directory: '" + parent_path.string() + "'");
         }
 
         Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
@@ -1739,14 +1712,14 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
             if (imported_variables.contains(elem->_Node.ID().value)) {
                 add_symbol(import_interpreter.global_symbol_table->symbols[elem->_Node.ID().value], current_symbol_table);
             } else {
-                error_and_exit("Cannot import value '" + elem->_Node.ID().value + "' - variable undefined");
+                return throw_error("Cannot import value '" + elem->_Node.ID().value + "' - variable undefined");
             }
         }
 
         return new_node(NodeType::NONE);
     }
 
-    error_and_exit("Malformed import statement");
+    return throw_error("Malformed import statement");
     return new_node(NodeType::NONE);
 }
 
@@ -1755,7 +1728,7 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
 node_ptr Interpreter::eval_pos_neg(node_ptr& node) {
     node_ptr value = eval_node(node->_Node.Op().right);
     if (value->type != NodeType::NUMBER) {
-        error_and_exit("Cannot negate a non-number");
+        return throw_error("Cannot negate a non-number");
     }
     if (node->_Node.Op().value == "-") {
         return new_number_node(-value->_Node.Number().value);
@@ -1795,7 +1768,7 @@ node_ptr Interpreter::eval_add(node_ptr& node) {
         return result;
     }
 
-    error_and_exit("Cannot perform operation '+' on types: " + node_repr(left) + ", " + node_repr(right));
+    return throw_error("Cannot perform operation '+' on types: " + node_repr(left) + ", " + node_repr(right));
     return new_node(NodeType::NONE);
 }
 
@@ -1807,7 +1780,7 @@ node_ptr Interpreter::eval_sub(node_ptr& node) {
         return new_number_node(left->_Node.Number().value - right->_Node.Number().value);
     }
 
-    error_and_exit("Cannot perform operation '-' on types: " + node_repr(left) + ", " + node_repr(right));
+    return throw_error("Cannot perform operation '-' on types: " + node_repr(left) + ", " + node_repr(right));
     return new_node(NodeType::NONE);
 }
 
@@ -1819,7 +1792,7 @@ node_ptr Interpreter::eval_mul(node_ptr& node) {
         return new_number_node(left->_Node.Number().value * right->_Node.Number().value);
     }
 
-    error_and_exit("Cannot perform operation '*' on types: " + node_repr(left) + ", " + node_repr(right));
+    return throw_error("Cannot perform operation '*' on types: " + node_repr(left) + ", " + node_repr(right));
     return new_node(NodeType::NONE);
 }
 
@@ -1831,7 +1804,7 @@ node_ptr Interpreter::eval_div(node_ptr& node) {
         return new_number_node(left->_Node.Number().value / right->_Node.Number().value);
     }
 
-    error_and_exit("Cannot perform operation '/' on types: " + node_repr(left) + ", " + node_repr(right));
+    return throw_error("Cannot perform operation '/' on types: " + node_repr(left) + ", " + node_repr(right));
     return new_node(NodeType::NONE);
 }
 
@@ -1843,7 +1816,7 @@ node_ptr Interpreter::eval_pow(node_ptr& node) {
         return new_number_node(pow(left->_Node.Number().value, right->_Node.Number().value));
     }
 
-    error_and_exit("Cannot perform operation '^' on types: " + node_repr(left) + ", " + node_repr(right));
+    return throw_error("Cannot perform operation '^' on types: " + node_repr(left) + ", " + node_repr(right));
     return new_node(NodeType::NONE);
 }
 
@@ -1855,7 +1828,7 @@ node_ptr Interpreter::eval_mod(node_ptr& node) {
         return new_number_node(fmod(left->_Node.Number().value, right->_Node.Number().value));
     }
 
-    error_and_exit("Cannot perform operation '^' on types: " + node_repr(left) + ", " + node_repr(right));
+    return throw_error("Cannot perform operation '^' on types: " + node_repr(left) + ", " + node_repr(right));
     return new_node(NodeType::NONE);
 }
 
@@ -1925,7 +1898,7 @@ node_ptr Interpreter::eval_lt_eq(node_ptr& node) {
         return new_boolean_node(left->_Node.Number().value <= right->_Node.Number().value);
     }
 
-    error_and_exit("Cannot perform operation '<=' on types: " + node_repr(left) + ", " + node_repr(right));
+    return throw_error("Cannot perform operation '<=' on types: " + node_repr(left) + ", " + node_repr(right));
     return new_node(NodeType::NONE);
 }
 
@@ -1937,7 +1910,7 @@ node_ptr Interpreter::eval_gt_eq(node_ptr& node) {
         return new_boolean_node(left->_Node.Number().value >= right->_Node.Number().value);
     }
 
-    error_and_exit("Cannot perform operation '>=' on types: " + node_repr(left) + ", " + node_repr(right));
+    return throw_error("Cannot perform operation '>=' on types: " + node_repr(left) + ", " + node_repr(right));
     return new_node(NodeType::NONE);
 }
 
@@ -1949,7 +1922,7 @@ node_ptr Interpreter::eval_lt(node_ptr& node) {
         return new_boolean_node(left->_Node.Number().value < right->_Node.Number().value);
     }
 
-    error_and_exit("Cannot perform operation '<' on types: " + node_repr(left) + ", " + node_repr(right));
+    return throw_error("Cannot perform operation '<' on types: " + node_repr(left) + ", " + node_repr(right));
     return new_node(NodeType::NONE);
 }
 
@@ -1961,7 +1934,7 @@ node_ptr Interpreter::eval_gt(node_ptr& node) {
         return new_boolean_node(left->_Node.Number().value > right->_Node.Number().value);
     }
 
-    error_and_exit("Cannot perform operation '>' on types: " + node_repr(left) + ", " + node_repr(right));
+    return throw_error("Cannot perform operation '>' on types: " + node_repr(left) + ", " + node_repr(right));
     return new_node(NodeType::NONE);
 }
 
@@ -1993,7 +1966,7 @@ node_ptr Interpreter::eval_and(node_ptr& node) {
 
     // return left;
 
-    // error_and_exit("Cannot perform operation '&&' on types: " + node_repr(left) + ", " + node_repr(right));
+    // return throw_error("Cannot perform operation '&&' on types: " + node_repr(left) + ", " + node_repr(right));
     // return new_node(NodeType::NONE);
 }
 
@@ -2005,7 +1978,7 @@ node_ptr Interpreter::eval_bit_and(node_ptr& node) {
         return new_number_node((long)left->_Node.Number().value & (long)right->_Node.Number().value);
     }
 
-    error_and_exit("Cannot perform operation '&' on types: " + node_repr(left) + ", " + node_repr(right));
+    return throw_error("Cannot perform operation '&' on types: " + node_repr(left) + ", " + node_repr(right));
     return new_node(NodeType::NONE);
 }
 
@@ -2017,7 +1990,7 @@ node_ptr Interpreter::eval_bit_or(node_ptr& node) {
         return new_number_node((long)left->_Node.Number().value | (long)right->_Node.Number().value);
     }
 
-    error_and_exit("Cannot perform operation '|' on types: " + node_repr(left) + ", " + node_repr(right));
+    return throw_error("Cannot perform operation '|' on types: " + node_repr(left) + ", " + node_repr(right));
     return new_node(NodeType::NONE);
 }
 
@@ -2045,7 +2018,7 @@ node_ptr Interpreter::eval_or(node_ptr& node) {
     //     return new_boolean_node(left->_Node.Boolean().value || right->_Node.Boolean().value);
     // }
 
-    // error_and_exit("Cannot perform operation '||' on types: " + node_repr(left) + ", " + node_repr(right));
+    // return throw_error("Cannot perform operation '||' on types: " + node_repr(left) + ", " + node_repr(right));
     // return new_node(NodeType::NONE);
 }
 
@@ -2142,7 +2115,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right);
             }
 
-            error_and_exit("Methond '" + func_name + "' does not exist on object");
+            return throw_error("Methond '" + func_name + "' does not exist on object");
         }
 
         if (right->type == NodeType::ACCESSOR) {
@@ -2158,7 +2131,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             return eval_accessor(res);
         }
 
-        error_and_exit("Right hand side of '.' must be an identifier, function call or accessor");
+        return throw_error("Right hand side of '.' must be an identifier, function call or accessor");
     }
 
     if (left->type == NodeType::STRING) {
@@ -2173,7 +2146,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return new_boolean_node(left->_Node.String().value.empty());
             }
 
-            error_and_exit("String does not have property '" + prop + "'");
+            return throw_error("String does not have property '" + prop + "'");
         }
 
         if (right->type == NodeType::FUNC_CALL) {
@@ -2188,10 +2161,10 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right, ext);
             }
 
-            error_and_exit("String does not have method '" + func_name + "'");
+            return throw_error("String does not have method '" + func_name + "'");
         }
 
-        error_and_exit("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
+        return throw_error("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
     }
 
     if (left->type == NodeType::LIST) {
@@ -2216,7 +2189,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return new_boolean_node(left->_Node.List().elements.empty());
             }
 
-            error_and_exit("List does not have property '" + prop + "'");
+            return throw_error("List does not have property '" + prop + "'");
         }
 
         if (right->type == NodeType::FUNC_CALL) {
@@ -2224,51 +2197,51 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
             if (prop == "append") {
                 if (left->Meta.is_const) {
-                    error_and_exit("Cannot modify constant list");
+                    return throw_error("Cannot modify constant list");
                 }
                 if (right->_Node.FunctionCall().args.size() != 1) {
-                    error_and_exit("List function '" + prop + "' expects 1 argument");
+                    return throw_error("List function '" + prop + "' expects 1 argument");
                 }
                 node_ptr arg = eval_node(right->_Node.FunctionCall().args[0]);
                 // Type check
                 if (!match_types(list_type, arg)) {
-                    error_and_exit("Cannot insert value of type '" + node_repr(arg) + "' into container of type '" + node_repr(left->TypeInfo.type) + "'");
+                    return throw_error("Cannot insert value of type '" + node_repr(arg) + "' into container of type '" + node_repr(left->TypeInfo.type) + "'");
                 }
                 left->_Node.List().elements.push_back(arg);
                 return left;
             }
             if (prop == "prepend") {
                 if (left->Meta.is_const) {
-                    error_and_exit("Cannot modify constant list");
+                    return throw_error("Cannot modify constant list");
                 }
                 if (right->_Node.FunctionCall().args.size() != 1) {
-                    error_and_exit("List function '" + prop + "' expects 1 argument");
+                    return throw_error("List function '" + prop + "' expects 1 argument");
                 }
                 node_ptr arg = eval_node(right->_Node.FunctionCall().args[0]);
                 // Type check
                 if (!match_types(list_type, arg)) {
-                    error_and_exit("Cannot insert value of type '" + node_repr(arg) + "' into container of type '" + node_repr(left->TypeInfo.type) + "'");
+                    return throw_error("Cannot insert value of type '" + node_repr(arg) + "' into container of type '" + node_repr(left->TypeInfo.type) + "'");
                 }
                 left->_Node.List().elements.insert(left->_Node.List().elements.begin(), arg);
                 return left;
             }
             if (prop == "insert") {
                 if (left->Meta.is_const) {
-                    error_and_exit("Cannot modify constant list");
+                    return throw_error("Cannot modify constant list");
                 }
                 if (right->_Node.FunctionCall().args.size() != 2) {
-                    error_and_exit("List function '" + prop + "' expects 2 arguments");
+                    return throw_error("List function '" + prop + "' expects 2 arguments");
                 }
                 node_ptr value = eval_node(right->_Node.FunctionCall().args[0]);
                 node_ptr index_node = eval_node(right->_Node.FunctionCall().args[1]);
 
                 // Type check
                 if (!match_types(list_type, value)) {
-                    error_and_exit("Cannot insert value of type '" + node_repr(value) + "' into container of type '" + node_repr(left->TypeInfo.type) + "'");
+                    return throw_error("Cannot insert value of type '" + node_repr(value) + "' into container of type '" + node_repr(left->TypeInfo.type) + "'");
                 }
 
                 if (index_node->type != NodeType::NUMBER) {
-                    error_and_exit("List function '" + prop + "' expects second argument to be a number");
+                    return throw_error("List function '" + prop + "' expects second argument to be a number");
                 }
 
                 int index = index_node->_Node.Number().value;
@@ -2284,20 +2257,20 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             }
             if (prop == "remove_at") {
                 if (left->Meta.is_const) {
-                    error_and_exit("Cannot modify constant list");
+                    return throw_error("Cannot modify constant list");
                 }
                 if (left->_Node.List().elements.size() == 0) {
                     return left;
                 }
 
                 if (right->_Node.FunctionCall().args.size() != 1) {
-                    error_and_exit("List function '" + prop + "' expects 1 argument");
+                    return throw_error("List function '" + prop + "' expects 1 argument");
                 }
 
                 node_ptr index_node = eval_node(right->_Node.FunctionCall().args[0]);
 
                 if (index_node->type != NodeType::NUMBER) {
-                    error_and_exit("List function '" + prop + "' expects argument to be a number");
+                    return throw_error("List function '" + prop + "' expects argument to be a number");
                 }
 
                 int index = index_node->_Node.Number().value;
@@ -2313,10 +2286,10 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             }
             if (prop == "remove") {
                 if (left->Meta.is_const) {
-                    error_and_exit("Cannot modify constant list");
+                    return throw_error("Cannot modify constant list");
                 }
                 if (right->_Node.FunctionCall().args.size() != 1) {
-                    error_and_exit("List function '" + prop + "' expects 1 argument");
+                    return throw_error("List function '" + prop + "' expects 1 argument");
                 }
                 node_ptr value = eval_node(right->_Node.FunctionCall().args[0]);
 
@@ -2336,23 +2309,23 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             }
             if (prop == "remove_if") {
                 if (left->Meta.is_const) {
-                    error_and_exit("Cannot modify constant list");
+                    return throw_error("Cannot modify constant list");
                 }
                 if (right->_Node.FunctionCall().args.size() != 1) {
-                    error_and_exit("List function '" + prop + "' expects 1 argument");
+                    return throw_error("List function '" + prop + "' expects 1 argument");
                 }
                 
                 node_ptr function = right->_Node.FunctionCall().args[0];
 
                 if (function->type != NodeType::FUNC) {
-                    error_and_exit("List function '" + prop + "' expects 1 function argument");
+                    return throw_error("List function '" + prop + "' expects 1 function argument");
                 }
 
                 for (int _index = 0; _index < left->_Node.List().elements.size(); _index++) {
                     node_ptr value = left->_Node.List().elements[_index];
                     node_ptr func_call = new_node(NodeType::FUNC_CALL);
                     if (function->_Node.Function().params.size() == 0) {
-                        error_and_exit("Function needs to have at least one parameter");
+                        return throw_error("Function needs to have at least one parameter");
                     }
                     if (function->_Node.Function().params.size() > 0) {
                         func_call->_Node.FunctionCall().args.push_back(value);
@@ -2365,7 +2338,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                     }
                     node_ptr res = eval_func_call(func_call, function);
                     if (res->type != NodeType::BOOLEAN) {
-                        error_and_exit("Function must return a boolean value");
+                        return throw_error("Function must return a boolean value");
                     }
                     if (res->_Node.Boolean().value) {
                         left->_Node.List().elements.erase(left->_Node.List().elements.begin() + _index);
@@ -2380,13 +2353,13 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
             if (prop == "map") {
                 if (right->_Node.FunctionCall().args.size() != 1) {
-                    error_and_exit("List function '" + prop + "' expects 1 argument");
+                    return throw_error("List function '" + prop + "' expects 1 argument");
                 }
                 
                 node_ptr function = eval_node(right->_Node.FunctionCall().args[0]);
 
                 if (function->type != NodeType::FUNC) {
-                    error_and_exit("List function '" + prop + "' expects 1 function argument");
+                    return throw_error("List function '" + prop + "' expects 1 function argument");
                 }
 
                 node_ptr new_list = new_node(NodeType::LIST);
@@ -2395,7 +2368,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                     node_ptr value = left->_Node.List().elements[_index];
                     node_ptr func_call = new_node(NodeType::FUNC_CALL);
                     if (function->_Node.Function().params.size() == 0) {
-                        error_and_exit("Function needs to have at least one parameter");
+                        return throw_error("Function needs to have at least one parameter");
                     }
                     if (function->_Node.Function().params.size() > 0) {
                         func_call->_Node.FunctionCall().args.push_back(value);
@@ -2416,13 +2389,13 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
             if (prop == "filter") {
                 if (right->_Node.FunctionCall().args.size() != 1) {
-                    error_and_exit("List function '" + prop + "' expects 1 argument");
+                    return throw_error("List function '" + prop + "' expects 1 argument");
                 }
                 
                 node_ptr function = eval_node(right->_Node.FunctionCall().args[0]);
 
                 if (function->type != NodeType::FUNC) {
-                    error_and_exit("List function '" + prop + "' expects 1 function argument");
+                    return throw_error("List function '" + prop + "' expects 1 function argument");
                 }
 
                 node_ptr new_list = new_node(NodeType::LIST);
@@ -2431,7 +2404,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                     node_ptr value = left->_Node.List().elements[_index];
                     node_ptr func_call = new_node(NodeType::FUNC_CALL);
                     if (function->_Node.Function().params.size() == 0) {
-                        error_and_exit("Function needs to have at least one parameter");
+                        return throw_error("Function needs to have at least one parameter");
                     }
                     if (function->_Node.Function().params.size() > 0) {
                         func_call->_Node.FunctionCall().args.push_back(value);
@@ -2445,7 +2418,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                     node_ptr res = eval_func_call(func_call, function);
 
                     if (res->type != NodeType::BOOLEAN) {
-                        error_and_exit("Function must return a boolean value");
+                        return throw_error("Function must return a boolean value");
                     }
 
                     if (res->_Node.Boolean().value) {
@@ -2458,13 +2431,13 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
             if (prop == "reduce") {
                 if (right->_Node.FunctionCall().args.size() != 1) {
-                    error_and_exit("List function '" + prop + "' expects 1 argument");
+                    return throw_error("List function '" + prop + "' expects 1 argument");
                 }
                 
                 node_ptr function = eval_node(right->_Node.FunctionCall().args[0]);
 
                 if (function->type != NodeType::FUNC) {
-                    error_and_exit("List function '" + prop + "' expects 1 function argument");
+                    return throw_error("List function '" + prop + "' expects 1 function argument");
                 }
 
                 node_ptr new_list = new_node(NodeType::LIST);
@@ -2476,7 +2449,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 for (int _index = 0; _index < left->_Node.List().elements.size()-1; _index++) {
                     node_ptr func_call = new_node(NodeType::FUNC_CALL);
                     if (function->_Node.Function().params.size() < 2) {
-                        error_and_exit("Function needs to have at least two parameters");
+                        return throw_error("Function needs to have at least two parameters");
                     }
 
                     node_ptr value = left->_Node.List().elements[_index];
@@ -2520,10 +2493,10 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right, ext);
             }
 
-            error_and_exit("List does not have method '" + func_name + "'");
+            return throw_error("List does not have method '" + func_name + "'");
         }
 
-        error_and_exit("Right hand side of '.' must be an identifier or function call");
+        return throw_error("Right hand side of '.' must be an identifier or function call");
     }
 
     if (left->type == NodeType::HOOK) {
@@ -2643,7 +2616,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             }
         }
 
-        error_and_exit("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
+        return throw_error("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
     }
 
     if (left->type == NodeType::NUMBER) {
@@ -2659,7 +2632,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right, ext);
             }
 
-            error_and_exit("Number does not have method '" + func_name + "'");
+            return throw_error("Number does not have method '" + func_name + "'");
         }
     }
 
@@ -2676,7 +2649,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right, ext);
             }
 
-            error_and_exit("Boolean does not have method '" + func_name + "'");
+            return throw_error("Boolean does not have method '" + func_name + "'");
         }
     }
 
@@ -2693,7 +2666,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right, ext);
             }
 
-            error_and_exit("Function does not have method '" + func_name + "'");
+            return throw_error("Function does not have method '" + func_name + "'");
         }
     }
 
@@ -2710,11 +2683,11 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right, ext);
             }
 
-            error_and_exit("None does not have method '" + func_name + "'");
+            return throw_error("None does not have method '" + func_name + "'");
         }
     }
 
-    error_and_exit("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
+    return throw_error("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
     return new_node(NodeType::NONE);
 }
 
@@ -2725,16 +2698,16 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
     if (left->type == NodeType::OP && left->_Node.Op().value == ".") {
         node_ptr object = eval_node(left->_Node.Op().left);
         if (object->Meta.is_const) {
-            error_and_exit("Cannot modify constant object");
+            return throw_error("Cannot modify constant object");
         }
         node_ptr prop = left->_Node.Op().right;
 
         if (object->type != NodeType::OBJECT) {
-            error_and_exit("Left hand side of '.' must be an object");
+            return throw_error("Left hand side of '.' must be an object");
         }
 
         if (prop->type != NodeType::ID && prop->type != NodeType::ACCESSOR) {
-            error_and_exit("Right hand side of '.' must be an identifier");
+            return throw_error("Right hand side of '.' must be an identifier");
         }
 
         if (prop->type == NodeType::ACCESSOR) {
@@ -2745,17 +2718,17 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
             // Type check
             // if (!accessed_value->Meta.is_untyped_property) {
             //     if (accessed_value->type != NodeType::NONE && !match_types(accessed_value->TypeInfo.type, right)) {
-            //         error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
+            //         return throw_error("Cannot modify object property type '" + node_repr(accessed_value) + "'");
             //     }
             // }
             if (!accessed_value->Meta.is_untyped_property) {
                 if (!match_types(accessed_value, right)) {
-                    error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
+                    return throw_error("Cannot modify object property type '" + node_repr(accessed_value) + "'");
                 }
             }
 
             if (accessed_value->type == NodeType::NONE && prop->_Node.Accessor().container->TypeInfo.type) {
-                error_and_exit("Property '" + prop->_Node.ID().value + "' does not exist on type '" + object->TypeInfo.type_name + "'");
+                return throw_error("Property '" + prop->_Node.ID().value + "' does not exist on type '" + object->TypeInfo.type_name + "'");
             }
 
             *accessed_value = *right;
@@ -2796,7 +2769,7 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
         if (!accessed_value) {
             // If the object has a type and the property wasn't found, we error
             if (object->TypeInfo.type) {
-                error_and_exit("Property '" + prop->_Node.ID().value + "' does not exist on type '" + object->TypeInfo.type_name + "'");
+                return throw_error("Property '" + prop->_Node.ID().value + "' does not exist on type '" + object->TypeInfo.type_name + "'");
             }   
             accessed_value = new_node(NodeType::NONE);
         }
@@ -2806,12 +2779,12 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
         // Type check
         // if (!accessed_value->Meta.is_untyped_property) {
         //     if (accessed_value->type != NodeType::NONE && !match_types(accessed_value->TypeInfo.type, right)) {
-        //         error_and_exit("Type error in property '" + prop->_Node.ID().value + "' - Cannot modify object property type '" + node_repr(accessed_value) + "'");
+        //         return throw_error("Type error in property '" + prop->_Node.ID().value + "' - Cannot modify object property type '" + node_repr(accessed_value) + "'");
         //     }
         // }
         if (!accessed_value->Meta.is_untyped_property) {
             if (!match_types(accessed_value, right)) {
-                error_and_exit("Type error in property '" + prop->_Node.ID().value + "' - Cannot modify object property type '" + node_repr(accessed_value) + "'");
+                return throw_error("Type error in property '" + prop->_Node.ID().value + "' - Cannot modify object property type '" + node_repr(accessed_value) + "'");
             }
         }
 
@@ -2852,12 +2825,12 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
         node_ptr container = eval_node(left->_Node.Accessor().container);
         node_ptr accessor = eval_node(left->_Node.Accessor().accessor);
         if (container->Meta.is_const) {
-            error_and_exit("Cannot modify constant");
+            return throw_error("Cannot modify constant");
         }
         if (container->type == NodeType::LIST) {
             accessor = eval_node(accessor->_Node.List().elements[0]);
             if (accessor->type != NodeType::NUMBER) {
-                error_and_exit("List accessor must be a number");
+                return throw_error("List accessor must be a number");
             }
 
             node_ptr accessed_value = eval_accessor(left);
@@ -2874,7 +2847,7 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
 
             // If the object has a type and the property wasn't found, we error
             if (container->TypeInfo.type_name != "" && accessed_value->type == NodeType::NONE) {
-                error_and_exit("Property does not exist on type '" + container->TypeInfo.type_name + "'");
+                return throw_error("Property does not exist on type '" + container->TypeInfo.type_name + "'");
             }  
 
             if (accessed_value->type == NodeType::NONE) {
@@ -2886,12 +2859,12 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
                 // Type check
                 // if (!accessed_value->Meta.is_untyped_property) {
                 //     if (accessed_value->type != NodeType::NONE && !match_types(accessed_value->TypeInfo.type, right)) {
-                //         error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
+                //         return throw_error("Cannot modify object property type '" + node_repr(accessed_value) + "'");
                 //     }
                 // }
                 if (!accessed_value->Meta.is_untyped_property) {
                     if (!match_types(accessed_value, right)) {
-                        error_and_exit("Cannot modify object property type '" + node_repr(accessed_value) + "'");
+                        return throw_error("Cannot modify object property type '" + node_repr(accessed_value) + "'");
                     }
                 }
 
@@ -2933,15 +2906,19 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
     if (left->type == NodeType::ID) {
         Symbol symbol = get_symbol(left->_Node.ID().value, current_symbol_table);
         if (symbol.value == nullptr) {
-            error_and_exit("Variable '" + left->_Node.ID().value + "' is undefined");
+            return throw_error("Variable '" + left->_Node.ID().value + "' is undefined");
         } else {
             // Re-assigning, check if const
             if (symbol.value->Meta.is_const) {
-                error_and_exit("Cannot modify constant '" + symbol.name + "'");
+                return throw_error("Cannot modify constant '" + symbol.name + "'");
             }
 
             if (!match_types(symbol.value, right)) {
-                error_and_exit("Cannot modify type of variable '" + symbol.name + "'");
+                node_ptr type = symbol.value;
+                if (!type->TypeInfo.is_type && type->TypeInfo.type) {
+                    type = type->TypeInfo.type;
+                }
+                return throw_error("Cannot modify type of variable '" + symbol.name + "': Expected '" + node_repr(type) + "' but received '" + node_repr(right) + "'");
             }
 
             node_ptr old_value = std::make_shared<Node>(*symbol.value);
@@ -2985,7 +2962,7 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
             return right;
         }
 
-        error_and_exit("Variable '" + left->_Node.ID().value + "' is undefined");
+        return throw_error("Variable '" + left->_Node.ID().value + "' is undefined");
     }
 
     if (left->_Node.Op().value == "::") {
@@ -2995,27 +2972,27 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
         right->_Node.Function().is_hook = true;
 
         if (prop->type != NodeType::ID) {
-            error_and_exit("Hook expects an identifier");
+            return throw_error("Hook expects an identifier");
         }
 
         if (target->type == NodeType::ID) {
             Symbol symbol = get_symbol(target->_Node.ID().value, current_symbol_table);
             if (symbol.value == nullptr) {
-                error_and_exit("Variable '" + target->_Node.ID().value + "' is undefined");
+                return throw_error("Variable '" + target->_Node.ID().value + "' is undefined");
             }
 
             if (prop->_Node.ID().value == "onChange") {
                 if (right->type != NodeType::FUNC) {
-                    error_and_exit("onChange hook expects a function");
+                    return throw_error("onChange hook expects a function");
                 }
                 symbol.value->Hooks.onChange.push_back(right);
             } else if (prop->_Node.ID().value == "onCall") {
                 if (right->type != NodeType::FUNC && symbol.value->type != NodeType::FUNC) {
-                    error_and_exit("onCall hook expects a function");
+                    return throw_error("onCall hook expects a function");
                 }
                 symbol.value->Hooks.onCall.push_back(right);
             } else {
-                error_and_exit("Unknown hook '" + prop->_Node.ID().value + "'");
+                return throw_error("Unknown hook '" + prop->_Node.ID().value + "'");
             }
 
             add_symbol(symbol, current_symbol_table);
@@ -3028,16 +3005,16 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
             if (target->_Node.List().elements.size() == 0) {
                 if (prop->_Node.ID().value == "onChange") {
                     if (right->type != NodeType::FUNC) {
-                        error_and_exit("onChange hook expects a function");
+                        return throw_error("onChange hook expects a function");
                     }
                     global_symbol_table->globalHooks_onChange.push_back(right);
                 } else if (prop->_Node.ID().value == "onCall") {
                     if (right->type != NodeType::FUNC) {
-                        error_and_exit("onCall hook expects a function");
+                        return throw_error("onCall hook expects a function");
                     }
                     global_symbol_table->globalHooks_onCall.push_back(right);
                 } else {
-                    error_and_exit("Unknown hook '" + prop->_Node.ID().value + "'");
+                    return throw_error("Unknown hook '" + prop->_Node.ID().value + "'");
                 }
 
                 return new_node(NodeType::NONE);
@@ -3052,16 +3029,16 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
 
                 if (prop->_Node.ID().value == "onChange") {
                     if (right->type != NodeType::FUNC) {
-                        error_and_exit("onChange hook expects a function");
+                        return throw_error("onChange hook expects a function");
                     }
                     elem->Hooks.onChange.push_back(right);
                 } else if (prop->_Node.ID().value == "onCall") {
                     if (right->type != NodeType::FUNC && elem->type != NodeType::FUNC) {
-                        error_and_exit("onCall hook expects a function");
+                        return throw_error("onCall hook expects a function");
                     }
                     elem->Hooks.onCall.push_back(right);
                 } else {
-                    error_and_exit("Unknown hook '" + prop->_Node.ID().value + "'");
+                    return throw_error("Unknown hook '" + prop->_Node.ID().value + "'");
                 }
             }
 
@@ -3072,16 +3049,16 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
             target = eval_dot(target);
             if (prop->_Node.ID().value == "onChange") {
                 if (right->type != NodeType::FUNC) {
-                    error_and_exit("onChange hook expects a function");
+                    return throw_error("onChange hook expects a function");
                 }
                 target->Hooks.onChange.push_back(right);
             } else if (prop->_Node.ID().value == "onCall") {
                 if (right->type != NodeType::FUNC && target->type != NodeType::FUNC) {
-                    error_and_exit("onCall hook expects a function");
+                    return throw_error("onCall hook expects a function");
                 }
                 target->Hooks.onCall.push_back(right);
             } else {
-                error_and_exit("Unknown hook '" + prop->_Node.ID().value + "'");
+                return throw_error("Unknown hook '" + prop->_Node.ID().value + "'");
             }
 
             return new_node(NodeType::NONE);
@@ -3226,13 +3203,13 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
         case NodeType::ID: {
             node_ptr value = get_symbol(node->_Node.ID().value, current_symbol_table).value;
             if (value == nullptr) {
-                error_and_exit("Variable '" + node->_Node.ID().value + "' is undefined");
+                return throw_error("Variable '" + node->_Node.ID().value + "' is undefined");
             }
             return value;
         }
         case NodeType::PAREN: {
             if (node->_Node.Paren().elements.size() != 1) {
-                error_and_exit("Empty parentheses");
+                return throw_error("Empty parentheses");
             }
             return eval_node(node->_Node.Paren().elements[0]);
         }
@@ -3280,6 +3257,9 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
         }
         case NodeType::OBJECT_DECONSTRUCT: {
             return eval_object_init(node);
+        }
+        case NodeType::TRY_CATCH: {
+            return eval_try_catch(node);
         }
         case NodeType::OP: {
             if ((node->_Node.Op().value == "+" || node->_Node.Op().value == "-") 
@@ -3356,7 +3336,7 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
                 return node;
             }
             
-            error_and_exit("No such operator '" + node->_Node.Op().value + "'");
+            return throw_error("No such operator '" + node->_Node.Op().value + "'");
         }
         default: {
             return node;
@@ -3499,4 +3479,16 @@ void Interpreter::error_and_exit(std::string message)
         current_symbol_table = current_symbol_table->parent;
     }
     exit(1);
+}
+
+node_ptr Interpreter::throw_error(std::string message)
+{
+    if (global_interpreter->try_catch) {
+        node_ptr error = new_node(NodeType::ERROR);
+        error->_Node.Error().message = message;
+        return error;
+    } else {
+        error_and_exit(message);
+        return new_node(NodeType::ERROR);
+    }
 }

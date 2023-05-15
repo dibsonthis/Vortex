@@ -1,7 +1,15 @@
 union Unit {
     "metric",
-    "imperial",
-    "standard"
+    "imperial"
 }
 
-var x: Unit = "standard"
+var x: Unit = "metric"
+
+try {
+    x = 12
+} catch (e) {
+    println("Error handled: " + e)
+    x = "12"
+}
+
+println("x: " + x)

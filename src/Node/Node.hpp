@@ -44,7 +44,9 @@ enum class NodeType {
 	LIB,
 	POINTER,
 	ANY,
-	UNION
+	UNION,
+	TRY_CATCH,
+	ERROR
 };
 
 struct IdNode {
@@ -187,6 +189,13 @@ struct IfBlockNode {
 	std::vector<node_ptr> statements;
 };
 
+struct TryCatchNode {
+	node_ptr try_body;
+	node_ptr catch_keyword;
+	node_ptr catch_body;
+};
+
+
 struct ReturnNode {
 	node_ptr value;
 };
@@ -219,48 +228,9 @@ struct TypeInfoNode {
 	bool is_literal_type = false;
 };
 
-// struct Node {
-// 	Node() = default;
-//     Node(NodeType type) : type(type) {}
-// 	Node(int line, int column) : line(line), column(column) {}
-// 	Node(NodeType type, int line, int column) : type(type), line(line), column(column) {}
-
-//     NodeType type;
-// 	int column = 1;
-// 	int line = 1;
-
-// 	IdNode ID;
-//     NumberNode Number;
-//     StringNode String;
-// 	BooleanNode Boolean;
-// 	OpNode Operator;
-// 	ListNode List;
-// 	ObjectNode Object;
-// 	ParenNode Paren;
-// 	FuncCallNode FuncCall;
-// 	FuncNode Function;
-// 	AccessorNode Accessor;
-// 	InterfaceNode Interface;
-// 	TypeNode Type;
-// 	HookNode Hook;
-// 	VariableDeclatationNode VariableDeclaration;
-// 	ConstantDeclatationNode ConstantDeclaration;
-// 	ForLoopNode ForLoop;
-// 	WhileLoopNode WhileLoop;
-// 	ObjectDeconstructNode ObjectDeconstruct;
-// 	ImportNode Import;
-// 	IfStatementNode IfStatement;
-// 	IfBlockNode IfBlock;
-// 	ReturnNode Return;
-// 	MetaInformation Meta;
-// 	Hooks Hooks;
-// 	LibNode Library;
-// 	PointerNode Pointer;
-// 	TypeInfoNode TypeInfo;
-// 	EnumNode Enum;
-// 	UnionNode Union;
-// 	TypeExtNode TypeExt;
-// };
+struct ErrorNode {
+	std::string message;
+};
 
 using _NodeType = std::variant<
 	IdNode,
@@ -289,7 +259,9 @@ using _NodeType = std::variant<
 	PointerNode,
 	EnumNode,
 	UnionNode,
-	TypeExtNode
+	TypeExtNode,
+	TryCatchNode,
+	ErrorNode
 	>;
 
 struct V : public _NodeType {
@@ -376,6 +348,12 @@ struct V : public _NodeType {
 		}
 		TypeExtNode& TypeExt() {
 			return std::get<TypeExtNode>(*this);
+		}
+		TryCatchNode& TryCatch() {
+			return std::get<TryCatchNode>(*this);
+		}
+		ErrorNode& Error() {
+			return std::get<ErrorNode>(*this);
 		}
 	};
 
@@ -489,6 +467,14 @@ struct Node {
 			}
 			case NodeType::TYPE_EXT: {
 				_Node = TypeExtNode();
+				break;
+			}
+			case NodeType::TRY_CATCH: {
+				_Node = TryCatchNode();
+				break;
+			}
+			case NodeType::ERROR: {
+				_Node = ErrorNode();
 				break;
 			}
 			default: {
@@ -606,6 +592,14 @@ struct Node {
 			}
 			case NodeType::TYPE_EXT: {
 				_Node = TypeExtNode();
+				break;
+			}
+			case NodeType::TRY_CATCH: {
+				_Node = TryCatchNode();
+				break;
+			}
+			case NodeType::ERROR: {
+				_Node = ErrorNode();
 				break;
 			}
 			default: {

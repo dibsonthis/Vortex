@@ -68,6 +68,7 @@ public:
     Interpreter* global_interpreter = this;
     int argc;
     std::vector<std::string> argv;
+    bool try_catch = false;
 
 public:
     Interpreter() = default;
@@ -101,6 +102,7 @@ public:
     node_ptr eval_object_init(node_ptr& node);
     node_ptr eval_enum(node_ptr& node);
     node_ptr eval_union(node_ptr& node);
+    node_ptr eval_try_catch(node_ptr& node);
     // Operations
     node_ptr eval_pos_neg(node_ptr& node);
     node_ptr eval_not(node_ptr& node);
@@ -154,4 +156,5 @@ public:
     void replaceAll(std::string& str, const std::string& from, const std::string& to);
 
     void error_and_exit(std::string message);
+    node_ptr throw_error(std::string message);
 };

@@ -89,6 +89,9 @@ std::string node_repr(node_ptr node) {
         case NodeType::NONE: {
             return "None";
         }
+        case NodeType::ERROR: {
+            return "Error";
+        }
         default: {
             return "<not_implemented>";
         }
