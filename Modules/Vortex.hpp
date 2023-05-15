@@ -21,12 +21,12 @@ VortexObj new_vortex_obj(NodeType type) {
 
 VortexObj new_number_node(double number) {
     auto node = std::make_shared<Node>(NodeType::NUMBER);
-    node->Number.value = number;
+    node->_Node.Number().value = number;
     return node;
 }
 
 VortexObj new_string_node(std::string text) {
     auto node = std::make_shared<Node>(NodeType::STRING);
-    node->String.value = text;
+    node->_Node.String().value = text;
     return node;
 }

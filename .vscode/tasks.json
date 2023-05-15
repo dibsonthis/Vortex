@@ -81,7 +81,7 @@
             "label": "C/C++: clang++ build interpreter",
             "command": "/usr/bin/clang++",
             "args": [
-                "-O3",
+                "-Ofast",
                 "-std=c++20",
                 "-stdlib=libc++",
                 "${fileDirname}/src/Node/Node.cpp",

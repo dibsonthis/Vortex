@@ -32,8 +32,8 @@ VortexObj rand_range(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects 2 number arguments");
     }
 
-    const int range_from  = args[0]->Number.value;
-    const int range_to    = args[1]->Number.value;
+    const int range_from  = args[0]->_Node.Number().value;
+    const int range_to    = args[1]->_Node.Number().value;
     std::random_device                  rand_dev;
     std::mt19937                        generator(rand_dev());
     std::uniform_int_distribution<int>  distr(range_from, range_to);

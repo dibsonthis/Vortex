@@ -1,13 +1,10 @@
 #pragma once
 #include "Node.hpp"
 
-// #define get_val(x) (std::get<x>(node->_Node))
-
 std::string node_repr(node_ptr node) {
     switch (node->type) {
         case NodeType::ID: {
-            return node->ID.value;
-            //return std::get<IdNode>(node->_Node).value;
+            return node->_Node.ID().value;
         }
         case NodeType::NUMBER: {
             return "Number";
@@ -19,17 +16,17 @@ std::string node_repr(node_ptr node) {
             return "Boolean";
         }
         case NodeType::LIST: {
-            if (node->List.is_union) {
+            if (node->_Node.List().is_union) {
                 return node->TypeInfo.type_name;
             }
-            if (node->List.elements.size() == 0) {
+            if (node->_Node.List().elements.size() == 0) {
                 return "List";
-            } else if (node->List.elements.size() == 1) {
-                return "[" + node_repr(node->List.elements[0]) + "]";
-            } else if (node->List.elements.size() > 10) {
+            } else if (node->_Node.List().elements.size() == 1) {
+                return "[" + node_repr(node->_Node.List().elements[0]) + "]";
+            } else if (node->_Node.List().elements.size() > 10) {
                 std::string res = "[";
                 for (int i = 0; i < 10; i++) {
-                    res += node_repr(node->List.elements[i]);
+                    res += node_repr(node->_Node.List().elements[i]);
                     if (i != 9) {
                         res += ", ";
                     }
@@ -38,9 +35,9 @@ std::string node_repr(node_ptr node) {
                 return res;
             }
             std::string res = "[";
-            for (int i = 0; i < node->List.elements.size(); i++) {
-                res += node_repr(node->List.elements[i]);
-                if (i < node->List.elements.size()-1) {
+            for (int i = 0; i < node->_Node.List().elements.size(); i++) {
+                res += node_repr(node->_Node.List().elements[i]);
+                if (i < node->_Node.List().elements.size()-1) {
                     res += ", ";
                 }
             }
@@ -54,7 +51,7 @@ std::string node_repr(node_ptr node) {
             if (node->TypeInfo.is_type && node->TypeInfo.type_name != "") {
                 return node->TypeInfo.type_name;
             }
-            if (node->Object.is_enum && node->TypeInfo.type_name != "") {
+            if (node->_Node.Object().is_enum && node->TypeInfo.type_name != "") {
                 return node->TypeInfo.type_name;
             }
             return "Object";
@@ -78,8 +75,8 @@ std::string node_repr(node_ptr node) {
             return "Function call";
         }
         case NodeType::FUNC: {
-            if (node->Function.name != "") {
-                return node->Function.name;
+            if (node->_Node.Function().name != "") {
+                return node->_Node.Function().name;
             }
             return "Function";
         }
@@ -91,6 +88,9 @@ std::string node_repr(node_ptr node) {
         }
         case NodeType::NONE: {
             return "None";
+        }
+        case NodeType::ERROR: {
+            return "Error";
         }
         default: {
             return "<not_implemented>";

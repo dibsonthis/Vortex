@@ -48,17 +48,17 @@ VortexObj create_window(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects arg 5 to be a number");
     }
 
-    SDL_Window* window = SDL_CreateWindow(windowName->String.value.c_str(), 
-                                      (int)xPos->Number.value, 
-                                      (int)yPos->Number.value, 
-                                      (int)width->Number.value,
-                                      (int)height->Number.value, 
+    SDL_Window* window = SDL_CreateWindow(windowName->_Node.String().value.c_str(), 
+                                      (int)xPos->_Node.Number().value, 
+                                      (int)yPos->_Node.Number().value, 
+                                      (int)width->_Node.Number().value,
+                                      (int)height->_Node.Number().value, 
                                       SDL_WINDOW_SHOWN);
 
     SDL_SetWindowResizable(window, SDL_TRUE);
 
     VortexObj windowNode = new_vortex_obj(NodeType::POINTER);
-    windowNode->Pointer.value = window;
+    windowNode->_Node.Pointer().value = window;
 
     auto error = std::string(SDL_GetError());
     if (error != "") {
@@ -81,7 +81,7 @@ VortexObj destroy_window(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects 1 pointer argument");
     }
 
-    SDL_Window* window = (SDL_Window*)windowPointer->Pointer.value;
+    SDL_Window* window = (SDL_Window*)windowPointer->_Node.Pointer().value;
 
     SDL_DestroyWindow(window);
 
@@ -107,12 +107,12 @@ VortexObj create_renderer(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects arg 2 to be a number");
     }
 
-    SDL_Window* windowPtr = (SDL_Window*)window->Pointer.value;
+    SDL_Window* windowPtr = (SDL_Window*)window->_Node.Pointer().value;
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(windowPtr, (int)index->Number.value, SDL_RENDERER_ACCELERATED);
+    SDL_Renderer* renderer = SDL_CreateRenderer(windowPtr, (int)index->_Node.Number().value, SDL_RENDERER_ACCELERATED);
 
     VortexObj rendererNode = new_vortex_obj(NodeType::POINTER);
-    rendererNode->Pointer.value = renderer;
+    rendererNode->_Node.Pointer().value = renderer;
 
     auto error = std::string(SDL_GetError());
     if (error != "") {
@@ -135,7 +135,7 @@ VortexObj destroy_renderer(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects 1 pointer argument");
     }
 
-    SDL_Renderer* renderer = (SDL_Renderer*)rendererPointer->Pointer.value;
+    SDL_Renderer* renderer = (SDL_Renderer*)rendererPointer->_Node.Pointer().value;
 
     SDL_DestroyRenderer(renderer);
 
@@ -181,9 +181,9 @@ VortexObj set_render_draw_color(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects arg 5 to be a number");
     }
 
-    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->Pointer.value;
+    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->_Node.Pointer().value;
 
-    int status = SDL_SetRenderDrawColor(rendererPtr, r->Number.value, g->Number.value, b->Number.value, a->Number.value);
+    int status = SDL_SetRenderDrawColor(rendererPtr, r->_Node.Number().value, g->_Node.Number().value, b->_Node.Number().value, a->_Node.Number().value);
 
     if (status != 0) {
         std::cout << "SDL Error (" << name << "): " << SDL_GetError() << "\n";
@@ -200,7 +200,7 @@ VortexObj render_clear(std::string name, std::vector<VortexObj> args) {
 
     VortexObj renderer = args[0];
 
-    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->Pointer.value;
+    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->_Node.Pointer().value;
 
     int status = SDL_RenderClear(rendererPtr);
 
@@ -219,7 +219,7 @@ VortexObj render_present(std::string name, std::vector<VortexObj> args) {
 
     VortexObj renderer = args[0];
 
-    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->Pointer.value;
+    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->_Node.Pointer().value;
 
     SDL_RenderPresent(rendererPtr);
 
@@ -243,9 +243,9 @@ VortexObj draw_point(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects 2 number arguments");
     }
 
-    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->Pointer.value;
+    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->_Node.Pointer().value;
 
-    int draw = SDL_RenderDrawPoint(rendererPtr, xPos->Number.value, yPos->Number.value);
+    int draw = SDL_RenderDrawPoint(rendererPtr, xPos->_Node.Number().value, yPos->_Node.Number().value);
 
     if (draw != 0) {
         error_and_exit("Function '" + name + "' failed");
@@ -273,9 +273,9 @@ VortexObj draw_line(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects 4 number arguments");
     }
 
-    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->Pointer.value;
+    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->_Node.Pointer().value;
 
-    int draw = SDL_RenderDrawLineF(rendererPtr, x1->Number.value, y1->Number.value, x2->Number.value, y2->Number.value);
+    int draw = SDL_RenderDrawLineF(rendererPtr, x1->_Node.Number().value, y1->_Node.Number().value, x2->_Node.Number().value, y2->_Node.Number().value);
 
     if (draw != 0) {
         error_and_exit("Function '" + name + "' failed");
@@ -295,7 +295,7 @@ VortexObj get_key_name(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects 1 number argument");
     }
 
-    const char* key_name = SDL_GetKeyName(key_code->Number.value);
+    const char* key_name = SDL_GetKeyName(key_code->_Node.Number().value);
     VortexObj name_node = new_string_node(std::string(key_name));
     return name_node;
 }
@@ -310,30 +310,30 @@ VortexObj poll_event(std::string name, std::vector<VortexObj> args) {
     int status = SDL_PollEvent(&e);
 
     VortexObj event = new_vortex_obj(NodeType::OBJECT);
-    event->Object.properties["type"] = new_number_node(e.type);
+    event->_Node.Object().properties["type"] = new_number_node(e.type);
     // Button
-    event->Object.properties["button"] = new_vortex_obj(NodeType::OBJECT);
-    event->Object.properties["button"]->Object.properties["button"] = new_number_node(e.button.button);
-    event->Object.properties["button"]->Object.properties["clicks"] = new_number_node(e.button.clicks);
-    event->Object.properties["button"]->Object.properties["x"] = new_number_node(e.button.x);
-    event->Object.properties["button"]->Object.properties["y"] = new_number_node(e.button.y);
+    event->_Node.Object().properties["button"] = new_vortex_obj(NodeType::OBJECT);
+    event->_Node.Object().properties["button"]->_Node.Object().properties["button"] = new_number_node(e.button.button);
+    event->_Node.Object().properties["button"]->_Node.Object().properties["clicks"] = new_number_node(e.button.clicks);
+    event->_Node.Object().properties["button"]->_Node.Object().properties["x"] = new_number_node(e.button.x);
+    event->_Node.Object().properties["button"]->_Node.Object().properties["y"] = new_number_node(e.button.y);
     // Motion
-    event->Object.properties["motion"] = new_vortex_obj(NodeType::OBJECT);
-    event->Object.properties["motion"]->Object.properties["x"] = new_number_node(e.motion.x);
-    event->Object.properties["motion"]->Object.properties["y"] = new_number_node(e.button.y);
+    event->_Node.Object().properties["motion"] = new_vortex_obj(NodeType::OBJECT);
+    event->_Node.Object().properties["motion"]->_Node.Object().properties["x"] = new_number_node(e.motion.x);
+    event->_Node.Object().properties["motion"]->_Node.Object().properties["y"] = new_number_node(e.button.y);
     // Keyboard
-    event->Object.properties["key"] = new_vortex_obj(NodeType::OBJECT);
-    event->Object.properties["key"]->Object.properties["type"] = new_number_node(e.key.type);
-    event->Object.properties["key"]->Object.properties["state"] = new_number_node(e.key.state);
-    event->Object.properties["key"]->Object.properties["repeat"] = new_number_node(e.key.repeat);
-    event->Object.properties["key"]->Object.properties["keysm"] = new_vortex_obj(NodeType::OBJECT);
-    event->Object.properties["key"]->Object.properties["keysm"]->Object.properties["mod"] = new_number_node(e.key.keysym.mod);
-    event->Object.properties["key"]->Object.properties["keysm"]->Object.properties["scancode"] = new_number_node(e.key.keysym.scancode);
-    event->Object.properties["key"]->Object.properties["keysm"]->Object.properties["sym"] = new_number_node(e.key.keysym.sym);
+    event->_Node.Object().properties["key"] = new_vortex_obj(NodeType::OBJECT);
+    event->_Node.Object().properties["key"]->_Node.Object().properties["type"] = new_number_node(e.key.type);
+    event->_Node.Object().properties["key"]->_Node.Object().properties["state"] = new_number_node(e.key.state);
+    event->_Node.Object().properties["key"]->_Node.Object().properties["repeat"] = new_number_node(e.key.repeat);
+    event->_Node.Object().properties["key"]->_Node.Object().properties["keysm"] = new_vortex_obj(NodeType::OBJECT);
+    event->_Node.Object().properties["key"]->_Node.Object().properties["keysm"]->_Node.Object().properties["mod"] = new_number_node(e.key.keysym.mod);
+    event->_Node.Object().properties["key"]->_Node.Object().properties["keysm"]->_Node.Object().properties["scancode"] = new_number_node(e.key.keysym.scancode);
+    event->_Node.Object().properties["key"]->_Node.Object().properties["keysm"]->_Node.Object().properties["sym"] = new_number_node(e.key.keysym.sym);
 
     VortexObj eventStruct = new_vortex_obj(NodeType::OBJECT);
-    eventStruct->Object.properties["status"] = new_number_node(status);
-    eventStruct->Object.properties["event"] = event;
+    eventStruct->_Node.Object().properties["status"] = new_number_node(status);
+    eventStruct->_Node.Object().properties["event"] = event;
 
     return eventStruct;
 }
@@ -350,7 +350,7 @@ VortexObj sdl_delay(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects 1 number argument");
     }
 
-    SDL_Delay(time->Number.value);
+    SDL_Delay(time->_Node.Number().value);
 
     return new_vortex_obj(NodeType::NONE);
 }
