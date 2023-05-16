@@ -1,15 +1,3 @@
-union Unit {
-    "metric",
-    "imperial"
-}
-
-var x: Unit = "metric"
-
-try {
-    x = 12
-} catch (e) {
-    println("Error handled: " + e)
-    x = "12"
-}
-
-println("x: " + x)
+import os
+os.setEnv("bloop", "BLOOOOOP")
+print(os.getEnv("bloop"))
