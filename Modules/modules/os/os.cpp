@@ -38,8 +38,8 @@ VortexObj set_env(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects 2 string arguments");
     }
 
-    std::string command = _name->_Node.String().value + "=" + _value->_Node.String().value;
-    int res = putenv(command.data());
+    // std::string command = _name->_Node.String().value + "=" + _value->_Node.String().value;
+    int res = setenv(_name->_Node.String().value.c_str(), _value->_Node.String().value.c_str(), 1);
 
     return new_number_node(res);
 }
