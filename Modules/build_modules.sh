@@ -28,11 +28,6 @@ elif [ "$FILE" = "requests" ]; then
     sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libcrypto.dylib" "$FILE/lib/libcrypto.dylib"
     sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libssl.3.dylib" "$FILE/lib/libssl.3.dylib"
     sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libssl.dylib" "$FILE/lib/libssl.dylib"
-else
-    CONFIG=$CONFIG
-fi
-
-if [ "$FILE" = "requests" ]; then
     CONFIG="-framework CoreFoundation -framework Security -L/usr/local/share/vortex/modules/requests/lib -I/usr/local/share/vortex/modules/requests/include"
 else
     CONFIG=$CONFIG
