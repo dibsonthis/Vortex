@@ -23,6 +23,8 @@
 #include <algorithm>
 #include <sstream>
 #include <math.h>
+#include <thread>
+#include <future>
 #include "../Node/Node.hpp"
 #include "../Lexer/Lexer.hpp"
 #include "../Parser/Parser.hpp"
@@ -69,6 +71,9 @@ public:
     int argc;
     std::vector<std::string> argv;
     bool try_catch = false;
+    // Futures
+    //std::vector<std::shared_future<node_ptr>> _futures;
+    std::unordered_map<void*, std::shared_future<node_ptr>> _futures;
 
 public:
     Interpreter() = default;

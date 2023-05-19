@@ -94,7 +94,8 @@
     "condition_variable": "cpp",
     "csignal": "cpp",
     "list": "cpp",
-    "__availability": "cpp"
+    "__availability": "cpp",
+    "future": "cpp"
   },
   "C_Cpp.loggingLevel": "Debug",
   "C_Cpp.errorSquiggles": "disabled"

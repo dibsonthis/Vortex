@@ -1,3 +1,48 @@
-import os
-os.setEnv("bloop", "BLOOOOOP")
-print(os.getEnv("bloop"))
+
+
+import async
+import requests
+
+const someLoop = () => {
+    for (0..10000) {
+        const x = 1
+    }
+    45
+}
+
+const get_response = () => { 
+    // someLoop()
+    const f = async.async(requests.get, ["https://24pullrequests.com", "/projects.json"])
+    println(f"Inner: ${f}")
+    while (!f.isReady()) {
+        print("Loading 0...\r")
+    }
+
+    f.await()
+    // while (!async.isReady(f._ptr)) {
+    //     print("Loading 0...\r")
+    // }
+
+    // async.await(f._ptr)
+}
+
+const loadingWidget = () => {
+    print("Loading 1...\r")
+}
+
+const data = async.async(get_response)
+println(f"Outer: ${data}")
+
+// while (async.isReady(data._ptr)) {
+//     loadingWidget()
+// }
+
+// const res = async.await(data._ptr)
+
+while (!data.isReady()) {
+    loadingWidget()
+}
+
+const res = data.await()
+
+println(res)

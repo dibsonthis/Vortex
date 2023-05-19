@@ -10,7 +10,7 @@ fi
 
 clang++ \
 -dynamiclib \
--O3 \
+-g \
 -Wno-everything \
 -I modules/"$1"/include \
 -L modules/"$1"/lib \

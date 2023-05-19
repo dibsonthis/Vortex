@@ -2088,7 +2088,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
             std::string func_name = right->_Node.FunctionCall().name;
 
-            if (left->TypeInfo.type) {
+            if (left->TypeInfo.type_name != "") {
                 if (global_symbol_table->CustomTypeExtensions.count(left->TypeInfo.type_name)) {
                     if (global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name].count(func_name)) {
                         node_ptr ext = std::make_shared<Node>(*global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name][func_name]);
@@ -2115,7 +2115,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right);
             }
 
-            return throw_error("Methond '" + func_name + "' does not exist on object");
+            return throw_error("Method '" + func_name + "' does not exist on object");
         }
 
         if (right->type == NodeType::ACCESSOR) {
@@ -3177,18 +3177,18 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
 
     switch (node->type) {
         case NodeType::NUMBER: {
-            node->TypeInfo.type = new_node(NodeType::NUMBER);
-            node->TypeInfo.type->TypeInfo.is_type = true;
+            //node->TypeInfo.type = new_node(NodeType::NUMBER);
+            //node->TypeInfo.type->TypeInfo.is_type = true;
             return node;
         }
         case NodeType::STRING: {
-            node->TypeInfo.type = new_node(NodeType::STRING);
-            node->TypeInfo.type->TypeInfo.is_type = true;
+            //node->TypeInfo.type = new_node(NodeType::STRING);
+            //node->TypeInfo.type->TypeInfo.is_type = true;
             return node;
         }
         case NodeType::BOOLEAN: {
-            node->TypeInfo.type = new_node(NodeType::BOOLEAN);
-            node->TypeInfo.type->TypeInfo.is_type = true;
+            //node->TypeInfo.type = new_node(NodeType::BOOLEAN);
+            //node->TypeInfo.type->TypeInfo.is_type = true;
             return node;
         }
         case NodeType::LIST: {
