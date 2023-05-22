@@ -30,6 +30,9 @@ node_ptr Interpreter::eval_const_decl(node_ptr& node) {
     }
     node_ptr value = eval_node(node->_Node.ConstantDeclatation().value);
     node_ptr type = eval_node(node->TypeInfo.type);
+    if (value->type == NodeType::ERROR) {
+        return throw_error(value->_Node.Error().message);
+    }
     value = std::make_shared<Node>(*value);
     value->TypeInfo.type = type;
     if (type && !match_types(type, value)) {
@@ -66,6 +69,9 @@ node_ptr Interpreter::eval_var_decl(node_ptr& node) {
         return throw_error("Variable '" + node->_Node.VariableDeclaration().name + "' is already defined");
     }
     node_ptr value = eval_node(node->_Node.VariableDeclaration().value);
+    if (value->type == NodeType::ERROR) {
+        return throw_error(value->_Node.Error().message);
+    }
     node_ptr type = eval_node(node->TypeInfo.type);
     if (type && !match_types(type, value)) {
         return throw_error("Variable '" + node->_Node.VariableDeclaration().name + "' expects a value of type '" + node_repr(type) + "' but was instantiated with value of type '" + node_repr(value) + "'");
@@ -455,6 +461,9 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
         for (int i = 0; i < function->_Node.Function().body->_Node.Object().elements.size(); i++) {
             node_ptr expr = function->_Node.Function().body->_Node.Object().elements[i];
             node_ptr evaluated_expr = eval_node(expr);
+            if (evaluated_expr->type == NodeType::ERROR) {
+                return throw_error(evaluated_expr->_Node.Error().message);
+            }
             if (evaluated_expr->type == NodeType::RETURN) {
                 if (evaluated_expr->_Node.Return().value == nullptr) {
                     res = new_node(NodeType::NONE);
@@ -1318,6 +1327,7 @@ node_ptr Interpreter::eval_try_catch(node_ptr& node) {
     }
     if (error != "") {
         global_interpreter->try_catch = false;
+        global_interpreter->error = "";
         sym_t_ptr catch_sym_table = std::make_shared<SymbolTable>();
         catch_sym_table->parent = current_symbol_table;
         node_ptr error_arg = node->_Node.TryCatch().catch_keyword->_Node.FunctionCall().args[0];
