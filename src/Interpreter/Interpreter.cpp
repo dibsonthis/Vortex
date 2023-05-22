@@ -120,7 +120,9 @@ node_ptr Interpreter::eval_list(node_ptr& node) {
             }
         } else {
             node_ptr evaluated_elem = eval_node(node->_Node.List().elements[0]);
-            evaluated_elem->TypeInfo.is_type = list->TypeInfo.is_type;
+            if (list->TypeInfo.is_type) {
+                evaluated_elem->TypeInfo.is_type = true;
+            }
             list->_Node.List().elements.push_back(eval_node(evaluated_elem));
             // If one element, it becomes the type
             list->TypeInfo.type = new_node(NodeType::LIST);
@@ -1207,7 +1209,7 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
             node_ptr list_type = type->_Node.List().elements[0];
 
             for (node_ptr& elem : value->_Node.List().elements) {
-                if (!match_types(elem, list_type)) {
+                if (!match_types(list_type, elem)) {
                     return false;
                 }
             }
@@ -1220,7 +1222,7 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
             node_ptr list_type = value->_Node.List().elements[0];
 
             for (node_ptr& elem : type->_Node.List().elements) {
-                if (!match_types(elem, list_type)) {
+                if (!match_types(list_type, elem)) {
                     return false;
                 }
             }
