@@ -1,6 +1,8 @@
-const obj = {name: "John"}
-if (obj) {
-    print("hi")
-} else {
-    print("bye")
+const obj = {
+    name: "John",
+    age: 34,
+    sex: "Male",
+    nums: [1,2,4,9]
 }
+
+println(obj.keys, obj.values, obj.items)

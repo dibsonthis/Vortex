@@ -2243,6 +2243,29 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             if (left->_Node.Object().properties.contains(right->_Node.ID().value)) {
                 return left->_Node.Object().properties[right->_Node.ID().value];
             }
+            if (right->_Node.ID().value == "keys") {
+                node_ptr keys = new_node(NodeType::LIST);
+                for (auto& elem : left->_Node.Object().properties) {
+                    keys->_Node.List().elements.push_back(new_string_node(elem.first));
+                }
+                return keys;
+            }
+            if (right->_Node.ID().value == "values") {
+                node_ptr values = new_node(NodeType::LIST);
+                for (auto& elem : left->_Node.Object().properties) {
+                    values->_Node.List().elements.push_back(elem.second);
+                }
+                return values;
+            }
+            if (right->_Node.ID().value == "items") {
+                node_ptr items = new_node(NodeType::LIST);
+                for (auto& elem : left->_Node.Object().properties) {
+                    node_ptr prop = new_node(NodeType::OBJECT);
+                    prop->_Node.Object().properties[elem.first] = elem.second;
+                    items->_Node.List().elements.push_back(prop);
+                }
+                return items;
+            }
             return new_node(NodeType::NONE);
         }
 
@@ -2816,6 +2839,14 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
     }
 
     if (left->type == NodeType::FUNC) {
+        if (right->type == NodeType::ID) {
+            std::string value = right->_Node.ID().value;
+            if (value == "name") {
+                return new_string_node(left->_Node.Function().name);
+            }
+
+            throw_error("Function does not have property '" + value + "'");
+        }
         if (right->type == NodeType::FUNC_CALL) {
             std::string func_name = right->_Node.FunctionCall().name;
 
