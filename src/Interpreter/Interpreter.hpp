@@ -71,6 +71,7 @@ public:
     int argc;
     std::vector<std::string> argv;
     bool try_catch = false;
+    std::string error = "";
     // Futures
     std::unordered_map<uint32_t, std::shared_future<node_ptr>> _futures;
 

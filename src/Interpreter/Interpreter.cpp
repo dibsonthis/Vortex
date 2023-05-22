@@ -1157,11 +1157,24 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
 
     if (type->type == NodeType::FUNC && type->TypeInfo.is_refinement_type) {
         node_ptr func_call = new_node(NodeType::FUNC_CALL);
+        if (type->_Node.Function().params.size() != 1) {
+            throw_error("Refinement type must have one parameter");
+            return false;
+        }
+        node_ptr param = type->_Node.Function().params[0];
+        node_ptr param_type = type->_Node.Function().param_types[param->_Node.ID().value];
+        if (!match_types(param_type, value)) {
+            return false;
+        }
         func_call->_Node.FunctionCall().name = type->_Node.Function().name;
         func_call->_Node.FunctionCall().args.push_back(value);
         node_ptr res = eval_func_call(func_call, type);
+        if (res->type == NodeType::ERROR) {
+            return false;
+        }
         if (res->type != NodeType::BOOLEAN) {
-            error_and_exit("Refinement types must return a boolean value");
+            throw_error("Refinement types must return a boolean value");
+            return false;
         }
         return res->_Node.Boolean().value;
     }
@@ -1296,6 +1309,10 @@ node_ptr Interpreter::eval_try_catch(node_ptr& node) {
         node_ptr evaluated_expr = eval_node(expr);
         if (evaluated_expr->type == NodeType::ERROR) {
             error = evaluated_expr->_Node.Error().message;
+            break;
+        }
+        if (global_interpreter->error != "") {
+            error = global_interpreter->error;
             break;
         }
     }
@@ -1744,6 +1761,10 @@ node_ptr Interpreter::eval_pos_neg(node_ptr& node) {
 node_ptr Interpreter::eval_not(node_ptr& node) {
     node_ptr value = eval_node(node->_Node.Op().right);
 
+    if (value->type == NodeType::ERROR) {
+        return throw_error(value->_Node.Error().message);
+    }
+
     if (value->type == NodeType::BOOLEAN) {
         return new_boolean_node(!value->_Node.Boolean().value);
     }
@@ -1754,6 +1775,14 @@ node_ptr Interpreter::eval_not(node_ptr& node) {
 node_ptr Interpreter::eval_add(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
+
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
 
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_number_node(left->_Node.Number().value + right->_Node.Number().value);
@@ -1778,6 +1807,14 @@ node_ptr Interpreter::eval_sub(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
+
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_number_node(left->_Node.Number().value - right->_Node.Number().value);
     }
@@ -1789,6 +1826,14 @@ node_ptr Interpreter::eval_sub(node_ptr& node) {
 node_ptr Interpreter::eval_mul(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
+
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
 
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_number_node(left->_Node.Number().value * right->_Node.Number().value);
@@ -1802,6 +1847,14 @@ node_ptr Interpreter::eval_div(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
+
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_number_node(left->_Node.Number().value / right->_Node.Number().value);
     }
@@ -1813,6 +1866,14 @@ node_ptr Interpreter::eval_div(node_ptr& node) {
 node_ptr Interpreter::eval_pow(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
+
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
 
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_number_node(pow(left->_Node.Number().value, right->_Node.Number().value));
@@ -1826,6 +1887,14 @@ node_ptr Interpreter::eval_mod(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
+
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_number_node(fmod(left->_Node.Number().value, right->_Node.Number().value));
     }
@@ -1837,6 +1906,14 @@ node_ptr Interpreter::eval_mod(node_ptr& node) {
 node_ptr Interpreter::eval_eq_eq(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
+
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
 
     if (left->type != right->type) {
         return new_boolean_node(false);
@@ -1867,6 +1944,14 @@ node_ptr Interpreter::eval_not_eq(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
+
     if (left->type != right->type) {
         return new_boolean_node(true);
     }
@@ -1896,6 +1981,14 @@ node_ptr Interpreter::eval_lt_eq(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
+
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_boolean_node(left->_Node.Number().value <= right->_Node.Number().value);
     }
@@ -1907,6 +2000,14 @@ node_ptr Interpreter::eval_lt_eq(node_ptr& node) {
 node_ptr Interpreter::eval_gt_eq(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
+
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
 
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_boolean_node(left->_Node.Number().value >= right->_Node.Number().value);
@@ -1920,6 +2021,14 @@ node_ptr Interpreter::eval_lt(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
+
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_boolean_node(left->_Node.Number().value < right->_Node.Number().value);
     }
@@ -1932,6 +2041,14 @@ node_ptr Interpreter::eval_gt(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
+
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_boolean_node(left->_Node.Number().value > right->_Node.Number().value);
     }
@@ -1942,6 +2059,10 @@ node_ptr Interpreter::eval_gt(node_ptr& node) {
 
 node_ptr Interpreter::eval_and(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
+
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
 
     node_ptr left_bool = left;
 
@@ -1954,27 +2075,25 @@ node_ptr Interpreter::eval_and(node_ptr& node) {
     }
 
     node_ptr right = eval_node(node->_Node.Op().right);
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
+
     return right;
-
-    // node_ptr right_bool = right;
-
-    // if (right->type != NodeType::BOOLEAN) {
-    //     right_bool = new_boolean_node(right->type != NodeType::NONE);
-    // }
-
-    // if (!right_bool->_Node.Boolean().value) {
-    //     return right;
-    // }
-
-    // return left;
-
-    // return throw_error("Cannot perform operation '&&' on types: " + node_repr(left) + ", " + node_repr(right));
-    // return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_bit_and(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
+
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
 
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_number_node((long)left->_Node.Number().value & (long)right->_Node.Number().value);
@@ -1988,6 +2107,14 @@ node_ptr Interpreter::eval_bit_or(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
+
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_number_node((long)left->_Node.Number().value | (long)right->_Node.Number().value);
     }
@@ -2000,6 +2127,10 @@ node_ptr Interpreter::eval_or(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr left_bool = left;
 
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
     if (left->type != NodeType::BOOLEAN) {
         left_bool = new_boolean_node(left->type != NodeType::NONE);
     }
@@ -2009,29 +2140,31 @@ node_ptr Interpreter::eval_or(node_ptr& node) {
     }
 
     node_ptr right = eval_node(node->_Node.Op().right);
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
+
     return right;
-    // node_ptr right_bool = right;
-
-    // if (right->type != NodeType::BOOLEAN) {
-    //     right_bool = new_boolean_node(right->type != NodeType::NONE);
-    // }
-
-    // if (right_bool->type == NodeType::BOOLEAN) {
-    //     return new_boolean_node(left->_Node.Boolean().value || right->_Node.Boolean().value);
-    // }
-
-    // return throw_error("Cannot perform operation '||' on types: " + node_repr(left) + ", " + node_repr(right));
-    // return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_null_op(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
+
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
 
     if (left->type != NodeType::NONE) {
         return left;
     }
 
     node_ptr right = eval_node(node->_Node.Op().right);
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
+
     return right;
 }
 
@@ -2076,6 +2209,14 @@ node_ptr Interpreter::eval_minus_eq(node_ptr& node) {
 node_ptr Interpreter::eval_dot(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = node->_Node.Op().right;
+
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
 
     if (left->type == NodeType::OBJECT) {
 
@@ -2697,6 +2838,14 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
     node_ptr left = node->_Node.Op().left;
     node_ptr right = eval_node(node->_Node.Op().right);
 
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
+
     if (left->type == NodeType::OP && left->_Node.Op().value == ".") {
         node_ptr object = eval_node(left->_Node.Op().left);
         if (object->Meta.is_const) {
@@ -3170,6 +3319,10 @@ void Interpreter::builtin_print(node_ptr& node) {
 
 node_ptr Interpreter::eval_node(node_ptr& node) {
 
+    if (global_interpreter->try_catch && global_interpreter->error != "") {
+        return throw_error(global_interpreter->error);
+    }
+
     if (node == nullptr) {
         return nullptr;
     }
@@ -3485,12 +3638,15 @@ void Interpreter::error_and_exit(std::string message)
 
 node_ptr Interpreter::throw_error(std::string message)
 {
+    std::string error_message = "\nError in '" + file_name + "' @ (" + std::to_string(line) + ", " + std::to_string(column) + "): " + message;
+
     if (global_interpreter->try_catch) {
         node_ptr error = new_node(NodeType::ERROR);
-        error->_Node.Error().message = message;
+        error->_Node.Error().message = error_message;
+        global_interpreter->error = error_message;
         return error;
     } else {
-        error_and_exit(message);
+        error_and_exit(error_message);
         return new_node(NodeType::ERROR);
     }
 }
