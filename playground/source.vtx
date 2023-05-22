@@ -2,7 +2,7 @@ import threading : "/Users/adib/Dev/Personal/Vortex/Modules/modules/threading/th
 import requests
 
 const get_response = () => {
-    const th = threading.thread(() => requests.get("https://24pullrequests.com", "/projects.json"))
+    const th = threading.thread(() => requests.get("https://24pullrequests.com", "projects.json"))
     while (!th.ready()) {
         print("Loading Inner...\r")
     }

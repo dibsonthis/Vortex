@@ -407,6 +407,10 @@ void Parser::parse_func_call(std::string end) {
         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
             break;
         }
+        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "ret") {
+            advance();
+            continue;
+        }
         if (current_node->type == NodeType::ID && peek()->type == NodeType::PAREN) {
             std::string name = current_node->_Node.ID().value;
             current_node->type = NodeType::FUNC_CALL;
@@ -428,6 +432,10 @@ void Parser::parse_object_desconstruct(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
             break;
+        }
+        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "ret") {
+            advance();
+            continue;
         }
         if (current_node->type == NodeType::ID && peek()->type == NodeType::OBJECT) {
             std::string name = current_node->_Node.ID().value;

@@ -1,14 +1,16 @@
 const lib = load_lib("./bin/requests")
 const json_lib = load_lib("../json/bin/json")
+const str_lib = load_lib("../string/bin/string")
+
+const _split = (str: String, delim: String) => str_lib.call("split", [str, delim])
 
 type Response {
-	version: String,
-	status: Number,
-	body: String,
-	location: String,
-	headers: [String],
-	_json_lib: Library = json_lib,
-	toJson: Function = () => this._json_lib.call("parse", [this.body])
+	version: String = "",
+	status: Number = 0,
+	body: String = "",
+	location: String = "",
+	headers: [String] = [],
+	toJson: Function = () => json_lib.call("parse", [this.body])
 }
 
 const get = (url: String, endpoint: String): Response => { 
@@ -23,8 +25,12 @@ const get = (url: String, endpoint: String): Response => {
 	ret res
 }
 
-const get = (url: String): Response => { 
-	ret get(url, "/")
+const get = (url: String): Response => {
+	const split = _split(url, "/")
+	if (split.length == 4) {
+		ret get(split[0] + "//" + split[1] + split[2], "/" + split[3])
+	}
+	ret Response {}
 }
 
 const post = (url: String, endpoint: String, payload: Object): Response => { 
