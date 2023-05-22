@@ -18,6 +18,8 @@ extend String {
 	trim: (): String => trim(self),
 	chars: (): [String] => chars(self),
 	at: (index: Number) => self[index],
+	first: () => self[0],
+	last: () => self[self.length-1],
 	print: () => { print(self) self },
 	println: () => { println(self) self }
 }

@@ -559,7 +559,16 @@ node_ptr Interpreter::eval_if_block(node_ptr& node) {
     for (node_ptr statement : node->_Node.IfBlock().statements) {
         if (statement->type == NodeType::IF_STATEMENT) {
             node_ptr conditional = eval_node(statement->_Node.IfStatement().condition);
-            if (conditional->_Node.Boolean().value) {
+            
+            bool is_true = false;
+
+            if (conditional->type == NodeType::BOOLEAN) {
+                is_true = conditional->_Node.Boolean().value;
+            } else {
+                is_true = conditional->type != NodeType::NONE;
+            }
+
+            if (is_true) {
                 return eval_node(statement);
             }
         } else if (statement->type == NodeType::OBJECT) {
