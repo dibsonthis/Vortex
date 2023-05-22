@@ -11,6 +11,7 @@ fi
 clang++ \
 -dynamiclib \
 -g \
+-Ofast \
 -Wno-everything \
 -I modules/"$1"/include \
 -L modules/"$1"/lib \

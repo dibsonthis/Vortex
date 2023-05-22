@@ -32,7 +32,7 @@ VortexObj thread(std::string name, std::vector<VortexObj> args) {
     auto future = std::async(std::launch::async, [func = std::move(func), func_call = std::move(func_call)] () mutable {
         auto interp = Interpreter();
         interp.global_symbol_table = _interpreter_ref.get().global_symbol_table;
-        interp.current_symbol_table = _interpreter_ref.get().current_symbol_table;
+        interp.current_symbol_table->parent = interp.global_symbol_table;
         node_ptr res = interp.eval_func_call(func_call, func);
         return res;
     }).share();
