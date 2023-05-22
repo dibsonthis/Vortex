@@ -1,40 +1,20 @@
-import async : "/Users/adib/Dev/Personal/Vortex/Modules/modules/async/async"
+import threading : "/Users/adib/Dev/Personal/Vortex/Modules/modules/threading/threading"
 import requests
 
-const get_response = () => { 
-    println("Response 1")
-    requests.get("https://24pullrequests.com", "/projects.json")
-}
-
-const get_response2 = () => { 
-    println("Response 2")
-    requests.get("https://24pullrequests.com", "/projects.json")
-}
-
-
-const loadingWidget = () => {
-    print("Loading...\r")
-}
-
-const data = async.async(get_response)
-const data2 = async.async(get_response2)
-
-while (true) {
-    loadingWidget()
-    if (data.isReady() && data2.isReady()) {
-        break
+const get_response = () => {
+    const th = threading.thread(() => requests.get("https://24pullrequests.com", "/projects.json"))
+    while (!th.ready()) {
+        print("Loading Inner...\r")
     }
+    ret th.get()
 }
 
-// while (!data.isReady()) {
-//     loadingWidget()
-// }
+const data = threading.thread(get_response)
 
-// while (!data2.isReady()) {
-//     loadingWidget()
-// }
+while (!data.ready()) {
+    print("Loading Outer...\r")
+}
 
-const res = data.await()
-const res2 = data2.await()
+const res = data.get()
 
-println(res.toJson(), res2.toJson())
+println(res.toJson())
