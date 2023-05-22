@@ -1,48 +1,40 @@
-
-
-import async
+import async : "/Users/adib/Dev/Personal/Vortex/Modules/modules/async/async"
 import requests
 
-const someLoop = () => {
-    for (0..10000) {
-        const x = 1
-    }
-    45
-}
-
 const get_response = () => { 
-    // someLoop()
-    const f = async.async(requests.get, ["https://24pullrequests.com", "/projects.json"])
-    println(f"Inner: ${f}")
-    while (!f.isReady()) {
-        print("Loading 0...\r")
-    }
-
-    f.await()
-    // while (!async.isReady(f._ptr)) {
-    //     print("Loading 0...\r")
-    // }
-
-    // async.await(f._ptr)
+    println("Response 1")
+    requests.get("https://24pullrequests.com", "/projects.json")
 }
+
+const get_response2 = () => { 
+    println("Response 2")
+    requests.get("https://24pullrequests.com", "/projects.json")
+}
+
 
 const loadingWidget = () => {
-    print("Loading 1...\r")
+    print("Loading...\r")
 }
 
 const data = async.async(get_response)
-println(f"Outer: ${data}")
+const data2 = async.async(get_response2)
 
-// while (async.isReady(data._ptr)) {
+while (true) {
+    loadingWidget()
+    if (data.isReady() && data2.isReady()) {
+        break
+    }
+}
+
+// while (!data.isReady()) {
 //     loadingWidget()
 // }
 
-// const res = async.await(data._ptr)
-
-while (!data.isReady()) {
-    loadingWidget()
-}
+// while (!data2.isReady()) {
+//     loadingWidget()
+// }
 
 const res = data.await()
+const res2 = data2.await()
 
-println(res)
+println(res.toJson(), res2.toJson())

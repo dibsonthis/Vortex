@@ -72,8 +72,7 @@ public:
     std::vector<std::string> argv;
     bool try_catch = false;
     // Futures
-    //std::vector<std::shared_future<node_ptr>> _futures;
-    std::unordered_map<void*, std::shared_future<node_ptr>> _futures;
+    std::unordered_map<uint32_t, std::shared_future<node_ptr>> _futures;
 
 public:
     Interpreter() = default;
