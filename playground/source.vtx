@@ -1,15 +1,4 @@
-const func_wrapper = (fx: (x: String) => String) => {
-    fx("hi")
+extend String {
+    blah: 5
+    blah5: 55
 }
-
-const func_wrapper = (fx: (x: Number) => Number) => {
-    fx(45)
-}
-
-const func_wrapper = (fx: () => Any) => {
-    fx()
-}
-
-const some_func = (x: Number): String => "hi"
-
-print(func_wrapper(some_func))

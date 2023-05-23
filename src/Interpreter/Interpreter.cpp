@@ -149,6 +149,9 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
     if (node->_Node.Object().elements.size() == 0) {
         return node;
     }
+    if (node->_Node.Object().elements.size() > 1 && node->_Node.Object().elements[0]->type != NodeType::COMMA_LIST) {
+        return throw_error("Object properties must be comma separated");
+    }
     if (node->_Node.Object().elements[0]->type != NodeType::COMMA_LIST) {
         node_ptr prop = node->_Node.Object().elements[0];
         if (prop->_Node.Op().value != ":") {
@@ -1096,7 +1099,7 @@ node_ptr Interpreter::eval_type_ext(node_ptr& node) {
     if (type->type == NodeType::OBJECT) {
         if (type->TypeInfo.is_type) {
             if (global_symbol_table->CustomTypeExtensions.count(type->TypeInfo.type_name)) {
-                global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name].insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
+                global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name].insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());        
             } else {
                 global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name] = std::unordered_map<std::string, node_ptr>();
                 global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name].insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
