@@ -3406,7 +3406,7 @@ std::string Interpreter::printable(node_ptr& node) {
         case NodeType::NONE: {
             return "None";
         }
-        case NodeType::NONE: {
+        case NodeType::ANY: {
             return "Any";
         }
         case NodeType::ID: {
