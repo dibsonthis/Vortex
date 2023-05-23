@@ -1,3 +1,25 @@
-const l1 = {name: "John", age: 34}
-const l2 = {ages: 34, name: "John"}
-print(l1 == l2)
+type Iterator {
+	state: Any,
+	next: Function,
+	prev: Function
+}
+
+var num_iterator = Iterator {
+	states: -1,
+	next: () => {
+		this.state += 1
+		this.state
+	},
+	prev: () => {
+		this.state -= 1
+		this.state
+	}
+}
+
+for (0..20, index) {
+	if (index <= 10) {
+		println(num_iterator.next())
+	} else {
+		println(num_iterator.prev())
+	}
+}

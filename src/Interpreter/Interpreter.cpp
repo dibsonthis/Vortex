@@ -1163,6 +1163,10 @@ bool Interpreter::match_values(node_ptr& nodeA, node_ptr& nodeB) {
 }
 
 bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
+    if (!_type || !_value) {
+        return false;
+    }
+
     node_ptr type = std::make_shared<Node>(*_type);
     if (!type->TypeInfo.is_type && type->TypeInfo.type) {
         type = type->TypeInfo.type;
