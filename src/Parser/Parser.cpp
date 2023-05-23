@@ -132,7 +132,7 @@ void Parser::parse_equals(std::string end) {
             if (current_node->_Node.Op().right->type == NodeType::FUNC) {
                 if (left->type == NodeType::ID) {
                     current_node->_Node.Op().right->_Node.Function().name = left->_Node.ID().value;
-                } else if (left->_Node.Op().value == ".") {
+                } else if (left->type == NodeType::OP && left->_Node.Op().value == ".") {
                     current_node->_Node.Op().right->_Node.Function().name = left->_Node.Op().right->_Node.ID().value;
                 }
             }

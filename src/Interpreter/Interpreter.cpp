@@ -1097,7 +1097,7 @@ node_ptr Interpreter::eval_type_ext(node_ptr& node) {
         return new_node(NodeType::NONE);
     }
     if (type->type == NodeType::OBJECT) {
-        if (type->TypeInfo.is_type) {
+        if (type->TypeInfo.is_type && type->TypeInfo.type_name != "") {
             if (global_symbol_table->CustomTypeExtensions.count(type->TypeInfo.type_name)) {
                 global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name].insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());        
             } else {
@@ -3121,23 +3121,21 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
                 node_ptr old_value = std::make_shared<Node>(*accessed_value);
                 std::vector<node_ptr> onChangeFunctions = accessed_value->Hooks.onChange;
 
-                // Type check
-                // if (!accessed_value->Meta.is_untyped_property) {
-                //     if (accessed_value->type != NodeType::NONE && !match_types(accessed_value->TypeInfo.type, right)) {
-                //         return throw_error("Cannot modify object property type '" + node_repr(accessed_value) + "'");
-                //     }
-                // }
                 if (!accessed_value->Meta.is_untyped_property) {
                     if (!match_types(accessed_value, right)) {
                         return throw_error("Cannot modify object property type '" + node_repr(accessed_value) + "'");
                     }
                 }
 
-                *accessed_value = *right;
-                accessed_value->TypeInfo = old_value->TypeInfo;
-                accessed_value->Meta = old_value->Meta;
-                accessed_value->Meta.is_const = false;
-                accessed_value->Hooks.onChange = onChangeFunctions;
+                if (accessed_value->type == NodeType::FUNC && right->type == NodeType::FUNC) {
+                    accessed_value->_Node.Function().dispatch_functions.push_back(right);
+                } else {
+                    *accessed_value = *right;
+                    accessed_value->TypeInfo = old_value->TypeInfo;
+                    accessed_value->Meta = old_value->Meta;
+                    accessed_value->Meta.is_const = false;
+                    accessed_value->Hooks.onChange = onChangeFunctions;
+                }
 
                 auto allOnChangeFunctionsLists = {std::cref(onChangeFunctions), std::cref(global_symbol_table->globalHooks_onChange)};
                 

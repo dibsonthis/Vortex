@@ -1,4 +1,9 @@
-extend String {
-    blah: 5
-    blah5: 55
+var obj = {
+    num: 42,
+    get: () => this.num
 }
+
+obj["get"] = (x: Number) => obj.num + x
+
+println(obj.get())
+println(obj.get(8))
