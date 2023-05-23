@@ -1114,6 +1114,10 @@ node_ptr Interpreter::eval_type_ext(node_ptr& node) {
 }
 
 bool Interpreter::match_values(node_ptr& nodeA, node_ptr& nodeB) {
+    if (!nodeA || !nodeB) {
+        return false;
+    }
+
     if (nodeA->type != nodeB->type) {
         return false;
     }
@@ -1954,7 +1958,13 @@ node_ptr Interpreter::eval_eq_eq(node_ptr& node) {
         return new_boolean_node(true);
     }
 
-    // TODO: Extend to lists and objects
+    if (left->type == NodeType::LIST) {
+        return new_boolean_node(match_values(left, right));
+    }
+
+    if (left->type == NodeType::OBJECT) {
+        return new_boolean_node(match_values(left, right));
+    }
 
     return new_boolean_node(false);
 }
@@ -1991,7 +2001,13 @@ node_ptr Interpreter::eval_not_eq(node_ptr& node) {
         return new_boolean_node(false);
     }
 
-    // TODO: Extend to lists and objects
+    if (left->type == NodeType::LIST) {
+        return new_boolean_node(!match_values(left, right));
+    }
+
+    if (left->type == NodeType::OBJECT) {
+        return new_boolean_node(!match_values(left, right));
+    }
 
     return new_boolean_node(true);
 }
