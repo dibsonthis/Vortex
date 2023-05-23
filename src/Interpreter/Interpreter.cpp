@@ -738,8 +738,9 @@ node_ptr Interpreter::eval_for_loop(node_ptr& node) {
 
 node_ptr Interpreter::eval_while_loop(node_ptr& node) {
     node_ptr conditional = eval_node(node->_Node.WhileLoop().condition);
+
     if (conditional->type != NodeType::BOOLEAN) {
-        return throw_error("While loop conditional must evaluate to a boolean");
+        conditional = new_boolean_node(conditional->type != NodeType::NONE);
     }
 
     auto current_scope = current_symbol_table;
@@ -765,6 +766,10 @@ node_ptr Interpreter::eval_while_loop(node_ptr& node) {
         }
 
         conditional = eval_node(node->_Node.WhileLoop().condition);
+
+        if (conditional->type != NodeType::BOOLEAN) {
+            conditional = new_boolean_node(conditional->type != NodeType::NONE);
+        }
 
         current_symbol_table = current_scope;
     }
