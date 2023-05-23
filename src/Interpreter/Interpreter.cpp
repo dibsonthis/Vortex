@@ -845,6 +845,8 @@ node_ptr Interpreter::eval_function(node_ptr& node) {
                 param_type->TypeInfo.is_type = true;
             } else if (param_type->type == NodeType::OBJECT) {
                 param_type->TypeInfo.is_type = true;
+            } else if (param_type->type == NodeType::FUNC) {
+                param_type->TypeInfo.is_type = true;
             }
             node->_Node.Function().param_types[param->_Node.Op().left->_Node.ID().value] 
                 = param_type;
@@ -1242,6 +1244,40 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
 
     if (type->type != value->type) {
         return false;
+    }
+
+    if (type->type == NodeType::FUNC && type->TypeInfo.is_type) {
+        if (value->_Node.Function().return_type) {
+            if (!match_types(type->_Node.Function().body, value->_Node.Function().return_type)) {
+                return false;
+            }
+        }
+
+        auto& type_params = type->_Node.Function().params;
+        auto& value_params = value->_Node.Function().params;
+
+        if (type_params.size() != value_params.size()) {
+            return false;
+        }
+
+        // We check the param types, but we don't care if they are
+        // named the same, we just care about positional params
+
+        for (int i = 0; i < type_params.size(); i++) {
+            std::string type_param = type_params[i]->_Node.ID().value;
+            std::string value_param = value_params[i]->_Node.ID().value;;
+
+            node_ptr type_param_type = type->_Node.Function().param_types[type_param];
+            node_ptr value_param_type = value->_Node.Function().param_types[value_param];
+
+            if (type_param_type && value_param_type) {
+                if (!match_types(type_param_type, value_param_type)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     if (type->type == NodeType::LIST) {
@@ -3369,6 +3405,9 @@ std::string Interpreter::printable(node_ptr& node) {
         }
         case NodeType::NONE: {
             return "None";
+        }
+        case NodeType::NONE: {
+            return "Any";
         }
         case NodeType::ID: {
             return node->_Node.ID().value;

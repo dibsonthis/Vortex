@@ -1,68 +1,15 @@
-type Iterator {
-	state: Any,
-	next: Function,
-	prev: Function
+const func_wrapper = (fx: (x: String) => String) => {
+    fx("hi")
 }
 
-const list_to_circular_iter = (list: List) => {
-	Iterator {
-		state: {
-			index: -1,
-			elements: list
-		},
-		next: () => {
-			this.state.index += 1
-			if (this.state.index >= this.state.elements.length) {
-				this.state.index = 0
-			}
-			this.state.elements[this.state.index]
-		},
-		prev: () => {
-			this.state.index -= 1
-			if (this.state.index < 0) {
-				this.state.index = this.state.elements.length-1
-			}
-			this.state.elements[this.state.index]
-		}
-	}
+const func_wrapper = (fx: (x: Number) => Number) => {
+    fx(45)
 }
 
-const list_to_iter = (list: List) => {
-	Iterator {
-		state: {
-			index: -1,
-			elements: list,
-			end_index: list.length,
-			stop: false
-		},
-		next: () => {
-			this.state.index += 1
-			if (this.state.index >= this.state.end_index) {
-				this.state.stop = true
-			} else {
-				ret this.state.elements[this.state.index]
-			}
-		},
-		prev: () => {
-			this.state.index -= 1
-			if (this.state.index < 0) {
-				this.state.stop = true
-			} else {
-				ret this.state.elements[this.state.index]
-			}
-		}
-	}
+const func_wrapper = (fx: () => Any) => {
+    fx()
 }
 
-import string
+const some_func = (x: Number): String => "hi"
 
-extend List {
-	to_iter: () => list_to_iter(self)
-}
-
-var str_iter = "hello world, my name is dibs".split().to_iter()
-
-var x: Any
-while ((x = str_iter.next()) && (!str_iter.state.stop)) {
-	print(x)
-}
+print(func_wrapper(some_func))
