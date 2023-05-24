@@ -1,8 +1,7 @@
-type Vec { x: Number, y: Number }
-union CustomFunc {
-	() => Any,
-	(x: String) => Vec,
-	(x: String) => String,
-}
 
-const x: CustomFunc = (x: String): String => x
+const test = (x: String) => true
+const name = "John"
+
+for (0..10) {
+	name.test()
+}

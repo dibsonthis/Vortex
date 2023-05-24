@@ -859,6 +859,9 @@ node_ptr Interpreter::eval_function(node_ptr& node) {
         }
     }
     // Check if the body is a type, if so, this function is a type
+    if (!node->_Node.Function().body) {
+        node->_Node.Function().body = new_node(NodeType::ANY);
+    }
     if (node->_Node.Function().body->type == NodeType::ID) {
         // We want to check if this ID is a type, in this case we mark
         // this function is a type
@@ -2387,7 +2390,8 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             // We inject object as the first arg in the function call
             // And try to run it
 
-            right->_Node.FunctionCall().args.insert(right->_Node.FunctionCall().args.begin(), left);
+            node_ptr func_call = std::make_shared<Node>(*right);
+            func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
             return eval_func_call(right);
 
             return throw_error("Method '" + func_name + "' does not exist on object");
@@ -2435,9 +2439,10 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 }
                 return eval_func_call(right, ext);
             }
-
-            right->_Node.FunctionCall().args.insert(right->_Node.FunctionCall().args.begin(), left);
-            return eval_func_call(right);
+            
+            node_ptr func_call = std::make_shared<Node>(*right);
+            func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
+            return eval_func_call(func_call);
 
             return throw_error("String does not have method '" + func_name + "'");
         }
@@ -2771,7 +2776,8 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right, ext);
             }
 
-            right->_Node.FunctionCall().args.insert(right->_Node.FunctionCall().args.begin(), left);
+            node_ptr func_call = std::make_shared<Node>(*right);
+            func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
             return eval_func_call(right);
 
             return throw_error("List does not have method '" + func_name + "'");
@@ -2913,7 +2919,8 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right, ext);
             }
 
-            right->_Node.FunctionCall().args.insert(right->_Node.FunctionCall().args.begin(), left);
+            node_ptr func_call = std::make_shared<Node>(*right);
+            func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
             return eval_func_call(right);
 
             return throw_error("Number does not have method '" + func_name + "'");
@@ -2933,7 +2940,8 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right, ext);
             }
 
-            right->_Node.FunctionCall().args.insert(right->_Node.FunctionCall().args.begin(), left);
+            node_ptr func_call = std::make_shared<Node>(*right);
+            func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
             return eval_func_call(right);
 
             return throw_error("Boolean does not have method '" + func_name + "'");
@@ -2961,7 +2969,8 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right, ext);
             }
 
-            right->_Node.FunctionCall().args.insert(right->_Node.FunctionCall().args.begin(), left);
+            node_ptr func_call = std::make_shared<Node>(*right);
+            func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
             return eval_func_call(right);
 
             return throw_error("Function does not have method '" + func_name + "'");
@@ -2981,7 +2990,8 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right, ext);
             }
 
-            right->_Node.FunctionCall().args.insert(right->_Node.FunctionCall().args.begin(), left);
+            node_ptr func_call = std::make_shared<Node>(*right);
+            func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
             return eval_func_call(right);
 
             return throw_error("None does not have method '" + func_name + "'");
