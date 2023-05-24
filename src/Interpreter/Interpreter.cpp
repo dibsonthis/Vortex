@@ -2392,7 +2392,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
             node_ptr func_call = std::make_shared<Node>(*right);
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
-            return eval_func_call(right);
+            return eval_func_call(func_call);
 
             return throw_error("Method '" + func_name + "' does not exist on object");
         }
@@ -2778,7 +2778,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
             node_ptr func_call = std::make_shared<Node>(*right);
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
-            return eval_func_call(right);
+            return eval_func_call(func_call);
 
             return throw_error("List does not have method '" + func_name + "'");
         }
@@ -2921,7 +2921,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
             node_ptr func_call = std::make_shared<Node>(*right);
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
-            return eval_func_call(right);
+            return eval_func_call(func_call);
 
             return throw_error("Number does not have method '" + func_name + "'");
         }
@@ -2942,7 +2942,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
             node_ptr func_call = std::make_shared<Node>(*right);
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
-            return eval_func_call(right);
+            return eval_func_call(func_call);
 
             return throw_error("Boolean does not have method '" + func_name + "'");
         }
@@ -2971,7 +2971,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
             node_ptr func_call = std::make_shared<Node>(*right);
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
-            return eval_func_call(right);
+            return eval_func_call(func_call);
 
             return throw_error("Function does not have method '" + func_name + "'");
         }
@@ -2992,7 +2992,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
             node_ptr func_call = std::make_shared<Node>(*right);
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
-            return eval_func_call(right);
+            return eval_func_call(func_call);
 
             return throw_error("None does not have method '" + func_name + "'");
         }
