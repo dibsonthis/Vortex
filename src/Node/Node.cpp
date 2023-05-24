@@ -54,6 +54,9 @@ std::string node_repr(node_ptr node) {
             if (node->_Node.Object().is_enum && node->TypeInfo.type_name != "") {
                 return node->TypeInfo.type_name;
             }
+            if (node->TypeInfo.type_name != "") {
+                return node->TypeInfo.type_name;
+            }
             return "Object";
         }
         case NodeType::LIB: {
@@ -91,7 +94,11 @@ std::string node_repr(node_ptr node) {
                         res += ", ";
                     }
                 }
-                res += ") => " + node_repr(node->_Node.Function().body);
+                if (node->_Node.Function().body) {
+                    res += ") => " + node_repr(node->_Node.Function().body);
+                } else {
+                    res += ") => ...";
+                }
                 if (node->_Node.Function().dispatch_functions.size() > 0) {
                     res += "\n";
                     for (auto& func : node->_Node.Function().dispatch_functions) {

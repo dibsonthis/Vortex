@@ -2337,32 +2337,38 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
             std::string func_name = right->_Node.FunctionCall().name;
 
-            if (left->TypeInfo.type_name != "") {
-                if (global_symbol_table->CustomTypeExtensions.count(left->TypeInfo.type_name)) {
-                    if (global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name].count(func_name)) {
-                        node_ptr ext = std::make_shared<Node>(*global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name][func_name]);
-                        ext->_Node.Function().closure["self"] = left;
-                        for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-                            dispatch_fx->_Node.Function().closure["self"] = left;
-                        }
-                        return eval_func_call(right, ext);
-                    }
-                }
-            }
+            // if (left->TypeInfo.type_name != "") {
+            //     if (global_symbol_table->CustomTypeExtensions.count(left->TypeInfo.type_name)) {
+            //         if (global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name].count(func_name)) {
+            //             node_ptr ext = std::make_shared<Node>(*global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name][func_name]);
+            //             ext->_Node.Function().closure["self"] = left;
+            //             for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+            //                 dispatch_fx->_Node.Function().closure["self"] = left;
+            //             }
+            //             return eval_func_call(right, ext);
+            //         }
+            //     }
+            // }
 
-            if (global_symbol_table->ObjectExtensions.count(func_name)) {
-                node_ptr ext = std::make_shared<Node>(*global_symbol_table->ObjectExtensions[func_name]);
-                ext->_Node.Function().closure["self"] = left;
-                for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-                    dispatch_fx->_Node.Function().closure["self"] = left;
-                }
-                return eval_func_call(right, ext);
-            }
+            // if (global_symbol_table->ObjectExtensions.count(func_name)) {
+            //     node_ptr ext = std::make_shared<Node>(*global_symbol_table->ObjectExtensions[func_name]);
+            //     ext->_Node.Function().closure["self"] = left;
+            //     for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+            //         dispatch_fx->_Node.Function().closure["self"] = left;
+            //     }
+            //     return eval_func_call(right, ext);
+            // }
 
             if (left->_Node.Object().properties.count(func_name)) {
                 right->_Node.FunctionCall().caller = left;
                 return eval_func_call(right);
             }
+
+            // We inject object as the first arg in the function call
+            // And try to run it
+
+            right->_Node.FunctionCall().args.insert(right->_Node.FunctionCall().args.begin(), left);
+            return eval_func_call(right);
 
             return throw_error("Method '" + func_name + "' does not exist on object");
         }
@@ -2409,6 +2415,9 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 }
                 return eval_func_call(right, ext);
             }
+
+            right->_Node.FunctionCall().args.insert(right->_Node.FunctionCall().args.begin(), left);
+            return eval_func_call(right);
 
             return throw_error("String does not have method '" + func_name + "'");
         }
@@ -2742,6 +2751,9 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right, ext);
             }
 
+            right->_Node.FunctionCall().args.insert(right->_Node.FunctionCall().args.begin(), left);
+            return eval_func_call(right);
+
             return throw_error("List does not have method '" + func_name + "'");
         }
 
@@ -2881,6 +2893,9 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right, ext);
             }
 
+            right->_Node.FunctionCall().args.insert(right->_Node.FunctionCall().args.begin(), left);
+            return eval_func_call(right);
+
             return throw_error("Number does not have method '" + func_name + "'");
         }
     }
@@ -2897,6 +2912,9 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 }
                 return eval_func_call(right, ext);
             }
+
+            right->_Node.FunctionCall().args.insert(right->_Node.FunctionCall().args.begin(), left);
+            return eval_func_call(right);
 
             return throw_error("Boolean does not have method '" + func_name + "'");
         }
@@ -2923,6 +2941,9 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right, ext);
             }
 
+            right->_Node.FunctionCall().args.insert(right->_Node.FunctionCall().args.begin(), left);
+            return eval_func_call(right);
+
             return throw_error("Function does not have method '" + func_name + "'");
         }
     }
@@ -2939,6 +2960,9 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 }
                 return eval_func_call(right, ext);
             }
+
+            right->_Node.FunctionCall().args.insert(right->_Node.FunctionCall().args.begin(), left);
+            return eval_func_call(right);
 
             return throw_error("None does not have method '" + func_name + "'");
         }
@@ -3447,18 +3471,12 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
 
     switch (node->type) {
         case NodeType::NUMBER: {
-            //node->TypeInfo.type = new_node(NodeType::NUMBER);
-            //node->TypeInfo.type->TypeInfo.is_type = true;
             return node;
         }
         case NodeType::STRING: {
-            //node->TypeInfo.type = new_node(NodeType::STRING);
-            //node->TypeInfo.type->TypeInfo.is_type = true;
             return node;
         }
         case NodeType::BOOLEAN: {
-            //node->TypeInfo.type = new_node(NodeType::BOOLEAN);
-            //node->TypeInfo.type->TypeInfo.is_type = true;
             return node;
         }
         case NodeType::LIST: {

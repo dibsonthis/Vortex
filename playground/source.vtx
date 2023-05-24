@@ -1,9 +1,20 @@
+import [] : "import"
+
 var obj = {
     num: 42,
     get: () => this.num
 }
 
-obj["get"] = (x: Number) => obj.num + x
+type Vec {
+    x: Number,
+    y: Number
+}
 
-println(obj.get())
-println(obj.get(8))
+const v = Vec {x:4, y:10}
+
+obj.prnt()
+v.prnt()
+"hi".prnt()
+(45).prnt()
+true.prnt()
+(const func = () => 45).prnt()

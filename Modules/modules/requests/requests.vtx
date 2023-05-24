@@ -49,6 +49,18 @@ const post = (url: String, endpoint: String): Response => {
 	ret post(url, endpoint, {})
 }
 
-const post = (url: String): Response => { 
-	ret post(url, "/", {})
+const post = (url: String): Response => {
+	const split = _split(url, "/")
+	if (split.length == 4) {
+		ret post(split[0] + "//" + split[1] + split[2], "/" + split[3])
+	}
+	ret Response {}
+}
+
+const post = (url: String, payload: Object): Response => {
+	const split = _split(url, "/")
+	if (split.length == 4) {
+		ret post(split[0] + "//" + split[1] + split[2], "/" + split[3], payload)
+	}
+	ret Response {}
 }

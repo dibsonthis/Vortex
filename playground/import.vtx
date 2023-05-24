@@ -1,0 +1,11 @@
+type Vec {
+    x: Number,
+    y: Number
+}
+
+const prnt = (x: Object) => println(f"Object: ${x}")
+const prnt = (x: Vec) => println(f"Vec: ${x}")
+const prnt = (x: String) => println(f"String: ${x}")
+const prnt = (x: Number) => println(f"Number: ${x}")
+const prnt = (x: Boolean) => println(f"Boolean: ${x}")
+const prnt = (x: Function) => println(f"Function: ${x.name}")
