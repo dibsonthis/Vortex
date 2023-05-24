@@ -1,20 +1,13 @@
-import [] : "import"
-
-var obj = {
-    num: 42,
-    get: () => this.num
+try {
+    error("oh no, error")
+} catch (e) {
+    try {
+        error("oh no, error 2")
+    } catch (f) {
+        print("Errors: " + e + " " + f)
+    }
 }
 
-type Vec {
-    x: Number,
-    y: Number
-}
-
-const v = Vec {x:4, y:10}
-
-obj.prnt()
-v.prnt()
-"hi".prnt()
-(45).prnt()
-true.prnt()
-(const func = () => 45).prnt()
+println("Here")
+error("oh no, error 3")
+println("Should not get here")

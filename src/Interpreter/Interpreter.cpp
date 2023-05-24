@@ -254,7 +254,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
 
             switch(var->type) {
                 case NodeType::NONE: new_number_node(0);
-                case NodeType::NUMBER: return node;
+                case NodeType::NUMBER: return var;
                 case NodeType::STRING: {
                     try {
                         return new_number_node(std::stod(var->_Node.String().value));
@@ -1373,7 +1373,7 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
 }
 
 node_ptr Interpreter::eval_try_catch(node_ptr& node) {
-    global_interpreter->try_catch = true;
+    global_interpreter->try_catch++;
     std::string error = "";
     for (node_ptr& expr : node->_Node.TryCatch().try_body->_Node.Object().elements) {
         node_ptr evaluated_expr = eval_node(expr);
@@ -1387,7 +1387,7 @@ node_ptr Interpreter::eval_try_catch(node_ptr& node) {
         }
     }
     if (error != "") {
-        global_interpreter->try_catch = false;
+        global_interpreter->try_catch--;
         global_interpreter->error = "";
         sym_t_ptr catch_sym_table = std::make_shared<SymbolTable>();
         catch_sym_table->parent = current_symbol_table;
@@ -2337,6 +2337,12 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
             std::string func_name = right->_Node.FunctionCall().name;
 
+            if (left->_Node.Object().properties.count(func_name)) {
+                right->_Node.FunctionCall().caller = left;
+                return eval_func_call(right);
+            }
+
+
             if (left->TypeInfo.type_name != "") {
                 if (global_symbol_table->CustomTypeExtensions.count(left->TypeInfo.type_name)) {
                     if (global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name].count(func_name)) {
@@ -2357,11 +2363,6 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                     dispatch_fx->_Node.Function().closure["self"] = left;
                 }
                 return eval_func_call(right, ext);
-            }
-
-            if (left->_Node.Object().properties.count(func_name)) {
-                right->_Node.FunctionCall().caller = left;
-                return eval_func_call(right);
             }
 
             // We inject object as the first arg in the function call
@@ -3458,7 +3459,7 @@ void Interpreter::builtin_print(node_ptr& node) {
 
 node_ptr Interpreter::eval_node(node_ptr& node) {
 
-    if (global_interpreter->try_catch && global_interpreter->error != "") {
+    if (global_interpreter->try_catch > 0 && global_interpreter->error != "") {
         return throw_error(global_interpreter->error);
     }
 
@@ -3773,7 +3774,7 @@ node_ptr Interpreter::throw_error(std::string message)
 {
     std::string error_message = "\nError in '" + file_name + "' @ (" + std::to_string(line) + ", " + std::to_string(column) + "): " + message;
 
-    if (global_interpreter->try_catch) {
+    if (global_interpreter->try_catch > 0) {
         node_ptr error = new_node(NodeType::ERROR);
         error->_Node.Error().message = error_message;
         global_interpreter->error = error_message;
