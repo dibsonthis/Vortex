@@ -49,7 +49,7 @@ enum ButtonTypeEnum {
 }
 
 enum StateTypeEnum {
-	SDL_RELEASED: 0
+	SDL_RELEASED: 0,
 	SDL_PRESSED: 1,
 }
 
@@ -117,5 +117,5 @@ var interpolate = (value: Number, x0: Number, x1: Number, y0: Number, y1: Number
 type Window {
 	window: Pointer,
 	renderer: Pointer,
-	changeColor: Function = (color: Color) => changeBackgroundColor(this.renderer, color)
+	changeColor: (color: Color) => None = (color: Color) => changeBackgroundColor(this.renderer, color)
 }

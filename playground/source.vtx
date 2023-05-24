@@ -1,13 +1,8 @@
-try {
-    error("oh no, error")
-} catch (e) {
-    try {
-        error("oh no, error 2")
-    } catch (f) {
-        print("Errors: " + e + " " + f)
-    }
+type Vec { x: Number, y: Number }
+union CustomFunc {
+	() => Any,
+	(x: String) => Vec,
+	(x: String) => String,
 }
 
-println("Here")
-error("oh no, error 3")
-println("Should not get here")
+const x: CustomFunc = (x: String): String => x

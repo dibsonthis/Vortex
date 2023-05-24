@@ -839,6 +839,8 @@ node_ptr Interpreter::eval_function(node_ptr& node) {
         } else if (node->_Node.Function().return_type->type == NodeType::OBJECT) {
             node->_Node.Function().return_type->TypeInfo.is_type = true;
         }
+    } else {
+        node->_Node.Function().return_type = new_node(NodeType::ANY);
     }
     // Go through params to see if they are typed, and store their types
     for (auto& param : node->_Node.Function().params) {
@@ -855,6 +857,18 @@ node_ptr Interpreter::eval_function(node_ptr& node) {
                 = param_type;
             param = param->_Node.Op().left;
         }
+    }
+    // Check if the body is a type, if so, this function is a type
+    if (node->_Node.Function().body->type == NodeType::ID) {
+        // We want to check if this ID is a type, in this case we mark
+        // this function is a type
+        auto value = get_symbol(node->_Node.Function().body->_Node.ID().value, current_symbol_table);
+        if (value.value && value.value->TypeInfo.is_type) {
+            node->TypeInfo.is_type = true;
+        }
+    }
+    if (node->_Node.Function().body->TypeInfo.is_type) {
+        node->TypeInfo.is_type = true;
     }
     // Inject current scope as closure
     for (auto& symbol : current_symbol_table->symbols) {
@@ -902,6 +916,7 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
     if (node->_Node.Type().expr) {
         node_ptr val = std::make_shared<Node>(*node->_Node.Type().expr);
         val = eval_node(val);
+        val->TypeInfo.is_type = true;
         Symbol symbol = new_symbol(node->_Node.Type().name, val);
         // Check if type is function and if it returns a type
         // If it does, it's a type
@@ -1187,7 +1202,7 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
         return false;
     }
 
-    if (type->type == NodeType::ANY) {
+    if (type->type == NodeType::ANY || value->type == NodeType::ANY) {
         return true;
     }
 
@@ -1250,10 +1265,14 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
     }
 
     if (type->type == NodeType::FUNC && type->TypeInfo.is_type) {
-        if (value->_Node.Function().return_type) {
-            if (!match_types(type->_Node.Function().body, value->_Node.Function().return_type)) {
-                return false;
-            }
+        node_ptr body = type->_Node.Function().body;
+        // Because we haven't evaluated the body here (in case the function returns a parametric type)
+        // We attempt to evaluate it here
+        if (body->type == NodeType::ID) {
+            body = get_symbol(body->_Node.ID().value, current_symbol_table).value;
+        }
+        if (!match_types(body, value->_Node.Function().return_type)) {
+            return false;
         }
 
         auto& type_params = type->_Node.Function().params;
