@@ -2337,27 +2337,27 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
             std::string func_name = right->_Node.FunctionCall().name;
 
-            // if (left->TypeInfo.type_name != "") {
-            //     if (global_symbol_table->CustomTypeExtensions.count(left->TypeInfo.type_name)) {
-            //         if (global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name].count(func_name)) {
-            //             node_ptr ext = std::make_shared<Node>(*global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name][func_name]);
-            //             ext->_Node.Function().closure["self"] = left;
-            //             for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-            //                 dispatch_fx->_Node.Function().closure["self"] = left;
-            //             }
-            //             return eval_func_call(right, ext);
-            //         }
-            //     }
-            // }
+            if (left->TypeInfo.type_name != "") {
+                if (global_symbol_table->CustomTypeExtensions.count(left->TypeInfo.type_name)) {
+                    if (global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name].count(func_name)) {
+                        node_ptr ext = std::make_shared<Node>(*global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name][func_name]);
+                        ext->_Node.Function().closure["self"] = left;
+                        for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+                            dispatch_fx->_Node.Function().closure["self"] = left;
+                        }
+                        return eval_func_call(right, ext);
+                    }
+                }
+            }
 
-            // if (global_symbol_table->ObjectExtensions.count(func_name)) {
-            //     node_ptr ext = std::make_shared<Node>(*global_symbol_table->ObjectExtensions[func_name]);
-            //     ext->_Node.Function().closure["self"] = left;
-            //     for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-            //         dispatch_fx->_Node.Function().closure["self"] = left;
-            //     }
-            //     return eval_func_call(right, ext);
-            // }
+            if (global_symbol_table->ObjectExtensions.count(func_name)) {
+                node_ptr ext = std::make_shared<Node>(*global_symbol_table->ObjectExtensions[func_name]);
+                ext->_Node.Function().closure["self"] = left;
+                for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+                    dispatch_fx->_Node.Function().closure["self"] = left;
+                }
+                return eval_func_call(right, ext);
+            }
 
             if (left->_Node.Object().properties.count(func_name)) {
                 right->_Node.FunctionCall().caller = left;
