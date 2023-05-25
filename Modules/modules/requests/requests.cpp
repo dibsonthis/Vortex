@@ -2,10 +2,101 @@
 #define CPPHTTPLIB_USE_CERTS_FROM_MACOSX_KEYCHAIN
 #include "../include/httplib.h"
 #include "../../Vortex.hpp"
+#include "../../../src/utils/utils.cpp"
+#include "../../../src/Lexer/Lexer.cpp"
+#include "../../../src/Parser/Parser.cpp"
+#include "../../../src/Interpreter/Interpreter.cpp"
 
 /* Define Vars */
 
+Interpreter interp;
+int indent_level = 0;
+std::string indent = "    ";
+
 /* Declare Lib Functions */
+
+std::string to_string(VortexObj node) {
+    switch (node->type) {
+        case NodeType::NUMBER: {
+            std::string num_str = std::to_string(node->_Node.Number().value);
+            num_str.erase(num_str.find_last_not_of('0') + 1, std::string::npos);
+            num_str.erase(num_str.find_last_not_of('.') + 1, std::string::npos);
+            return num_str;
+        }
+        case NodeType::BOOLEAN: {
+            return node->_Node.Boolean().value ? "true" : "false";
+        }
+        case NodeType::STRING: {
+            return '"' + node->_Node.String().value + '"';
+        }
+        case NodeType::LIST: {
+            if (node->_Node.List().elements.size() == 0) {
+                return "[]";
+            }
+            std::string res = "";
+            res += "[\n";
+            indent_level++;
+            for (int i = 0; i < node->_Node.List().elements.size(); i++) {
+                for (int ind = 0; ind < indent_level; ind++) {
+                    res += indent;
+                }
+                res += to_string(node->_Node.List().elements[i]);
+                if (i < node->_Node.List().elements.size()-1) {
+                    res += ",\n";
+                }
+            }
+            indent_level--;
+            res += '\n';
+            for (int i = 0; i < indent_level; i++) {
+                res += indent;
+            }
+            res += "]";
+            return res;
+        }
+        case NodeType::OBJECT: {
+            if (node->_Node.Object().properties.size() == 0) {
+                return "{}";
+            }
+            std::string res = "";
+            res += "{\n";
+            indent_level++;
+            int elem_i = 0;
+            for (auto const& elem : node->_Node.Object().properties) {
+                for (int i = 0; i < indent_level; i++) {
+                    res += indent;
+                }
+                res +=  '"' + elem.first + '"' + ": " + to_string(elem.second);
+                if (elem_i != node->_Node.Object().properties.size()-1) {
+                    res += ",\n";
+                } else {
+                    res += '\n';
+                }
+                elem_i++;
+            }
+            indent_level--;
+            for (int i = 0; i < indent_level; i++) {
+                res += indent;
+            }
+            res += "}";
+            return res;
+        }
+        case NodeType::NONE: {
+            return "null";
+        }
+        case NodeType::ID: {
+            return '"' + node->_Node.ID().value + '"';
+        }
+        case NodeType::OP: {
+            if (node->_Node.Op().value == ".") {
+                return to_string(node->_Node.Op().left) + "." + to_string(node->_Node.Op().right);
+            }
+            return node->_Node.Op().value;
+        }
+        default: {
+            return "";
+        }
+    }
+}
 
 /* Implement Lib Functions */
 
@@ -44,97 +135,6 @@ VortexObj get(std::string name, std::vector<VortexObj> args) {
     }
 
     return response;
-}
-
-std::string to_string(VortexObj node) {
-    switch (node->type) {
-        case NodeType::NUMBER: {
-            std::string num_str = std::to_string(node->_Node.Number().value);
-            num_str.erase(num_str.find_last_not_of('0') + 1, std::string::npos);
-            num_str.erase(num_str.find_last_not_of('.') + 1, std::string::npos);
-            return num_str;
-        }
-        case NodeType::BOOLEAN: {
-            return node->_Node.Boolean().value ? "true" : "false";
-        }
-        case NodeType::STRING: {
-            return node->_Node.String().value;
-        }
-        case NodeType::FUNC: {
-            std::string res = "(";
-            for (int i = 0; i < node->_Node.Function().params.size(); i++) {
-                node_ptr& param = node->_Node.Function().params[i];
-                node_ptr& type = node->_Node.Function().param_types[param->_Node.ID().value];
-                if (type) {
-                    res += param->_Node.ID().value + ": " + node_repr(type);
-                } else {
-                    res += param->_Node.ID().value;
-                }
-                if (i < node->_Node.Function().params.size()-1) {
-                    res += ", ";
-                }
-            }
-            if (node->_Node.Function().return_type) {
-                res += ") => " + node_repr(node->_Node.Function().return_type);
-            } else {
-                res += ") => ...";
-            }
-            if (node->_Node.Function().dispatch_functions.size() > 0) {
-                res += "\n";
-                for (auto& func : node->_Node.Function().dispatch_functions) {
-                    res += to_string(func) += "\n";
-                }
-            }
-            return res;
-        }
-        case NodeType::LIST: {
-            std::string res = "[";
-            for (int i = 0; i < node->_Node.List().elements.size(); i++) {
-                res += to_string(node->_Node.List().elements[i]);
-                if (i < node->_Node.List().elements.size()-1) {
-                    res += ", ";
-                }
-            }
-            res += "]";
-            return res;
-        }
-        case NodeType::OBJECT: {
-            std::string res = "{ ";
-            for (auto const& elem : node->_Node.Object().properties) {
-                res += elem.first + ": " + to_string(elem.second) + ' ';
-            }
-            res += "}";
-            return res;
-        }
-        case NodeType::POINTER: {
-            std::stringstream buffer;
-            buffer << node->_Node.Pointer().value;
-            return buffer.str();
-        }
-        case NodeType::LIB: {
-            std::stringstream buffer;
-            buffer << node->_Node.Lib().handle;
-            return buffer.str();
-        }
-        case NodeType::NONE: {
-            return "None";
-        }
-        case NodeType::ID: {
-            return node->_Node.ID().value;
-        }
-        case NodeType::OP: {
-            if (node->_Node.Op().value == ".") {
-                return to_string(node->_Node.Op().left) + "." + to_string(node->_Node.Op().right);
-            }
-            return node->_Node.Op().value;
-        }
-        case NodeType::ACCESSOR: {
-            return to_string(node->_Node.Accessor().container) + to_string(node->_Node.Accessor().accessor);
-        }
-        default: {
-            return "<not implemented>";
-        }
-    }
 }
 
 VortexObj post(std::string name, std::vector<VortexObj> args) {
@@ -180,6 +180,107 @@ VortexObj post(std::string name, std::vector<VortexObj> args) {
     return response;
 }
 
+VortexObj server(std::string name, std::vector<VortexObj> args) {
+
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    auto server = new httplib::Server();
+
+    VortexObj server_ptr = new_vortex_obj(NodeType::POINTER);
+    server_ptr->_Node.Pointer().value = server;
+    return server_ptr;
+}
+
+VortexObj start(std::string name, std::vector<VortexObj> args) {
+
+    int num_required_args = 3;
+
+    if (args.size() != num_required_args) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    VortexObj v_server = args[0];
+    VortexObj v_host = args[1];
+    VortexObj v_port = args[2];
+
+    if (v_server->type != NodeType::POINTER) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'server' must be a pointer";
+        return error;
+    }
+
+    if (v_host->type != NodeType::STRING) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'host' must be a string";
+        return error;
+    }
+
+    if (v_port->type != NodeType::NUMBER) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'port' must be a number";
+        return error;
+    }
+
+    httplib::Server* svr = (httplib::Server*)v_server->_Node.Pointer().value;
+
+    svr->listen(v_host->_Node.String().value, v_port->_Node.Number().value);
+
+    return new_vortex_obj(NodeType::NONE);
+}
+
+VortexObj set_get(std::string name, std::vector<VortexObj> args) {
+
+    int num_required_args = 3;
+
+    if (args.size() != num_required_args) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    VortexObj v_server = args[0];
+    VortexObj v_route = args[1];
+    VortexObj v_callback = args[2];
+
+    if (v_server->type != NodeType::POINTER) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'server' must be a pointer";
+        return error;
+    }
+
+    if (v_route->type != NodeType::STRING) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'route' must be a string";
+        return error;
+    }
+
+    if (v_route->_Node.String().value.size() == 0 || v_route->_Node.String().value[0] != '/') {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'route' must begin with '/'";
+        return error;
+    }
+
+    if (v_callback->type != NodeType::FUNC) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'callback' must be a function";
+        return error;
+    }
+
+    httplib::Server* svr = (httplib::Server*)v_server->_Node.Pointer().value;
+
+    svr->Get(v_route->_Node.String().value, [v_callback = std::move(v_callback)](const httplib::Request &req, httplib::Response &res) {
+        VortexObj func_call = new_vortex_obj(NodeType::FUNC_CALL);
+        func_call->_Node.FunctionCall().name = v_callback->_Node.Function().name;
+        VortexObj result = interp.eval_func_call(func_call, v_callback);
+
+        res.set_content(to_string(result), "text/html");
+    });
+
+    return new_vortex_obj(NodeType::NONE);
+}
+
 /* Implement call_function */
 
 extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args) {
@@ -188,6 +289,15 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     }
     if (name == "post") {
         return post(name, args);
+    }
+    if (name == "server") {
+        return server(name, args);
+    }
+    if (name == "start") {
+        return start(name, args);
+    }
+    if (name == "set_get") {
+        return set_get(name, args);
     }
 
     error_and_exit("Function '" + name + "' is undefined");

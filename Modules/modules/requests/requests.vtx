@@ -64,3 +64,12 @@ const post = (url: String, payload: Object): Response => {
 	}
 	ret Response {}
 }
+
+const server = (): Pointer => 
+	lib.call("server", [])
+
+const start = (server: Pointer, host: String, port: Number) => 
+	lib.call("start", [server, host, port])
+
+const set_get = (server: Pointer, route: String, callback: Function) => 
+	lib.call("set_get", [server, route, callback])
