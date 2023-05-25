@@ -1,1 +1,9 @@
-const f: Function = (x: String) => 45
+var x = 0
+while (true) {
+	if (x < 10) {
+		x += 1
+		continue
+	}
+	println("Here", x)
+	break
+}

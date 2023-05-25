@@ -766,6 +766,9 @@ node_ptr Interpreter::eval_while_loop(node_ptr& node) {
             if (evaluated_expr->type == NodeType::BREAK) {
                 goto _break;
             }
+            if (evaluated_expr->type == NodeType::CONTINUE) {
+                break;
+            }
         }
 
         conditional = eval_node(node->_Node.WhileLoop().condition);
