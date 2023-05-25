@@ -203,6 +203,7 @@ struct ReturnNode {
 struct MetaInformation {
 	bool is_const = false;
 	bool is_untyped_property = false;
+	bool evaluated = false;
 };
 
 struct Hooks {
@@ -226,6 +227,7 @@ struct TypeInfoNode {
 	bool is_type = false;
 	bool is_refinement_type = false;
 	bool is_literal_type = false;
+	bool is_general_type = false;
 };
 
 struct ErrorNode {

@@ -807,6 +807,7 @@ void Parser::parse_keywords(std::string end) {
                 current_node->type = NodeType::LIST;
                 current_node->_Node = ListNode();
                 current_node->TypeInfo.is_type = true;
+                current_node->TypeInfo.is_general_type = true;
             } else if (current_node->_Node.ID().value == "Object") {
                 current_node->type = NodeType::OBJECT;
                 current_node->_Node = ObjectNode();
@@ -815,6 +816,7 @@ void Parser::parse_keywords(std::string end) {
                 current_node->type = NodeType::FUNC;
                 current_node->_Node = FuncNode();
                 current_node->TypeInfo.is_type = true;
+                current_node->TypeInfo.is_general_type = true;
             } else if (current_node->_Node.ID().value == "Pointer") {
                 current_node->type = NodeType::POINTER;
                 current_node->_Node = PointerNode();

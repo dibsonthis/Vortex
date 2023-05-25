@@ -129,7 +129,7 @@ node_ptr Interpreter::eval_list(node_ptr& node) {
             if (list->TypeInfo.is_type) {
                 evaluated_elem->TypeInfo.is_type = true;
             }
-            list->_Node.List().elements.push_back(eval_node(evaluated_elem));
+            list->_Node.List().elements.push_back(evaluated_elem);
             // If one element, it becomes the type
             list->TypeInfo.type = new_node(NodeType::LIST);
             list->TypeInfo.type->TypeInfo.is_type = true;
@@ -792,7 +792,7 @@ node_ptr Interpreter::eval_accessor(node_ptr& node) {
     }
 
     if (container->type == NodeType::STRING) {
-        node_ptr index_node = accessor->_Node.List().elements[0];
+        node_ptr index_node = eval_node(accessor->_Node.List().elements[0]);
         if (index_node->type != NodeType::NUMBER) {
             return throw_error("List accessor expects a number");
         }
@@ -804,7 +804,7 @@ node_ptr Interpreter::eval_accessor(node_ptr& node) {
     }
 
     if (container->type == NodeType::LIST) {
-        node_ptr index_node = accessor->_Node.List().elements[0];
+        node_ptr index_node = eval_node(accessor->_Node.List().elements[0]);
         if (index_node->type != NodeType::NUMBER) {
             return throw_error("List accessor expects a number");
         }
@@ -816,7 +816,7 @@ node_ptr Interpreter::eval_accessor(node_ptr& node) {
     }
 
     if (container->type == NodeType::OBJECT) {
-        node_ptr prop_node = accessor->_Node.List().elements[0];
+        node_ptr prop_node = eval_node(accessor->_Node.List().elements[0]);
         if (prop_node->type != NodeType::STRING) {
             return throw_error("Object accessor expects a string");
         }
@@ -1234,6 +1234,9 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
     }
 
     if (type->type == NodeType::LIST && type->_Node.List().is_union) {
+        if (type->TypeInfo.is_general_type) {
+            return true;
+        }
         for (node_ptr& type : type->_Node.List().elements) {
             if (match_types(type, value)) {
                 if (!type->TypeInfo.is_type) {
@@ -1268,6 +1271,9 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
     }
 
     if (type->type == NodeType::FUNC && type->TypeInfo.is_type) {
+        if (type->TypeInfo.is_general_type) {
+            return true;
+        }
         node_ptr body = type->_Node.Function().body;
         // Because we haven't evaluated the body here (in case the function returns a parametric type)
         // We attempt to evaluate it here
@@ -2777,8 +2783,10 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             }
 
             node_ptr func_call = std::make_shared<Node>(*right);
+            left->Meta.evaluated = true;
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
-            return eval_func_call(func_call);
+            node_ptr res = eval_func_call(func_call);
+            return res;
 
             return throw_error("List does not have method '" + func_name + "'");
         }
@@ -3498,6 +3506,10 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
 
     line = node->line;
     column = node->column;
+
+    if (node->Meta.evaluated) {
+        return node;
+    }
 
     switch (node->type) {
         case NodeType::NUMBER: {
