@@ -10,12 +10,12 @@ extend List {
 
 const get_response = requests.get("https://24pullrequests.com", "/projects.json")
 const body = get_response.toJson()
-io.writef("../output/response.txt", "")
+io.writef("output/response.txt", "")
 for (body, i, v) {
     const name = v.github_url.split("/").filter((e) => e != "").last()
     const description = v.description
     const language = v.main_language
-    io.appendf("../output/response.txt", f"${name}: ${description} (url: ${v.github_url}, language: ${language})\n\n")
+    io.appendf("output/response.txt", f"${name}: ${description} (url: ${v.github_url}, language: ${language})\n\n")
 }
 
 // Post

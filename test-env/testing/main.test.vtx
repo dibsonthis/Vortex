@@ -1,0 +1,10 @@
+import [] : "testing"
+import tests : "tests/tests"
+
+const testList = tests.values
+.filter((value) => (type(value) == "Function") && value.name.startsWith("test"))
+.map((test) => ({name: test.name, test: test}))
+
+const res = runTests(testList)
+
+println(f"\nPassed: ${res.passed}\nFailed: ${res.failed}\nPercentage passed: ${res.percentage_passed}%\n")

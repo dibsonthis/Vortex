@@ -1,0 +1,40 @@
+directus6: Open-Source Data Platform 🐰  — Directus wraps any SQL database with a real-time GraphQL+REST API and an intuitive app for non-technical users. (url: https://github.com/RNGR/directus6, language: TypeScript)
+
+musikcube: a cross-platform, terminal-based music player, audio engine, metadata indexer, and server in c++ (url: https://github.com/clangen/musikcube, language: C++)
+
+hypothesis-python: Hypothesis is a powerful, flexible, and easy to use library for property-based testing. (url: https://github.com/HypothesisWorks/hypothesis-python, language: Python)
+
+absinthe: The GraphQL toolkit for Elixir (url: https://github.com/absinthe-graphql/absinthe, language: Elixir)
+
+linuxkit: A toolkit for building secure, portable and lean operating systems for containers (url: https://github.com/linuxkit/linuxkit, language: Go)
+
+microweber: Drag and Drop Website Builder and CMS with E-commerce (url: https://github.com/microweber/microweber, language: PHP)
+
+serilog: Simple .NET logging with fully-structured events (url: https://github.com/serilog/serilog, language: C#)
+
+packer: Packer is a tool for creating identical machine images for multiple platforms from a single source configuration. (url: https://github.com/mitchellh/packer, language: Go)
+
+purescript: A strongly-typed language that compiles to JavaScript (url: https://github.com/purescript/purescript, language: Haskell)
+
+phpDocumentor2: Documentation Generator for PHP  (url: https://github.com/phpDocumentor/phpDocumentor2, language: PHP)
+
+codechecker: CodeChecker is an analyzer tooling, defect database and viewer extension for the Clang Static Analyzer and Clang Tidy (url: https://github.com/Ericsson/codechecker, language: Python)
+
+bitcoin: Bitcoin Core integration/staging tree (url: https://github.com/bitcoin/bitcoin, language: C++)
+
+oh-my-fish: The Fish Shell Framework (url: https://github.com/oh-my-fish/oh-my-fish, language: Shell)
+
+PowerShell-Docs: The official PowerShell documentation sources (url: https://github.com/PowerShell/PowerShell-Docs, language: PowerShell)
+
+gogs: Gogs is a painless self-hosted Git service (url: https://github.com/gogits/gogs, language: Go)
+
+codetriage: Discover the best way to get started contributing to Open Source projects (url: https://github.com/codetriage/codetriage, language: Ruby)
+
+sequelize: An easy-to-use and promise-based multi SQL dialects ORM tool for Node.js (url: https://github.com/sequelize/sequelize, language: JavaScript)
+
+hyper: An HTTP library for Rust (url: https://github.com/hyperium/hyper, language: Rust)
+
+EventStore: The stream database optimised for event sourcing (url: https://github.com/EventStore/EventStore, language: C#)
+
+mjml: MJML: the only framework that makes responsive-email easy (url: https://github.com/mjmlio/mjml, language: JavaScript)
+

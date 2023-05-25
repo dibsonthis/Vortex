@@ -4,7 +4,7 @@ var interpolate = (value: Number, x0: Number, x1: Number, y0: Number, y1: Number
 	y0 + (value - x0) * ((y0 - y1)/(x0 - x1))
 }
 
-var width = 1000
+var width = 200
 var x = -0.65
 var y = 0
 var oldX = x
@@ -70,4 +70,4 @@ for (0..height, _row) {
     }
 }
 
-image.write("../output/mandelbrot_output.png", grid)
+image.write("output/mandelbrot_output.png", grid)

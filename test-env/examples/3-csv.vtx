@@ -15,7 +15,7 @@ extend String {
 }
 
 var data: [[String]] = 
-	readf("../data/people.csv")
+	readf("data/people.csv")
 	.split("\n")
 	.map((row: String): [String] => row.split(","))
 
@@ -48,7 +48,7 @@ for (data, rowI, row) {
 
 const selectedPeople: [String] 
 	= csvList
-	.filter((elem: DataObj): Boolean => elem.id >= 500 && elem.id <= 550 && elem.firstname.startsWith("Al"))
+	.filter((elem: DataObj): Boolean => (elem.id >= 500) && (elem.id <= 550) && (elem.firstname.startsWith("Al")))
 	.map((elem: DataObj): String => f"${elem.firstname} ${elem.lastname} (${elem.email}): ${elem.id}")
 
 for (selectedPeople, i, person) {

@@ -1,0 +1,98 @@
+type Iterator {
+	state: Any,
+	next: Function,
+	prev: Function
+}
+
+const IteratorT = (T) => {
+	type Iterator_T {
+		state: T,
+		next: Function,
+		prev: Function
+	}
+}
+
+const NumIter = IteratorT(Number)
+const StrIter = IteratorT(String)
+
+const list_to_circular_iter = (list: List) => {
+	NumIter {
+		state: {
+			index: -1,
+			elements: list
+		},
+		next: () => {
+			this.state.index += 1
+			if (this.state.index >= this.state.elements.length) {
+				this.state.index = 0
+			}
+			this.state.elements[this.state.index]
+		},
+		prev: () => {
+			this.state.index -= 1
+			if (this.state.index < 0) {
+				this.state.index = this.state.elements.length-1
+			}
+			this.state.elements[this.state.index]
+		}
+	}
+}
+
+const list_to_iter = (list: List) => {
+	Iterator {
+		state: {
+			index: -1,
+			elements: list,
+			end_index: list.length,
+			stop: false
+		},
+		next: () => {
+			this.state.index += 1
+			if (this.state.index >= this.state.end_index) {
+				this.state.stop = true
+			} else {
+				ret this.state.elements[this.state.index]
+			}
+		},
+		prev: () => {
+			this.state.index -= 1
+			if (this.state.index < 0) {
+				this.state.stop = true
+			} else {
+				ret this.state.elements[this.state.index]
+			}
+		}
+	}
+}
+
+import string
+
+extend List {
+	to_iter: () => list_to_iter(self)
+}
+
+var str_iter = "hello world, my name is dibs".split().to_iter()
+
+extend Iterator {
+	map: (func: (x) => Any) => {
+		var list = []
+		var x: Any
+		while ((x = self.next()) && (!self.state.stop)) {
+			list.append(func(x))
+		}
+		list
+	},
+	map: (func: (x: Any, i: Number) => Any) => {
+		var list = []
+		var x: Any
+		while ((x = self.next()) && (!self.state.stop)) {
+			var index = self.state.index
+			var val = x
+			list.append(func(val, index))
+		}
+		list
+	}
+}
+
+var new_list = str_iter.map((x, i) => x.chars() + [i])
+print(new_list)

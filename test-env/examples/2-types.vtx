@@ -24,4 +24,4 @@ const numfunc = (num: PosNum) => println("number is pos")
 const numfunc = (num: NegNum) => println("number is neg")
 const numfunc = (num: Number) => println("number is 0")
 
-numfunc(10)
+numfunc(-10)

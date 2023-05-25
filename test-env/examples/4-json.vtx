@@ -4,7 +4,7 @@ import string
 
 // JSON
 
-const data_str = io.readf("../data/random.json")
+const data_str = io.readf("data/random.json")
 const data: Object = json.parse(data_str)
 
 println(f"\nName: ${data.firstname} ${data.lastname}\nDOB: ${data.date}\nFav Names: ${data.array}\n")

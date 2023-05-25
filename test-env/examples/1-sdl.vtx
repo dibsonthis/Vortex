@@ -22,7 +22,7 @@ const onQuit = () => {
 	sdl.destroyWindow(window)
 	sdl.quitSDL()
 	println("Done")
-	exit(0)
+	running = false
 }
 
 const onMouseDown = (event) => {
@@ -56,7 +56,9 @@ const onMouseMotion = (event) => {
 var xPos = 0
 var yPos = 0
 
-while (true) {
+var running = true
+
+while (running) {
 	var event: Any;
 	while ((sdl.pollEvent(event)) != 0) {
 

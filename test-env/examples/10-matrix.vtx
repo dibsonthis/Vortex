@@ -28,7 +28,7 @@ const copy_matrix = (matrix: Matrix): Matrix => {
     ret copy
 }
 
-const mmul = (a: Number, b: Matrix) => {
+const mmul = (a: Number, b: Matrix): Matrix => {
     if (b.empty) {
         ret b
     }
@@ -41,11 +41,11 @@ const mmul = (a: Number, b: Matrix) => {
     ret matrix
 }
 
-const mmul = (a: Matrix, b: Number) => {
+const mmul = (a: Matrix, b: Number): Matrix => {
     mmul(b, a)
 }
 
-const mmul = (a: Matrix, b: Matrix) => {
+const mmul = (a: Matrix, b: Matrix): Matrix => {
     var h = a.length
     if (b.empty) {
         ret a
@@ -64,18 +64,19 @@ const mmul = (a: Matrix, b: Matrix) => {
     ret matrix
 }
 
-var m1 = [  [12, 7, 3],
+const m1 = [[12, 7, 3],
             [4, 5, 6],
             [7, 8, 9]]
 
 
-var m2 = [  [5, 8, 1, 2],
+const m2 = [[5, 8, 1, 2],
             [6, 7, 3, 0],
             [4, 5, 9, 1]]
 
 println(m1, m2, "\n")
 
-var res1 = mmul(m1, 2)
-var res2 = mmul(10, m2)
-var res3 = mmul(m1, m2)
+const res1 = mmul(m1, 2)
+const res2 = mmul(10, m2)
+const res3 = mmul(m1, m2)
+
 println(res1, res2, res3)
