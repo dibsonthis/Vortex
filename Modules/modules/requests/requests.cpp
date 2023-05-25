@@ -194,6 +194,20 @@ VortexObj server(std::string name, std::vector<VortexObj> args) {
 
     auto server = new httplib::Server();
 
+    server->set_exception_handler([](const auto& req, auto& res, std::exception_ptr ep) {
+        auto fmt = "<h1>Error 500</h1><p>%s</p>";
+        char buf[BUFSIZ];
+        try {
+            std::rethrow_exception(ep);
+        } catch (std::exception &e) {
+            snprintf(buf, sizeof(buf), fmt, e.what());
+        } catch (...) { // See the following NOTE
+            snprintf(buf, sizeof(buf), fmt, "Unknown Exception");
+        }
+        res.set_content(buf, "text/html");
+        res.status = 500;
+    });
+
     VortexObj server_ptr = new_vortex_obj(NodeType::POINTER);
     server_ptr->_Node.Pointer().value = server;
     return server_ptr;
@@ -285,6 +299,10 @@ VortexObj set_get(std::string name, std::vector<VortexObj> args) {
         VortexObj func_call = new_vortex_obj(NodeType::FUNC_CALL);
         func_call->_Node.FunctionCall().name = v_callback->_Node.Function().name;
         VortexObj result = interp.eval_func_call(func_call, v_callback);
+        
+        if (result->type == NodeType::ERROR) {
+            throw std::runtime_error(result->_Node.Error().message);
+        }
 
         std::string content_type = v_content_type->_Node.String().value;
         std::string result_string;
@@ -366,6 +384,10 @@ VortexObj set_post(std::string name, std::vector<VortexObj> args) {
         func_call->_Node.FunctionCall().name = v_callback->_Node.Function().name;
 
         VortexObj result = interp.eval_func_call(func_call, v_callback);
+
+        if (result->type == NodeType::ERROR) {
+            throw std::runtime_error(result->_Node.Error().message);
+        }
 
         std::string content_type = v_content_type->_Node.String().value;
         std::string result_string;

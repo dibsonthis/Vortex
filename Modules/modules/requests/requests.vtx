@@ -70,8 +70,10 @@ const set_post =
 type Server {
 	_ref: Pointer,
 	start: Function = (host: String, port: Number) => start(this._ref, host, port),
-	set_get: Function = (route: String, callback: Function, content_type: ContentType) => set_get(this._ref, route, callback, content_type),
-	set_post: Function = (route: String, callback: Function, content_type: ContentType) => set_post(this._ref, route, callback, content_type)
+	get: Function = (route: String, callback: Function, content_type: ContentType) => set_get(this._ref, route, callback, content_type),
+	get: Function = (route: String, callback: Function) => set_get(this._ref, route, callback, ContentType.json),
+	post: Function = (route: String, callback: Function, content_type: ContentType) => set_post(this._ref, route, callback, content_type),
+	post: Function = (route: String, callback: Function) => set_post(this._ref, route, callback, ContentType.json)
 }
 
 const server = () => Server {_ref: _server()}

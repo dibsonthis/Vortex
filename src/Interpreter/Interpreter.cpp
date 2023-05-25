@@ -761,7 +761,7 @@ node_ptr Interpreter::eval_while_loop(node_ptr& node) {
             node_ptr evaluated_expr = eval_node(expr);
             if (evaluated_expr->type == NodeType::RETURN) {
                 current_symbol_table = current_scope;
-                return evaluated_expr->_Node.Return().value;
+                return evaluated_expr;
             }
             if (evaluated_expr->type == NodeType::BREAK) {
                 goto _break;
@@ -1416,6 +1416,9 @@ node_ptr Interpreter::eval_try_catch(node_ptr& node) {
             error = global_interpreter->error;
             break;
         }
+        if (evaluated_expr->type == NodeType::RETURN) {
+            return evaluated_expr;
+        }
     }
     if (error != "") {
         global_interpreter->try_catch--;
@@ -1428,7 +1431,10 @@ node_ptr Interpreter::eval_try_catch(node_ptr& node) {
         current_symbol_table = catch_sym_table;
 
         for (node_ptr& expr : node->_Node.TryCatch().catch_body->_Node.Object().elements) {
-            eval_node(expr);
+            node_ptr evaluated_expr = eval_node(expr);
+            if (evaluated_expr->type == NodeType::RETURN) {
+                return evaluated_expr;
+            }
         }
 
         current_symbol_table = current_symbol_table->parent;
