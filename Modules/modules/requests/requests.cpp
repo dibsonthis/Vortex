@@ -15,7 +15,7 @@ std::string indent = "    ";
 
 /* Declare Lib Functions */
 
-std::string to_string(VortexObj node) {
+std::string to_string(VortexObj node, bool strip_quotes = false) {
     switch (node->type) {
         case NodeType::NUMBER: {
             std::string num_str = std::to_string(node->_Node.Number().value);
@@ -27,6 +27,12 @@ std::string to_string(VortexObj node) {
             return node->_Node.Boolean().value ? "true" : "false";
         }
         case NodeType::STRING: {
+            if (strip_quotes) {
+                return node->_Node.String().value;
+            }
+            if (node->_Node.String().value.size() > 0 && node->_Node.String().value[0] == '"') {
+                return node->_Node.String().value;
+            }
             return '"' + node->_Node.String().value + '"';
         }
         case NodeType::LIST: {
@@ -143,20 +149,31 @@ VortexObj post(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects 3 arguments");
     }
 
-    if (args[0]->type != NodeType::STRING || args[1]->type != NodeType::STRING || args[2]->type != NodeType::OBJECT) {
-        error_and_exit("Function '" + name + "' expects 2 string arguments and 1 object argument");
+    if (args[0]->type != NodeType::STRING || args[1]->type != NodeType::STRING || (args[2]->type != NodeType::OBJECT && args[2]->type != NodeType::STRING)) {
+        error_and_exit("Function '" + name + "' expects 2 string arguments and 1 object/string argument");
     }
 
     httplib::Client cli(args[0]->_Node.String().value);
 
-    httplib::Params params;
+    httplib::Result res;
 
-    for (auto& prop : args[2]->_Node.Object().properties) {
-        params.emplace(prop.first, to_string(prop.second));
-    }
+    httplib::MultipartFormDataItems items;
+    items.push_back({"data", args[2]->type == NodeType::STRING ? args[2]->_Node.String().value : to_string(args[2]), "", ""});
+    res = cli.Post(args[1]->_Node.String().value, items);
 
-    auto res = cli.Post(args[1]->_Node.String().value, params);
+    // if (args[2]->type == NodeType::OBJECT) {
 
+    //     httplib::MultipartFormDataItems items;
+    //     items.push_back({"data", args[2]->_Node.String().value, "", ""});
+    //     res = cli.Post(args[1]->_Node.String().value, items);
+
+    // } else {
+
+    //     httplib::MultipartFormDataItems items;
+    //     items.push_back({"data", args[2]->type == NodeType::STRING ? args[2]->_Node.String().value : to_string(args[2]), "", ""});
+    //     res = cli.Post(args[1]->_Node.String().value, items);
+    // }
+    
     VortexObj response = new_vortex_obj(NodeType::OBJECT);
 
     if (!res) {
@@ -234,7 +251,7 @@ VortexObj start(std::string name, std::vector<VortexObj> args) {
 
 VortexObj set_get(std::string name, std::vector<VortexObj> args) {
 
-    int num_required_args = 3;
+    int num_required_args = 4;
 
     if (args.size() != num_required_args) {
         error_and_exit("Function '" + name + "' expects " + std::to_string(num_required_args) + " argument(s)");
@@ -243,6 +260,7 @@ VortexObj set_get(std::string name, std::vector<VortexObj> args) {
     VortexObj v_server = args[0];
     VortexObj v_route = args[1];
     VortexObj v_callback = args[2];
+    VortexObj v_content_type = args[3];
 
     if (v_server->type != NodeType::POINTER) {
         VortexObj error = new_vortex_obj(NodeType::ERROR);
@@ -268,14 +286,110 @@ VortexObj set_get(std::string name, std::vector<VortexObj> args) {
         return error;
     }
 
+    if (v_content_type->type != NodeType::STRING) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'content_type' must be a string";
+        return error;
+    }
+
     httplib::Server* svr = (httplib::Server*)v_server->_Node.Pointer().value;
 
-    svr->Get(v_route->_Node.String().value, [v_callback = std::move(v_callback)](const httplib::Request &req, httplib::Response &res) {
+    svr->Get(v_route->_Node.String().value, [v_callback = std::move(v_callback), v_content_type = std::move(v_content_type)](const httplib::Request &req, httplib::Response &res) {
         VortexObj func_call = new_vortex_obj(NodeType::FUNC_CALL);
         func_call->_Node.FunctionCall().name = v_callback->_Node.Function().name;
         VortexObj result = interp.eval_func_call(func_call, v_callback);
 
-        res.set_content(to_string(result), "text/html");
+        std::string content_type = v_content_type->_Node.String().value;
+        std::string result_string;
+        if (content_type == "text/html") {
+            result_string = to_string(result, true);
+        } else {
+            result_string = to_string(result);
+        }
+        res.set_content(result_string, content_type);
+    });
+
+    return new_vortex_obj(NodeType::NONE);
+}
+
+VortexObj set_post(std::string name, std::vector<VortexObj> args) {
+
+    int num_required_args = 4;
+
+    if (args.size() != num_required_args) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    VortexObj v_server = args[0];
+    VortexObj v_route = args[1];
+    VortexObj v_callback = args[2];
+    VortexObj v_content_type = args[3];
+
+    if (v_server->type != NodeType::POINTER) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'server' must be a pointer";
+        return error;
+    }
+
+    if (v_route->type != NodeType::STRING) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'route' must be a string";
+        return error;
+    }
+
+    if (v_route->_Node.String().value.size() == 0 || v_route->_Node.String().value[0] != '/') {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'route' must begin with '/'";
+        return error;
+    }
+
+    if (v_callback->type != NodeType::FUNC) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'callback' must be a function";
+        return error;
+    }
+
+    if (v_callback->_Node.Function().params.size() != 1) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'callback' must have one parameter";
+        return error;
+    }
+
+    if (v_content_type->type != NodeType::STRING) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'content_type' must be a string";
+        return error;
+    }
+
+    httplib::Server* svr = (httplib::Server*)v_server->_Node.Pointer().value;
+
+    svr->Post(v_route->_Node.String().value, [v_callback = std::move(v_callback), v_content_type = std::move(v_content_type)](const httplib::Request &req, httplib::Response &res) {
+        VortexObj req_object = new_vortex_obj(NodeType::OBJECT);
+
+        if (req.params.size() > 0) {   
+            for (auto& param : req.params) {
+                req_object->_Node.Object().properties[param.first] = new_string_node(param.second);
+            }
+        } else if (req.files.size() > 0) {
+            req_object = new_string_node(req.get_file_value("data").content);
+        }
+
+        VortexObj func_call = new_vortex_obj(NodeType::FUNC_CALL);
+        func_call->_Node.FunctionCall().args.push_back(req_object);
+        func_call->_Node.FunctionCall().name = v_callback->_Node.Function().name;
+
+        VortexObj result = interp.eval_func_call(func_call, v_callback);
+
+        std::string content_type = v_content_type->_Node.String().value;
+        std::string result_string;
+
+        if (content_type == "text/html") {
+            result_string = to_string(result, true);
+        } else {
+            result_string = to_string(result);
+        }
+
+        res.set_content(result_string, content_type);
     });
 
     return new_vortex_obj(NodeType::NONE);
@@ -298,6 +412,9 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     }
     if (name == "set_get") {
         return set_get(name, args);
+    }
+    if (name == "set_post") {
+        return set_post(name, args);
     }
 
     error_and_exit("Function '" + name + "' is undefined");

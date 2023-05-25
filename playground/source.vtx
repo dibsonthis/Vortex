@@ -1,15 +1,20 @@
 import requests : "/Users/adib/Dev/Personal/Vortex/Modules/modules/requests/requests"
+import [ContentType] : requests
+import io
 
 const host = "localhost"
 const port = 1234
 
-print(f"Server running on ${host}:${port}\r")
+println(f"Server running on ${host}:${port}")
 
 const server = requests.server()
+
 requests.set_get(server, "/", () => {
-	{
-        name: "John",
-        age: 34
-    }
-})
+	{name: "John", age: 34, fav_nums: [1, 2, 3, 4, 5]}
+}, ContentType.json)
+
+requests.set_get(server, "/bingo", () => {
+	io.readf("resources/sample.html")
+}, ContentType.html)
+
 requests.start(server, host, port)

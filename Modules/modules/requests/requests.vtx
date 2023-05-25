@@ -13,6 +13,11 @@ type Response {
 	toJson: Function = () => json_lib.call("parse", [this.body])
 }
 
+enum ContentType {
+	html: "text/html",
+	json: "application/json"
+}
+
 const get = (url: String, endpoint: String): Response => { 
 	const obj = lib.call("get", [url, endpoint])
 	const res = Response {
@@ -33,7 +38,7 @@ const get = (url: String): Response => {
 	ret Response {}
 }
 
-const post = (url: String, endpoint: String, payload: Object): Response => { 
+const post = (url: String, endpoint: String, payload: union _ {Object, String}): Response => { 
 	const obj = lib.call("post", [url, endpoint, payload])
 	const res = Response {
 		version: obj.version,
@@ -49,27 +54,15 @@ const post = (url: String, endpoint: String): Response => {
 	ret post(url, endpoint, {})
 }
 
-const post = (url: String): Response => {
-	const split = _split(url, "/")
-	if (split.length == 4) {
-		ret post(split[0] + "//" + split[1] + split[2], "/" + split[3])
-	}
-	ret Response {}
-}
-
-const post = (url: String, payload: Object): Response => {
-	const split = _split(url, "/")
-	if (split.length == 4) {
-		ret post(split[0] + "//" + split[1] + split[2], "/" + split[3], payload)
-	}
-	ret Response {}
-}
-
 const server = (): Pointer => 
 	lib.call("server", [])
 
 const start = (server: Pointer, host: String, port: Number) => 
 	lib.call("start", [server, host, port])
 
-const set_get = (server: Pointer, route: String, callback: Function) => 
-	lib.call("set_get", [server, route, callback])
+const set_get = (server: Pointer, route: String, callback: Function, content_type: ContentType) => 
+	lib.call("set_get", [server, route, callback, content_type])
+
+const set_post = 
+	(server: Pointer, route: String, callback: Function, content_type: ContentType) => 
+		lib.call("set_post", [server, route, callback, content_type])
