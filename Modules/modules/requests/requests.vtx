@@ -54,7 +54,7 @@ const post = (url: String, endpoint: String): Response => {
 	ret post(url, endpoint, {})
 }
 
-const server = (): Pointer => 
+const _server = (): Pointer => 
 	lib.call("server", [])
 
 const start = (server: Pointer, host: String, port: Number) => 
@@ -66,3 +66,12 @@ const set_get = (server: Pointer, route: String, callback: Function, content_typ
 const set_post = 
 	(server: Pointer, route: String, callback: Function, content_type: ContentType) => 
 		lib.call("set_post", [server, route, callback, content_type])
+
+type Server {
+	_ref: Pointer,
+	start: Function = (host: String, port: Number) => start(this._ref, host, port),
+	set_get: Function = (route: String, callback: Function, content_type: ContentType) => set_get(this._ref, route, callback, content_type),
+	set_post: Function = (route: String, callback: Function, content_type: ContentType) => set_post(this._ref, route, callback, content_type)
+}
+
+const server = () => Server {_ref: _server()}

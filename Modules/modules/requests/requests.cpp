@@ -161,19 +161,6 @@ VortexObj post(std::string name, std::vector<VortexObj> args) {
     items.push_back({"data", args[2]->type == NodeType::STRING ? args[2]->_Node.String().value : to_string(args[2]), "", ""});
     res = cli.Post(args[1]->_Node.String().value, items);
 
-    // if (args[2]->type == NodeType::OBJECT) {
-
-    //     httplib::MultipartFormDataItems items;
-    //     items.push_back({"data", args[2]->_Node.String().value, "", ""});
-    //     res = cli.Post(args[1]->_Node.String().value, items);
-
-    // } else {
-
-    //     httplib::MultipartFormDataItems items;
-    //     items.push_back({"data", args[2]->type == NodeType::STRING ? args[2]->_Node.String().value : to_string(args[2]), "", ""});
-    //     res = cli.Post(args[1]->_Node.String().value, items);
-    // }
-    
     VortexObj response = new_vortex_obj(NodeType::OBJECT);
 
     if (!res) {
