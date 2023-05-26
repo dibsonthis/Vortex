@@ -1526,6 +1526,8 @@ public:
   SSLServer(
       const std::function<bool(SSL_CTX &ssl_ctx)> &setup_ssl_ctx_callback);
 
+  SSLServer() {}
+
   ~SSLServer() override;
 
   bool is_valid() const override;

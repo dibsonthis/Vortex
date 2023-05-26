@@ -9,12 +9,12 @@ println(f"Server running on ${host}:${port}")
 
 const server = requests.server()
 
-requests.set_get(server, "/", () => {
+server.get("/", () => {
 	{name: "John", age: 34, fav_nums: [1, 2, 3, 4, 5]}
 }, ContentType.json)
 
-requests.set_get(server, "/bingo", () => {
+server.get("/bingo", () => {
 	io.readf("resources/sample.html")
 }, ContentType.html)
 
-requests.start(server, host, port)
+server.start(host, port)
