@@ -54,14 +54,14 @@ for (0..height, _row) {
         if (index < precision) {
             const distance = (index + 1) / (precision + 1)
             const interpol = interpolate(distance, x, y, 0, 255)
-            (grid[_row][_col]).r = 100
-            (grid[_row][_col]).g = 55
-            (grid[_row][_col]).b = interpol
+            grid[_row][_col].r = 100
+            grid[_row][_col].g = 55
+            grid[_row][_col].b = interpol
         } else {
             const interpol = interpolate(precision, x, y, 0, 255)
-            (grid[_row][_col]).r = 10
-            (grid[_row][_col]).g = index
-            (grid[_row][_col]).b = interpol
+            grid[_row][_col].r = 10
+            grid[_row][_col].g = index
+            grid[_row][_col].b = interpol
         }
 
         index = _row * width + _col + 1

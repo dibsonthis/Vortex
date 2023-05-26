@@ -1,3 +1,4 @@
+
 const Matrix = [[Number]]
 
 const new_matrix = (w: Number, h: Number): Matrix => {
@@ -17,7 +18,7 @@ const new_matrix = (w: Number, h: Number): Matrix => {
 }
 
 const copy_matrix = (matrix: Matrix): Matrix => {
-    const w = (matrix[0]).length
+    const w = matrix[0].length
     const h = matrix.length
     var copy = new_matrix(w, h)
     for (0..h, y) {
@@ -34,7 +35,7 @@ const mmul = (a: Number, b: Matrix): Matrix => {
     }
     var matrix = copy_matrix(b)
     for (0..matrix.length, y) {
-        for (0..(matrix[0]).length, x) {
+        for (0..matrix[0].length, x) {
             matrix[y][x] = matrix[y][x] * a
         }
     }
@@ -50,12 +51,12 @@ const mmul = (a: Matrix, b: Matrix): Matrix => {
     if (b.empty) {
         ret a
     }
-    var w = (b[0]).length
+    var w = b[0].length
 
     var matrix = new_matrix(w, h)
 
     for (0..a.length, i) {
-        for (0..(b[0]).length, j) {
+        for (0..b[0].length, j) {
             for (0..b.length, k) {
                 matrix[i][j] += a[i][k] * b[k][j]
             }

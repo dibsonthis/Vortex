@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <filesystem>
 #include "../../Vortex.hpp"
 
 /* Define Vars */
@@ -44,6 +45,46 @@ VortexObj set_env(std::string name, std::vector<VortexObj> args) {
     return new_number_node(res);
 }
 
+VortexObj list_dir(std::string name, std::vector<VortexObj> args) {
+
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    VortexObj v_path = args[0];
+
+    if (v_path->type != NodeType::STRING) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'filePath' must be a string";
+        return error;
+    }
+
+    VortexObj dir_list = new_vortex_obj(NodeType::LIST);
+
+    std::error_code ec;
+
+    for (const auto & entry : std::filesystem::directory_iterator(v_path->_Node.String().value, ec)) {
+        std::error_code ec;
+        std::string path = entry.path();
+        bool is_dir = std::filesystem::is_directory(path, ec);
+
+        VortexObj filePath = new_string_node(path);
+        VortexObj isDir = new_vortex_obj(NodeType::BOOLEAN);
+        isDir->_Node.Boolean().value = ec ? false : is_dir;
+
+        VortexObj res = new_vortex_obj(NodeType::OBJECT);
+        res->TypeInfo.type_name = "Path";
+        res->_Node.Object().properties["filePath"] = filePath;
+        res->_Node.Object().properties["isDir"] = isDir;
+
+        dir_list->_Node.List().elements.push_back(res);
+    }
+
+    return dir_list;
+}
+
 /* Implement call_function */
 
 extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args) {
@@ -52,6 +93,9 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     }
     if (name == "set_env") {
         return set_env(name, args);
+    }
+    if (name == "list_dir") {
+        return list_dir(name, args);
     }
 
     error_and_exit("Function '" + name + "' is undefined");
