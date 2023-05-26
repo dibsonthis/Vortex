@@ -871,7 +871,6 @@ std::ostream &operator<<(std::ostream &os, const Error &obj);
 
 class Result {
 public:
-  Result() {}
   Result(std::unique_ptr<Response> &&res, Error err,
          Headers &&request_headers = Headers{})
       : res_(std::move(res)), err_(err),
@@ -1525,8 +1524,6 @@ public:
 
   SSLServer(
       const std::function<bool(SSL_CTX &ssl_ctx)> &setup_ssl_ctx_callback);
-
-  SSLServer() {}
 
   ~SSLServer() override;
 

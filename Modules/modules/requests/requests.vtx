@@ -57,6 +57,9 @@ const post = (url: String, endpoint: String): Response => {
 const _server = (): Pointer => 
 	lib.call("server", [])
 
+const _server_ssl = (): Pointer => 
+	lib.call("server_ssl", [])
+
 const start = (server: Pointer, host: String, port: Number) => 
 	lib.call("start", [server, host, port])
 
@@ -77,3 +80,6 @@ type Server {
 }
 
 const server = () => Server {_ref: _server()}
+const server_ssl = 
+	(cert_path: String, private_key_path: String) 
+		=> Server {_ref: _server_ssl(cert_path, private_key_path)}

@@ -155,11 +155,9 @@ VortexObj post(std::string name, std::vector<VortexObj> args) {
 
     httplib::Client cli(args[0]->_Node.String().value);
 
-    httplib::Result res;
-
     httplib::MultipartFormDataItems items;
     items.push_back({"data", args[2]->type == NodeType::STRING ? args[2]->_Node.String().value : to_string(args[2]), "", ""});
-    res = cli.Post(args[1]->_Node.String().value, items);
+    auto res = cli.Post(args[1]->_Node.String().value, items);
 
     VortexObj response = new_vortex_obj(NodeType::OBJECT);
 
@@ -193,6 +191,50 @@ VortexObj server(std::string name, std::vector<VortexObj> args) {
     }
 
     auto server = new httplib::Server();
+
+    server->set_exception_handler([](const auto& req, auto& res, std::exception_ptr ep) {
+        auto fmt = "<h1>Error 500</h1><p>%s</p>";
+        char buf[BUFSIZ];
+        try {
+            std::rethrow_exception(ep);
+        } catch (std::exception &e) {
+            snprintf(buf, sizeof(buf), fmt, e.what());
+        } catch (...) { // See the following NOTE
+            snprintf(buf, sizeof(buf), fmt, "Unknown Exception");
+        }
+        res.set_content(buf, "text/html");
+        res.status = 500;
+    });
+
+    VortexObj server_ptr = new_vortex_obj(NodeType::POINTER);
+    server_ptr->_Node.Pointer().value = server;
+    return server_ptr;
+}
+
+VortexObj server_ssl(std::string name, std::vector<VortexObj> args) {
+
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    VortexObj cert_path = args[0];
+    VortexObj private_key_path = args[1];
+
+    if (cert_path->type != NodeType::STRING) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'cert_path' must be a string";
+        return error;
+    }
+
+    if (private_key_path->type != NodeType::STRING) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'private_key_path' must be a string";
+        return error;
+    }
+
+    auto server = new httplib::SSLServer(cert_path->_Node.String().value.c_str(), private_key_path->_Node.String().value.c_str());
 
     server->set_exception_handler([](const auto& req, auto& res, std::exception_ptr ep) {
         auto fmt = "<h1>Error 500</h1><p>%s</p>";
@@ -415,6 +457,9 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     }
     if (name == "server") {
         return server(name, args);
+    }
+    if (name == "server_ssl") {
+        return server_ssl(name, args);
     }
     if (name == "start") {
         return start(name, args);
