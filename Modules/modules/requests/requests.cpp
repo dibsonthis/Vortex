@@ -292,6 +292,46 @@ VortexObj start(std::string name, std::vector<VortexObj> args) {
     return new_vortex_obj(NodeType::NONE);
 }
 
+std::string parse_route(std::string& route, std::vector<std::string>& params) {
+
+    // We want to parse the route in case we have parameters
+    // If we do, we store the param names and replace the param with
+    // the following regex: ([a-zA-Z0-9_]*)
+    // If we have matches, we insert the matches into the callback closure
+    // With the correct names we pulled out earlier
+
+    std::string parsed_route;
+    std::string regex = "([a-zA-Z0-9_]+)";
+
+    for (int i = 0; i < route.size(); i++) {
+        if (route[i] == '{') {
+            std::string param;
+            i++;
+            parsed_route += regex;
+            while (route[i] != '}') {
+                if (route[i] == '{') {
+                    // No nesting allowed
+                    return "";
+                }
+                if (i == route.size()) {
+                    return "";
+                }
+                param += route[i];
+                i++;
+            }
+            // Bypass '}'
+            i++;
+            params.push_back(param);
+        }
+
+        if (i < route.size()) {
+            parsed_route += route[i];
+        }
+    }
+
+    return parsed_route;
+}
+
 VortexObj set_get(std::string name, std::vector<VortexObj> args) {
 
     int num_required_args = 4;
@@ -335,9 +375,17 @@ VortexObj set_get(std::string name, std::vector<VortexObj> args) {
         return error;
     }
 
+    std::vector<std::string> params;
+    auto route = v_route->_Node.String().value;
+    auto parsed_route = parse_route(route, params);
+
     httplib::Server* svr = (httplib::Server*)v_server->_Node.Pointer().value;
 
-    svr->Get(v_route->_Node.String().value, [v_callback = std::move(v_callback), v_content_type = std::move(v_content_type)](const httplib::Request &req, httplib::Response &res) {
+    svr->Get(parsed_route, [v_callback = std::move(v_callback), v_content_type = std::move(v_content_type), params = std::move(params)](const httplib::Request &req, httplib::Response &res) {
+        for (int i = 0; i < params.size(); i++) {
+            auto param = req.matches[i+1];
+            v_callback->_Node.Function().closure[params[i]] = new_string_node(param);
+        }
         VortexObj func_call = new_vortex_obj(NodeType::FUNC_CALL);
         func_call->_Node.FunctionCall().name = v_callback->_Node.Function().name;
         VortexObj result = interp.eval_func_call(func_call, v_callback);
@@ -408,9 +456,13 @@ VortexObj set_post(std::string name, std::vector<VortexObj> args) {
         return error;
     }
 
+    std::vector<std::string> params;
+    auto route = v_route->_Node.String().value;
+    auto parsed_route = parse_route(route, params);
+
     httplib::Server* svr = (httplib::Server*)v_server->_Node.Pointer().value;
 
-    svr->Post(v_route->_Node.String().value, [v_callback = std::move(v_callback), v_content_type = std::move(v_content_type)](const httplib::Request &req, httplib::Response &res) {
+    svr->Post(parsed_route, [v_callback = std::move(v_callback), v_content_type = std::move(v_content_type), params = std::move(params)](const httplib::Request &req, httplib::Response &res) {
         VortexObj req_object = new_vortex_obj(NodeType::OBJECT);
 
         if (req.params.size() > 0) {   
@@ -419,6 +471,11 @@ VortexObj set_post(std::string name, std::vector<VortexObj> args) {
             }
         } else if (req.files.size() > 0) {
             req_object = new_string_node(req.get_file_value("data").content);
+        }
+
+        for (int i = 0; i < params.size(); i++) {
+            auto param = req.matches[i+1];
+            v_callback->_Node.Function().closure[params[i]] = new_string_node(param);
         }
 
         VortexObj func_call = new_vortex_obj(NodeType::FUNC_CALL);

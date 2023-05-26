@@ -463,6 +463,7 @@ void Parser::parse_accessor(std::string end) {
         current_node->type == NodeType::STRING ||
         current_node->type == NodeType::BOOLEAN ||
         current_node->type == NodeType::OBJECT ||
+        current_node->type == NodeType::PAREN ||
         current_node->type == NodeType::FUNC) 
         && peek()->type == NodeType::LIST) {
             node_ptr accessor = new_accessor_node();
@@ -875,9 +876,9 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_try_catch(end);
     reset(start);
-    parse_accessor(end);
-    reset(start);
     parse_bin_op({"."}, end);
+    reset(start);
+    parse_accessor(end);
     reset(start);
     parse_un_op({"!"}, end);
     reset(start);

@@ -9,12 +9,20 @@ println(f"Server running on ${host}:${port}")
 
 const server = requests.server()
 
+server.get("/{name}", () => {
+	f"hello ${name}!"
+}, ContentType.json)
+
+server.get("/{name}/{age}", () => {
+	f"hello ${name}, you are ${age} years old!"
+}, ContentType.json)
+
 server.get("/", () => {
 	{name: "John", age: 34, fav_nums: [1, 2, 3, 4, 5]}
 }, ContentType.json)
 
 server.get("/bingo", () => {
-	io.readf("resources/sample.html")
+	"BINGO"
 }, ContentType.html)
 
 server.start(host, port)

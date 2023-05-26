@@ -1,0 +1,57 @@
+// import [] : math
+
+// const res = (5).pow().pow().sqrt().sqrt()
+// print(res)
+
+import requests
+import [ContentType] : requests
+
+const host = "localhost"
+const port = 1234
+
+println(f"Server running on ${host}:${port}")
+
+const server = requests.server()
+
+const users = [
+	{
+		id: 1,
+		name: "John",
+		age: 34
+	},
+	{	id: 2,
+		name: "Stephanie",
+		age: 18
+	},
+	{	id: 3,
+		name: "Allan",
+		age: 42
+	},
+	{	id: 4,
+		name: "Blake",
+		age: 22
+	}
+]
+
+server.get("/", () => {
+	"<h1> Hello </h1>"
+}, ContentType.html)
+
+server.get("/{id}", () => {
+	try {
+		const id = number(id)
+		const user = users.filter((user) => user.id == id)[0]
+		if (user) {
+			const res = f"<h1>Hello ${user.name}, you are ${user.age} years old!</h1>"
+			println(res)
+			ret res
+		} else {
+			ret f"<h1>No user found</h1>"
+		}
+	} catch (e) {
+		println(e)
+		ret f"<h1>Invalid route</h1>"
+	}
+}, ContentType.html)
+
+server.start(host, port)
