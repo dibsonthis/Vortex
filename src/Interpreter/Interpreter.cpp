@@ -543,7 +543,6 @@ node_ptr Interpreter::eval_if_statement(node_ptr& node) {
         for (node_ptr expr : node->_Node.IfStatement().body->_Node.Object().elements) {
             node_ptr evaluated_expr = eval_node(expr);
             if (evaluated_expr->type == NodeType::RETURN) {
-                evaluated_expr->_Node.Return().value = eval_node(evaluated_expr->_Node.Return().value);
                 return evaluated_expr;
             }
             if (evaluated_expr->type == NodeType::BREAK) {

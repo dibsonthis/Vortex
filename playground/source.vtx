@@ -1,28 +1,12 @@
-import requests : "/Users/adib/Dev/Personal/Vortex/Modules/modules/requests/requests"
-import [ContentType] : requests
-import io
+const matrix = [
+    [1, 2, 3, 4],
+    [5, 6, 7, 8]
+]
 
-const host = "localhost"
-const port = 1234
+const person = {
+    numbers: [1, 2, 3, 4]
+}
 
-println(f"Server running on ${host}:${port}")
-
-const server = requests.server()
-
-server.get("/{name}", () => {
-	f"hello ${name}!"
-}, ContentType.json)
-
-server.get("/{name}/{age}", () => {
-	f"hello ${name}, you are ${age} years old!"
-}, ContentType.json)
-
-server.get("/", () => {
-	{name: "John", age: 34, fav_nums: [1, 2, 3, 4, 5]}
-}, ContentType.json)
-
-server.get("/bingo", () => {
-	"BINGO"
-}, ContentType.html)
-
-server.start(host, port)
+println(matrix[0].length)
+println(matrix[0][2])
+println(person.numbers[3])

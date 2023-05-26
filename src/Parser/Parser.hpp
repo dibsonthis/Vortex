@@ -51,6 +51,7 @@ public:
     void parse_object_desconstruct(std::string end);
     void parse_hook_implementation(std::string end);
     void parse_colon(std::string end);
+    void parse_dot(std::string end);
     void parse_equals(std::string end);
     void flatten_commas(std::string end);
     void parse(int start, std::string end);

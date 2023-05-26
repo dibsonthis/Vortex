@@ -116,6 +116,31 @@ void Parser::parse_post_op(std::vector<std::string> operators, std::string end) 
     }
 }
 
+void Parser::parse_dot(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
+            break;
+        }
+        if (current_node->type == NodeType::OP && !has_children(current_node) && current_node->_Node.Op().value == ".") {
+            node_ptr left = peek(-1);
+            node_ptr right = peek(1);
+
+            if (right->type == NodeType::ACCESSOR) {
+                current_node->_Node.Op().left = left;
+                current_node->_Node.Op().right = right->_Node.Accessor().container;
+                right->_Node.Accessor().container = current_node;
+                nodes[index] = right;
+            } else {
+                current_node->_Node.Op().left = left;
+                current_node->_Node.Op().right = right;
+            }
+            erase_next();
+            erase_prev();
+        }
+        advance();
+    }
+}
+
 void Parser::parse_equals(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
@@ -876,9 +901,10 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_try_catch(end);
     reset(start);
-    parse_bin_op({"."}, end);
-    reset(start);
     parse_accessor(end);
+    reset(start);
+    //parse_bin_op({"."}, end);
+    parse_dot(end);
     reset(start);
     parse_un_op({"!"}, end);
     reset(start);

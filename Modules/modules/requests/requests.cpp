@@ -296,12 +296,12 @@ std::string parse_route(std::string& route, std::vector<std::string>& params) {
 
     // We want to parse the route in case we have parameters
     // If we do, we store the param names and replace the param with
-    // the following regex: ([a-zA-Z0-9_]*)
+    // the following regex: ([a-zA-Z0-9_-]+)
     // If we have matches, we insert the matches into the callback closure
     // With the correct names we pulled out earlier
 
     std::string parsed_route;
-    std::string regex = "([a-zA-Z0-9_]+)";
+    std::string regex = "([a-zA-Z0-9_-]+)";
 
     for (int i = 0; i < route.size(); i++) {
         if (route[i] == '{') {
@@ -309,7 +309,7 @@ std::string parse_route(std::string& route, std::vector<std::string>& params) {
             i++;
             parsed_route += regex;
             while (route[i] != '}') {
-                if (route[i] == '{') {
+                if (route[i] == '{' || !(isalpha(route[i]) || route[i] == '_')) {
                     // No nesting allowed
                     return "";
                 }
