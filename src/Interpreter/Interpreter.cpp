@@ -3355,6 +3355,10 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
                 }
             }
 
+            if (is_ref) {
+                add_symbol(symbol, current_symbol_table);
+            }
+            
             return right;
         }
 
