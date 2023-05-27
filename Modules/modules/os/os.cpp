@@ -45,6 +45,37 @@ VortexObj set_env(std::string name, std::vector<VortexObj> args) {
     return new_number_node(res);
 }
 
+VortexObj os_name(std::string name, std::vector<VortexObj> args) {
+
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    std::string os_name_str;
+
+    #ifdef _WIN32
+    os_name_str = "Windows 32-bit";
+    #elif _WIN64
+    os_name_str = "Windows 64-bit";
+    #elif __APPLE__ || __MACH__
+    os_name_str = "Mac OSX";
+    #elif __linux__
+    os_name_str = "Linux";
+    #elif __FreeBSD__
+    os_name_str = "FreeBSD";
+    #elif __unix || __unix__
+    os_name_str = "Unix";
+    #else
+    os_name_str = "Other";
+    #endif
+
+    VortexObj os_name = new_string_node(os_name_str);
+
+    return os_name;
+}
+
 VortexObj list_dir(std::string name, std::vector<VortexObj> args) {
 
     int num_required_args = 1;
@@ -96,6 +127,9 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     }
     if (name == "list_dir") {
         return list_dir(name, args);
+    }
+    if (name == "os_name") {
+        return os_name(name, args);
     }
 
     error_and_exit("Function '" + name + "' is undefined");

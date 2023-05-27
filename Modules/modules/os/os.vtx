@@ -11,5 +11,8 @@ var getEnv = (var: String): String
 var setEnv = (name: String, value: String): Number 
 	=> lib.call("set_env", [name, value])
 
+var osName = (): String 
+	=> lib.call("os_name", [])
+
 var listDir = (filePath: String): [Path] 
 	=> lib.call("list_dir", [filePath])
