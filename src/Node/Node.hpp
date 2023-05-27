@@ -46,7 +46,8 @@ enum class NodeType {
 	ANY,
 	UNION,
 	TRY_CATCH,
-	ERROR
+	ERROR,
+	REF
 };
 
 struct IdNode {
@@ -83,6 +84,10 @@ struct ObjectNode {
 	std::vector<std::string> keys;
 	std::vector<node_ptr> values;
 	bool is_enum = false;
+};
+
+struct RefNode {
+	node_ptr value;
 };
 
 struct ObjectDeconstructNode {
@@ -204,6 +209,7 @@ struct MetaInformation {
 	bool is_const = false;
 	bool is_untyped_property = false;
 	bool evaluated = false;
+	int ref_count = 1;
 };
 
 struct Hooks {
@@ -263,7 +269,8 @@ using _NodeType = std::variant<
 	UnionNode,
 	TypeExtNode,
 	TryCatchNode,
-	ErrorNode
+	ErrorNode,
+	RefNode
 	>;
 
 struct V : public _NodeType {
@@ -357,9 +364,15 @@ struct V : public _NodeType {
 		ErrorNode& Error() {
 			return std::get<ErrorNode>(*this);
 		}
+		RefNode& Ref() {
+			return std::get<RefNode>(*this);
+		}
 	};
 
 struct Node {
+	~Node() {
+		Meta.ref_count--;
+	}
 	Node() = default;
     Node(NodeType type) : type(type) {
 		switch(type) {
@@ -477,6 +490,10 @@ struct Node {
 			}
 			case NodeType::ERROR: {
 				_Node = ErrorNode();
+				break;
+			}
+			case NodeType::REF: {
+				_Node = RefNode();
 				break;
 			}
 			default: {
@@ -602,6 +619,10 @@ struct Node {
 			}
 			case NodeType::ERROR: {
 				_Node = ErrorNode();
+				break;
+			}
+			case NodeType::REF: {
+				_Node = RefNode();
 				break;
 			}
 			default: {

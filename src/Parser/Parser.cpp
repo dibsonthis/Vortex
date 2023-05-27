@@ -79,6 +79,15 @@ void Parser::parse_un_op_amb(std::vector<std::string> operators, std::string end
             node_ptr right = peek(1);
             current_node->_Node.Op().right = right;
             erase_next();
+
+            if (current_node->_Node.Op().value == "&") {
+                if (right->type != NodeType::ID) {
+                    error_and_exit("Cannot capture a reference of a literal - '&' must be followed by a variable name");
+                }
+                current_node->type = NodeType::REF;
+                current_node->_Node = RefNode();
+                current_node->_Node.Ref().value = right;
+            }
         }
         advance();
     }
@@ -903,12 +912,13 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_accessor(end);
     reset(start);
-    //parse_bin_op({"."}, end);
     parse_dot(end);
     reset(start);
     parse_un_op({"!"}, end);
     reset(start);
     parse_un_op_amb({"+", "-"}, end);
+    reset(start);
+    parse_un_op_amb({"&"}, end);
     reset(start);
     parse_bin_op({"&&", "||", "??"}, end);
     reset(start);

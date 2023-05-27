@@ -1,3 +1,4 @@
-var list = [1, 2, 3]
-list.append(list)
-print(list)
+var x = 12
+var y = x
+
+print(refcount(x))

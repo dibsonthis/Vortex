@@ -29,11 +29,17 @@ node_ptr Interpreter::eval_const_decl(node_ptr& node) {
         return throw_error("Variable '" + node->_Node.ConstantDeclatation().name + "' is already defined");
     }
     node_ptr value = eval_node(node->_Node.ConstantDeclatation().value);
+    bool is_ref = value->type == NodeType::REF;
+    if (is_ref) {
+        value = eval_node(value->_Node.Ref().value);
+    }
     node_ptr type = eval_node(node->TypeInfo.type);
     if (value->type == NodeType::ERROR) {
         return throw_error(value->_Node.Error().message);
     }
-    value = std::make_shared<Node>(*value);
+    if (!is_ref) {
+        value = std::make_shared<Node>(*value);
+    }
     value->TypeInfo.type = type;
     if (type && !match_types(type, value)) {
         return throw_error("Variable '" + node->_Node.ConstantDeclatation().name + "' expects a value of type '" + node_repr(type) + "' but was instantiated with value of type '" + node_repr(value) + "'");
@@ -46,6 +52,9 @@ node_ptr Interpreter::eval_const_decl(node_ptr& node) {
         value->TypeInfo.type_name = type->TypeInfo.type_name;
     }
     value->Meta.is_const = true;
+    if (is_ref) {
+        value->Meta.ref_count++;
+    }
     if (value->type == NodeType::HOOK) {
         value->_Node.Hook().name = node->_Node.ConstantDeclatation().name;
     }
@@ -69,6 +78,10 @@ node_ptr Interpreter::eval_var_decl(node_ptr& node) {
         return throw_error("Variable '" + node->_Node.VariableDeclaration().name + "' is already defined");
     }
     node_ptr value = eval_node(node->_Node.VariableDeclaration().value);
+    bool is_ref = value->type == NodeType::REF;
+    if (is_ref) {
+        value = eval_node(value->_Node.Ref().value);
+    }
     if (value->type == NodeType::ERROR) {
         return throw_error(value->_Node.Error().message);
     }
@@ -80,12 +93,17 @@ node_ptr Interpreter::eval_var_decl(node_ptr& node) {
         type = std::make_shared<Node>(*value);
         type->TypeInfo.is_type = true;
     }
-    value = std::make_shared<Node>(*value);
+    if (!is_ref) {
+        value = std::make_shared<Node>(*value);
+    }
     value->TypeInfo.type = type;
     if (type) {
         value->TypeInfo.type_name = type->TypeInfo.type_name;
     }
     value->Meta.is_const = false;
+    if (is_ref) {
+        value->Meta.ref_count++;
+    }
     if (value->type == NodeType::HOOK) {
         value->_Node.Hook().name = node->_Node.VariableDeclaration().name;
     }
@@ -233,6 +251,8 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
             if (node->_Node.FunctionCall().args.size() != 1) {
                 return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
             }
+            // node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
+            // return new_number_node(arg->Meta.ref_count);
             return new_number_node(eval_node(node->_Node.FunctionCall().args[0]).use_count());
         }
         if (node->_Node.FunctionCall().name == "error") {
@@ -3028,6 +3048,11 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
     node_ptr left = node->_Node.Op().left;
     node_ptr right = eval_node(node->_Node.Op().right);
 
+    bool is_ref = right->type == NodeType::REF;
+    if (is_ref) {
+        right = eval_node(right->_Node.Ref().value);
+    }
+
     if (left->type == NodeType::ERROR) {
         return throw_error(left->_Node.Error().message);
     }
@@ -3072,7 +3097,15 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
                 return throw_error("Property '" + prop->_Node.ID().value + "' does not exist on type '" + object->TypeInfo.type_name + "'");
             }
 
-            *accessed_value = *right;
+            accessed_value->Meta.ref_count--;
+
+            if (is_ref) {
+                accessed_value = right;
+                right->Meta.ref_count++;
+            } else {
+                *accessed_value = *right;
+            }
+
             accessed_value->TypeInfo = old_value->TypeInfo;
             accessed_value->Meta = old_value->Meta;
             accessed_value->Meta.is_const = false;
@@ -3129,7 +3162,15 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
             }
         }
 
-        *accessed_value = *right;
+        accessed_value->Meta.ref_count--;
+
+        if (is_ref) {
+            accessed_value = right;
+            right->Meta.ref_count++;
+        } else {
+            *accessed_value = *right;
+        }
+
         accessed_value->Meta = old_value->Meta;
         accessed_value->TypeInfo = old_value->TypeInfo;
         accessed_value->Hooks.onChange = onChangeFunctions;
@@ -3206,7 +3247,15 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
                 if (accessed_value->type == NodeType::FUNC && right->type == NodeType::FUNC) {
                     accessed_value->_Node.Function().dispatch_functions.push_back(right);
                 } else {
-                    *accessed_value = *right;
+
+                    accessed_value->Meta.ref_count--;
+
+                    if (is_ref) {
+                        accessed_value = right;
+                        right->Meta.ref_count++;
+                    } else {
+                        *accessed_value = *right;
+                    }
                     accessed_value->TypeInfo = old_value->TypeInfo;
                     accessed_value->Meta = old_value->Meta;
                     accessed_value->Meta.is_const = false;
@@ -3265,8 +3314,16 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
             // Extract onChange functions from value
 
             std::vector<node_ptr> onChangeFunctions = symbol.value->Hooks.onChange;
+            
+            symbol.value->Meta.ref_count--;
 
-            *symbol.value = *right;
+            if (is_ref) {
+                symbol.value = right;
+                right->Meta.ref_count++;
+            } else {
+                *symbol.value = *right;
+            }
+
             symbol.value->TypeInfo = old_value->TypeInfo;
             symbol.value->Meta.is_const = false;
             symbol.value->Hooks.onChange = onChangeFunctions;
