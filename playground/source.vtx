@@ -1,4 +1,15 @@
-var x = 12
-var y = 0
-y = &x
-print(x, y)
+print("omega: \u03A9 is a greek letter")
+// enum ColorCodes {
+//     HEADER: "\033[95m",
+//     OKBLUE: "\033[94m",
+//     OKCYAN: "\033[96m",
+//     OKGREEN: "\033[92m",
+//     WARNING: "\033[93m",
+//     FAIL: "\033[91m",
+//     ENDC: "\033[0m",
+//     BOLD: "\033[1m",
+//     UNDERLINE: "\033[4m"
+// }
+
+// println(f"${ColorCodes.WARNING}Warning: BLAH${ColorCodes.ENDC}")
+// println(f"${ColorCodes.FAIL}Error: UH OH${ColorCodes.ENDC}")

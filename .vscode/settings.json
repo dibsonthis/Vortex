@@ -95,7 +95,10 @@
     "csignal": "cpp",
     "list": "cpp",
     "__availability": "cpp",
-    "future": "cpp"
+    "future": "cpp",
+    "format": "cpp",
+    "__verbose_abort": "cpp",
+    "charconv": "cpp"
   },
   "C_Cpp.loggingLevel": "Debug",
   "C_Cpp.errorSquiggles": "disabled"

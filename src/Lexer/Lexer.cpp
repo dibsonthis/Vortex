@@ -228,6 +228,12 @@ void Lexer::build_string()
 
 	for (int i = 0; i < (str).length(); i++)
 	{
+		// if ((str)[i] == '\\')
+		// {
+		// 	(str)[i] = '\\';
+		// 	(node->_Node.String().value).push_back('\\');
+		// 	i++;
+		// }
 		if ((str)[i] == '\\' && (str)[i + 1] == 'n')
 		{
 			(str)[i] = '\n';
@@ -250,6 +256,76 @@ void Lexer::build_string()
 		{
 			(str)[i] = '\"';
 			(node->_Node.String().value).push_back('\"');
+			i++;
+		}
+		else if ((str)[i] == '\\' && (str)[i + 1] == '\'')
+		{
+			(str)[i] = '\'';
+			(node->_Node.String().value).push_back('\'');
+			i++;
+		}
+		else if ((str)[i] == '\\' && isdigit((str)[i + 1]) && isdigit((str)[i + 2]) && isdigit((str)[i + 3]))
+		{	
+			std::string escapeCode = {(str)[i + 1], (str)[i + 2], (str)[i + 3]};
+			char escapeChar = static_cast<char>(std::stoi(escapeCode, nullptr, 8));
+
+			(str)[i] = escapeChar;
+			(node->_Node.String().value).push_back((str)[i]);
+			i++;
+			i++;
+			i++;
+		}
+		else if ((str)[i] == '\\' && ((str)[i + 1] == 'O' || (str)[i + 1] == 'o') && isdigit((str)[i + 2]) && isdigit((str)[i + 3]) && isdigit((str)[i + 4]))
+		{	
+			std::string escapeCode = {(str)[i + 2], (str)[i + 3], (str)[i + 4]};
+			char escapeChar = static_cast<char>(std::stoi(escapeCode, nullptr, 8));
+
+			(str)[i] = escapeChar;
+			(node->_Node.String().value).push_back((str)[i]);
+			i++;
+			i++;
+			i++;
+		}
+		else if ((str)[i] == '\\' && ((str)[i + 1] == 'X' || (str)[i + 1] == 'x') && isdigit((str)[i + 2]) && isdigit((str)[i + 3]) && isdigit((str)[i + 4]))
+		{	
+			std::string escapeCode = {(str)[i + 2], (str)[i + 3], (str)[i + 4]};
+			char escapeChar = static_cast<char>(std::stoi(escapeCode, nullptr, 16));
+
+			(str)[i] = escapeChar;
+			(node->_Node.String().value).push_back((str)[i]);
+			i++;
+			i++;
+			i++;
+		}
+		else if ((str)[i] == '\\' && ((str)[i + 1] == 'U' || (str)[i + 1] == 'u'))
+		{	
+			std::string escapeCode = {(str)[i + 2], (str)[i + 3], (str)[i + 4], (str)[i + 5]};
+
+			unsigned int codepoint = std::stoul(escapeCode, nullptr, 16);
+			std::string utf8Character;
+
+			if (codepoint <= 0x7F) {
+        		utf8Character += static_cast<char>(codepoint);
+			}
+			else if (codepoint <= 0x7FF) {
+				utf8Character += static_cast<char>(0xC0 | ((codepoint >> 6) & 0x1F));
+				utf8Character += static_cast<char>(0x80 | (codepoint & 0x3F));
+			}
+			else if (codepoint <= 0xFFFF) {
+				utf8Character += static_cast<char>(0xE0 | ((codepoint >> 12) & 0x0F));
+				utf8Character += static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F));
+				utf8Character += static_cast<char>(0x80 | (codepoint & 0x3F));
+			}
+			else if (codepoint <= 0x10FFFF) {
+				utf8Character += static_cast<char>(0xF0 | ((codepoint >> 18) & 0x07));
+				utf8Character += static_cast<char>(0x80 | ((codepoint >> 12) & 0x3F));
+				utf8Character += static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F));
+				utf8Character += static_cast<char>(0x80 | (codepoint & 0x3F));
+			}
+
+			//(str)[i] = utf8Character;
+			str.replace(i, 6, utf8Character);
+			(node->_Node.String().value).append(utf8Character);
 			i++;
 		}
 		else
