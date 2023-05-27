@@ -229,6 +229,12 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
             }
             return new_node(NodeType::NONE);
         }
+        if (node->_Node.FunctionCall().name == "refcount") {
+            if (node->_Node.FunctionCall().args.size() != 1) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
+            }
+            return new_number_node(eval_node(node->_Node.FunctionCall().args[0]).use_count());
+        }
         if (node->_Node.FunctionCall().name == "error") {
             if (node->_Node.FunctionCall().args.size() != 1) {
                 return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");

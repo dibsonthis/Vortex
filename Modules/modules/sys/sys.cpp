@@ -22,23 +22,6 @@ VortexObj pause(std::string name, std::vector<VortexObj> args) {
     return new_vortex_obj(NodeType::NONE);
 }
 
-VortexObj error(std::string name, std::vector<VortexObj> args) {
-
-    if (args.size() != 1) {
-        error_and_exit("Function '" + name + "' expects 1 string argument");
-    }
-
-    if (args[0]->type != NodeType::STRING) {
-        error_and_exit("Function '" + name + "' expects 1 string argument");
-    }
-
-    _interpreter_ref.get().line = _interpreter_ref.get().current_node->line;
-    _interpreter_ref.get().column = _interpreter_ref.get().current_node->column;
-    _interpreter_ref.get().error_and_exit(args[0]->_Node.String().value);
-
-    return new_vortex_obj(NodeType::NONE);
-}
-
 VortexObj argc(std::string name, std::vector<VortexObj> args) {
 
     if (args.size() != 0) {
@@ -76,9 +59,6 @@ extern "C" void load(Interpreter& interpreter) {
 extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args) {
     if (name == "pause") {
         return pause(name, args);
-    }
-    if (name == "error") {
-        return error(name, args);
     }
     if (name == "argc") {
         return argc(name, args);
