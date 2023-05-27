@@ -3447,7 +3447,12 @@ std::string Interpreter::printable(node_ptr& node) {
         case NodeType::LIST: {
             std::string res = "[";
             for (int i = 0; i < node->_Node.List().elements.size(); i++) {
-                res += printable(node->_Node.List().elements[i]);
+                node_ptr value = node->_Node.List().elements[i];
+                if (value == node) {
+                    res += "[...]";
+                } else {
+                    res += printable(node->_Node.List().elements[i]);
+                }
                 if (i < node->_Node.List().elements.size()-1) {
                     res += ", ";
                 }
@@ -3459,7 +3464,11 @@ std::string Interpreter::printable(node_ptr& node) {
             std::string res = "{ ";
             for (auto const& elem : node->_Node.Object().properties) {
                 node_ptr value = elem.second;
-                res += elem.first + ": " + printable(value) + ' ';
+                if (value == node) {
+                    res += elem.first + ": {...} ";
+                } else {
+                    res += elem.first + ": " + printable(value) + ' ';
+                }
             }
             res += "}";
             return res;
