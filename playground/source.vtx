@@ -1,4 +1,5 @@
-print("omega: \u03A9 is a greek letter")
+const x = number("0xBEEF")
+print(f"bloop ${x} blah")
 // enum ColorCodes {
 //     HEADER: "\033[95m",
 //     OKBLUE: "\033[94m",

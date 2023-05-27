@@ -275,27 +275,43 @@ void Lexer::build_string()
 			i++;
 			i++;
 		}
-		else if ((str)[i] == '\\' && ((str)[i + 1] == 'O' || (str)[i + 1] == 'o') && isdigit((str)[i + 2]) && isdigit((str)[i + 3]) && isdigit((str)[i + 4]))
+		else if ((str)[i] == '\\' && ((str)[i + 1] == 'O' || (str)[i + 1] == 'o'))
 		{	
-			std::string escapeCode = {(str)[i + 2], (str)[i + 3], (str)[i + 4]};
-			char escapeChar = static_cast<char>(std::stoi(escapeCode, nullptr, 8));
+			try {
+				std::string escapeCode = {(str)[i + 2], (str)[i + 3], (str)[i + 4]};
+				char escapeChar = static_cast<char>(std::stoi(escapeCode, nullptr, 8));
 
-			(str)[i] = escapeChar;
-			(node->_Node.String().value).push_back((str)[i]);
-			i++;
-			i++;
-			i++;
+				(str)[i] = escapeChar;
+				(node->_Node.String().value).push_back((str)[i]);
+				i++;
+				i++;
+				i++;
+			} catch (...) {}
 		}
-		else if ((str)[i] == '\\' && ((str)[i + 1] == 'X' || (str)[i + 1] == 'x') && isdigit((str)[i + 2]) && isdigit((str)[i + 3]) && isdigit((str)[i + 4]))
+		else if ((str)[i] == '\\' && ((str)[i + 1] == 'X' || (str)[i + 1] == 'x'))
 		{	
-			std::string escapeCode = {(str)[i + 2], (str)[i + 3], (str)[i + 4]};
-			char escapeChar = static_cast<char>(std::stoi(escapeCode, nullptr, 16));
+			try {
+				// 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E and F
 
-			(str)[i] = escapeChar;
-			(node->_Node.String().value).push_back((str)[i]);
-			i++;
-			i++;
-			i++;
+				std::string escapeCode = "";
+				int hex_i = i;
+				hex_i++;
+				hex_i++;
+				char hex_c = str[hex_i];
+				while (isdigit(hex_c) || hex_c == 'A' || hex_c == 'B' || hex_c == 'C' || hex_c == 'D' || hex_c == 'E' || hex_c == 'F' || hex_c == 'a' || hex_c == 'b' || hex_c == 'c' || hex_c == 'd' || hex_c == 'e' || hex_c == 'f') {
+					escapeCode.push_back(hex_c);
+					hex_i++;
+					hex_c = str[hex_i];
+				}
+
+				char escapeChar = static_cast<char>(std::stoi(escapeCode, nullptr, 16));
+
+				(str)[i] = escapeChar;
+				(node->_Node.String().value).push_back((str)[i]);
+				for (int it = 0; it <= escapeCode.size(); it++) {
+					i++;
+				}
+			} catch (...) {}
 		}
 		else if ((str)[i] == '\\' && ((str)[i + 1] == 'U' || (str)[i + 1] == 'u'))
 		{	

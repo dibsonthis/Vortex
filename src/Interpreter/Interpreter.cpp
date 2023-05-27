@@ -273,19 +273,30 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
             return new_string_node(printable(arg));
         }
         if (node->_Node.FunctionCall().name == "number") {
-            if (node->_Node.FunctionCall().args.size() != 1) {
-                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
+            if (node->_Node.FunctionCall().args.size() != 1 && node->_Node.FunctionCall().args.size() != 2) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 or 2 arguments");
             }
             node_ptr var = eval_node(node->_Node.FunctionCall().args[0]);
+
+            if (node->_Node.FunctionCall().args.size() == 2) {
+                if (node->_Node.FunctionCall().args[1]->type != NodeType::NUMBER) {
+                    throw_error("Function " + node->_Node.FunctionCall().name + " expects second argument to be a number");
+                }
+            }
 
             switch(var->type) {
                 case NodeType::NONE: new_number_node(0);
                 case NodeType::NUMBER: return var;
                 case NodeType::STRING: {
+                    std::string value = var->_Node.String().value;
                     try {
-                        return new_number_node(std::stod(var->_Node.String().value));
+                        if (node->_Node.FunctionCall().args.size() == 2) {
+                            int base = node->_Node.FunctionCall().args[1]->_Node.Number().value;
+                            return new_number_node(std::stol(value, nullptr, base));
+                        }
+                        return new_number_node(std::stod(value));
                     } catch(...) {
-                        return throw_error("Cannot convert \"" + var->_Node.String().value + "\" to a number");
+                        return throw_error("Cannot convert \"" + value + "\" to a number");
                     }
                 };
                 case NodeType::BOOLEAN: {
