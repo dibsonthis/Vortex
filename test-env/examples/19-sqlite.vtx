@@ -1,7 +1,10 @@
+import os
 import sqlite
 import [toDicts] : sqlite
 
-const db = sqlite.connect("test.db")
+os.createDir("db")
+
+const db = sqlite.connect("db/test.db")
 
 const create_table_query = "
 		DROP TABLE IF EXISTS COMPANY;
