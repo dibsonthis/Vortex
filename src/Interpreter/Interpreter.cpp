@@ -89,7 +89,9 @@ node_ptr Interpreter::eval_var_decl(node_ptr& node) {
     }
     node_ptr type = eval_node(node->TypeInfo.type);
     if (type && !match_types(type, value)) {
-        return throw_error("Variable '" + node->_Node.VariableDeclaration().name + "' expects a value of type '" + node_repr(type) + "' but was instantiated with value of type '" + node_repr(value) + "'");
+        node_ptr _type = get_type(type);
+        node_ptr _value = get_type(value);
+        return throw_error("Variable '" + node->_Node.ConstantDeclatation().name + "' expects a value of type '" + printable(_type) + "' but was instantiated with value of type '" + printable(_value) + "'");
     }
     if (!type) {
         type = std::make_shared<Node>(*value);
