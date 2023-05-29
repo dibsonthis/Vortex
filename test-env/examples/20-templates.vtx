@@ -1,0 +1,24 @@
+import io
+
+const loadTemplate = (filePath: String) => {
+	var template = io.readf(filePath)
+	template.replaceAll("\n", "\n\n")
+	template = "f\"" + template.replaceAll("\"", "\\\"") + "\""
+}
+
+const renderTemplate = (template: String, data: Object) => {
+	var rendered = eval(template)
+	rendered.replaceAll("\\"", "\"")
+}
+
+const template = loadTemplate("data/template.html")
+
+const data = {
+	name: "John",
+	age: 34,
+	nums: [1, 2, 3, 4]
+}
+
+const renderedTemplate = renderTemplate(template, data)
+
+print(renderedTemplate)
