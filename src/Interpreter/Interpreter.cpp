@@ -2553,6 +2553,32 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 }
                 return eval_func_call(right, ext);
             }
+
+            if (right->_Node.FunctionCall().name == "replaceAll") {
+
+                if (left->Meta.is_const) {
+                    return throw_error("Cannot modify constant string");
+                }
+
+                if (right->_Node.FunctionCall().args.size() != 2) {
+                    return throw_error("String function '" + right->_Node.FunctionCall().name + "' expects 2 arguments");
+                }
+
+                node_ptr from_node = right->_Node.FunctionCall().args[0];
+                node_ptr to_node = right->_Node.FunctionCall().args[1];
+
+                if (from_node->type != NodeType::STRING) {
+                    return throw_error("String function '" + right->_Node.FunctionCall().name + "' expects 2 string arguments");
+                }
+
+                if (to_node->type != NodeType::STRING) {
+                    return throw_error("String function '" + right->_Node.FunctionCall().name + "' expects 2 string arguments");
+                }
+
+                replaceAll(left->_Node.String().value, from_node->_Node.String().value, to_node->_Node.String().value);
+
+                return left;
+            }
             
             node_ptr func_call = std::make_shared<Node>(*right);
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);

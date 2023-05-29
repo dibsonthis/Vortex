@@ -1,6 +1,3 @@
-eval_all("const x = 12
-const y = x * 2
-const z = x + y;
-print(z)")
-
-println(x)
+var x = "\"hello world\""
+x.replaceAll("\"", "\\"")
+print(x)
