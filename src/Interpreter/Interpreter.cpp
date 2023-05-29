@@ -1391,7 +1391,8 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
             return false;
         }
 
-        if (type->TypeInfo.is_type && type->TypeInfo.type_name == "" && value->TypeInfo.type_name == "") {
+        // If 'Object'
+        if (type->TypeInfo.is_type && type->TypeInfo.type_name == "" && type->_Node.Object().properties.size() == 0 && value->TypeInfo.type_name == "") {
             return true;
         }
 

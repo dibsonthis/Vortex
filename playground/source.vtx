@@ -40,4 +40,6 @@ const schema = {
 	FIRSTNAME: Number
 }
 
-const dicts: [Number] = res.toDicts(schema)
+const dicts: [{ ID: Number, SALARY: Number, FIRSTNAME: Number, LASTNAME: String, AGE: Number, ADDRESS: String }] = res.toDicts(schema)
+
+print(dicts)
