@@ -21,12 +21,37 @@ const connect = (filePath: String) => {
 	}
 }
 
-const toDicts = (queryResult: [{columns: [String], values: [String]}]) => {
+const QueryResultType = [{columns: [String], values: [String]}]
+
+const toDicts = (queryResult: QueryResultType, schema: Object) => {
 	const dict = queryResult.map((elem) => {
 		var mapping = {}
 		for (elem.columns, i, column) {
-			mapping[column] = elem.values[i]
+			if (schema.keys.filter((key) => (key == column)).empty) {
+				mapping[column] = elem.values[i]
+			} else if (schema[column] == Number) {
+				try {
+					mapping[column] = number(elem.values[i])
+				} catch (e) {
+					println(f"Warning: Could not transform '${column}' to number, defaulting to string")
+					mapping[column] = elem.values[i]
+				}
+			} else if (schema[column] == Boolean) {
+				mapping[column] = (elem.values[i] == "TRUE")
+			} else if (schema[column] == None) {
+				if (mapping[column] == "NULL") {
+					mapping[column] = None
+				} else {
+					println(f"Warning: Could not transform '${column}' to None, defaulting to string")
+				}
+			} else {
+				mapping[column] = elem.values[i]
+			}
 		}
 		mapping
 	})
+}
+
+const toDicts = (queryResult: QueryResultType) => {
+	queryResult.toDicts({})
 }

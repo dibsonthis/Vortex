@@ -42,7 +42,9 @@ node_ptr Interpreter::eval_const_decl(node_ptr& node) {
     }
     value->TypeInfo.type = type;
     if (type && !match_types(type, value)) {
-        return throw_error("Variable '" + node->_Node.ConstantDeclatation().name + "' expects a value of type '" + node_repr(type) + "' but was instantiated with value of type '" + node_repr(value) + "'");
+        node_ptr _type = get_type(type);
+        node_ptr _value = get_type(value);
+        return throw_error("Variable '" + node->_Node.ConstantDeclatation().name + "' expects a value of type '" + printable(_type) + "' but was instantiated with value of type '" + printable(_value) + "'");
     }
     if (!type) {
         type = std::make_shared<Node>(*value);
@@ -444,7 +446,8 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
     if (!func_match) {
         std::string argsStr = "(";
         for (int i = 0; i < args.size(); i++) {
-            argsStr += node_repr(args[i]);
+            node_ptr arg = get_type(args[i]);
+            argsStr += printable(arg);
             if (i != args.size()-1) {
                 argsStr += ", ";
             }
@@ -1424,9 +1427,9 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
             std::string prop_name = prop.first;
 
             node_ptr b_prop_value = prop.second;
-            node_ptr a_prop_value = value->_Node.Object().properties[prop_name];
+            node_ptr a_prop_value = type->_Node.Object().properties[prop_name];
 
-            int match = match_types(b_prop_value, a_prop_value);
+            int match = match_types(a_prop_value, b_prop_value);
             if (!match) {
                 return false;
             }
@@ -3501,7 +3504,8 @@ std::string Interpreter::printable(node_ptr& node) {
                 node_ptr& param = node->_Node.Function().params[i];
                 node_ptr& type = node->_Node.Function().param_types[param->_Node.ID().value];
                 if (type) {
-                    res += param->_Node.ID().value + ": " + node_repr(type);
+                    node_ptr _type = get_type(type);
+                    res += param->_Node.ID().value + ": " + printable(_type);
                 } else {
                     res += param->_Node.ID().value;
                 }
@@ -3539,7 +3543,11 @@ std::string Interpreter::printable(node_ptr& node) {
             return res;
         }
         case NodeType::OBJECT: {
-            std::string res = "{ ";
+            std::string res = "";
+            if (node->TypeInfo.type_name != "") {
+                res += node->TypeInfo.type_name + " ";
+            }
+            res += "{ ";
             for (auto const& elem : node->_Node.Object().properties) {
                 node_ptr value = elem.second;
                 if (value == node) {
@@ -3581,6 +3589,64 @@ std::string Interpreter::printable(node_ptr& node) {
         }
         default: {
             return "<not implemented>";
+        }
+    }
+}
+
+node_ptr Interpreter::get_type(node_ptr& node) {
+    switch (node->type) {
+        case NodeType::NUMBER: {
+            return new_string_node("Number");
+        }
+        case NodeType::BOOLEAN: {
+            return new_string_node("Boolean");
+        }
+        case NodeType::STRING: {
+            return new_string_node("String");
+        }
+        case NodeType::FUNC: {
+            node_ptr func_obj = new_node(NodeType::OBJECT);
+            func_obj->_Node.Object().properties["params"] = new_node(NodeType::LIST);
+            func_obj->_Node.Object().properties["params"]->_Node.List().elements = node->_Node.Function().params;
+            func_obj->_Node.Object().properties["return"] = node->_Node.Function().return_type ? node->_Node.Function().return_type: new_node(NodeType::ANY);
+            return func_obj;
+        }
+        case NodeType::LIST: {
+            std::vector<node_ptr> list;
+            for (int i = 0; i < node->_Node.List().elements.size(); i++) {
+                list.push_back(get_type(node->_Node.List().elements[i]));
+            }
+            node_ptr list_node = new_node(NodeType::LIST);
+            list_node->_Node.List().elements = list;
+            list_node->TypeInfo = node->TypeInfo;
+            return list_node;
+        }
+        case NodeType::OBJECT: {
+            node_ptr obj = new_node(NodeType::OBJECT);
+            obj->TypeInfo = node->TypeInfo;
+            for (auto& elem : node->_Node.Object().properties) {
+                node_ptr value = get_type(elem.second);
+                obj->_Node.Object().properties[elem.first] = value;
+            }
+            return obj;
+        }
+        case NodeType::POINTER: {
+            return new_string_node("Pointer");
+        }
+        case NodeType::LIB: {
+            return new_string_node("Library");
+        }
+        case NodeType::NONE: {
+            return new_string_node("None");
+        }
+        case NodeType::ANY: {
+            return new_string_node("Any");
+        }
+        case NodeType::ID: {
+            return new_string_node(node->_Node.ID().value);
+        }
+        default: {
+            return node;
         }
     }
 }
@@ -3773,7 +3839,10 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
 
 void Interpreter::evaluate() {
     while (current_node->type != NodeType::END_OF_FILE) {
-        eval_node(current_node);
+        node_ptr evaluated_node = eval_node(current_node);
+        if (evaluated_node->type == NodeType::ERROR) {
+            error_and_exit(evaluated_node->_Node.Error().message);
+        }
         advance();
     }
 }
