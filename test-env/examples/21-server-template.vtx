@@ -1,0 +1,41 @@
+import requests
+import [ContentType] : requests
+import json
+import io
+
+const loadTemplate = (filePath: String) => {
+	var template = io.readf(filePath)
+	template.replaceAll("\n", "\n\n")
+	template = "f\"" + template.replaceAll("\"", "\\"") + "\""
+}
+
+const renderTemplate = (template: String, data: Object) => {
+	var rendered = eval(template)
+	//rendered.replaceAll("\\"", "\"")
+}
+
+const host = "localhost"
+const port = 1234
+
+println(f"Server running on ${host}:${port}")
+
+const server = requests.server()
+
+const template = loadTemplate("data/template3.html")
+
+server.get("/{name}", () => {
+	const data = {
+		name: name,
+		p1: {
+			size: "4rem",
+			color: "blue"
+		},
+		p2: {
+			size: "1.5rem",
+			color: "red"
+		}
+	}
+	renderTemplate(template, data)
+}, ContentType.html)
+
+server.start(host, port)

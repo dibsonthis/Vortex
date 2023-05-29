@@ -17,5 +17,5 @@ const auth = Auth {
 	password: "steph123"
 }
 
-const res = updateAge(2, 342, auth)
+const res = updateAge(2, 32, auth)
 print(res)

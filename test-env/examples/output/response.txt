@@ -1,40 +1,40 @@
 directus6: Open-Source Data Platform 🐰  — Directus wraps any SQL database with a real-time GraphQL+REST API and an intuitive app for non-technical users. (url: https://github.com/RNGR/directus6, language: TypeScript)
 
-musikcube: a cross-platform, terminal-based music player, audio engine, metadata indexer, and server in c++ (url: https://github.com/clangen/musikcube, language: C++)
+juice-shop: OWASP Juice Shop: Probably the most modern and sophisticated insecure web application (url: https://github.com/bkimminich/juice-shop, language: TypeScript)
 
 hypothesis-python: Hypothesis is a powerful, flexible, and easy to use library for property-based testing. (url: https://github.com/HypothesisWorks/hypothesis-python, language: Python)
 
-absinthe: The GraphQL toolkit for Elixir (url: https://github.com/absinthe-graphql/absinthe, language: Elixir)
+stylelint: A mighty, modern linter that helps you avoid errors and enforce conventions in your styles. (url: https://github.com/stylelint/stylelint, language: JavaScript)
 
-linuxkit: A toolkit for building secure, portable and lean operating systems for containers (url: https://github.com/linuxkit/linuxkit, language: Go)
+cockroach: CockroachDB - the open source, cloud-native distributed SQL database. (url: https://github.com/cockroachdb/cockroach, language: Go)
 
-microweber: Drag and Drop Website Builder and CMS with E-commerce (url: https://github.com/microweber/microweber, language: PHP)
+vanilla-framework: From community websites to web applications, this CSS framework will help you achieve a consistent look and feel. (url: https://github.com/vanilla-framework/vanilla-framework, language: HTML)
 
-serilog: Simple .NET logging with fully-structured events (url: https://github.com/serilog/serilog, language: C#)
+nginxconfig.io: ⚙️ NGINX config generator on steroids 💉 (url: https://github.com/valentinxxx/nginxconfig.io, language: JavaScript)
 
 packer: Packer is a tool for creating identical machine images for multiple platforms from a single source configuration. (url: https://github.com/mitchellh/packer, language: Go)
 
-purescript: A strongly-typed language that compiles to JavaScript (url: https://github.com/purescript/purescript, language: Haskell)
+mjml: MJML: the only framework that makes responsive-email easy (url: https://github.com/mjmlio/mjml, language: JavaScript)
 
-phpDocumentor2: Documentation Generator for PHP  (url: https://github.com/phpDocumentor/phpDocumentor2, language: PHP)
+eslint-plugin-react: React specific linting rules for ESLint (url: https://github.com/yannickcr/eslint-plugin-react, language: JavaScript)
 
-codechecker: CodeChecker is an analyzer tooling, defect database and viewer extension for the Clang Static Analyzer and Clang Tidy (url: https://github.com/Ericsson/codechecker, language: Python)
+Empirical-Core: Empirical Core is the mono repo for the Quill.org codebase. This repo contains both the Quill Learning Tools, such as Quill Connect, and the Quill Learning Management System, the platform that enables (url: https://github.com/empirical-org/Empirical-Core, language: TypeScript)
 
 bitcoin: Bitcoin Core integration/staging tree (url: https://github.com/bitcoin/bitcoin, language: C++)
 
 oh-my-fish: The Fish Shell Framework (url: https://github.com/oh-my-fish/oh-my-fish, language: Shell)
 
-PowerShell-Docs: The official PowerShell documentation sources (url: https://github.com/PowerShell/PowerShell-Docs, language: PowerShell)
+dependabot-core: 🤖 The core logic behind Dependabot's update PR creation, and the public issue tracker for all things Dependabot (url: https://github.com/dependabot/dependabot-core, language: Ruby)
 
 gogs: Gogs is a painless self-hosted Git service (url: https://github.com/gogits/gogs, language: Go)
 
-codetriage: Discover the best way to get started contributing to Open Source projects (url: https://github.com/codetriage/codetriage, language: Ruby)
+aws-sdk-php: Official repository of the AWS SDK for PHP (@awsforphp) (url: https://github.com/aws/aws-sdk-php, language: PHP)
 
-sequelize: An easy-to-use and promise-based multi SQL dialects ORM tool for Node.js (url: https://github.com/sequelize/sequelize, language: JavaScript)
+Uno: Build Mobile, Desktop and WebAssembly apps with C# and XAML. Today. Open source and professionally supported. (url: https://github.com/nventive/Uno, language: C#)
 
-hyper: An HTTP library for Rust (url: https://github.com/hyperium/hyper, language: Rust)
+clap-rs: A full featured, fast Command Line Argument Parser for Rust (url: https://github.com/kbknapp/clap-rs, language: Rust)
 
-EventStore: The stream database optimised for event sourcing (url: https://github.com/EventStore/EventStore, language: C#)
+magento-lts: Official OpenMage LTS codebase | Migrate easily from Magento Community Edition in minutes! Download the source code for free or contribute to OpenMage LTS | Security vulnerability patches, bug fixes,  (url: https://github.com/OpenMage/magento-lts, language: PHP)
 
-mjml: MJML: the only framework that makes responsive-email easy (url: https://github.com/mjmlio/mjml, language: JavaScript)
+SwiftLint: A tool to enforce Swift style and conventions. (url: https://github.com/realm/SwiftLint, language: Swift)
 
