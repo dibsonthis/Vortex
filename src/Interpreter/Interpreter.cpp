@@ -3175,7 +3175,8 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
         // }
         if (!accessed_value->Meta.is_untyped_property) {
             if (!match_types(accessed_value, right)) {
-                return throw_error("Type error in property '" + prop->_Node.ID().value + "' - Cannot modify object property type '" + node_repr(accessed_value) + "'");
+                node_ptr _type = get_type(accessed_value);
+                return throw_error("Type error in property '" + prop->_Node.ID().value + "' - Cannot modify object property type '" + printable(_type) + "'");
             }
         }
 
@@ -3323,7 +3324,9 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
                 if (!type->TypeInfo.is_type && type->TypeInfo.type) {
                     type = type->TypeInfo.type;
                 }
-                return throw_error("Cannot modify type of variable '" + symbol.name + "': Expected '" + node_repr(type) + "' but received '" + node_repr(right) + "'");
+                node_ptr _type = get_type(type);
+                node_ptr _value = get_type(right);
+                return throw_error("Cannot modify type of variable '" + symbol.name + "': Expected '" + printable(_type) + "' but received '" + printable(_value) + "'");
             }
 
             node_ptr old_value = std::make_shared<Node>(*symbol.value);
