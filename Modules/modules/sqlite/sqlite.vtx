@@ -1,0 +1,22 @@
+const lib = load_lib("./bin/sqlite")
+
+const _connect = (filePath: String)
+	=> lib.call("connect", [filePath])
+
+const _execute = (dbPtr: Pointer, statement: String)
+	=> lib.call("execute", [dbPtr, statement])
+
+const _close = (dbPtr: Pointer)
+	=> lib.call("close", [dbPtr])
+
+type SqliteDB {
+	_ref: Pointer,
+	execute = (statement: String) => _execute(this._ref, statement),
+	close = () => _close(this._ref)
+}
+
+const connect = (filePath: String) => {
+	SqliteDB {
+		_ref: _connect(filePath)
+	}
+}

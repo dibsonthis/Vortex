@@ -30,3 +30,9 @@ VortexObj new_string_node(std::string text) {
     node->_Node.String().value = text;
     return node;
 }
+
+VortexObj new_error_node(std::string text) {
+    auto node = std::make_shared<Node>(NodeType::ERROR);
+    node->_Node.Error().message = text;
+    return node;
+}
