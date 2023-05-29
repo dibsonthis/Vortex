@@ -5,14 +5,26 @@ type Path {
 	isDir: Boolean
 }
 
-var getEnv = (var: String): String 
+const getEnv = (var: String): String 
 	=> lib.call("get_env", [var])
 
-var setEnv = (name: String, value: String): Number 
+const setEnv = (name: String, value: String): Number 
 	=> lib.call("set_env", [name, value])
 
-var osName = (): String 
+const osName = (): String 
 	=> lib.call("os_name", [])
 
-var listDir = (filePath: String): [Path] 
+const listDir = (filePath: String): [Path] 
 	=> lib.call("list_dir", [filePath])
+
+const createDir = (filePath: String): Boolean
+	=> lib.call("create_dir", [filePath])
+
+const createDirs = (filePath: String): Boolean
+	=> lib.call("create_dirs", [filePath])
+
+const remove = (filePath: String): Boolean
+	=> lib.call("remove", [filePath])
+
+const removeAll = (filePath: String): Boolean
+	=> lib.call("remove_all", [filePath])

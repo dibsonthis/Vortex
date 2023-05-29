@@ -872,6 +872,10 @@ void Parser::parse_keywords(std::string end) {
             } else if (current_node->_Node.ID().value == "Any") {
                 current_node->type = NodeType::ANY;
                 current_node->TypeInfo.is_type = true;
+            } else if (current_node->_Node.ID().value == "Error") {
+                current_node->type = NodeType::ERROR;
+                current_node->_Node = ErrorNode();
+                current_node->TypeInfo.is_type = true;
             }
         }
         advance();

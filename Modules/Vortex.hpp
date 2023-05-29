@@ -25,6 +25,12 @@ VortexObj new_number_node(double number) {
     return node;
 }
 
+VortexObj new_boolean_node(bool value) {
+    auto node = std::make_shared<Node>(NodeType::BOOLEAN);
+    node->_Node.Boolean().value = value;
+    return node;
+}
+
 VortexObj new_string_node(std::string text) {
     auto node = std::make_shared<Node>(NodeType::STRING);
     node->_Node.String().value = text;

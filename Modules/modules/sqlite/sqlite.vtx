@@ -16,8 +16,12 @@ type SqliteDB {
 }
 
 const connect = (filePath: String) => {
+	const ref = _connect(filePath)
+	if (type(ref) == "Error") {
+		ret ref
+	}
 	SqliteDB {
-		_ref: _connect(filePath)
+		_ref: ref
 	}
 }
 

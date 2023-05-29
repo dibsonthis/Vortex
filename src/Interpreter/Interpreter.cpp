@@ -331,8 +331,65 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
                 case NodeType::POINTER: return new_string_node("Pointer");
                 case NodeType::LIB: return new_string_node("Library");
                 case NodeType::ANY: return new_string_node("Any");
+                case NodeType::ERROR: return new_string_node("Error");
                 default: return new_string_node("None");
             }
+        }
+        if (node->_Node.FunctionCall().name == "eval_all") {
+            if (node->_Node.FunctionCall().args.size() != 1) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
+            }
+
+            node_ptr var = eval_node(node->_Node.FunctionCall().args[0]);
+
+            if (var->type != NodeType::STRING) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 string argument");
+            }
+
+            Lexer eval_lexer(var->_Node.String().value, false);
+            eval_lexer.file_name = file_name;
+            eval_lexer.tokenize();
+
+            Parser eval_parser(eval_lexer.nodes, eval_lexer.file_name);
+            eval_parser.parse(0, "_");
+            eval_parser.remove_op_node(";");
+
+            Interpreter eval_interpreter(eval_parser.nodes, eval_parser.file_name);
+            eval_interpreter.global_interpreter = global_interpreter;
+            eval_interpreter.current_symbol_table = current_symbol_table;
+            eval_interpreter.evaluate();
+
+            return new_node(NodeType::NONE);
+        }
+        if (node->_Node.FunctionCall().name == "eval") {
+            if (node->_Node.FunctionCall().args.size() != 1) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
+            }
+
+            node_ptr var = eval_node(node->_Node.FunctionCall().args[0]);
+
+            if (var->type != NodeType::STRING) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 string argument");
+            }
+
+            Lexer eval_lexer(var->_Node.String().value, false);
+            eval_lexer.file_name = file_name;
+            eval_lexer.tokenize();
+
+            Parser eval_parser(eval_lexer.nodes, eval_lexer.file_name);
+            eval_parser.parse(0, "_");
+            eval_parser.remove_op_node(";");
+
+            Interpreter eval_interpreter(eval_parser.nodes, eval_parser.file_name);
+            eval_interpreter.global_interpreter = global_interpreter;
+            eval_interpreter.current_symbol_table = current_symbol_table;
+            
+            if (eval_interpreter.nodes.size() != 3) {
+                return throw_error("Cannot evaluate more than one expression");
+            }
+
+            return eval_interpreter.eval_node(eval_interpreter.nodes[1]);
+
         }
         if (node->_Node.FunctionCall().name == "load_lib") {
             return eval_load_lib(node);

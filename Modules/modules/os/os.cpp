@@ -116,6 +116,86 @@ VortexObj list_dir(std::string name, std::vector<VortexObj> args) {
     return dir_list;
 }
 
+VortexObj create_dir(std::string name, std::vector<VortexObj> args) {
+
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    VortexObj v_path = args[0];
+
+    if (v_path->type != NodeType::STRING) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'filePath' must be a string";
+        return error;
+    }
+
+    bool res = std::filesystem::create_directory(v_path->_Node.String().value);
+    return new_boolean_node(res);
+}
+
+VortexObj create_dirs(std::string name, std::vector<VortexObj> args) {
+
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    VortexObj v_path = args[0];
+
+    if (v_path->type != NodeType::STRING) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'filePath' must be a string";
+        return error;
+    }
+
+    bool res = std::filesystem::create_directories(v_path->_Node.String().value);
+    return new_boolean_node(res);
+}
+
+VortexObj remove(std::string name, std::vector<VortexObj> args) {
+
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    VortexObj v_path = args[0];
+
+    if (v_path->type != NodeType::STRING) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'filePath' must be a string";
+        return error;
+    }
+
+    bool res = std::filesystem::remove(v_path->_Node.String().value);
+    return new_boolean_node(res);
+}
+
+VortexObj remove_all(std::string name, std::vector<VortexObj> args) {
+
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    VortexObj v_path = args[0];
+
+    if (v_path->type != NodeType::STRING) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'filePath' must be a string";
+        return error;
+    }
+
+    bool res = std::filesystem::remove_all(v_path->_Node.String().value);
+    return new_boolean_node(res);
+}
+
 /* Implement call_function */
 
 extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args) {
@@ -130,6 +210,18 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     }
     if (name == "os_name") {
         return os_name(name, args);
+    }
+    if (name == "create_dir") {
+        return create_dir(name, args);
+    }
+    if (name == "create_dirs") {
+        return create_dirs(name, args);
+    }
+    if (name == "remove") {
+        return remove(name, args);
+    }
+    if (name == "remove_all") {
+        return remove_all(name, args);
     }
 
     error_and_exit("Function '" + name + "' is undefined");
