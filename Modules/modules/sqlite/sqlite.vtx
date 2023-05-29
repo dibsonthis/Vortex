@@ -21,7 +21,7 @@ const connect = (filePath: String) => {
 	}
 }
 
-const toDict = (queryResult: [{columns: [String], values: [String]}]) => {
+const toDicts = (queryResult: [{columns: [String], values: [String]}]) => {
 	const dict = queryResult.map((elem) => {
 		var mapping = {}
 		for (elem.columns, i, column) {
