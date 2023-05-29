@@ -1,16 +1,52 @@
-const x = number("0xBEEF")
-print(f"bloop ${x} blah")
-// enum ColorCodes {
-//     HEADER: "\033[95m",
-//     OKBLUE: "\033[94m",
-//     OKCYAN: "\033[96m",
-//     OKGREEN: "\033[92m",
-//     WARNING: "\033[93m",
-//     FAIL: "\033[91m",
-//     ENDC: "\033[0m",
-//     BOLD: "\033[1m",
-//     UNDERLINE: "\033[4m"
-// }
+import requests : "/Users/adib/Dev/Personal/Vortex/Modules/modules/requests/requests"
+import [ContentType] : requests
 
-// println(f"${ColorCodes.WARNING}Warning: BLAH${ColorCodes.ENDC}")
-// println(f"${ColorCodes.FAIL}Error: UH OH${ColorCodes.ENDC}")
+const host = "localhost"
+const port = 1234
+
+println(f"Server running on ${host}:${port}")
+
+const server = requests.server()
+
+print(server)
+
+const users = [
+	{
+		id: 1,
+		name: "John",
+		age: 34
+	},
+	{	id: 2,
+		name: "Stephanie",
+		age: 18
+	},
+	{	id: 3,
+		name: "Allan",
+		age: 42
+	},
+	{	id: 4,
+		name: "Blake",
+		age: 22
+	}
+]
+
+server.get("/", () => {
+	"<h1> Hello </h1>"
+}, ContentType.html)
+
+server.get("/users/{id}", () => {
+	try {
+		const id = number(id)
+		const user = users.filter((user) => user.id == id)[0]
+		if (user) {
+			ret f"<h1>Hello ${user.name}, you are ${user.age} years old!</h1>"
+		} else {
+			ret f"<h1>No user found</h1>"
+		}
+	} catch (e) {
+		println(e)
+		ret f"<h1>Invalid route</h1>"
+	}
+}, ContentType.html)
+
+server.start(host, port)

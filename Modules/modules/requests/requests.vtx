@@ -57,29 +57,38 @@ const post = (url: String, endpoint: String): Response => {
 const _server = (): Pointer => 
 	lib.call("server", [])
 
-const _server_ssl = (): Pointer => 
-	lib.call("server_ssl", [])
+const _server_ssl = (cert_path: String, private_key_path: String): Pointer => 
+	lib.call("server_ssl", [cert_path, private_key_path])
 
-const start = (server: Pointer, host: String, port: Number) => 
-	lib.call("start", [server, host, port])
+const start = (server: Pointer, host: String, port: Number, ssl: Boolean) => 
+	lib.call("start", [server, host, port, ssl])
 
-const set_get = (server: Pointer, route: String, callback: Function, content_type: ContentType) => 
-	lib.call("set_get", [server, route, callback, content_type])
+const set_get = (server: Pointer, route: String, callback: Function, content_type: ContentType, ssl: Boolean) => 
+	lib.call("set_get", [server, route, callback, content_type, ssl])
 
 const set_post = 
-	(server: Pointer, route: String, callback: Function, content_type: ContentType) => 
-		lib.call("set_post", [server, route, callback, content_type])
+	(server: Pointer, route: String, callback: Function, content_type: ContentType, ssl: Boolean) => 
+		lib.call("set_post", [server, route, callback, content_type, ssl])
 
 type Server {
 	_ref: Pointer,
-	start: Function = (host: String, port: Number) => start(this._ref, host, port),
-	get: Function = (route: String, callback: Function, content_type: ContentType) => set_get(this._ref, route, callback, content_type),
-	get: Function = (route: String, callback: Function) => set_get(this._ref, route, callback, ContentType.json),
-	post: Function = (route: String, callback: Function, content_type: ContentType) => set_post(this._ref, route, callback, content_type),
-	post: Function = (route: String, callback: Function) => set_post(this._ref, route, callback, ContentType.json)
+	start: Function = (host: String, port: Number) => start(this._ref, host, port, false),
+	get: Function = (route: String, callback: Function, content_type: ContentType) => set_get(this._ref, route, callback, content_type, false),
+	get: Function = (route: String, callback: Function) => set_get(this._ref, route, callback, ContentType.json, false),
+	post: Function = (route: String, callback: Function, content_type: ContentType) => set_post(this._ref, route, callback, content_type, false),
+	post: Function = (route: String, callback: Function) => set_post(this._ref, route, callback, ContentType.json, false)
+}
+
+type ServerSSL {
+	_ref: Pointer,
+	start: Function = (host: String, port: Number) => start(this._ref, host, port, true),
+	get: Function = (route: String, callback: Function, content_type: ContentType) => set_get(this._ref, route, callback, content_type, true),
+	get: Function = (route: String, callback: Function) => set_get(this._ref, route, callback, ContentType.json, true),
+	post: Function = (route: String, callback: Function, content_type: ContentType) => set_post(this._ref, route, callback, content_type, true),
+	post: Function = (route: String, callback: Function) => set_post(this._ref, route, callback, ContentType.json, true)
 }
 
 const server = () => Server {_ref: _server()}
 const server_ssl = 
 	(cert_path: String, private_key_path: String) 
-		=> Server {_ref: _server_ssl(cert_path, private_key_path)}
+		=> ServerSSL {_ref: _server_ssl(cert_path, private_key_path)}

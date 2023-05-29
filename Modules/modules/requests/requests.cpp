@@ -257,7 +257,7 @@ VortexObj server_ssl(std::string name, std::vector<VortexObj> args) {
 
 VortexObj start(std::string name, std::vector<VortexObj> args) {
 
-    int num_required_args = 3;
+    int num_required_args = 4;
 
     if (args.size() != num_required_args) {
         error_and_exit("Function '" + name + "' expects " + std::to_string(num_required_args) + " argument(s)");
@@ -266,6 +266,7 @@ VortexObj start(std::string name, std::vector<VortexObj> args) {
     VortexObj v_server = args[0];
     VortexObj v_host = args[1];
     VortexObj v_port = args[2];
+    VortexObj v_ssl = args[3];
 
     if (v_server->type != NodeType::POINTER) {
         VortexObj error = new_vortex_obj(NodeType::ERROR);
@@ -285,10 +286,24 @@ VortexObj start(std::string name, std::vector<VortexObj> args) {
         return error;
     }
 
+    if (v_ssl->type != NodeType::BOOLEAN) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'ssl' must be a boolean";
+        return error;
+    }
+
+    if (v_ssl->_Node.Boolean().value == true) {
+        std::cout << "HERE";
+    }
+
+    if (v_ssl->_Node.Boolean().value) {
+        httplib::SSLServer* svr = (httplib::SSLServer*)v_server->_Node.Pointer().value;
+        svr->listen(v_host->_Node.String().value, v_port->_Node.Number().value);
+        return new_vortex_obj(NodeType::NONE);
+    }
+
     httplib::Server* svr = (httplib::Server*)v_server->_Node.Pointer().value;
-
     svr->listen(v_host->_Node.String().value, v_port->_Node.Number().value);
-
     return new_vortex_obj(NodeType::NONE);
 }
 
@@ -334,7 +349,7 @@ std::string parse_route(std::string& route, std::vector<std::string>& params) {
 
 VortexObj set_get(std::string name, std::vector<VortexObj> args) {
 
-    int num_required_args = 4;
+    int num_required_args = 5;
 
     if (args.size() != num_required_args) {
         error_and_exit("Function '" + name + "' expects " + std::to_string(num_required_args) + " argument(s)");
@@ -344,6 +359,7 @@ VortexObj set_get(std::string name, std::vector<VortexObj> args) {
     VortexObj v_route = args[1];
     VortexObj v_callback = args[2];
     VortexObj v_content_type = args[3];
+    VortexObj v_ssl = args[4];
 
     if (v_server->type != NodeType::POINTER) {
         VortexObj error = new_vortex_obj(NodeType::ERROR);
@@ -375,9 +391,48 @@ VortexObj set_get(std::string name, std::vector<VortexObj> args) {
         return error;
     }
 
+    if (v_ssl->type != NodeType::BOOLEAN) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'ssl' must be a boolean";
+        return error;
+    }
+
     std::vector<std::string> params;
     auto route = v_route->_Node.String().value;
     auto parsed_route = parse_route(route, params);
+
+    if (v_ssl->_Node.Boolean().value == true) {
+        std::cout << "TRUE" << std::endl;
+    }
+
+    if (v_ssl->_Node.Boolean().value) {
+        httplib::SSLServer* svr = (httplib::SSLServer*)v_server->_Node.Pointer().value;
+
+        svr->Get(parsed_route, [v_callback = std::move(v_callback), v_content_type = std::move(v_content_type), params = std::move(params)](const httplib::Request &req, httplib::Response &res) {
+            for (int i = 0; i < params.size(); i++) {
+                auto param = req.matches[i+1];
+                v_callback->_Node.Function().closure[params[i]] = new_string_node(param);
+            }
+            VortexObj func_call = new_vortex_obj(NodeType::FUNC_CALL);
+            func_call->_Node.FunctionCall().name = v_callback->_Node.Function().name;
+            VortexObj result = interp.eval_func_call(func_call, v_callback);
+            
+            if (result->type == NodeType::ERROR) {
+                throw std::runtime_error(result->_Node.Error().message);
+            }
+
+            std::string content_type = v_content_type->_Node.String().value;
+            std::string result_string;
+            if (content_type == "text/html") {
+                result_string = to_string(result, true);
+            } else {
+                result_string = to_string(result);
+            }
+            res.set_content(result_string, content_type);
+        });
+
+        return new_vortex_obj(NodeType::NONE);
+    }
 
     httplib::Server* svr = (httplib::Server*)v_server->_Node.Pointer().value;
 
@@ -409,7 +464,7 @@ VortexObj set_get(std::string name, std::vector<VortexObj> args) {
 
 VortexObj set_post(std::string name, std::vector<VortexObj> args) {
 
-    int num_required_args = 4;
+    int num_required_args = 5;
 
     if (args.size() != num_required_args) {
         error_and_exit("Function '" + name + "' expects " + std::to_string(num_required_args) + " argument(s)");
@@ -419,6 +474,7 @@ VortexObj set_post(std::string name, std::vector<VortexObj> args) {
     VortexObj v_route = args[1];
     VortexObj v_callback = args[2];
     VortexObj v_content_type = args[3];
+    VortexObj v_ssl = args[4];
 
     if (v_server->type != NodeType::POINTER) {
         VortexObj error = new_vortex_obj(NodeType::ERROR);
@@ -456,9 +512,59 @@ VortexObj set_post(std::string name, std::vector<VortexObj> args) {
         return error;
     }
 
+    if (v_ssl->type != NodeType::BOOLEAN) {
+        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        error->_Node.Error().message = "Parameter 'ssl' must be a boolean";
+        return error;
+    }
+
     std::vector<std::string> params;
     auto route = v_route->_Node.String().value;
     auto parsed_route = parse_route(route, params);
+
+    if (v_ssl->_Node.Boolean().value) {
+        httplib::SSLServer* svr = (httplib::SSLServer*)v_server->_Node.Pointer().value;
+
+        svr->Post(parsed_route, [v_callback = std::move(v_callback), v_content_type = std::move(v_content_type), params = std::move(params)](const httplib::Request &req, httplib::Response &res) {
+            VortexObj req_object = new_vortex_obj(NodeType::OBJECT);
+
+            if (req.params.size() > 0) {   
+                for (auto& param : req.params) {
+                    req_object->_Node.Object().properties[param.first] = new_string_node(param.second);
+                }
+            } else if (req.files.size() > 0) {
+                req_object = new_string_node(req.get_file_value("data").content);
+            }
+
+            for (int i = 0; i < params.size(); i++) {
+                auto param = req.matches[i+1];
+                v_callback->_Node.Function().closure[params[i]] = new_string_node(param);
+            }
+
+            VortexObj func_call = new_vortex_obj(NodeType::FUNC_CALL);
+            func_call->_Node.FunctionCall().args.push_back(req_object);
+            func_call->_Node.FunctionCall().name = v_callback->_Node.Function().name;
+
+            VortexObj result = interp.eval_func_call(func_call, v_callback);
+
+            if (result->type == NodeType::ERROR) {
+                throw std::runtime_error(result->_Node.Error().message);
+            }
+
+            std::string content_type = v_content_type->_Node.String().value;
+            std::string result_string;
+
+            if (content_type == "text/html") {
+                result_string = to_string(result, true);
+            } else {
+                result_string = to_string(result);
+            }
+
+            res.set_content(result_string, content_type);
+        });
+
+        return new_vortex_obj(NodeType::NONE);
+    }
 
     httplib::Server* svr = (httplib::Server*)v_server->_Node.Pointer().value;
 
