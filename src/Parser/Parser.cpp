@@ -401,6 +401,15 @@ void Parser::parse_func_def(std::string end) {
                 erase_prev();
                 erase_prev();
             }
+
+            if (current_node->_Node.Function().body->type == NodeType::OBJECT) {
+                for (int i = 0; i < current_node->_Node.Function().body->_Node.Object().elements.size(); i++) {
+                    auto& elem = current_node->_Node.Function().body->_Node.Object().elements[i];
+                    if (elem->type == NodeType::OP && elem->_Node.Op().value == ";") {
+                        current_node->_Node.Function().body->_Node.Object().elements.erase(current_node->_Node.Function().body->_Node.Object().elements.begin() + i);
+                    }
+                }
+            }
         }
         advance();
     }

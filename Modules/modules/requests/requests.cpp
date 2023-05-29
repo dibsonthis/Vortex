@@ -117,6 +117,7 @@ VortexObj get(std::string name, std::vector<VortexObj> args) {
     }
 
     httplib::Client cli(args[0]->_Node.String().value);
+    cli.enable_server_certificate_verification(false);
 
     auto res = cli.Get(args[1]->_Node.String().value);
 
@@ -154,6 +155,7 @@ VortexObj post(std::string name, std::vector<VortexObj> args) {
     }
 
     httplib::Client cli(args[0]->_Node.String().value);
+    cli.enable_server_certificate_verification(false);
 
     httplib::MultipartFormDataItems items;
     items.push_back({"data", args[2]->type == NodeType::STRING ? args[2]->_Node.String().value : to_string(args[2]), "", ""});
@@ -293,10 +295,6 @@ VortexObj start(std::string name, std::vector<VortexObj> args) {
     }
 
     if (v_ssl->_Node.Boolean().value == true) {
-        std::cout << "HERE";
-    }
-
-    if (v_ssl->_Node.Boolean().value) {
         httplib::SSLServer* svr = (httplib::SSLServer*)v_server->_Node.Pointer().value;
         svr->listen(v_host->_Node.String().value, v_port->_Node.Number().value);
         return new_vortex_obj(NodeType::NONE);
@@ -402,10 +400,6 @@ VortexObj set_get(std::string name, std::vector<VortexObj> args) {
     auto parsed_route = parse_route(route, params);
 
     if (v_ssl->_Node.Boolean().value == true) {
-        std::cout << "TRUE" << std::endl;
-    }
-
-    if (v_ssl->_Node.Boolean().value) {
         httplib::SSLServer* svr = (httplib::SSLServer*)v_server->_Node.Pointer().value;
 
         svr->Get(parsed_route, [v_callback = std::move(v_callback), v_content_type = std::move(v_content_type), params = std::move(params)](const httplib::Request &req, httplib::Response &res) {
@@ -522,7 +516,7 @@ VortexObj set_post(std::string name, std::vector<VortexObj> args) {
     auto route = v_route->_Node.String().value;
     auto parsed_route = parse_route(route, params);
 
-    if (v_ssl->_Node.Boolean().value) {
+    if (v_ssl->_Node.Boolean().value == true) {
         httplib::SSLServer* svr = (httplib::SSLServer*)v_server->_Node.Pointer().value;
 
         svr->Post(parsed_route, [v_callback = std::move(v_callback), v_content_type = std::move(v_content_type), params = std::move(params)](const httplib::Request &req, httplib::Response &res) {
