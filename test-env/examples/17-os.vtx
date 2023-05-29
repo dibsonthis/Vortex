@@ -10,3 +10,4 @@ const printDirs = (path: String) => {
 }
 
 printDirs(".")
+println(os.osName())

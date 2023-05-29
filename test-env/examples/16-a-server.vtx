@@ -1,0 +1,93 @@
+import requests
+import [ContentType] : requests
+import json
+
+const host = "localhost"
+const port = 1234
+
+println(f"Server running on ${host}:${port}")
+
+const server = requests.server()
+
+var users = [
+	{
+		id: 1,
+		name: "John",
+		age: 34,
+		auth: {
+			email: "johnsmith@test.com",
+			password: "johnnom8"
+		}
+	},
+	{	id: 2,
+		name: "Stephanie",
+		age: 18,
+		auth: {
+			email: "stephanie2@test.com",
+			password: "steph123"
+		}
+	},
+	{	id: 3,
+		name: "Allan",
+		age: 42,
+		auth: {
+			email: "allanjones@test.com",
+			password: "allme"
+		}
+	},
+	{	id: 4,
+		name: "Blake",
+		age: 22,
+		auth: {
+			email: "bobby@test.com",
+			password: "bb8"
+		}
+	}
+]
+
+server.get("/", () => {
+	"<h1> Hello </h1>"
+}, ContentType.html)
+
+server.get("/users/{id}", () => {
+	try {
+		const id = number(id)
+		const user = users.filter((user) => user.id == id)[0]
+		if (user) {
+			ret f"<h1>Hello ${user.name}, you are ${user.age} years old!</h1>"
+		} else {
+			ret f"<h1>No user found</h1>"
+		}
+	} catch (e) {
+		println(e)
+		ret f"<h1>Invalid route</h1>"
+	}
+}, ContentType.html)
+
+server.post("/users/{id}/age", (req) => {
+	try {
+		const data = json.parse(req)
+		const new_age = number(data.age)
+		const id = number(id)
+		var user = users.filter((user) => user.id == id)[0]
+		if (user) {
+			// authenticate
+			const user_auth = user.auth
+			const provided_auth = data.auth
+
+			if (user_auth != provided_auth) {
+				ret "Authetication failed"
+			}
+
+			user.age = new_age
+			ret f"Updated user ${user.name}'s age"
+		} else {
+			ret "No such user"
+		}
+	} catch (e) {
+		println(e)
+		ret "Malformed request"
+	}
+}, ContentType.json)
+
+server.start(host, port)

@@ -1,0 +1,21 @@
+import requests
+
+type Auth {
+	email: String,
+	password: String
+}
+
+const updateAge = (id: Number, age: Number, auth: Auth) => {
+	const res = requests.post("http://localhost:1234", f"/users/${id}/age", { 
+		age: age, 
+		auth: auth 
+	});
+}
+
+const auth = Auth {
+	email: "stephanie2@test.com",
+	password: "steph123"
+}
+
+const res = updateAge(2, 342, auth)
+print(res)
