@@ -20,3 +20,13 @@ const connect = (filePath: String) => {
 		_ref: _connect(filePath)
 	}
 }
+
+const toDict = (queryResult: [{columns: [String], values: [String]}]) => {
+	const dict = queryResult.map((elem) => {
+		var mapping = {}
+		for (elem.columns, i, column) {
+			mapping[column] = elem.values[i]
+		}
+		mapping
+	})
+}
