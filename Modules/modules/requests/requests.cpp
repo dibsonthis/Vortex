@@ -419,7 +419,9 @@ VortexObj set_get(std::string name, std::vector<VortexObj> args) {
             }
 
             VortexObj func_call = new_vortex_obj(NodeType::FUNC_CALL);
-            func_call->_Node.FunctionCall().args.push_back(req_object);
+            if (v_callback->_Node.Function().params.size() == 1) {
+                func_call->_Node.FunctionCall().args.push_back(req_object);
+            }
             func_call->_Node.FunctionCall().name = v_callback->_Node.Function().name;
             VortexObj result = interp.eval_func_call(func_call, v_callback);
             
@@ -447,7 +449,22 @@ VortexObj set_get(std::string name, std::vector<VortexObj> args) {
             auto param = req.matches[i+1];
             v_callback->_Node.Function().closure[params[i]] = new_string_node(param);
         }
+
+        VortexObj req_object = new_vortex_obj(NodeType::OBJECT);
+
+        if (v_callback->_Node.Function().params.size() == 1) {
+            req_object->_Node.Object().properties["url_params"] = new_vortex_obj(NodeType::OBJECT);
+
+            for (auto& url_param : req.params) {
+                req_object->_Node.Object().properties["url_params"]->_Node.Object().properties[url_param.first] = new_string_node(url_param.second);
+            }
+        }
+
         VortexObj func_call = new_vortex_obj(NodeType::FUNC_CALL);
+        if (v_callback->_Node.Function().params.size() == 1) {
+            func_call->_Node.FunctionCall().args.push_back(req_object);
+        }
+
         func_call->_Node.FunctionCall().name = v_callback->_Node.Function().name;
         VortexObj result = interp.eval_func_call(func_call, v_callback);
         
@@ -594,6 +611,12 @@ VortexObj set_post(std::string name, std::vector<VortexObj> args) {
         for (int i = 0; i < params.size(); i++) {
             auto param = req.matches[i+1];
             v_callback->_Node.Function().closure[params[i]] = new_string_node(param);
+        }
+
+        req_object->_Node.Object().properties["url_params"] = new_vortex_obj(NodeType::OBJECT);
+
+        for (auto& url_param : req.params) {
+            req_object->_Node.Object().properties["url_params"]->_Node.Object().properties[url_param.first] = new_string_node(url_param.second);
         }
 
         VortexObj func_call = new_vortex_obj(NodeType::FUNC_CALL);
