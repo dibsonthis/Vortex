@@ -103,6 +103,7 @@ struct FuncCallNode {
 	std::string name;
 	std::vector<node_ptr> args;
 	node_ptr caller;
+	node_ptr inline_func;
 };
 
 struct FuncNode {

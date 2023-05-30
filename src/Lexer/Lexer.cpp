@@ -192,7 +192,7 @@ void Lexer::build_string()
 
 	advance();
 
-	while (current_char != '"')
+	while (true)
 	{
 		if (current_char == '\0')
 		{
@@ -200,26 +200,31 @@ void Lexer::build_string()
 			return;
 		}
 
-		if (current_char == '\n')
-		{
+		if (current_char == '\\' && peek() == '\\') {
+			str += current_char;
+			advance();
+			str += current_char;
+			advance();
+		} else if (current_char == '\\' && peek() == '"') {
+			str += current_char;
+			advance();
+			str += current_char;
+			advance();
+		} else if (current_char == '\n') {
 			line++;
 			column = 0;
 			advance(); // consume '\n'
+		} else if (current_char == '"') {
+			if (peek(-1) != '\\') {
+				break;
+			} else if (peek(-1) == '\\' && peek(-2) == '\\') {
+				break;
+			}
 		}
-
-		if (current_char == '\\' && peek() == '"')
-		{
-			str += current_char;
-			advance();
-			str += current_char;
-			advance();
-		}
-		else
-		{
+		else {
 			str += current_char;
 			advance();
 		}
-
 	}
 
 	advance();
@@ -228,12 +233,6 @@ void Lexer::build_string()
 
 	for (int i = 0; i < (str).length(); i++)
 	{
-		// if ((str)[i] == '\\')
-		// {
-		// 	(str)[i] = '\\';
-		// 	(node->_Node.String().value).push_back('\\');
-		// 	i++;
-		// }
 		if ((str)[i] == '\\' && (str)[i + 1] == 'n')
 		{
 			(str)[i] = '\n';
@@ -339,9 +338,14 @@ void Lexer::build_string()
 				utf8Character += static_cast<char>(0x80 | (codepoint & 0x3F));
 			}
 
-			//(str)[i] = utf8Character;
 			str.replace(i, 6, utf8Character);
 			(node->_Node.String().value).append(utf8Character);
+			i++;
+		}
+		else if ((str)[i] == '\\' && str[i+1] == '\\')
+		{
+			(str)[i] = '\\';
+			(node->_Node.String().value).push_back('\\');
 			i++;
 		}
 		else

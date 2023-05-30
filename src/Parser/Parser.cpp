@@ -466,6 +466,18 @@ void Parser::parse_func_call(std::string end) {
                 current_node->_Node.FunctionCall().args.push_back(argsList->_Node.Paren().elements[0]);
             }
             erase_next();
+        } else if (current_node->type == NodeType::PAREN && current_node->_Node.Paren().elements.size() == 1 && peek()->type == NodeType::PAREN) {
+            node_ptr func = current_node->_Node.Paren().elements[0];
+            current_node->type = NodeType::FUNC_CALL;
+            current_node->_Node = FuncCallNode();
+            current_node->_Node.FunctionCall().inline_func = func;
+            node_ptr argsList = peek();
+            if (argsList->_Node.Paren().elements.size() == 1 && argsList->_Node.Paren().elements[0]->type == NodeType::COMMA_LIST) {
+                current_node->_Node.FunctionCall().args = argsList->_Node.Paren().elements[0]->_Node.List().elements;
+            } else if (argsList->_Node.Paren().elements.size() == 1) {
+                current_node->_Node.FunctionCall().args.push_back(argsList->_Node.Paren().elements[0]);
+            }
+            erase_next();
         }
         advance();
     }

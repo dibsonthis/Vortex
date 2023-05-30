@@ -1,3 +1,5 @@
-var x = "\"hello world\""
-x.replaceAll("\"", "\\"")
-print(x)
+const obj = {
+    func: () => print("hi")
+}
+
+(obj["func"])()

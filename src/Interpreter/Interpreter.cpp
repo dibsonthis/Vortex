@@ -222,7 +222,12 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
 
 node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
     node_ptr function = new_node(NodeType::FUNC);
-
+    if (node->_Node.FunctionCall().inline_func) {
+        node_ptr inline_func_call = new_node(NodeType::FUNC_CALL);
+        inline_func_call->_Node.FunctionCall().args = node->_Node.FunctionCall().args;
+        return eval_func_call(inline_func_call, eval_node(node->_Node.FunctionCall().inline_func));
+    }
+    
     if (!func) {
         if (node->_Node.FunctionCall().name == "print") {
             if (node->_Node.FunctionCall().args.size() == 1) {
@@ -3789,7 +3794,7 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
         }
         case NodeType::PAREN: {
             if (node->_Node.Paren().elements.size() != 1) {
-                return throw_error("Empty parentheses");
+                return new_node(NodeType::NONE);
             }
             return eval_node(node->_Node.Paren().elements[0]);
         }
