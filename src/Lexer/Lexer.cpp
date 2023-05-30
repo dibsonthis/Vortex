@@ -144,6 +144,7 @@ void Lexer::format_string()
 		{
 			advance();
 			advance();
+			continue;
 		}
 		if (current_char == '$' && peek() == '{') {
 			source[index] = '"';
