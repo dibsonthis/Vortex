@@ -2569,8 +2569,8 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                     return throw_error("String function '" + right->_Node.FunctionCall().name + "' expects 2 arguments");
                 }
 
-                node_ptr from_node = right->_Node.FunctionCall().args[0];
-                node_ptr to_node = right->_Node.FunctionCall().args[1];
+                node_ptr from_node = eval_node(right->_Node.FunctionCall().args[0]);
+                node_ptr to_node = eval_node(right->_Node.FunctionCall().args[1]);
 
                 if (from_node->type != NodeType::STRING) {
                     return throw_error("String function '" + right->_Node.FunctionCall().name + "' expects 2 string arguments");

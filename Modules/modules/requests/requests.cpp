@@ -429,6 +429,23 @@ VortexObj set_get(std::string name, std::vector<VortexObj> args) {
                 throw std::runtime_error(result->_Node.Error().message);
             }
 
+            if (result->type == NodeType::OBJECT && result->TypeInfo.type_name == "Redirect") {
+                std::vector<std::string> params;
+                if (!result->_Node.Object().properties.count("route")) {
+                    throw std::runtime_error("Redirect object must contain 'route'");
+                }
+
+                VortexObj redirect_route_node = result->_Node.Object().properties["route"];
+                if (redirect_route_node->type != NodeType::STRING) {
+                    throw std::runtime_error("Redirect object property 'route' must be a string");
+                }
+
+                std::string parsed_route = parse_route(redirect_route_node->_Node.String().value, params);
+
+                res.set_redirect(parsed_route);
+                return;
+            }
+
             std::string content_type = v_content_type->_Node.String().value;
             std::string result_string;
             if (content_type == "text/html") {
@@ -470,6 +487,23 @@ VortexObj set_get(std::string name, std::vector<VortexObj> args) {
         
         if (result->type == NodeType::ERROR) {
             throw std::runtime_error(result->_Node.Error().message);
+        }
+
+        if (result->type == NodeType::OBJECT && result->TypeInfo.type_name == "Redirect") {
+            std::vector<std::string> params;
+            if (!result->_Node.Object().properties.count("route")) {
+                throw std::runtime_error("Redirect object must contain 'route'");
+            }
+
+            VortexObj redirect_route_node = result->_Node.Object().properties["route"];
+            if (redirect_route_node->type != NodeType::STRING) {
+                throw std::runtime_error("Redirect object property 'route' must be a string");
+            }
+
+            std::string parsed_route = parse_route(redirect_route_node->_Node.String().value, params);
+
+            res.set_redirect(parsed_route);
+            return;
         }
 
         std::string content_type = v_content_type->_Node.String().value;
@@ -564,12 +598,6 @@ VortexObj set_post(std::string name, std::vector<VortexObj> args) {
                 v_callback->_Node.Function().closure[params[i]] = new_string_node(param);
             }
 
-            req_object->_Node.Object().properties["url_params"] = new_vortex_obj(NodeType::OBJECT);
-
-            for (auto& url_param : req.params) {
-                req_object->_Node.Object().properties["url_params"]->_Node.Object().properties[url_param.first] = new_string_node(url_param.second);
-            }
-
             VortexObj func_call = new_vortex_obj(NodeType::FUNC_CALL);
             func_call->_Node.FunctionCall().args.push_back(req_object);
             func_call->_Node.FunctionCall().name = v_callback->_Node.Function().name;
@@ -578,6 +606,23 @@ VortexObj set_post(std::string name, std::vector<VortexObj> args) {
 
             if (result->type == NodeType::ERROR) {
                 throw std::runtime_error(result->_Node.Error().message);
+            }
+
+            if (result->type == NodeType::OBJECT && result->TypeInfo.type_name == "Redirect") {
+                std::vector<std::string> params;
+                if (!result->_Node.Object().properties.count("route")) {
+                    throw std::runtime_error("Redirect object must contain 'route'");
+                }
+
+                VortexObj redirect_route_node = result->_Node.Object().properties["route"];
+                if (redirect_route_node->type != NodeType::STRING) {
+                    throw std::runtime_error("Redirect object property 'route' must be a string");
+                }
+
+                std::string parsed_route = parse_route(redirect_route_node->_Node.String().value, params);
+
+                res.set_redirect(parsed_route);
+                return;
             }
 
             std::string content_type = v_content_type->_Node.String().value;
@@ -613,17 +658,28 @@ VortexObj set_post(std::string name, std::vector<VortexObj> args) {
             v_callback->_Node.Function().closure[params[i]] = new_string_node(param);
         }
 
-        req_object->_Node.Object().properties["url_params"] = new_vortex_obj(NodeType::OBJECT);
-
-        for (auto& url_param : req.params) {
-            req_object->_Node.Object().properties["url_params"]->_Node.Object().properties[url_param.first] = new_string_node(url_param.second);
-        }
-
         VortexObj func_call = new_vortex_obj(NodeType::FUNC_CALL);
         func_call->_Node.FunctionCall().args.push_back(req_object);
         func_call->_Node.FunctionCall().name = v_callback->_Node.Function().name;
 
         VortexObj result = interp.eval_func_call(func_call, v_callback);
+
+        if (result->type == NodeType::OBJECT && result->TypeInfo.type_name == "Redirect") {
+            std::vector<std::string> params;
+            if (!result->_Node.Object().properties.count("route")) {
+                throw std::runtime_error("Redirect object must contain 'route'");
+            }
+
+            VortexObj redirect_route_node = result->_Node.Object().properties["route"];
+            if (redirect_route_node->type != NodeType::STRING) {
+                throw std::runtime_error("Redirect object property 'route' must be a string");
+            }
+
+            std::string parsed_route = parse_route(redirect_route_node->_Node.String().value, params);
+
+            res.set_redirect(parsed_route);
+            return;
+        }
 
         if (result->type == NodeType::ERROR) {
             throw std::runtime_error(result->_Node.Error().message);
