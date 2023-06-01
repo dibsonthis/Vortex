@@ -11,7 +11,8 @@ Vortex's main focus is on what we call "hooks". Hooks allow the user to bind var
 For example, if we wanted automatically increment variable y whenever variable x changes, we could use the onChange hook to do so:
 
 ```go
-var x, y = 0
+var x = 0
+var y = 0
 
 x::onChange = () => {
     y += 1
@@ -54,12 +55,13 @@ We'll cover what data can be extracted and used within each hook in a later sect
 For added convenience, we can also provide a list of variables for which to implement a specific hook for:
 
 ```go
-var xPos, yPos = 0
+var xPos = 0
+var yPos = 0
 
 [xPos, yPos]::onChange(old, new, info) => println(info.name + " has changed")
 
-x = 2 // x has changed
-y = 3 // y has changed
+xPos = 2 // x has changed
+yPos = 3 // y has changed
 ```
 
 ### Global Hooks
@@ -67,7 +69,9 @@ y = 3 // y has changed
 We can also set up hooks globally, meaning that the hook will apply to all variables who are bound by the hook's context (onChange, onCalled etc.). We do this by using empty brackets:
 
 ```go
-var x, y, z = 0
+var x = 0
+var y = 0
+var z = 0
 
 []::onChange = (old, new, info) => println(info.name + " has changed")
 
@@ -83,7 +87,9 @@ Up until now, we've only seen hooks being implemented once in a set and forget a
 const logOnChange = onChange::(new, old, info) => 
     println(info.name + ": " + string(old) + " -> " + string(new))
 
-var x, y, z = 0
+var x = 0
+var y = 0
+var z = 0
 
 logOnChange.attach([x, z]) // This attaches the onChange hook to x and z
 
