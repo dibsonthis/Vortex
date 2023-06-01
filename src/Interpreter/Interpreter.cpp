@@ -1089,7 +1089,7 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
 
         // Check if container type (List or Obj) and tag it as a type
         node_ptr type_val = eval_node(prop->_Node.Op().right);
-        if (type_val->type == NodeType::LIST) {
+        if (type_val->type == NodeType::LIST && !type_val->_Node.List().is_union) {
             if (type_val->_Node.List().elements.size() > 1) {
                 return throw_error("List types can only contain one type");
             }
@@ -1137,9 +1137,6 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
                 } else {
                     object->_Node.Object().defaults[name] = value;
                 }
-                // object->_Node.Object().properties[prop->_Node.Op().left->_Node.ID().value] = new_node(NodeType::NONE);
-                // object->_Node.Object().properties[prop->_Node.Op().left->_Node.ID().value]->Meta.is_untyped_property = true;
-                // object->_Node.Object().defaults[prop->_Node.Op().left->_Node.ID().value] = eval_node(prop->_Node.Op().right);
                 continue;
             }
 
@@ -1161,7 +1158,7 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
 
             // Check if container type (List or Obj) and tag it as a type
             node_ptr type_val = eval_node(prop->_Node.Op().right);
-            if (type_val->type == NodeType::LIST) {
+            if (type_val->type == NodeType::LIST && !type_val->_Node.List().is_union) {
                 if (type_val->_Node.List().elements.size() > 1) {
                     return throw_error("List types can only contain one type");
                 }
@@ -2622,7 +2619,17 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
         if (right->type == NodeType::FUNC_CALL) {
             std::string prop = right->_Node.FunctionCall().name;
-
+            
+            if (prop == "clear") {
+                if (left->Meta.is_const) {
+                    return throw_error("Cannot modify constant list");
+                }
+                if (right->_Node.FunctionCall().args.size() != 0) {
+                    return throw_error("List function '" + prop + "' expects 0 arguments");
+                }
+                left->_Node.List().elements.clear();
+                return left;
+            }
             if (prop == "append") {
                 if (left->Meta.is_const) {
                     return throw_error("Cannot modify constant list");
@@ -3187,11 +3194,6 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
             std::vector<node_ptr> onChangeFunctions = accessed_value->Hooks.onChange;
 
             // Type check
-            // if (!accessed_value->Meta.is_untyped_property) {
-            //     if (accessed_value->type != NodeType::NONE && !match_types(accessed_value->TypeInfo.type, right)) {
-            //         return throw_error("Cannot modify object property type '" + node_repr(accessed_value) + "'");
-            //     }
-            // }
             if (!accessed_value->Meta.is_untyped_property) {
                 if (!match_types(accessed_value, right)) {
                     return throw_error("Cannot modify object property type '" + node_repr(accessed_value) + "'");
@@ -3256,11 +3258,6 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
         std::vector<node_ptr> onChangeFunctions = old_value->Hooks.onChange;
 
         // Type check
-        // if (!accessed_value->Meta.is_untyped_property) {
-        //     if (accessed_value->type != NodeType::NONE && !match_types(accessed_value->TypeInfo.type, right)) {
-        //         return throw_error("Type error in property '" + prop->_Node.ID().value + "' - Cannot modify object property type '" + node_repr(accessed_value) + "'");
-        //     }
-        // }
         if (!accessed_value->Meta.is_untyped_property) {
             if (!match_types(accessed_value, right)) {
                 node_ptr _type = get_type(accessed_value);

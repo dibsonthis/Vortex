@@ -28,6 +28,11 @@ const connect = (filePath: String) => {
 const QueryResultType = [{columns: [String], values: [String]}]
 
 const toDicts = (queryResult: QueryResultType, schema: Object) => {
+
+	if (queryResult.empty) {
+		ret queryResult
+	}
+
 	// Map out a type
 	var ResultType = {}
 	for ((queryResult[0] ?? []).columns, i, col) {
