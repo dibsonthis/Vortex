@@ -60,8 +60,8 @@ var yPos = 0
 
 [xPos, yPos]::onChange(old, new, info) => println(info.name + " has changed")
 
-xPos = 2 // x has changed
-yPos = 3 // y has changed
+xPos = 2 // xPos has changed
+yPos = 3 // yPos has changed
 ```
 
 ### Global Hooks
