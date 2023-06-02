@@ -1,6 +1,14 @@
-type SomeType {
-	x: Number,
-	y: union _ {SomeType, None}
+type Node
+
+type OpNode {
+	left: Node,
+	right: Node
 }
 
-print(SomeType)
+union Node {
+	OpNode
+}
+
+OpNode {left: 12, right: 2}
+
+println(OpNode, Node)

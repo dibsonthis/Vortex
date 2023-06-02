@@ -1050,6 +1050,10 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
     Symbol symbol = new_symbol(node->_Node.Type().name, object);
     add_symbol(symbol, current_symbol_table);
 
+    if (!node->_Node.Type().body) {
+        return object;
+    }
+
     if (node->_Node.Type().body->_Node.Object().elements[0]->type != NodeType::COMMA_LIST) {
         node_ptr prop = node->_Node.Type().body->_Node.Object().elements[0];
         node_ptr def_val = nullptr;
