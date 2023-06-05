@@ -12,11 +12,11 @@ const trim = (str: String): String
 const chars = (str: String): [String] 
 	=> lib.call("chars", [str])
 
-const at = (index: Number) 
-	=> self[index]
+const at = (str: String, index: Number) 
+	=> str[index]
 
-const first = () 
-	=> self[0]
+const first = (str: String) 
+	=> str[0]
 
-const last = () 
-	=> self[self.length-1]
+const last = (str: String) 
+	=> str[str.length-1]
