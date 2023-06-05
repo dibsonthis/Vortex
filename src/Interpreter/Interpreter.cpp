@@ -568,7 +568,8 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
     if (!func_match) {
         std::string argsStr = "(";
         for (int i = 0; i < args.size(); i++) {
-            node_ptr arg = get_type(args[i]);
+            //node_ptr arg = get_type(args[i]);
+            node_ptr arg = args[i];
             argsStr += printable(arg);
             if (i != args.size()-1) {
                 argsStr += ", ";
@@ -3715,7 +3716,8 @@ std::string Interpreter::printable(node_ptr& node, std::vector<node_ptr> bases) 
                 node_ptr& param = node->_Node.Function().params[i];
                 node_ptr& type = node->_Node.Function().param_types[param->_Node.ID().value];
                 if (type) {
-                    node_ptr _type = get_type(type);
+                    //node_ptr _type = get_type(type);
+                    node_ptr _type = type;
                     res += param->_Node.ID().value + ": " + printable(_type);
                 } else {
                     res += param->_Node.ID().value;
@@ -3848,7 +3850,11 @@ node_ptr Interpreter::get_type(node_ptr& node) {
         case NodeType::LIST: {
             std::vector<node_ptr> list;
             for (int i = 0; i < _node->_Node.List().elements.size(); i++) {
-                list.push_back(get_type(_node->_Node.List().elements[i]));
+                if (_node->_Node.List().elements[i] == _node) {
+                    list.push_back(_node->_Node.List().elements[i]);
+                } else {
+                    list.push_back(get_type(_node->_Node.List().elements[i]));
+                }
             }
             node_ptr list_node = new_node(NodeType::LIST);
             list_node->_Node.List().elements = list;
@@ -3859,7 +3865,12 @@ node_ptr Interpreter::get_type(node_ptr& node) {
             node_ptr obj = new_node(NodeType::OBJECT);
             obj->TypeInfo = _node->TypeInfo;
             for (auto& elem : _node->_Node.Object().properties) {
-                node_ptr value = get_type(elem.second);
+                node_ptr value;
+                if (_node == elem.second) {
+                    value = elem.second;
+                } else {
+                    value = get_type(elem.second);
+                }
                 obj->_Node.Object().properties[elem.first] = value;
             }
             return obj;

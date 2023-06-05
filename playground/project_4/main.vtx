@@ -1,0 +1,13 @@
+import [Lexer] : "lexer"
+import [Parser] : "parser"
+
+var lexer = Lexer {}
+lexer.load("source/source.bloop")
+lexer.tokenize()
+
+var parser = Parser {}
+parser.nodes = lexer.nodes
+parser.current_node = parser.nodes[0]
+parser.parse()
+
+//parser.nodes.map((node) => node.println())

@@ -1,0 +1,142 @@
+import [] : "lexer"
+
+type Parser {
+	current_node: MaybeNode = None,
+	index: Number = 0,
+	nodes: [Node] = [],
+	advance = () => {
+		this.index += 1
+		this.current_node = this.nodes[this.index]
+		//println(this.current_node)
+	},
+	reset = (i: Number) => {
+		this.index = i
+		this.current_node = this.nodes[this.index]
+	},
+	parse = (endFunc: Function, start: Number) => {
+		var self = this
+		while (this.current_node.endFunc()) {
+			if (!this.current_node) {
+				break;
+			}
+			if (this.current_node.typeof() == OpNode && (this.current_node.value == "*" || this.current_node.value == "/")) {
+				const left = self.nodes[self.index-1]
+				const right = self.nodes[self.index+1]
+				self.nodes[self.index].left = left
+				self.nodes[self.index].right = right
+				self.nodes.remove_at(self.index+1)
+				self.nodes.remove_at(self.index-1)
+				self.index -= 1
+			}
+			self.advance()
+		}
+		self.reset(start)
+		while (this.current_node.endFunc()) {
+			if (!this.current_node) {
+				break;
+			}
+			if (this.current_node.typeof() == OpNode && (this.current_node.value == "+" || this.current_node.value == "-")) {
+				const left = self.nodes[self.index-1]
+				const right = self.nodes[self.index+1]
+				self.nodes[self.index].left = left
+				self.nodes[self.index].right = right
+				self.nodes.remove_at(self.index+1)
+				self.nodes.remove_at(self.index-1)
+				self.index -= 1
+			}
+			self.advance()
+		}
+		self.reset(start)
+		while (this.current_node.endFunc()) {
+			if (!this.current_node) {
+				break;
+			}
+			if (this.current_node.typeof() == OpNode && this.current_node.value == "=") {
+				const left = self.nodes[self.index-1]
+				const right = self.nodes[self.index+1]
+				self.nodes[self.index].left = left
+				self.nodes[self.index].right = right
+				self.nodes.remove_at(self.index+1)
+				self.nodes.remove_at(self.index-1)
+				self.index -= 1
+			}
+			self.advance()
+		}
+		self.reset(start)
+		while (this.current_node.endFunc()) {
+			if (!this.current_node) {
+				break;
+			}
+			if (this.current_node.typeof() == IDNode && this.current_node.value == "const") {
+				var constDecl = ConstDeclNode { meta: self.current_node.meta }
+				const right = self.nodes[self.index+1]
+				if (right.typeof() == OpNode && right.value == "=") {
+					const name = right.left.value
+					const value = right.right
+					constDecl.name = name
+					constDecl.value = value
+					self.nodes[self.index] = constDecl
+					self.nodes.remove_at(self.index+1)
+				}
+			}
+			self.advance()
+		}
+		self.reset(start)
+		while (this.current_node.endFunc()) {
+			if (!this.current_node) {
+				break;
+			}
+			if (this.current_node.typeof() == ContainerNode && this.current_node.value == "(") {
+				var parenCall = ParenNode { meta: self.current_node.meta }
+				self.nodes[this.index] = parenCall
+				self.advance()
+				const i = self.index
+				self.parse((n: MaybeNode) => {
+					n && n.value != ")"
+					}, i)
+				// while (self.current_node.value != ")") {
+				// 	// if (self.current_node.value == "(") {
+				// 	// 	self.advance()
+				// 	// 	const i = self.index
+				// 	// 	self.parse((n: Node) => {
+				// 	// 		n.value != ")"
+				// 	// 	}, i)
+				// 	// 	self.index = i
+				// 	// 	self.current_node = self.nodes[self.index]
+				// 	// }
+				// 	if (self.current_node.value != ",") {
+				// 		parenCall.elements.append(self.nodes[self.index])
+				// 	}
+				// 	this.nodes.remove_at(this.index)
+				// 	this.index -= 1
+				// 	self.advance()
+				// }
+				// this.nodes.remove_at(this.index)
+			}
+			self.advance()
+		}
+		self.reset(start)
+		while (this.current_node.endFunc()) {
+			if (!this.current_node) {
+				break;
+			}
+			if (this.current_node.typeof() == IDNode && this.nodes[this.index+1].typeof() == ParenNode) {
+				const name = this.current_node.value
+				var funcCall = FuncCallNode { meta: self.current_node.meta, name: name }
+				const right = self.nodes[self.index+1]
+				funcCall.args = right.elements
+				self.nodes[self.index] = funcCall
+				self.nodes.remove_at(self.index+1)
+			}
+			self.advance()
+		}
+		self.reset(start)
+
+		self.nodes.map((e) => println(e))
+	},
+	parse = () => {
+		this.parse((n: MaybeNode) => {
+			n && n.typeof() != EOFNode
+		}, 0)
+	}
+}
