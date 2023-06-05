@@ -167,7 +167,10 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
     node_ptr object = new_node(NodeType::OBJECT);
     object->TypeInfo = node->TypeInfo;
     // inject current object into scope as "this"
-    // TODO: Create new scope here so 'this' doesn't get wiped if nested objects
+    auto obj_symbol_table = std::make_shared<SymbolTable>();
+    obj_symbol_table->parent = current_symbol_table;
+    current_symbol_table = obj_symbol_table;
+
     add_symbol(new_symbol("this", object), current_symbol_table);
     if (node->_Node.Object().elements.size() == 0) {
         return node;
@@ -218,6 +221,7 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
     }
     // remove "this" from scope
     delete_symbol("this", current_symbol_table);
+    current_symbol_table = current_symbol_table->parent;
     return object;
 }
 

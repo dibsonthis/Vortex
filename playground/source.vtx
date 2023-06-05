@@ -1,24 +1,17 @@
-type Node;
-
-union MaybeNode {
-	Node,
-	None
+type Out {
+	x: Number = 12,
+	y = () => {
+		println(this)
+		type In {
+			x = "hi",
+			y = () => {
+				println(this)
+			}
+		}
+	}
 }
 
-type StringNode {
-	value: String
-}
-
-type OpNode {
-	value: String,
-	left: MaybeNode = None,
-	right: MaybeNode = None
-}
-
-union Node {
-	StringNode,
-	OpNode
-}
-
-const x: Node = OpNode { value: "+" }
-print(Node)
+const x = Out {}
+const p = x.y()
+const z = p {}
+z.y()
