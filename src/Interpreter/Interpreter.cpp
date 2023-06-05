@@ -168,6 +168,9 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
     object->TypeInfo = node->TypeInfo;
     // inject current object into scope as "this"
     auto obj_symbol_table = std::make_shared<SymbolTable>();
+    for (auto& elem : current_symbol_table->symbols) {
+        obj_symbol_table->symbols[elem.first] = elem.second;
+    }
     auto& current_scope = current_symbol_table;
     obj_symbol_table->parent = current_scope;
     current_symbol_table = obj_symbol_table;
