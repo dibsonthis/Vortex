@@ -1112,6 +1112,10 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
         return object;
     }
 
+    if (node->_Node.Type().body->_Node.Object().elements.size() == 0) {
+        return object;
+    }
+
     if (node->_Node.Type().body->_Node.Object().elements[0]->type != NodeType::COMMA_LIST) {
         node_ptr prop = node->_Node.Type().body->_Node.Object().elements[0];
         node_ptr def_val = nullptr;
