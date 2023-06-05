@@ -235,6 +235,7 @@ struct TypeInfoNode {
 	bool is_refinement_type = false;
 	bool is_literal_type = false;
 	bool is_general_type = false;
+	bool is_decl = false;
 };
 
 struct ErrorNode {

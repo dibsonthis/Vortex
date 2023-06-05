@@ -1,14 +1,24 @@
-type Node
+type Node;
+
+union MaybeNode {
+	Node,
+	None
+}
+
+type StringNode {
+	value: String
+}
 
 type OpNode {
-	left: Node,
-	right: Node
+	value: String,
+	left: MaybeNode = None,
+	right: MaybeNode = None
 }
 
 union Node {
+	StringNode,
 	OpNode
 }
 
-OpNode {left: 12, right: 2}
-
-println(OpNode, Node)
+const x: Node = OpNode { value: "+" }
+print(x)

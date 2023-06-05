@@ -167,6 +167,7 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
     node_ptr object = new_node(NodeType::OBJECT);
     object->TypeInfo = node->TypeInfo;
     // inject current object into scope as "this"
+    // TODO: Create new scope here so 'this' doesn't get wiped if nested objects
     add_symbol(new_symbol("this", object), current_symbol_table);
     if (node->_Node.Object().elements.size() == 0) {
         return node;
@@ -1021,7 +1022,6 @@ node_ptr Interpreter::eval_union(node_ptr& node) {
 }
 
 node_ptr Interpreter::eval_type(node_ptr& node) {
-
     if (node->_Node.Type().expr) {
         node_ptr val = std::make_shared<Node>(*node->_Node.Type().expr);
         val = eval_node(val);
@@ -1047,6 +1047,7 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
     node_ptr object = new_node(NodeType::OBJECT);
     object->TypeInfo.is_type = true;
     object->TypeInfo.type_name = node->_Node.Type().name;
+    object->TypeInfo.is_decl = node->TypeInfo.is_decl;
     Symbol symbol = new_symbol(node->_Node.Type().name, object);
     add_symbol(symbol, current_symbol_table);
 
@@ -1110,7 +1111,7 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
 
         object->_Node.Object().properties[name] = type_val;
         if (def_val) {
-            if (!match_types(type_val, def_val)) {
+            if (!type_val->TypeInfo.is_decl && !match_types(type_val, def_val)) {
                 return throw_error("Default type constructor for propery '" + name + "' does not match type: Expecting value of type '" + node_repr(type_val) + "' but received value of type '" + node_repr(def_val) + "'");
             }
             if (def_val->type == NodeType::FUNC && object->_Node.Object().defaults.count(name) && object->_Node.Object().defaults[name]->type == NodeType::FUNC) {
@@ -1176,7 +1177,7 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
             }
             object->_Node.Object().properties[name] = type_val;
             if (def_val) {
-                if (!match_types(type_val, def_val)) {
+                if (!type_val->TypeInfo.is_decl && !match_types(type_val, def_val)) {
                     return throw_error("Default type constructor for propery '" + name + "' does not match type: Expecting value of type '" + node_repr(type_val) + "' but received value of type '" + node_repr(def_val) + "'");
                 }
                 if (def_val->type == NodeType::FUNC && object->_Node.Object().defaults.count(name) && object->_Node.Object().defaults[name]->type == NodeType::FUNC) {
@@ -1315,6 +1316,15 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
 
     if (type == nullptr || value == nullptr) {
         return false;
+    }
+
+    if (type->TypeInfo.is_decl) {
+        Symbol symbol = get_symbol(type->TypeInfo.type_name, current_symbol_table);
+        if (!symbol.value) {
+            throw_error("Type '" + type->TypeInfo.type_name + "' is undefined");
+            return false;
+        }
+        type = symbol.value;
     }
 
     if (type->type == NodeType::ANY || value->type == NodeType::ANY) {
@@ -1606,6 +1616,13 @@ node_ptr Interpreter::eval_object_init(node_ptr& node) {
 
         std::string prop_name = prop.first;
 
+        if (prop.second->TypeInfo.is_decl) {
+            Symbol symbol = get_symbol(prop.second->TypeInfo.type_name, current_symbol_table);
+            if (!symbol.value) {
+                return throw_error("Type '" + prop.second->TypeInfo.type_name + "' is undefined");
+            }
+            prop.second = symbol.value;
+        }
         node_ptr type_prop_value = prop.second;
         node_ptr obj_prop_value = object->_Node.Object().properties[prop_name];
 

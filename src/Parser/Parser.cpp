@@ -318,6 +318,7 @@ void Parser::parse_type(std::string end) {
             current_node->_Node = TypeNode();
             current_node->_Node.Type().name = peek()->_Node.ID().value;
             current_node->_Node.Type().body = nullptr;
+            current_node->TypeInfo.is_decl = true;
         }
         advance();
     }
