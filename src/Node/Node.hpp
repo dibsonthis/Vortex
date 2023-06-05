@@ -236,6 +236,8 @@ struct TypeInfoNode {
 	bool is_literal_type = false;
 	bool is_general_type = false;
 	bool is_decl = false;
+
+	node_ptr base_type;
 };
 
 struct ErrorNode {

@@ -40,9 +40,18 @@ node_ptr Interpreter::eval_const_decl(node_ptr& node) {
     if (!is_ref) {
         value = std::make_shared<Node>(*value);
     }
-    value->TypeInfo.type = type;
+    if (type && (type->type == NodeType::LIST && type->_Node.List().is_union) || type && (type->type == NodeType::ANY)) {
+        value->TypeInfo.base_type = type;
+    } else {
+        value->TypeInfo.type = type;
+    }
     if (type && !match_types(type, value)) {
         node_ptr _type = get_type(type);
+        node_ptr _value = get_type(value);
+        return throw_error("Variable '" + node->_Node.ConstantDeclatation().name + "' expects a value of type '" + printable(_type) + "' but was instantiated with value of type '" + printable(_value) + "'");
+    }
+    if (value->TypeInfo.base_type && !match_types(value->TypeInfo.base_type, value)) {
+        node_ptr _type = get_type(value->TypeInfo.base_type);
         node_ptr _value = get_type(value);
         return throw_error("Variable '" + node->_Node.ConstantDeclatation().name + "' expects a value of type '" + printable(_type) + "' but was instantiated with value of type '" + printable(_value) + "'");
     }
@@ -65,7 +74,7 @@ node_ptr Interpreter::eval_const_decl(node_ptr& node) {
         return value;
     }
 
-    if ((value->type == NodeType::OBJECT && value->_Node.Object().is_enum )|| value->TypeInfo.is_type || (value->type == NodeType::LIST && value->_Node.List().is_union)) {
+    if ((value->type == NodeType::OBJECT && value->_Node.Object().is_enum) || value->TypeInfo.is_type || (value->type == NodeType::LIST && value->_Node.List().is_union)) {
         value->TypeInfo.type_name = node->_Node.ConstantDeclatation().name;
     }
 
@@ -88,8 +97,18 @@ node_ptr Interpreter::eval_var_decl(node_ptr& node) {
         return throw_error(value->_Node.Error().message);
     }
     node_ptr type = eval_node(node->TypeInfo.type);
+    if (type && (type->type == NodeType::LIST && type->_Node.List().is_union) || type && (type->type == NodeType::ANY)) {
+        value->TypeInfo.base_type = type;
+    } else {
+        value->TypeInfo.type = type;
+    }
     if (type && !match_types(type, value)) {
         node_ptr _type = get_type(type);
+        node_ptr _value = get_type(value);
+        return throw_error("Variable '" + node->_Node.VariableDeclaration().name + "' expects a value of type '" + printable(_type) + "' but was instantiated with value of type '" + printable(_value) + "'");
+    }
+    if (value->TypeInfo.base_type && !match_types(value->TypeInfo.base_type, value)) {
+        node_ptr _type = get_type(value->TypeInfo.base_type);
         node_ptr _value = get_type(value);
         return throw_error("Variable '" + node->_Node.VariableDeclaration().name + "' expects a value of type '" + printable(_type) + "' but was instantiated with value of type '" + printable(_value) + "'");
     }
@@ -100,7 +119,7 @@ node_ptr Interpreter::eval_var_decl(node_ptr& node) {
     if (!is_ref) {
         value = std::make_shared<Node>(*value);
     }
-    value->TypeInfo.type = type;
+
     if (type) {
         value->TypeInfo.type_name = type->TypeInfo.type_name;
     }
@@ -1156,6 +1175,9 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
                 object->_Node.Object().defaults[name]->_Node.Function().dispatch_functions.push_back(def_val);
             } else {
                 object->_Node.Object().defaults[name] = def_val;
+                if ((type_val->type == NodeType::LIST && type_val->_Node.List().is_union) || type_val->type == NodeType::ANY) {
+                    object->_Node.Object().defaults[name]->TypeInfo.base_type = type_val;
+                }
             }
         }
 
@@ -1222,6 +1244,9 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
                     object->_Node.Object().defaults[name]->_Node.Function().dispatch_functions.push_back(def_val);
                 } else {
                     object->_Node.Object().defaults[name] = def_val;
+                    if ((type_val->type == NodeType::LIST && type_val->_Node.List().is_union) || type_val->type == NodeType::ANY) {
+                        object->_Node.Object().defaults[name]->TypeInfo.base_type = type_val;
+                    }
                 }
                 //object->_Node.Object().defaults[name] = def_val;
             }
@@ -1304,6 +1329,10 @@ bool Interpreter::match_values(node_ptr& nodeA, node_ptr& nodeB) {
     if (nodeA->type == NodeType::NONE) {
         return true;
     }
+
+    if (nodeA == nodeB) {
+        return true;
+    }
     
     if (nodeA->type == NodeType::NUMBER) {
         return nodeA->_Node.Number().value == nodeB->_Node.Number().value;
@@ -1347,9 +1376,15 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
     }
 
     node_ptr type = std::make_shared<Node>(*_type);
+
+    if (type->TypeInfo.base_type) {
+        type = type->TypeInfo.base_type;
+    }
+
     if (!type->TypeInfo.is_type && type->TypeInfo.type) {
         type = type->TypeInfo.type;
     }
+
     node_ptr value = std::make_shared<Node>(*_value);
 
     if (type == nullptr || value == nullptr) {
@@ -1668,6 +1703,10 @@ node_ptr Interpreter::eval_object_init(node_ptr& node) {
         int match = match_types(type_prop_value, obj_prop_value);
         if (!match) {
             return throw_error("Error in object initialization for type '" + node->_Node.ObjectDeconstruct().name + "': Match error in property '" + prop_name + "'");
+        }
+
+        if ((type_prop_value->type == NodeType::LIST && type_prop_value->_Node.List().is_union) || type_prop_value->type == NodeType::ANY) {
+            obj_prop_value->TypeInfo.base_type = type_prop_value;
         }
 
         object->_Node.Object().properties[prop_name]->Hooks.onChange = type_prop_value->Hooks.onChange;
@@ -3280,7 +3319,13 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
                 *accessed_value = *right;
             }
 
-            accessed_value->TypeInfo = old_value->TypeInfo;
+            accessed_value->TypeInfo.base_type = old_value->TypeInfo.base_type;
+
+            // If we had a type (like a union, we keep it)
+            if (old_value->TypeInfo.type) {
+                accessed_value->TypeInfo = old_value->TypeInfo;
+            }
+
             accessed_value->Meta = old_value->Meta;
             accessed_value->Meta.is_const = false;
             accessed_value->Hooks.onChange = onChangeFunctions;
@@ -3340,6 +3385,8 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
         } else {
             *accessed_value = *right;
         }
+
+        accessed_value->TypeInfo.base_type = old_value->TypeInfo.base_type;
 
         accessed_value->Meta = old_value->Meta;
         accessed_value->Hooks.onChange = onChangeFunctions;
@@ -3425,6 +3472,9 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
                     } else {
                         *accessed_value = *right;
                     }
+                    
+                    accessed_value->TypeInfo.base_type = old_value->TypeInfo.base_type;
+
                     accessed_value->Meta = old_value->Meta;
                     accessed_value->Meta.is_const = false;
                     accessed_value->Hooks.onChange = onChangeFunctions;
@@ -3494,7 +3544,8 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
                 *symbol.value = *right;
             }
 
-            symbol.value->TypeInfo = old_value->TypeInfo;
+            symbol.value->TypeInfo.base_type = old_value->TypeInfo.base_type;
+
             symbol.value->Meta.is_const = false;
             symbol.value->Hooks.onChange = onChangeFunctions;
 
@@ -3772,7 +3823,8 @@ std::string Interpreter::printable(node_ptr& node, std::vector<node_ptr> bases) 
 }
 
 node_ptr Interpreter::get_type(node_ptr& node) {
-    switch (node->type) {
+    node_ptr _node = node->TypeInfo.base_type ? node->TypeInfo.base_type : node;
+    switch (_node->type) {
         case NodeType::NUMBER: {
             return new_string_node("Number");
         }
@@ -3785,24 +3837,24 @@ node_ptr Interpreter::get_type(node_ptr& node) {
         case NodeType::FUNC: {
             node_ptr func_obj = new_node(NodeType::OBJECT);
             func_obj->_Node.Object().properties["params"] = new_node(NodeType::LIST);
-            func_obj->_Node.Object().properties["params"]->_Node.List().elements = node->_Node.Function().params;
-            func_obj->_Node.Object().properties["return"] = node->_Node.Function().return_type ? node->_Node.Function().return_type: new_node(NodeType::ANY);
+            func_obj->_Node.Object().properties["params"]->_Node.List().elements = _node->_Node.Function().params;
+            func_obj->_Node.Object().properties["return"] = _node->_Node.Function().return_type ? _node->_Node.Function().return_type: new_node(NodeType::ANY);
             return func_obj;
         }
         case NodeType::LIST: {
             std::vector<node_ptr> list;
-            for (int i = 0; i < node->_Node.List().elements.size(); i++) {
-                list.push_back(get_type(node->_Node.List().elements[i]));
+            for (int i = 0; i < _node->_Node.List().elements.size(); i++) {
+                list.push_back(get_type(_node->_Node.List().elements[i]));
             }
             node_ptr list_node = new_node(NodeType::LIST);
             list_node->_Node.List().elements = list;
-            list_node->TypeInfo = node->TypeInfo;
+            list_node->TypeInfo = _node->TypeInfo;
             return list_node;
         }
         case NodeType::OBJECT: {
             node_ptr obj = new_node(NodeType::OBJECT);
-            obj->TypeInfo = node->TypeInfo;
-            for (auto& elem : node->_Node.Object().properties) {
+            obj->TypeInfo = _node->TypeInfo;
+            for (auto& elem : _node->_Node.Object().properties) {
                 node_ptr value = get_type(elem.second);
                 obj->_Node.Object().properties[elem.first] = value;
             }
@@ -3821,7 +3873,7 @@ node_ptr Interpreter::get_type(node_ptr& node) {
             return new_string_node("Any");
         }
         case NodeType::ID: {
-            return new_string_node(node->_Node.ID().value);
+            return new_string_node(_node->_Node.ID().value);
         }
         default: {
             return node;
@@ -4110,6 +4162,15 @@ node_ptr Interpreter::new_boolean_node(bool value) {
 
 node_ptr Interpreter::new_accessor_node() {
     auto node = std::make_shared<Node>(NodeType::ACCESSOR);
+    node->Meta.is_const = false;
+    node->line = line;
+    node->column = column;
+    return node;
+}
+
+node_ptr Interpreter::new_list_node(std::vector<node_ptr> nodes) {
+    auto node = std::make_shared<Node>(NodeType::LIST);
+    node->_Node.List().elements = nodes;
     node->Meta.is_const = false;
     node->line = line;
     node->column = column;
