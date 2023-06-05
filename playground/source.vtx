@@ -1,11 +1,14 @@
-import [func] : "import"
-
-type Route {
-	callback: Function
+type Vec2i {
+	x: Number = 0,
+	y: Number = 0
 }
 
-const x = Route {
-	callback: () => func()
+type Vec2s {
+	x: String = "",
+	y: String = ""
 }
 
-x.callback()
+const x = Vec2i {}
+const y = Vec2s {}
+
+print(typeof(x) == Vec2s)

@@ -350,6 +350,35 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
                 default: return new_string_node("None");
             }
         }
+        if (node->_Node.FunctionCall().name == "typeof") {
+            if (node->_Node.FunctionCall().args.size() != 1) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
+            }
+
+            node_ptr var = eval_node(node->_Node.FunctionCall().args[0]);
+
+            switch(var->type) {
+                case NodeType::NONE: return new_node(NodeType::NONE);
+                case NodeType::NUMBER: return new_node(NodeType::NUMBER);
+                case NodeType::STRING: return new_node(NodeType::STRING);
+                case NodeType::BOOLEAN: return new_node(NodeType::BOOLEAN);
+                case NodeType::LIST: return var;
+                case NodeType::OBJECT: {
+                    if (var->TypeInfo.type_name != "") {
+                        node_ptr type = get_symbol(var->TypeInfo.type_name, current_symbol_table).value;
+                        return type;
+                    } else {
+                        return new_node(NodeType::OBJECT);
+                    }
+                };
+                case NodeType::FUNC: return var;
+                case NodeType::POINTER: return var;
+                case NodeType::LIB: return var;
+                case NodeType::ANY: return var;
+                case NodeType::ERROR: return var;
+                default: return new_node(NodeType::NONE);
+            }
+        }
         if (node->_Node.FunctionCall().name == "eval_all") {
             if (node->_Node.FunctionCall().args.size() != 1) {
                 return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
