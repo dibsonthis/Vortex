@@ -408,7 +408,7 @@ void Parser::parse_func_def(std::string end) {
                 erase_prev();
             }
 
-            if (current_node->_Node.Function().body->type == NodeType::OBJECT) {
+            if (current_node->type == NodeType::FUNC && current_node->_Node.Function().body->type == NodeType::OBJECT) {
                 for (int i = 0; i < current_node->_Node.Function().body->_Node.Object().elements.size(); i++) {
                     auto& elem = current_node->_Node.Function().body->_Node.Object().elements[i];
                     if (elem->type == NodeType::OP && elem->_Node.Op().value == ";") {
@@ -587,7 +587,7 @@ void Parser::parse_const(std::string end) {
 
         if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "const") {
             node_ptr next = peek();
-            if (next->_Node.Op().value == "=") {
+            if (next->type == NodeType::OP && next->_Node.Op().value == "=") {
                 current_node->type = NodeType::CONSTANT_DECLARATION;
                 current_node->_Node = ConstantDeclatationNode();
                 if (next->_Node.Op().left->type == NodeType::OP && next->_Node.Op().left->_Node.Op().value == ":") {

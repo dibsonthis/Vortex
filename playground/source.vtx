@@ -1,39 +1,95 @@
-import sdl : "@modules/sdl"
-import [WindowConfig, Color, Window] : "@modules/sdl"
+type Iterator {
+	state: Any,
+	next: Function,
+	prev: Function
+}
 
-// type Item {
-// 	key: String, 
-// 	value: Any
-// }
+const IteratorT = (T) => {
+	type Iterator_T {
+		state: T,
+		next: Function,
+		prev: Function
+	}
+}
 
-// extend Object {
-// 	map: (func: (item: Item) => Any) => {
-// 		var new_obj = {}
-// 		for (self.keys, index, key) {
-// 			const value = self[key]
-// 			new_obj[key] = func(Item {key: key, value: value})
-// 		}
-// 		new_obj
-// 	}
-// }
+const NumIter = IteratorT(Number)
+const StrIter = IteratorT(String)
 
-// const obj = {
-// 	name: "John",
-// 	age: 34,
-// 	nums: [1, 3, 8, 16],
-// 	address: {
-// 		street: "123 Test St.",
-// 		city: "Testville",
-// 		postCode: 1234
-// 	}
-// }
+const list_to_circular_iter = (list: List) => {
+	NumIter {
+		state: {
+			index: -1,
+			elements: list
+		},
+		next: () => {
+			this.state.index += 1
+			if (this.state.index >= this.state.elements.length) {
+				this.state.index = 0
+			}
+			this.state.elements[this.state.index]
+		},
+		prev: () => {
+			this.state.index -= 1
+			if (this.state.index < 0) {
+				this.state.index = this.state.elements.length-1
+			}
+			this.state.elements[this.state.index]
+		}
+	}
+}
 
-// const new_obj = obj.map((item: Item) => {
-// 	if (type(item.value) == "String") {
-// 		ret item.value.chars()
-// 	} else if (type(item.value) == "Number") {
-// 		ret item.value * 2
-// 	} else {
-// 		ret item.value
-// 	}
-// })
+const list_to_iter = (list: List) => {
+	Iterator {
+		state: {
+			index: -1,
+			elements: list,
+			end_index: list.length,
+			stop: false
+		},
+		next: () => {
+			this.state.index += 1
+			if (this.state.index >= this.state.end_index) {
+				this.state.stop = true
+			} else {
+				ret this.state.elements[this.state.index]
+			}
+		},
+		prev: () => {
+			this.state.index -= 1
+			if (this.state.index < 0) {
+				this.state.stop = true
+			} else {
+				ret this.state.elements[this.state.index]
+			}
+		}
+	}
+}
+
+import [] : string
+
+const to_iter = (x: List) => list_to_iter(x)
+
+var str_iter = "hello world, my name is dibs".split().to_iter()
+
+const map = (iter: Iterator, func: (x) => Any) => {
+	var list = []
+	var x: Any
+	while ((x = iter.next()) && (!iter.state.stop)) {
+		list.append(func(x))
+	}
+	list
+}
+
+const map = (iter: Iterator, func: (x: Any, i: Number) => Any) => {
+	var list = []
+	var x: Any
+	while ((x = iter.next()) && (!iter.state.stop)) {
+		var index = iter.state.index
+		var val = x
+		list.append(func(val, index))
+	}
+	list
+}
+
+var new_list = str_iter.map((x, i) => x.chars() + [i])
+print(new_list)

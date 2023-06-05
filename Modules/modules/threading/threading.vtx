@@ -19,3 +19,9 @@ const get = (future: Number)
 
 const ready = (future: Number) 
 	=> lib.call("ready", [future])
+
+const ready = (future: Future)
+	=> ready(future._ref)
+
+const get = (future: Future)
+	=> get(future._ref)
