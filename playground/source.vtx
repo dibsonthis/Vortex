@@ -1,8 +1,5 @@
-import [] : string
-
-const obj = {
-	name: "john".chars()
-}
+import sdl : "@modules/sdl"
+import [WindowConfig, Color, Window] : "@modules/sdl"
 
 // type Item {
 // 	key: String, 

@@ -168,21 +168,13 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
     object->TypeInfo = node->TypeInfo;
     // inject current object into scope as "this"
     auto obj_symbol_table = std::make_shared<SymbolTable>();
-    // obj_symbol_table->BoolExtensions = current_symbol_table->BoolExtensions;
-    // obj_symbol_table->StringExtensions = current_symbol_table->StringExtensions;
-    // obj_symbol_table->NumberExtensions = current_symbol_table->NumberExtensions;
-    // obj_symbol_table->ListExtensions = current_symbol_table->ListExtensions;
-    // obj_symbol_table->ObjectExtensions = current_symbol_table->ObjectExtensions;
-    // obj_symbol_table->CustomTypeExtensions = current_symbol_table->CustomTypeExtensions;
-    // obj_symbol_table->NoneExtensions = current_symbol_table->NoneExtensions;
-    // obj_symbol_table->FunctionExtensions = current_symbol_table->FunctionExtensions;
-
-    obj_symbol_table->parent = current_symbol_table;
+    auto& current_scope = current_symbol_table;
+    obj_symbol_table->parent = current_scope;
     current_symbol_table = obj_symbol_table;
 
     add_symbol(new_symbol("this", object), current_symbol_table);
     if (node->_Node.Object().elements.size() == 0) {
-        return node;
+        goto end;
     }
     if (node->_Node.Object().elements.size() > 1 && node->_Node.Object().elements[0]->type != NodeType::COMMA_LIST) {
         return throw_error("Object properties must be comma separated");
@@ -228,6 +220,7 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
             }
         }
     }
+    end:
     // remove "this" from scope
     delete_symbol("this", current_symbol_table);
     current_symbol_table = current_symbol_table->parent;
@@ -1890,17 +1883,17 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
 
         std::filesystem::current_path(current_path);
 
-        for (auto& symbol : import_interpreter.global_symbol_table->symbols) {
+        for (auto& symbol : import_interpreter.current_symbol_table->symbols) {
             import_obj->_Node.Object().properties[symbol.first] = symbol.second.value;
         }
 
         // We also want to import hooks into the current scope
 
         for (auto& hook : import_interpreter.global_symbol_table->globalHooks_onChange) {
-            current_symbol_table->globalHooks_onChange.push_back(hook);
+            global_symbol_table->globalHooks_onChange.push_back(hook);
         }
 
-        for (auto& hook : import_interpreter.global_symbol_table->globalHooks_onCall) {
+        for (auto& hook : import_interpreter.current_symbol_table->globalHooks_onCall) {
             current_symbol_table->globalHooks_onCall.push_back(hook);
         }
 
@@ -1962,14 +1955,16 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
 
         std::filesystem::current_path(current_path);
 
+        import_interpreter.current_symbol_table->parent = import_interpreter.global_symbol_table;
+
         std::unordered_map<std::string, node_ptr> imported_variables;
 
-        for (auto& symbol : import_interpreter.global_symbol_table->symbols) {
+        for (auto& symbol : import_interpreter.current_symbol_table->symbols) {
             imported_variables[symbol.first] = symbol.second.value;
         }
 
         if (node->_Node.Import().module->_Node.List().elements.size() == 0) {
-            for (auto& elem : import_interpreter.global_symbol_table->symbols) {
+            for (auto& elem : import_interpreter.current_symbol_table->symbols) {
                 add_symbol(new_symbol(elem.first, elem.second.value), current_symbol_table);
             }
 
@@ -1978,7 +1973,7 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
 
         for (node_ptr elem : node->_Node.Import().module->_Node.List().elements) {
             if (imported_variables.contains(elem->_Node.ID().value)) {
-                add_symbol(import_interpreter.global_symbol_table->symbols[elem->_Node.ID().value], current_symbol_table);
+                add_symbol(import_interpreter.current_symbol_table->symbols[elem->_Node.ID().value], current_symbol_table);
             } else {
                 return throw_error("Cannot import value '" + elem->_Node.ID().value + "' - variable undefined");
             }
