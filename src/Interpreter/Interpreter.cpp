@@ -1324,6 +1324,7 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
             throw_error("Type '" + type->TypeInfo.type_name + "' is undefined");
             return false;
         }
+        *_type = *symbol.value;
         type = symbol.value;
     }
 
@@ -3601,7 +3602,7 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
 
 // Builtin functions
 
-std::string Interpreter::printable(node_ptr& node, node_ptr base) {
+std::string Interpreter::printable(node_ptr& node, std::vector<node_ptr> bases) {
     switch (node->type) {
         case NodeType::NUMBER: {
             std::string num_str = std::to_string(node->_Node.Number().value);
@@ -3644,20 +3645,24 @@ std::string Interpreter::printable(node_ptr& node, node_ptr base) {
             return res;
         }
         case NodeType::LIST: {
-            if (base == null_value) {
-                base = node;
-            }
+            bases.push_back(node);
             std::string res = "[";
             for (int i = 0; i < node->_Node.List().elements.size(); i++) {
                 node_ptr value = node->_Node.List().elements[i];
-                if (value == base) {
-                    if (base->type == NodeType::OBJECT) {
-                        res += "{...}";
-                    } else {
-                        res += "[...]";
+                bool is_base = false;
+                for (node_ptr& base : bases) {
+                    if (value == base) {
+                        if (base->type == NodeType::OBJECT) {
+                            res += "{...}";
+                        } else {
+                            res += "[...]";
+                        }
+                        is_base = true;
+                        break;
                     }
-                } else {
-                    res += printable(node->_Node.List().elements[i], base);
+                }
+                if (!is_base) {
+                    res += printable(node->_Node.List().elements[i], bases);
                 }
                 if (i < node->_Node.List().elements.size()-1) {
                     res += ", ";
@@ -3667,9 +3672,7 @@ std::string Interpreter::printable(node_ptr& node, node_ptr base) {
             return res;
         }
         case NodeType::OBJECT: {
-            if (base == null_value) {
-                base = node;
-            }
+            bases.push_back(node);
             std::string res = "";
             if (node->TypeInfo.type_name != "") {
                 res += node->TypeInfo.type_name + " ";
@@ -3677,14 +3680,20 @@ std::string Interpreter::printable(node_ptr& node, node_ptr base) {
             res += "{ ";
             for (auto const& elem : node->_Node.Object().properties) {
                 node_ptr value = elem.second;
-                if (value == base) {
-                    if (base->type == NodeType::OBJECT) {
-                        res += elem.first + ": {...} ";
-                    } else {
-                        res += elem.first + ": [...] ";
+                bool is_base = false;
+                for (node_ptr& base : bases) {
+                    if (value == base) {
+                        if (base->type == NodeType::OBJECT) {
+                            res += elem.first + ": {...} ";
+                        } else {
+                            res += elem.first + ": [...] ";
+                        }
+                        is_base = true;
+                        break;
                     }
-                } else {
-                    res += elem.first + ": " + printable(value, base) + ' ';
+                }
+                if (!is_base) {
+                    res += elem.first + ": " + printable(value, bases) + ' ';
                 }
             }
             res += "}";

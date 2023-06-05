@@ -21,4 +21,4 @@ union Node {
 }
 
 const x: Node = OpNode { value: "+" }
-print(x)
+print(Node)

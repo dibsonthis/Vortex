@@ -156,7 +156,8 @@ public:
     node_ptr new_node(NodeType type);
     node_ptr new_node();
 
-    std::string printable(node_ptr& node, node_ptr base = nullptr);
+    // std::string printable(node_ptr& node, node_ptr base = nullptr);
+    std::string printable(node_ptr& node, std::vector<node_ptr> bases = {});
     node_ptr get_type(node_ptr& node);
 
     void replaceAll(std::string& str, const std::string& from, const std::string& to);
