@@ -12,14 +12,11 @@ const trim = (str: String): String
 const chars = (str: String): [String] 
 	=> lib.call("chars", [str])
 
-extend String {
-	split: (delim: String): [String] => split(self, delim),
-	split: (): [String] => split(self, ""),
-	trim: (): String => trim(self),
-	chars: (): [String] => chars(self),
-	at: (index: Number) => self[index],
-	first: () => self[0],
-	last: () => self[self.length-1],
-	print: () => { print(self) self },
-	println: () => { println(self) self }
-}
+const at = (index: Number) 
+	=> self[index]
+
+const first = () 
+	=> self[0]
+
+const last = () 
+	=> self[self.length-1]

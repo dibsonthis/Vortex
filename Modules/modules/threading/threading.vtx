@@ -19,9 +19,3 @@ const get = (future: Number)
 
 const ready = (future: Number) 
 	=> lib.call("ready", [future])
-
-extend Future {
-	ready: () => ready(self._ref),
-	get: () => get(self._ref),
-}
-

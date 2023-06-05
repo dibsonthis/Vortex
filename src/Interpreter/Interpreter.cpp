@@ -168,6 +168,15 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
     object->TypeInfo = node->TypeInfo;
     // inject current object into scope as "this"
     auto obj_symbol_table = std::make_shared<SymbolTable>();
+    // obj_symbol_table->BoolExtensions = current_symbol_table->BoolExtensions;
+    // obj_symbol_table->StringExtensions = current_symbol_table->StringExtensions;
+    // obj_symbol_table->NumberExtensions = current_symbol_table->NumberExtensions;
+    // obj_symbol_table->ListExtensions = current_symbol_table->ListExtensions;
+    // obj_symbol_table->ObjectExtensions = current_symbol_table->ObjectExtensions;
+    // obj_symbol_table->CustomTypeExtensions = current_symbol_table->CustomTypeExtensions;
+    // obj_symbol_table->NoneExtensions = current_symbol_table->NoneExtensions;
+    // obj_symbol_table->FunctionExtensions = current_symbol_table->FunctionExtensions;
+
     obj_symbol_table->parent = current_symbol_table;
     current_symbol_table = obj_symbol_table;
 
@@ -1204,59 +1213,59 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
     return object;
 }
 
-node_ptr Interpreter::eval_type_ext(node_ptr& node) {
-    node_ptr type = eval_node(node->_Node.TypeExt().type);
-    node_ptr body = eval_object(node->_Node.TypeExt().body);
+// node_ptr Interpreter::eval_type_ext(node_ptr& node) {
+//     node_ptr type = eval_node(node->_Node.TypeExt().type);
+//     node_ptr body = eval_object(node->_Node.TypeExt().body);
 
-    // Check that all property values resolve to functions
-    for (auto& prop : body->_Node.Object().properties) {
-        if (prop.second->type != NodeType::FUNC) {
-            return throw_error("Type extension properties must resolve to functions");
-        }
-    }
+//     // Check that all property values resolve to functions
+//     for (auto& prop : body->_Node.Object().properties) {
+//         if (prop.second->type != NodeType::FUNC) {
+//             return throw_error("Type extension properties must resolve to functions");
+//         }
+//     }
 
-    if (type->type == NodeType::STRING) {
-        global_symbol_table->StringExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
-        return new_node(NodeType::NONE);
-    }
-    if (type->type == NodeType::NUMBER) {
-        global_symbol_table->NumberExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
-        return new_node(NodeType::NONE);
-    }
-    if (type->type == NodeType::BOOLEAN) {
-        global_symbol_table->BoolExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
-        return new_node(NodeType::NONE);
-    }
-    if (type->type == NodeType::LIST) {
-        global_symbol_table->ListExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
-        return new_node(NodeType::NONE);
-    }
-    if (type->type == NodeType::OBJECT) {
-        if (type->TypeInfo.is_type && type->TypeInfo.type_name != "") {
-            if (global_symbol_table->CustomTypeExtensions.count(type->TypeInfo.type_name)) {
-                global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name].insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());        
-            } else {
-                global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name] = std::unordered_map<std::string, node_ptr>();
-                global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name].insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
-            }
-            return new_node(NodeType::NONE);
-        }
+//     if (type->type == NodeType::STRING) {
+//         global_symbol_table->StringExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
+//         return new_node(NodeType::NONE);
+//     }
+//     if (type->type == NodeType::NUMBER) {
+//         global_symbol_table->NumberExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
+//         return new_node(NodeType::NONE);
+//     }
+//     if (type->type == NodeType::BOOLEAN) {
+//         global_symbol_table->BoolExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
+//         return new_node(NodeType::NONE);
+//     }
+//     if (type->type == NodeType::LIST) {
+//         global_symbol_table->ListExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
+//         return new_node(NodeType::NONE);
+//     }
+//     if (type->type == NodeType::OBJECT) {
+//         if (type->TypeInfo.is_type && type->TypeInfo.type_name != "") {
+//             if (global_symbol_table->CustomTypeExtensions.count(type->TypeInfo.type_name)) {
+//                 global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name].insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());        
+//             } else {
+//                 global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name] = std::unordered_map<std::string, node_ptr>();
+//                 global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name].insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
+//             }
+//             return new_node(NodeType::NONE);
+//         }
 
-        global_symbol_table->ObjectExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
-        return new_node(NodeType::NONE);
-    }
-    if (type->type == NodeType::FUNC) {
-        global_symbol_table->FunctionExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
-        return new_node(NodeType::NONE);
-    }
-    if (type->type == NodeType::NONE) {
-        global_symbol_table->NoneExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
-        return new_node(NodeType::NONE);
-    }
+//         global_symbol_table->ObjectExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
+//         return new_node(NodeType::NONE);
+//     }
+//     if (type->type == NodeType::FUNC) {
+//         global_symbol_table->FunctionExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
+//         return new_node(NodeType::NONE);
+//     }
+//     if (type->type == NodeType::NONE) {
+//         global_symbol_table->NoneExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
+//         return new_node(NodeType::NONE);
+//     }
 
-    return throw_error("Malformed Type extension");
-    return new_node(NodeType::NONE);
-}
+//     return throw_error("Malformed Type extension");
+//     return new_node(NodeType::NONE);
+// }
 
 bool Interpreter::match_values(node_ptr& nodeA, node_ptr& nodeB) {
     if (!nodeA || !nodeB) {
@@ -1897,21 +1906,21 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
 
         // Any Type extensions must be imported to global scope
 
-        global_symbol_table->StringExtensions.insert(import_interpreter.global_symbol_table->StringExtensions.begin(), import_interpreter.global_symbol_table->StringExtensions.end());
+        // global_symbol_table->StringExtensions.insert(import_interpreter.global_symbol_table->StringExtensions.begin(), import_interpreter.global_symbol_table->StringExtensions.end());
 
-        global_symbol_table->NumberExtensions.insert(import_interpreter.global_symbol_table->NumberExtensions.begin(), import_interpreter.global_symbol_table->NumberExtensions.end());
+        // global_symbol_table->NumberExtensions.insert(import_interpreter.global_symbol_table->NumberExtensions.begin(), import_interpreter.global_symbol_table->NumberExtensions.end());
 
-        global_symbol_table->BoolExtensions.insert(import_interpreter.global_symbol_table->BoolExtensions.begin(), import_interpreter.global_symbol_table->BoolExtensions.end());
+        // global_symbol_table->BoolExtensions.insert(import_interpreter.global_symbol_table->BoolExtensions.begin(), import_interpreter.global_symbol_table->BoolExtensions.end());
 
-        global_symbol_table->ListExtensions.insert(import_interpreter.global_symbol_table->ListExtensions.begin(), import_interpreter.global_symbol_table->ListExtensions.end());
+        // global_symbol_table->ListExtensions.insert(import_interpreter.global_symbol_table->ListExtensions.begin(), import_interpreter.global_symbol_table->ListExtensions.end());
 
-        global_symbol_table->ObjectExtensions.insert(import_interpreter.global_symbol_table->ObjectExtensions.begin(), import_interpreter.global_symbol_table->ObjectExtensions.end());
+        // global_symbol_table->ObjectExtensions.insert(import_interpreter.global_symbol_table->ObjectExtensions.begin(), import_interpreter.global_symbol_table->ObjectExtensions.end());
 
-        global_symbol_table->FunctionExtensions.insert(import_interpreter.global_symbol_table->FunctionExtensions.begin(), import_interpreter.global_symbol_table->FunctionExtensions.end());
+        // global_symbol_table->FunctionExtensions.insert(import_interpreter.global_symbol_table->FunctionExtensions.begin(), import_interpreter.global_symbol_table->FunctionExtensions.end());
 
-        global_symbol_table->NoneExtensions.insert(import_interpreter.global_symbol_table->NoneExtensions.begin(), import_interpreter.global_symbol_table->NoneExtensions.end());
+        // global_symbol_table->NoneExtensions.insert(import_interpreter.global_symbol_table->NoneExtensions.begin(), import_interpreter.global_symbol_table->NoneExtensions.end());
 
-        global_symbol_table->CustomTypeExtensions.insert(import_interpreter.global_symbol_table->CustomTypeExtensions.begin(), import_interpreter.global_symbol_table->CustomTypeExtensions.end());
+        // global_symbol_table->CustomTypeExtensions.insert(import_interpreter.global_symbol_table->CustomTypeExtensions.begin(), import_interpreter.global_symbol_table->CustomTypeExtensions.end());
 
         add_symbol(new_symbol(module_name, import_obj), current_symbol_table);
         return new_node(NodeType::NONE);
@@ -2512,27 +2521,27 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             }
 
 
-            if (left->TypeInfo.type_name != "") {
-                if (global_symbol_table->CustomTypeExtensions.count(left->TypeInfo.type_name)) {
-                    if (global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name].count(func_name)) {
-                        node_ptr ext = std::make_shared<Node>(*global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name][func_name]);
-                        ext->_Node.Function().closure["self"] = left;
-                        for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-                            dispatch_fx->_Node.Function().closure["self"] = left;
-                        }
-                        return eval_func_call(right, ext);
-                    }
-                }
-            }
+            // if (left->TypeInfo.type_name != "") {
+            //     if (global_symbol_table->CustomTypeExtensions.count(left->TypeInfo.type_name)) {
+            //         if (global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name].count(func_name)) {
+            //             node_ptr ext = std::make_shared<Node>(*global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name][func_name]);
+            //             ext->_Node.Function().closure["self"] = left;
+            //             for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+            //                 dispatch_fx->_Node.Function().closure["self"] = left;
+            //             }
+            //             return eval_func_call(right, ext);
+            //         }
+            //     }
+            // }
 
-            if (global_symbol_table->ObjectExtensions.count(func_name)) {
-                node_ptr ext = std::make_shared<Node>(*global_symbol_table->ObjectExtensions[func_name]);
-                ext->_Node.Function().closure["self"] = left;
-                for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-                    dispatch_fx->_Node.Function().closure["self"] = left;
-                }
-                return eval_func_call(right, ext);
-            }
+            // if (global_symbol_table->ObjectExtensions.count(func_name)) {
+            //     node_ptr ext = std::make_shared<Node>(*global_symbol_table->ObjectExtensions[func_name]);
+            //     ext->_Node.Function().closure["self"] = left;
+            //     for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+            //         dispatch_fx->_Node.Function().closure["self"] = left;
+            //     }
+            //     return eval_func_call(right, ext);
+            // }
 
             // We inject object as the first arg in the function call
             // And try to run it
@@ -2578,14 +2587,14 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
         if (right->type == NodeType::FUNC_CALL) {
             std::string func_name = right->_Node.FunctionCall().name;
 
-            if (global_symbol_table->StringExtensions.count(func_name)) {
-                node_ptr ext = std::make_shared<Node>(*global_symbol_table->StringExtensions[func_name]);
-                ext->_Node.Function().closure["self"] = left;
-                for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-                    dispatch_fx->_Node.Function().closure["self"] = left;
-                }
-                return eval_func_call(right, ext);
-            }
+            // if (global_symbol_table->StringExtensions.count(func_name)) {
+            //     node_ptr ext = std::make_shared<Node>(*global_symbol_table->StringExtensions[func_name]);
+            //     ext->_Node.Function().closure["self"] = left;
+            //     for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+            //         dispatch_fx->_Node.Function().closure["self"] = left;
+            //     }
+            //     return eval_func_call(right, ext);
+            // }
 
             if (right->_Node.FunctionCall().name == "replaceAll") {
 
@@ -2950,14 +2959,14 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
             std::string func_name = right->_Node.FunctionCall().name;
 
-            if (global_symbol_table->ListExtensions.count(func_name)) {
-                node_ptr ext = std::make_shared<Node>(*global_symbol_table->ListExtensions[func_name]);
-                ext->_Node.Function().closure["self"] = left;
-                for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-                    dispatch_fx->_Node.Function().closure["self"] = left;
-                }
-                return eval_func_call(right, ext);
-            }
+            // if (global_symbol_table->ListExtensions.count(func_name)) {
+            //     node_ptr ext = std::make_shared<Node>(*global_symbol_table->ListExtensions[func_name]);
+            //     ext->_Node.Function().closure["self"] = left;
+            //     for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+            //         dispatch_fx->_Node.Function().closure["self"] = left;
+            //     }
+            //     return eval_func_call(right, ext);
+            // }
 
             node_ptr func_call = std::make_shared<Node>(*right);
             left->Meta.evaluated = true;
@@ -3095,14 +3104,14 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
         if (right->type == NodeType::FUNC_CALL) {
             std::string func_name = right->_Node.FunctionCall().name;
 
-            if (global_symbol_table->NumberExtensions.count(func_name)) {
-                node_ptr ext = std::make_shared<Node>(*global_symbol_table->NumberExtensions[func_name]);
-                ext->_Node.Function().closure["self"] = left;
-                for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-                    dispatch_fx->_Node.Function().closure["self"] = left;
-                }
-                return eval_func_call(right, ext);
-            }
+            // if (global_symbol_table->NumberExtensions.count(func_name)) {
+            //     node_ptr ext = std::make_shared<Node>(*global_symbol_table->NumberExtensions[func_name]);
+            //     ext->_Node.Function().closure["self"] = left;
+            //     for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+            //         dispatch_fx->_Node.Function().closure["self"] = left;
+            //     }
+            //     return eval_func_call(right, ext);
+            // }
 
             node_ptr func_call = std::make_shared<Node>(*right);
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
@@ -3116,14 +3125,14 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
         if (right->type == NodeType::FUNC_CALL) {
             std::string func_name = right->_Node.FunctionCall().name;
 
-            if (global_symbol_table->BoolExtensions.count(func_name)) {
-                node_ptr ext = std::make_shared<Node>(*global_symbol_table->BoolExtensions[func_name]);
-                ext->_Node.Function().closure["self"] = left;
-                for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-                    dispatch_fx->_Node.Function().closure["self"] = left;
-                }
-                return eval_func_call(right, ext);
-            }
+            // if (global_symbol_table->BoolExtensions.count(func_name)) {
+            //     node_ptr ext = std::make_shared<Node>(*global_symbol_table->BoolExtensions[func_name]);
+            //     ext->_Node.Function().closure["self"] = left;
+            //     for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+            //         dispatch_fx->_Node.Function().closure["self"] = left;
+            //     }
+            //     return eval_func_call(right, ext);
+            // }
 
             node_ptr func_call = std::make_shared<Node>(*right);
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
@@ -3145,14 +3154,14 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
         if (right->type == NodeType::FUNC_CALL) {
             std::string func_name = right->_Node.FunctionCall().name;
 
-            if (global_symbol_table->FunctionExtensions.count(func_name)) {
-                node_ptr ext = std::make_shared<Node>(*global_symbol_table->FunctionExtensions[func_name]);
-                ext->_Node.Function().closure["self"] = left;
-                for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-                    dispatch_fx->_Node.Function().closure["self"] = left;
-                }
-                return eval_func_call(right, ext);
-            }
+            // if (global_symbol_table->FunctionExtensions.count(func_name)) {
+            //     node_ptr ext = std::make_shared<Node>(*global_symbol_table->FunctionExtensions[func_name]);
+            //     ext->_Node.Function().closure["self"] = left;
+            //     for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+            //         dispatch_fx->_Node.Function().closure["self"] = left;
+            //     }
+            //     return eval_func_call(right, ext);
+            // }
 
             node_ptr func_call = std::make_shared<Node>(*right);
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
@@ -3166,14 +3175,14 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
         if (right->type == NodeType::FUNC_CALL) {
             std::string func_name = right->_Node.FunctionCall().name;
 
-            if (global_symbol_table->NoneExtensions.count(func_name)) {
-                node_ptr ext = std::make_shared<Node>(*global_symbol_table->NoneExtensions[func_name]);
-                ext->_Node.Function().closure["self"] = left;
-                for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-                    dispatch_fx->_Node.Function().closure["self"] = left;
-                }
-                return eval_func_call(right, ext);
-            }
+            // if (global_symbol_table->NoneExtensions.count(func_name)) {
+            //     node_ptr ext = std::make_shared<Node>(*global_symbol_table->NoneExtensions[func_name]);
+            //     ext->_Node.Function().closure["self"] = left;
+            //     for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
+            //         dispatch_fx->_Node.Function().closure["self"] = left;
+            //     }
+            //     return eval_func_call(right, ext);
+            // }
 
             node_ptr func_call = std::make_shared<Node>(*right);
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
@@ -3881,9 +3890,9 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
         case NodeType::TYPE: {
             return eval_type(node);
         }
-        case NodeType::TYPE_EXT: {
-            return eval_type_ext(node);
-        }
+        // case NodeType::TYPE_EXT: {
+        //     return eval_type_ext(node);
+        // }
         case NodeType::ENUM: {
             return eval_enum(node);
         }

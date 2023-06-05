@@ -324,22 +324,22 @@ void Parser::parse_type(std::string end) {
     }
 }
 
-void Parser::parse_type_ext(std::string end) {
-    while (current_node->type != NodeType::END_OF_FILE) {
-        if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
-            break;
-        }
-        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "extend" && peek(2)->type == NodeType::OBJECT) {
-            current_node->type = NodeType::TYPE_EXT;
-            current_node->_Node = TypeExtNode();
-            current_node->_Node.TypeExt().type = peek();
-            current_node->_Node.TypeExt().body = peek(2);
-            erase_next();
-            erase_next();
-        }
-        advance();
-    }
-}
+// void Parser::parse_type_ext(std::string end) {
+//     while (current_node->type != NodeType::END_OF_FILE) {
+//         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
+//             break;
+//         }
+//         if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "extend" && peek(2)->type == NodeType::OBJECT) {
+//             current_node->type = NodeType::TYPE_EXT;
+//             current_node->_Node = TypeExtNode();
+//             current_node->_Node.TypeExt().type = peek();
+//             current_node->_Node.TypeExt().body = peek(2);
+//             erase_next();
+//             erase_next();
+//         }
+//         advance();
+//     }
+// }
 
 void Parser::parse_hook_implementation(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
@@ -937,8 +937,8 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_post_op({"?"}, end);
     reset(start);
-    parse_type_ext(end);
-    reset(start);
+    // parse_type_ext(end);
+    // reset(start);
     parse_try_catch(end);
     reset(start);
     parse_accessor(end);

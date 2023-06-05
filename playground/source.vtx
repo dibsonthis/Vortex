@@ -1,17 +1,42 @@
-type Out {
-	x: Number = 12,
-	y = () => {
-		println(this)
-		type In {
-			x = "hi",
-			y = () => {
-				println(this)
-			}
-		}
-	}
+import [] : string
+
+const obj = {
+	name: "john".chars()
 }
 
-const x = Out {}
-const p = x.y()
-const z = p {}
-z.y()
+// type Item {
+// 	key: String, 
+// 	value: Any
+// }
+
+// extend Object {
+// 	map: (func: (item: Item) => Any) => {
+// 		var new_obj = {}
+// 		for (self.keys, index, key) {
+// 			const value = self[key]
+// 			new_obj[key] = func(Item {key: key, value: value})
+// 		}
+// 		new_obj
+// 	}
+// }
+
+// const obj = {
+// 	name: "John",
+// 	age: 34,
+// 	nums: [1, 3, 8, 16],
+// 	address: {
+// 		street: "123 Test St.",
+// 		city: "Testville",
+// 		postCode: 1234
+// 	}
+// }
+
+// const new_obj = obj.map((item: Item) => {
+// 	if (type(item.value) == "String") {
+// 		ret item.value.chars()
+// 	} else if (type(item.value) == "Number") {
+// 		ret item.value * 2
+// 	} else {
+// 		ret item.value
+// 	}
+// })
