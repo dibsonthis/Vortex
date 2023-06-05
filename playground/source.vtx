@@ -3,12 +3,16 @@ type Vec2i {
 	y: Number = 0
 }
 
-type Vec2s {
-	x: String = "",
-	y: String = ""
+union MaybeVec {
+	None,
+	Vec2i
 }
 
-const x = Vec2i {}
-const y = Vec2s {}
+type Blah {
+	x: MaybeVec = None
+}
 
-print(typeof(x) == Vec2s)
+var x = Vec2i {}
+var y = Blah {}
+y.x = x
+print(y.x)

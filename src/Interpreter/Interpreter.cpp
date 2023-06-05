@@ -3316,7 +3316,7 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
         node_ptr accessed_value = object->_Node.Object().properties[prop->_Node.ID().value];
         if (!accessed_value) {
             // If the object has a type and the property wasn't found, we error
-            if (object->TypeInfo.type) {
+            if (object->TypeInfo.type_name != "") {
                 return throw_error("Property '" + prop->_Node.ID().value + "' does not exist on type '" + object->TypeInfo.type_name + "'");
             }   
             accessed_value = new_node(NodeType::NONE);
@@ -3342,7 +3342,6 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
         }
 
         accessed_value->Meta = old_value->Meta;
-        accessed_value->TypeInfo = old_value->TypeInfo;
         accessed_value->Hooks.onChange = onChangeFunctions;
 
         auto allOnChangeFunctionsLists = {std::cref(onChangeFunctions), std::cref(global_symbol_table->globalHooks_onChange)};
@@ -3426,7 +3425,6 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
                     } else {
                         *accessed_value = *right;
                     }
-                    accessed_value->TypeInfo = old_value->TypeInfo;
                     accessed_value->Meta = old_value->Meta;
                     accessed_value->Meta.is_const = false;
                     accessed_value->Hooks.onChange = onChangeFunctions;

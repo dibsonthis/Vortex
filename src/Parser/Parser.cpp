@@ -565,7 +565,7 @@ void Parser::parse_var(std::string end) {
                     current_node->_Node.VariableDeclaration().value = next->_Node.Op().right;
                 }
                 erase_next();
-            } else if (next->_Node.Op().value == ":") {
+            } else if (next->type == NodeType::OP && next->_Node.Op().value == ":") {
                 current_node->type = NodeType::VARIABLE_DECLARATION;
                 current_node->_Node = VariableDeclatationNode();
                 current_node->_Node.VariableDeclaration().name = next->_Node.Op().left->_Node.ID().value;
