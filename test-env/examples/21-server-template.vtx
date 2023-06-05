@@ -2,17 +2,7 @@ import requests
 import [ContentType] : requests
 import json
 import io
-
-const loadTemplate = (filePath: String) => {
-	var template = io.readf(filePath)
-	template.replaceAll("\n", "\n\n")
-	template = "f\"" + template.replaceAll("\"", "\\"") + "\""
-}
-
-const renderTemplate = (template: String, data: Object) => {
-	var rendered = eval(template)
-	//rendered.replaceAll("\\"", "\"")
-}
+import [] : string
 
 const host = "localhost"
 const port = 1234
@@ -21,21 +11,61 @@ println(f"Server running on ${host}:${port}")
 
 const server = requests.server()
 
-const template = loadTemplate("data/template3.html")
+const loadTemplate = (filePath: String) => {
+	var template = io.readf(filePath)
+	template = "f\"" + template.replaceAll("\"", "\\\"") + "\""
 
-server.get("/{name}", () => {
-	const data = {
-		name: name,
-		p1: {
-			size: "4rem",
-			color: "blue"
-		},
-		p2: {
-			size: "1.5rem",
-			color: "red"
+	var t_chars = template.chars()
+	var to_remove = []
+	var num = 0
+	var in_code_block = false
+
+	for (t_chars, i, c) {
+		if ((c == "$") && (template[i+1] == "{")) {
+			in_code_block = true
+		} else if (in_code_block && (c == "{")) {
+			num += 1
+			in_code_block = (num != 0)
+		} else if (in_code_block && (c == "}")) {
+			num -= 1
+			in_code_block = (num != 0)
+		}
+
+		if (in_code_block && (c == "\\")) {
+			to_remove.prepend(i)
 		}
 	}
-	renderTemplate(template, data)
+
+	for (to_remove, i, v) {
+		t_chars.remove_at(v)
+	}
+
+	template = t_chars.reduce((a, b) => a + b)
+}
+
+const renderTemplate = (template: String) => {
+	var rendered = eval(template)
+}
+
+var template = loadTemplate("data/template4.html")
+
+const mapAndReduce = (data, func) => {
+	data.names.map((elem) => func(elem)).reduce((a, b) => a + b)
+}
+
+server.get("/register", () => {
+	const data = {
+		app_name: "Company Co."
+	}
+	renderTemplate(template)
 }, ContentType.html)
+
+server.get("/account", (req) => {
+	req.url_params
+}, ContentType.json)
+
+server.post("/account", (req) => {
+	req
+}, ContentType.json)
 
 server.start(host, port)

@@ -1,8 +1,6 @@
-import string
+import [] : string
 
-extend List {
-    last: () => self[self.length-1]
-}
+const last = (x: List) => x[x.length-1]
 
 const getExt = (str: String) => str.split(".").last() 
 

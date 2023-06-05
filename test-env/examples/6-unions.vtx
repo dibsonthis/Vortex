@@ -14,10 +14,7 @@ const Vec2 = (T) => {
 
 const Vec2n = Vec2(Number)
 
-extend Vec2n {
-    add: (other: Vec2n): Vec2n => Vec2n {x: self.x + other.x, y: self.y + other.y},
-    print: () => println(self)
-}
+const add = (x: Vec2n, other: Vec2n): Vec2n => Vec2n {x: x.x + other.x, y: x.y + other.y}
 
 var z1: Vec2n = Vec2n {x: 10, y: 10}
 var z2: Vec2n = Vec2n {x: 20, y: 20}

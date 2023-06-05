@@ -1,40 +1,40 @@
-directus6: Open-Source Data Platform 🐰  — Directus wraps any SQL database with a real-time GraphQL+REST API and an intuitive app for non-technical users. (url: https://github.com/RNGR/directus6, language: TypeScript)
+eventstore: The stream database optimised for event sourcing (url: http://github.com/eventstore/eventstore, language: C#)
 
-juice-shop: OWASP Juice Shop: Probably the most modern and sophisticated insecure web application (url: https://github.com/bkimminich/juice-shop, language: TypeScript)
+pyatv: A client library for Apple TV and AirPlay devices (url: https://github.com/postlund/pyatv, language: Python)
 
-hypothesis-python: Hypothesis is a powerful, flexible, and easy to use library for property-based testing. (url: https://github.com/HypothesisWorks/hypothesis-python, language: Python)
+Signal-iOS: A private messenger for iOS. (url: https://github.com/WhisperSystems/Signal-iOS, language: Swift)
 
-stylelint: A mighty, modern linter that helps you avoid errors and enforce conventions in your styles. (url: https://github.com/stylelint/stylelint, language: JavaScript)
+lighthouse: Automated auditing, performance metrics, and best practices for the web. (url: https://github.com/GoogleChrome/lighthouse, language: JavaScript)
 
-cockroach: CockroachDB - the open source, cloud-native distributed SQL database. (url: https://github.com/cockroachdb/cockroach, language: Go)
+Umbraco-CMS: The simple, flexible and friendly ASP.NET CMS used by more than 730.000 websites (url: https://github.com/umbraco/Umbraco-CMS, language: C#)
 
-vanilla-framework: From community websites to web applications, this CSS framework will help you achieve a consistent look and feel. (url: https://github.com/vanilla-framework/vanilla-framework, language: HTML)
+bulma: Modern CSS framework based on Flexbox (url: https://github.com/jgthms/bulma, language: CSS)
 
-nginxconfig.io: ⚙️ NGINX config generator on steroids 💉 (url: https://github.com/valentinxxx/nginxconfig.io, language: JavaScript)
+cordova-plugin-file: Apache Cordova Plugin file (url: https://github.com/apache/cordova-plugin-file, language: JavaScript)
 
 packer: Packer is a tool for creating identical machine images for multiple platforms from a single source configuration. (url: https://github.com/mitchellh/packer, language: Go)
 
-mjml: MJML: the only framework that makes responsive-email easy (url: https://github.com/mjmlio/mjml, language: JavaScript)
+SwiftLint: A tool to enforce Swift style and conventions. (url: https://github.com/realm/SwiftLint, language: Swift)
 
-eslint-plugin-react: React specific linting rules for ESLint (url: https://github.com/yannickcr/eslint-plugin-react, language: JavaScript)
+rustfmt: The rust code formatter. (url: https://github.com/rust-lang-nursery/rustfmt, language: Rust)
 
-Empirical-Core: Empirical Core is the mono repo for the Quill.org codebase. This repo contains both the Quill Learning Tools, such as Quill Connect, and the Quill Learning Management System, the platform that enables (url: https://github.com/empirical-org/Empirical-Core, language: TypeScript)
+webpack.js.org: Repository for webpack documentation and more! (url: https://github.com/webpack/webpack.js.org, language: JavaScript)
 
-bitcoin: Bitcoin Core integration/staging tree (url: https://github.com/bitcoin/bitcoin, language: C++)
+purescript: A strongly-typed language that compiles to JavaScript (url: http://github.com/purescript/purescript, language: Haskell)
 
 oh-my-fish: The Fish Shell Framework (url: https://github.com/oh-my-fish/oh-my-fish, language: Shell)
 
-dependabot-core: 🤖 The core logic behind Dependabot's update PR creation, and the public issue tracker for all things Dependabot (url: https://github.com/dependabot/dependabot-core, language: Ruby)
+oh-my-zsh: 🙃   A delightful community-driven (with 1900+ contributors) framework for managing your zsh configuration. Includes 300+ optional plugins (rails, git, macOS, hub, docker, homebrew, node, php, python,  (url: https://github.com/robbyrussell/oh-my-zsh, language: Shell)
 
 gogs: Gogs is a painless self-hosted Git service (url: https://github.com/gogits/gogs, language: Go)
 
-aws-sdk-php: Official repository of the AWS SDK for PHP (@awsforphp) (url: https://github.com/aws/aws-sdk-php, language: PHP)
+jscpd: Copy/paste detector for programming source code. (url: https://github.com/kucherenko/jscpd, language: TypeScript)
 
-Uno: Build Mobile, Desktop and WebAssembly apps with C# and XAML. Today. Open source and professionally supported. (url: https://github.com/nventive/Uno, language: C#)
+cypress-documentation: Cypress Documentation including Guides, API, Plugins, Examples, & FAQ. (url: https://github.com/cypress-io/cypress-documentation, language: JavaScript)
 
-clap-rs: A full featured, fast Command Line Argument Parser for Rust (url: https://github.com/kbknapp/clap-rs, language: Rust)
+hypothesis: Hypothesis is a powerful, flexible, and easy to use library for property-based testing. (url: https://github.com/HypothesisWorks/hypothesis, language: Python)
 
-magento-lts: Official OpenMage LTS codebase | Migrate easily from Magento Community Edition in minutes! Download the source code for free or contribute to OpenMage LTS | Security vulnerability patches, bug fixes,  (url: https://github.com/OpenMage/magento-lts, language: PHP)
+openebs: OpenEBS is containerized block storage written in Go for cloud native and other environments w/ per container (or pod) QoS SLAs, tiering and replica policies across AZs and environments. (url: https://github.com/openebs/openebs, language: Go)
 
-SwiftLint: A tool to enforce Swift style and conventions. (url: https://github.com/realm/SwiftLint, language: Swift)
+laravel-datatables: jQuery DataTables API for Laravel 4|5|6|7|8 (url: https://github.com/yajra/laravel-datatables, language: PHP)
 

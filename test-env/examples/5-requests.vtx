@@ -1,10 +1,8 @@
 import requests
-import string
+import [] : string
 import io
 
-extend List {
-    last: () => self[self.length-1]
-}
+const last = (x: List) => x[x.length-1]
 
 // Get
 

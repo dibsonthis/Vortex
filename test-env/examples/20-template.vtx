@@ -2,13 +2,12 @@ import io
 
 const loadTemplate = (filePath: String) => {
 	var template = io.readf(filePath)
-	template.replaceAll("\n", "\n\n")
 	template = "f\"" + template.replaceAll("\"", "\\\"") + "\""
+	template.replaceAll("\n", "\\n")
 }
 
 const renderTemplate = (template: String, data: Object) => {
 	var rendered = eval(template)
-	rendered.replaceAll("\\"", "\"")
 }
 
 const template = loadTemplate("data/template.html")
@@ -21,4 +20,5 @@ const data = {
 
 const renderedTemplate = renderTemplate(template, data)
 
+print(template)
 print(renderedTemplate)

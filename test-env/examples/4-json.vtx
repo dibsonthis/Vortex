@@ -1,6 +1,6 @@
 import io
 import json
-import string
+import [] : string
 
 // JSON
 

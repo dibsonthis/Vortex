@@ -65,33 +65,30 @@ const list_to_iter = (list: List) => {
 	}
 }
 
-import string
+import [] : string
 
-extend List {
-	to_iter: () => list_to_iter(self)
-}
+const to_iter = (x: List) => list_to_iter(x)
 
 var str_iter = "hello world, my name is dibs".split().to_iter()
 
-extend Iterator {
-	map: (func: (x) => Any) => {
-		var list = []
-		var x: Any
-		while ((x = self.next()) && (!self.state.stop)) {
-			list.append(func(x))
-		}
-		list
-	},
-	map: (func: (x: Any, i: Number) => Any) => {
-		var list = []
-		var x: Any
-		while ((x = self.next()) && (!self.state.stop)) {
-			var index = self.state.index
-			var val = x
-			list.append(func(val, index))
-		}
-		list
+const map = (iter: Iterator, func: (x) => Any) => {
+	var list = []
+	var x: Any
+	while ((x = iter.next()) && (!iter.state.stop)) {
+		list.append(func(x))
 	}
+	list
+}
+
+const map = (iter: Iterator, func: (x: Any, i: Number) => Any) => {
+	var list = []
+	var x: Any
+	while ((x = iter.next()) && (!iter.state.stop)) {
+		var index = iter.state.index
+		var val = x
+		list.append(func(val, index))
+	}
+	list
 }
 
 var new_list = str_iter.map((x, i) => x.chars() + [i])

@@ -30,11 +30,24 @@
   <article>
     <p class="paragraph-one">
       <a href="freecodecamp.org">${data.name}</a>
-      is one of the best platforms to learn how to code
+      is one of the best platforms to learn how to ${(() => {
+        if (data.age >= 18) {
+          ret "<b>poop</b>"
+        } else {
+          ret "code"
+        }
+      })()}
     </p>
     <p class="paragraph-two">
-      Learning to code is free on freeCodeCamp, that's why they call it
-      freeCodeCamp
+      <ul>
+        ${mapAndReduce(data, (name) => {
+            if (name == "Allan") {
+              ret f"<li><b>${name}</b></li>"
+            } else {
+              ret f"<li>${name}</li>"
+            }
+        })}
+      </ul>
     </p>
     <p class="paragraph-three">
       freeCodeCamp generates money through donations inorder to pay employees

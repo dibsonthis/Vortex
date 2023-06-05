@@ -1,4 +1,5 @@
 import threading
+import [] : threading
 import requests
 
 const data = threading.thread(() => requests.get("https://24pullrequests.com/projects.json"))

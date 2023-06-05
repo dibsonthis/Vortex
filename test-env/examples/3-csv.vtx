@@ -1,18 +1,18 @@
 import [readf] : io
-import string
+import [] : string
 
-extend String {
-	substring: (start: Number, end: Number): String => {
-		var substr = ""
-		const str = self
-		for (start..end, index, value) {
-			substr += str[value]
-		}
-		ret substr
-	},
-	startsWith: (str: String): Boolean => self.substring(0, str.length) == str,
-	endsWith: (str: String): Boolean => self.substring(self.length-str.length, self.length) == str
+const substring = (x: String, start: Number, end: Number): String => {
+	var substr = ""
+	const str = x
+	for (start..end, index, value) {
+		substr += str[value]
+	}
+	ret substr
 }
+
+const startsWith = (x: String, str: String): Boolean => x.substring(0, str.length) == str
+
+const endsWith = (x: String, str: String): Boolean => x.substring(x.length-str.length, x.length) == str
 
 var data: [[String]] = 
 	readf("data/people.csv")
