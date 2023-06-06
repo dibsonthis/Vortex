@@ -9,6 +9,4 @@ var parser = Parser {}
 parser.nodes = lexer.nodes
 parser.current_node = parser.nodes[0]
 parser.parse()
-//parser.nodes.map((e) => println(e))
-
-//parser.nodes.map((node) => node.println())
+parser.nodes.map((e) => println(e))

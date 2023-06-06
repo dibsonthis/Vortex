@@ -1,20 +1,74 @@
-type Blah {
-	name: String
+type Node;
+
+union MaybeNode {
+	Node,
+	None
 }
 
-type Bloop {
-	age: Number
+type Meta {
+	line: Number = 1,
+	col: Number = 1
 }
 
-union BlahOrBloop {
-	Blah,
-	Bloop
+type NumNode {
+	value: Number = 0,
+	meta: Meta
 }
 
-const x: BlahOrBloop = Blah {
-	name: "Allan"
+type StringNode {
+	value: String = "",
+	meta: Meta
 }
 
-const y: BlahOrBloop = Bloop {
-	age: 12
+type IDNode {
+	value: String = "",
+	meta: Meta
 }
+
+type OpNode {
+	value: String = "",
+	left: MaybeNode = None,
+	right: MaybeNode = None,
+	meta: Meta
+}
+
+type ContainerNode {
+	value: String = "",
+	meta: Meta
+}
+
+type ConstDeclNode {
+	name: String = "",
+	value: MaybeNode = None,
+	meta: Meta
+}
+
+type FuncCallNode {
+	name: String = "",
+	args: [Node] = [],
+	meta: Meta
+}
+
+type ParenNode {
+	elements: [Node] = [],
+	meta: Meta
+}
+
+type EOFNode {}
+
+union Node {
+	NumNode,
+	StringNode,
+	IDNode,
+	OpNode,
+	ContainerNode,
+	ConstDeclNode,
+	FuncCallNode,
+	ParenNode,
+	EOFNode
+}
+
+const x = NumNode {meta: Meta{}}
+println(ParenNode.keys)
+x == ParenNode
+println(ParenNode.keys)

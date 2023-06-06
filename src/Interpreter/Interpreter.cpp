@@ -1368,6 +1368,9 @@ bool Interpreter::match_values(node_ptr& nodeA, node_ptr& nodeB) {
         }
 
         for (auto& prop : nodeA->_Node.Object().properties) {
+            if (!nodeB->_Node.Object().properties.count(prop.first)) {
+                return false;
+            }
             if (!match_values(nodeA->_Node.Object().properties[prop.first], nodeB->_Node.Object().properties[prop.first])) {
                 return false;
             }
@@ -1592,6 +1595,10 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
         for (auto& prop : type->_Node.Object().properties) {
             std::string prop_name = prop.first;
 
+            if (!value->_Node.Object().properties.count(prop_name)) {
+                return false;
+            }
+
             node_ptr a_prop_value = prop.second;
             node_ptr b_prop_value = value->_Node.Object().properties[prop_name];
 
@@ -1603,6 +1610,10 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
         
         for (auto& prop : value->_Node.Object().properties) {
             std::string prop_name = prop.first;
+
+            if (!type->_Node.Object().properties.count(prop_name)) {
+                return false;
+            }
 
             node_ptr b_prop_value = prop.second;
             node_ptr a_prop_value = type->_Node.Object().properties[prop_name];
