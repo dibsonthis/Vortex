@@ -40,15 +40,15 @@ node_ptr Interpreter::eval_const_decl(node_ptr& node) {
     if (!is_ref) {
         value = std::make_shared<Node>(*value);
     }
-    if (type && (type->type == NodeType::LIST && type->_Node.List().is_union) || type && (type->type == NodeType::ANY)) {
-        value->TypeInfo.base_type = type;
-    } else {
-        value->TypeInfo.type = type;
-    }
     if (type && !match_types(type, value)) {
         node_ptr _type = get_type(type);
         node_ptr _value = get_type(value);
         return throw_error("Variable '" + node->_Node.ConstantDeclatation().name + "' expects a value of type '" + printable(_type) + "' but was instantiated with value of type '" + printable(_value) + "'");
+    }
+    if (type && (type->type == NodeType::LIST && type->_Node.List().is_union) || type && (type->type == NodeType::ANY)) {
+        value->TypeInfo.base_type = type;
+    } else {
+        value->TypeInfo.type = type;
     }
     if (value->TypeInfo.base_type && !match_types(value->TypeInfo.base_type, value)) {
         node_ptr _type = get_type(value->TypeInfo.base_type);
@@ -97,15 +97,15 @@ node_ptr Interpreter::eval_var_decl(node_ptr& node) {
         return throw_error(value->_Node.Error().message);
     }
     node_ptr type = eval_node(node->TypeInfo.type);
-    if (type && (type->type == NodeType::LIST && type->_Node.List().is_union) || type && (type->type == NodeType::ANY)) {
-        value->TypeInfo.base_type = type;
-    } else {
-        value->TypeInfo.type = type;
-    }
     if (type && !match_types(type, value)) {
         node_ptr _type = get_type(type);
         node_ptr _value = get_type(value);
         return throw_error("Variable '" + node->_Node.VariableDeclaration().name + "' expects a value of type '" + printable(_type) + "' but was instantiated with value of type '" + printable(_value) + "'");
+    }
+    if (type && (type->type == NodeType::LIST && type->_Node.List().is_union) || type && (type->type == NodeType::ANY)) {
+        value->TypeInfo.base_type = type;
+    } else {
+        value->TypeInfo.type = type;
     }
     if (value->TypeInfo.base_type && !match_types(value->TypeInfo.base_type, value)) {
         node_ptr _type = get_type(value->TypeInfo.base_type);
@@ -1064,10 +1064,12 @@ node_ptr Interpreter::eval_union(node_ptr& node) {
     if (union_body->_Node.Object().elements.size() == 1 && union_body->_Node.Object().elements[0]->type == NodeType::COMMA_LIST) {
         union_body = union_body->_Node.Object().elements[0];
         for (node_ptr elem : union_body->_Node.List().elements) {
-            union_list->_Node.List().elements.push_back(eval_node(elem));
+            node_ptr ev_elem = eval_node(elem);
+            union_list->_Node.List().elements.push_back(ev_elem);
         }
     } else {
-        union_list->_Node.List().elements.push_back(eval_node(union_body->_Node.Object().elements[0]));
+        node_ptr ev_elem = eval_node(union_body->_Node.Object().elements[0]);
+        union_list->_Node.List().elements.push_back(ev_elem);
     }
 
     union_list->Meta.is_const = true;
@@ -1380,6 +1382,10 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
         return false;
     }
 
+    if (_type == _value) {
+        return true;
+    }
+
     node_ptr type = std::make_shared<Node>(*_type);
 
     if (type->TypeInfo.base_type) {
@@ -1394,6 +1400,10 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
 
     if (type == nullptr || value == nullptr) {
         return false;
+    }
+
+    if (type == value) {
+        return true;
     }
 
     if (type->TypeInfo.is_decl) {
@@ -1548,6 +1558,14 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
     if (type->type == NodeType::OBJECT) {
         if (type->TypeInfo.type_name != value->TypeInfo.type_name) {
             return false;
+        }
+
+        if (type->TypeInfo.type_name != "" && value->TypeInfo.type_name != "" && type->TypeInfo.type_name == value->TypeInfo.type_name) {
+            // If they both have the same type name
+            // They must be the same type
+            // Because instantiation of types won't allow an object
+            // to have a type without adhering to its properties
+            return true;
         }
 
         // If 'Object'
@@ -3377,7 +3395,8 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
         // Type check
         if (!accessed_value->Meta.is_untyped_property) {
             if (!match_types(accessed_value, right)) {
-                node_ptr _type = get_type(accessed_value);
+                //node_ptr _type = get_type(accessed_value);
+                node_ptr _type = accessed_value;
                 return throw_error("Type error in property '" + prop->_Node.ID().value + "' - Cannot modify object property type '" + printable(_type) + "'");
             }
         }

@@ -20,6 +20,10 @@ type Parser {
 				break;
 			}
 			if (this.current_node.typeof() == OpNode && (this.current_node.value == "*" || this.current_node.value == "/")) {
+				if (self.current_node.left || self.current_node.right) {
+					self.advance()
+					continue
+				}
 				const left = self.nodes[self.index-1]
 				const right = self.nodes[self.index+1]
 				self.nodes[self.index].left = left
@@ -36,6 +40,30 @@ type Parser {
 				break;
 			}
 			if (this.current_node.typeof() == OpNode && (this.current_node.value == "+" || this.current_node.value == "-")) {
+				if (self.current_node.left || self.current_node.right) {
+					self.advance()
+					continue
+				}
+				const left = self.nodes[self.index-1]
+				const right = self.nodes[self.index+1]
+				self.nodes[self.index].left = left
+				self.nodes[self.index].right = right
+				self.nodes.remove_at(self.index+1)
+				self.nodes.remove_at(self.index-1)
+				self.index -= 1
+			}
+			self.advance()
+		}
+		self.reset(start)
+		while (this.current_node.endFunc()) {
+			if (!this.current_node) {
+				break;
+			}
+			if (this.current_node.typeof() == OpNode && this.current_node.value == ",") {
+				if (self.current_node.left || self.current_node.right) {
+					self.advance()
+					continue
+				}
 				const left = self.nodes[self.index-1]
 				const right = self.nodes[self.index+1]
 				self.nodes[self.index].left = left
@@ -87,35 +115,40 @@ type Parser {
 				break;
 			}
 			if (this.current_node.typeof() == ContainerNode && this.current_node.value == "(") {
-				var parenCall = ParenNode { meta: self.current_node.meta }
-				self.nodes[this.index] = parenCall
+				var parenNode = ParenNode { meta: self.current_node.meta }
+				self.nodes[this.index] = parenNode
 				self.advance()
 				const i = self.index
 				self.parse((n: MaybeNode) => {
 					n && n.value != ")"
 					}, i)
-				// while (self.current_node.value != ")") {
-				// 	// if (self.current_node.value == "(") {
-				// 	// 	self.advance()
-				// 	// 	const i = self.index
-				// 	// 	self.parse((n: Node) => {
-				// 	// 		n.value != ")"
-				// 	// 	}, i)
-				// 	// 	self.index = i
-				// 	// 	self.current_node = self.nodes[self.index]
-				// 	// }
-				// 	if (self.current_node.value != ",") {
-				// 		parenCall.elements.append(self.nodes[self.index])
-				// 	}
-				// 	this.nodes.remove_at(this.index)
-				// 	this.index -= 1
-				// 	self.advance()
-				// }
-				// this.nodes.remove_at(this.index)
+				while (self.current_node && self.current_node.value != ")") {
+					if (self.current_node.typeof() == ParenNode) {
+						for (self.nodes[self.index].elements, _i, e) {
+							parenNode.elements.append(e)
+						}
+					} else {
+						parenNode.elements.append(self.nodes[self.index])
+					}
+					self.nodes.remove_at(self.index)
+					self.current_node = self.nodes[self.index]
+					if (self.current_node && self.current_node.value == ")") {
+						break
+					}
+					self.advance()
+				}
+	
+				self.nodes.remove_at(self.index)
+				self.current_node = self.nodes[self.index]
+
+				if (self.current_node && self.current_node.typeof() == EOFNode) {
+					break
+				}
 			}
 			self.advance()
 		}
 		self.reset(start)
+		println(self.nodes, self.current_node)
 		while (this.current_node.endFunc()) {
 			if (!this.current_node) {
 				break;
@@ -131,8 +164,6 @@ type Parser {
 			self.advance()
 		}
 		self.reset(start)
-
-		self.nodes.map((e) => println(e))
 	},
 	parse = () => {
 		this.parse((n: MaybeNode) => {

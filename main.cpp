@@ -19,12 +19,12 @@ int main(int argc, char** argv)
 {
     if (type == Type::DEV)
     {
-        std::filesystem::current_path("../../../playground/project_4");
-        Lexer lexer("main.vtx");
+        // std::filesystem::current_path("../../../playground/project_4");
+        // Lexer lexer("main.vtx");
 
-        // std::filesystem::current_path("../../../playground");
+        std::filesystem::current_path("../../../playground");
+        Lexer lexer("source.vtx");
 
-        // Lexer lexer("source.vtx");
         lexer.tokenize();
 
         Parser parser(lexer.nodes, lexer.file_name);

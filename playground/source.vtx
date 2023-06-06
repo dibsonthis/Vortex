@@ -1,5 +1,20 @@
-type Blah {}
+type Blah {
+	name: String
+}
 
-var x = Blah {}
+type Bloop {
+	age: Number
+}
 
-x = Blah {}
+union BlahOrBloop {
+	Blah,
+	Bloop
+}
+
+const x: BlahOrBloop = Blah {
+	name: "Allan"
+}
+
+const y: BlahOrBloop = Bloop {
+	age: 12
+}
