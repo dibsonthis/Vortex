@@ -1,74 +1,11 @@
-type Node;
-
-union MaybeNode {
-	Node,
-	None
+const func = (x: Number | String) => {
+	println("yes")
 }
 
-type Meta {
-	line: Number = 1,
-	col: Number = 1
+const func = (x) => {
+	println("no")
 }
 
-type NumNode {
-	value: Number = 0,
-	meta: Meta
-}
-
-type StringNode {
-	value: String = "",
-	meta: Meta
-}
-
-type IDNode {
-	value: String = "",
-	meta: Meta
-}
-
-type OpNode {
-	value: String = "",
-	left: MaybeNode = None,
-	right: MaybeNode = None,
-	meta: Meta
-}
-
-type ContainerNode {
-	value: String = "",
-	meta: Meta
-}
-
-type ConstDeclNode {
-	name: String = "",
-	value: MaybeNode = None,
-	meta: Meta
-}
-
-type FuncCallNode {
-	name: String = "",
-	args: [Node] = [],
-	meta: Meta
-}
-
-type ParenNode {
-	elements: [Node] = [],
-	meta: Meta
-}
-
-type EOFNode {}
-
-union Node {
-	NumNode,
-	StringNode,
-	IDNode,
-	OpNode,
-	ContainerNode,
-	ConstDeclNode,
-	FuncCallNode,
-	ParenNode,
-	EOFNode
-}
-
-const x = NumNode {meta: Meta{}}
-println(ParenNode.keys)
-x == ParenNode
-println(ParenNode.keys)
+func("hi")
+func(12)
+func(true)

@@ -143,6 +143,7 @@ node_ptr Interpreter::eval_var_decl(node_ptr& node) {
 node_ptr Interpreter::eval_list(node_ptr& node) {
     node_ptr list = new_node(NodeType::LIST);
     list->TypeInfo = node->TypeInfo;
+    list->_Node.List().is_union = node->_Node.List().is_union;
     node_ptr list_elem_type = new_node(NodeType::ANY);
     list->TypeInfo.type = new_node(NodeType::LIST);
     list->TypeInfo.type->_Node.List().elements.push_back(list_elem_type);

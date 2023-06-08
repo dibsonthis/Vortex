@@ -912,6 +912,18 @@ void Parser::flatten_commas(std::string end) {
     }
 }
 
+void Parser::flatten_pipes(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
+            break;
+        }
+        if (current_node->type == NodeType::OP && current_node->_Node.Op().value == "|") {
+            current_node = flatten_pipe_node(current_node);
+        }
+        advance();
+    }
+}
+
 void Parser::parse(int start, std::string end) {
     parse_paren(end);
     reset(start);
@@ -979,6 +991,8 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_bin_op({"::"}, end);
     reset(start);
+	flatten_pipes(end);
+    reset(start);
     parse_colon(end);
     reset(start);
     parse_equals(end);
@@ -986,6 +1000,8 @@ void Parser::parse(int start, std::string end) {
     parse_comma(end);
     reset(start);
     flatten_commas(end);
+    reset(start);
+	flatten_pipes(end);
     reset(start);
     parse_var(end);
     reset(start);
@@ -1046,6 +1062,50 @@ node_ptr Parser::flatten_comma_node(node_ptr node) {
     }
 
     *node = *comma_list;
+    
+    return node;
+}
+
+node_ptr Parser::flatten_pipe_node(node_ptr node) {
+
+    node_ptr pipe_list = new_node(NodeType::LIST);
+    pipe_list->type = NodeType::LIST;
+
+    if (node->type == NodeType::OP && node->_Node.Op().left->type == NodeType::OP && node->_Node.Op().left->_Node.Op().value == "|") {
+        node->_Node.Op().left = flatten_pipe_node(node->_Node.Op().left);
+    } else {
+        pipe_list->_Node.List().elements.push_back(node->_Node.Op().left);
+    }
+
+    if (node->type == NodeType::OP && node->_Node.Op().left->type == NodeType::LIST) {
+        for (auto& child_node : node->_Node.Op().left->_Node.List().elements) {
+            pipe_list->_Node.List().elements.push_back(child_node);
+        }
+    }
+
+
+    if (node->type == NodeType::OP && node->_Node.Op().right->type == NodeType::OP && node->_Node.Op().right->_Node.Op().value == "|") {
+        node->_Node.Op().right = flatten_pipe_node(node->_Node.Op().right);
+    } else {
+        pipe_list->_Node.List().elements.push_back(node->_Node.Op().right);
+    }
+
+    if (node->type == NodeType::OP && node->_Node.Op().right->type == NodeType::LIST) {
+        for (auto& child_node : node->_Node.Op().right->_Node.List().elements) {
+            pipe_list->_Node.List().elements.push_back(child_node);
+        }
+    }
+
+    //*node = *pipe_list;
+	node_ptr comma_list = new_node(NodeType::LIST);
+	comma_list->type = NodeType::COMMA_LIST;
+	comma_list->_Node.List().elements = pipe_list->_Node.List().elements;
+	node_ptr list = new_node(NodeType::LIST);
+	list->_Node.List().elements.push_back(comma_list);
+	list->_Node.List().is_union = true;
+	list->TypeInfo.is_type = true;
+
+	*node = *list;
     
     return node;
 }
