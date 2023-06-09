@@ -1,1 +1,14 @@
-const x: union _ {1, 2} = 12
+type Vec2 {
+	x: Number = 0,
+	y: Number = 0
+}
+
+const someFunc = (x: String) => {
+	if (x == "1") {
+		ret true
+	} else if (x == "2") {
+		ret false
+	}
+}
+
+var p: Boolean = someFunc("10")

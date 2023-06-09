@@ -47,7 +47,8 @@ enum class NodeType {
 	UNION,
 	TRY_CATCH,
 	ERROR,
-	REF
+	REF,
+	NOVALUE
 };
 
 struct IdNode {

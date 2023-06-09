@@ -251,6 +251,11 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
 }
 
 node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
+    // We need this here in case eval_func_call is called directly
+    // instead of through eval_node
+    if (tc) {
+        return tc_func_call(node, func);
+    }
     node_ptr function = new_node(NodeType::FUNC);
     if (node->_Node.FunctionCall().inline_func) {
         node_ptr inline_func_call = new_node(NodeType::FUNC_CALL);
@@ -319,7 +324,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
 
             if (node->_Node.FunctionCall().args.size() == 2) {
                 if (node->_Node.FunctionCall().args[1]->type != NodeType::NUMBER) {
-                    throw_error("Function " + node->_Node.FunctionCall().name + " expects second argument to be a number");
+                    return throw_error("Function " + node->_Node.FunctionCall().name + " expects second argument to be a number");
                 }
             }
 
@@ -345,7 +350,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
 
                     return new_number_node(0);
                 };
-                default: return new_string_node("None");
+                default: return new_number_node(0);
             }
         }
         if (node->_Node.FunctionCall().name == "type") {
@@ -1256,74 +1261,13 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
                         object->_Node.Object().defaults[name]->TypeInfo.base_type = type_val;
                     }
                 }
-                //object->_Node.Object().defaults[name] = def_val;
             }
         }
     }
 
     end:
-
-    // object->TypeInfo.is_type = true;
-    // object->TypeInfo.type_name = node->_Node.Type().name;
-    // symbol = get_symbol(node->_Node.Type().name, current_symbol_table);
-    // symbol.value = object;
-    // add_symbol(symbol, current_symbol_table);
     return object;
 }
-
-// node_ptr Interpreter::eval_type_ext(node_ptr& node) {
-//     node_ptr type = eval_node(node->_Node.TypeExt().type);
-//     node_ptr body = eval_object(node->_Node.TypeExt().body);
-
-//     // Check that all property values resolve to functions
-//     for (auto& prop : body->_Node.Object().properties) {
-//         if (prop.second->type != NodeType::FUNC) {
-//             return throw_error("Type extension properties must resolve to functions");
-//         }
-//     }
-
-//     if (type->type == NodeType::STRING) {
-//         global_symbol_table->StringExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
-//         return new_node(NodeType::NONE);
-//     }
-//     if (type->type == NodeType::NUMBER) {
-//         global_symbol_table->NumberExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
-//         return new_node(NodeType::NONE);
-//     }
-//     if (type->type == NodeType::BOOLEAN) {
-//         global_symbol_table->BoolExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
-//         return new_node(NodeType::NONE);
-//     }
-//     if (type->type == NodeType::LIST) {
-//         global_symbol_table->ListExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
-//         return new_node(NodeType::NONE);
-//     }
-//     if (type->type == NodeType::OBJECT) {
-//         if (type->TypeInfo.is_type && type->TypeInfo.type_name != "") {
-//             if (global_symbol_table->CustomTypeExtensions.count(type->TypeInfo.type_name)) {
-//                 global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name].insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());        
-//             } else {
-//                 global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name] = std::unordered_map<std::string, node_ptr>();
-//                 global_symbol_table->CustomTypeExtensions[type->TypeInfo.type_name].insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
-//             }
-//             return new_node(NodeType::NONE);
-//         }
-
-//         global_symbol_table->ObjectExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
-//         return new_node(NodeType::NONE);
-//     }
-//     if (type->type == NodeType::FUNC) {
-//         global_symbol_table->FunctionExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
-//         return new_node(NodeType::NONE);
-//     }
-//     if (type->type == NodeType::NONE) {
-//         global_symbol_table->NoneExtensions.insert(body->_Node.Object().properties.begin(), body->_Node.Object().properties.end());
-//         return new_node(NodeType::NONE);
-//     }
-
-//     return throw_error("Malformed Type extension");
-//     return new_node(NodeType::NONE);
-// }
 
 bool Interpreter::match_values(node_ptr& nodeA, node_ptr& nodeB) {
     if (!nodeA || !nodeB) {
@@ -1450,6 +1394,14 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
 
     if (type->type == NodeType::LIST && type->_Node.List().is_union) {
         if (type->TypeInfo.is_general_type) {
+            return true;
+        }
+        if (value->type == NodeType::LIST && value->_Node.List().is_union) {
+            for (node_ptr& elem : value->_Node.List().elements) {
+                if (!match_types(type, elem)) {
+                    return false;
+                }
+            }
             return true;
         }
         for (node_ptr& type : type->_Node.List().elements) {
@@ -2002,24 +1954,6 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
         for (auto& hook : import_interpreter.current_symbol_table->globalHooks_onCall) {
             current_symbol_table->globalHooks_onCall.push_back(hook);
         }
-
-        // Any Type extensions must be imported to global scope
-
-        // global_symbol_table->StringExtensions.insert(import_interpreter.global_symbol_table->StringExtensions.begin(), import_interpreter.global_symbol_table->StringExtensions.end());
-
-        // global_symbol_table->NumberExtensions.insert(import_interpreter.global_symbol_table->NumberExtensions.begin(), import_interpreter.global_symbol_table->NumberExtensions.end());
-
-        // global_symbol_table->BoolExtensions.insert(import_interpreter.global_symbol_table->BoolExtensions.begin(), import_interpreter.global_symbol_table->BoolExtensions.end());
-
-        // global_symbol_table->ListExtensions.insert(import_interpreter.global_symbol_table->ListExtensions.begin(), import_interpreter.global_symbol_table->ListExtensions.end());
-
-        // global_symbol_table->ObjectExtensions.insert(import_interpreter.global_symbol_table->ObjectExtensions.begin(), import_interpreter.global_symbol_table->ObjectExtensions.end());
-
-        // global_symbol_table->FunctionExtensions.insert(import_interpreter.global_symbol_table->FunctionExtensions.begin(), import_interpreter.global_symbol_table->FunctionExtensions.end());
-
-        // global_symbol_table->NoneExtensions.insert(import_interpreter.global_symbol_table->NoneExtensions.begin(), import_interpreter.global_symbol_table->NoneExtensions.end());
-
-        // global_symbol_table->CustomTypeExtensions.insert(import_interpreter.global_symbol_table->CustomTypeExtensions.begin(), import_interpreter.global_symbol_table->CustomTypeExtensions.end());
 
         add_symbol(new_symbol(module_name, import_obj), current_symbol_table);
         return new_node(NodeType::NONE);
@@ -2621,29 +2555,6 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 return eval_func_call(right);
             }
 
-
-            // if (left->TypeInfo.type_name != "") {
-            //     if (global_symbol_table->CustomTypeExtensions.count(left->TypeInfo.type_name)) {
-            //         if (global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name].count(func_name)) {
-            //             node_ptr ext = std::make_shared<Node>(*global_symbol_table->CustomTypeExtensions[left->TypeInfo.type_name][func_name]);
-            //             ext->_Node.Function().closure["self"] = left;
-            //             for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-            //                 dispatch_fx->_Node.Function().closure["self"] = left;
-            //             }
-            //             return eval_func_call(right, ext);
-            //         }
-            //     }
-            // }
-
-            // if (global_symbol_table->ObjectExtensions.count(func_name)) {
-            //     node_ptr ext = std::make_shared<Node>(*global_symbol_table->ObjectExtensions[func_name]);
-            //     ext->_Node.Function().closure["self"] = left;
-            //     for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-            //         dispatch_fx->_Node.Function().closure["self"] = left;
-            //     }
-            //     return eval_func_call(right, ext);
-            // }
-
             // We inject object as the first arg in the function call
             // And try to run it
 
@@ -2687,15 +2598,6 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
         if (right->type == NodeType::FUNC_CALL) {
             std::string func_name = right->_Node.FunctionCall().name;
-
-            // if (global_symbol_table->StringExtensions.count(func_name)) {
-            //     node_ptr ext = std::make_shared<Node>(*global_symbol_table->StringExtensions[func_name]);
-            //     ext->_Node.Function().closure["self"] = left;
-            //     for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-            //         dispatch_fx->_Node.Function().closure["self"] = left;
-            //     }
-            //     return eval_func_call(right, ext);
-            // }
 
             if (right->_Node.FunctionCall().name == "replaceAll") {
 
@@ -3060,15 +2962,6 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
             std::string func_name = right->_Node.FunctionCall().name;
 
-            // if (global_symbol_table->ListExtensions.count(func_name)) {
-            //     node_ptr ext = std::make_shared<Node>(*global_symbol_table->ListExtensions[func_name]);
-            //     ext->_Node.Function().closure["self"] = left;
-            //     for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-            //         dispatch_fx->_Node.Function().closure["self"] = left;
-            //     }
-            //     return eval_func_call(right, ext);
-            // }
-
             node_ptr func_call = std::make_shared<Node>(*right);
             left->Meta.evaluated = true;
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
@@ -3205,15 +3098,6 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
         if (right->type == NodeType::FUNC_CALL) {
             std::string func_name = right->_Node.FunctionCall().name;
 
-            // if (global_symbol_table->NumberExtensions.count(func_name)) {
-            //     node_ptr ext = std::make_shared<Node>(*global_symbol_table->NumberExtensions[func_name]);
-            //     ext->_Node.Function().closure["self"] = left;
-            //     for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-            //         dispatch_fx->_Node.Function().closure["self"] = left;
-            //     }
-            //     return eval_func_call(right, ext);
-            // }
-
             node_ptr func_call = std::make_shared<Node>(*right);
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
             return eval_func_call(func_call);
@@ -3225,15 +3109,6 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
     if (left->type == NodeType::BOOLEAN) {
         if (right->type == NodeType::FUNC_CALL) {
             std::string func_name = right->_Node.FunctionCall().name;
-
-            // if (global_symbol_table->BoolExtensions.count(func_name)) {
-            //     node_ptr ext = std::make_shared<Node>(*global_symbol_table->BoolExtensions[func_name]);
-            //     ext->_Node.Function().closure["self"] = left;
-            //     for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-            //         dispatch_fx->_Node.Function().closure["self"] = left;
-            //     }
-            //     return eval_func_call(right, ext);
-            // }
 
             node_ptr func_call = std::make_shared<Node>(*right);
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
@@ -3255,15 +3130,6 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
         if (right->type == NodeType::FUNC_CALL) {
             std::string func_name = right->_Node.FunctionCall().name;
 
-            // if (global_symbol_table->FunctionExtensions.count(func_name)) {
-            //     node_ptr ext = std::make_shared<Node>(*global_symbol_table->FunctionExtensions[func_name]);
-            //     ext->_Node.Function().closure["self"] = left;
-            //     for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-            //         dispatch_fx->_Node.Function().closure["self"] = left;
-            //     }
-            //     return eval_func_call(right, ext);
-            // }
-
             node_ptr func_call = std::make_shared<Node>(*right);
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
             return eval_func_call(func_call);
@@ -3275,15 +3141,6 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
     if (left->type == NodeType::NONE) {
         if (right->type == NodeType::FUNC_CALL) {
             std::string func_name = right->_Node.FunctionCall().name;
-
-            // if (global_symbol_table->NoneExtensions.count(func_name)) {
-            //     node_ptr ext = std::make_shared<Node>(*global_symbol_table->NoneExtensions[func_name]);
-            //     ext->_Node.Function().closure["self"] = left;
-            //     for (node_ptr& dispatch_fx : ext->_Node.Function().dispatch_functions) {
-            //         dispatch_fx->_Node.Function().closure["self"] = left;
-            //     }
-            //     return eval_func_call(right, ext);
-            // }
 
             node_ptr func_call = std::make_shared<Node>(*right);
             func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
@@ -3981,6 +3838,9 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
             return eval_node(node->_Node.Paren().elements[0]);
         }
         case NodeType::FUNC: {
+            if (tc) {
+                return tc_function(node);
+            }
             return eval_function(node);
         }
         case NodeType::CONSTANT_DECLARATION: {
@@ -3990,12 +3850,21 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
             return eval_var_decl(node);
         }
         case NodeType::FUNC_CALL: {
+            if (tc) {
+                return tc_func_call(node);
+            }
             return eval_func_call(node);
         }
         case NodeType::IF_STATEMENT: {
+            if (tc) {
+                return tc_if_statement(node);
+            }
             return eval_if_statement(node);
         }
         case NodeType::IF_BLOCK: {
+            if (tc) {
+                return tc_if_block(node);
+            }
             return eval_if_block(node);
         }
         case NodeType::WHILE_LOOP: {
@@ -4013,9 +3882,6 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
         case NodeType::TYPE: {
             return eval_type(node);
         }
-        // case NodeType::TYPE_EXT: {
-        //     return eval_type_ext(node);
-        // }
         case NodeType::ENUM: {
             return eval_enum(node);
         }
@@ -4273,4 +4139,568 @@ node_ptr Interpreter::throw_error(std::string message)
         error_and_exit(error_message);
         return new_node(NodeType::ERROR);
     }
+}
+
+// Typecheck
+
+node_ptr Interpreter::tc_function(node_ptr& node) {
+    node->_Node.Function().decl_filename = file_name;
+    if (node->_Node.Function().return_type) {
+        node->_Node.Function().return_type = eval_node(node->_Node.Function().return_type);
+        if (node->_Node.Function().return_type->type == NodeType::LIST) {
+            node->_Node.Function().return_type->TypeInfo.is_type = true;
+        } else if (node->_Node.Function().return_type->type == NodeType::OBJECT) {
+            node->_Node.Function().return_type->TypeInfo.is_type = true;
+        }
+    }
+
+    // Go through params to see if they are typed, and store their types
+    for (auto& param : node->_Node.Function().params) {
+        if (param->type == NodeType::OP && param->_Node.Op().value == ":") {
+            node_ptr param_type = eval_node(param->_Node.Op().right);
+            if (param_type->type == NodeType::LIST) {
+                param_type->TypeInfo.is_type = true;
+            } else if (param_type->type == NodeType::OBJECT) {
+                param_type->TypeInfo.is_type = true;
+            } else if (param_type->type == NodeType::FUNC) {
+                param_type->TypeInfo.is_type = true;
+            }
+            node->_Node.Function().param_types[param->_Node.Op().left->_Node.ID().value] 
+                = param_type;
+            param = param->_Node.Op().left;
+        }
+    }
+    // Check if the body is a type, if so, this function is a type
+    if (!node->_Node.Function().body) {
+        node->_Node.Function().body = new_node(NodeType::ANY);
+    }
+    if (node->_Node.Function().body->type == NodeType::ID) {
+        // We want to check if this ID is a type, in this case we mark
+        // this function as a type
+        auto value = get_symbol(node->_Node.Function().body->_Node.ID().value, current_symbol_table);
+        if (value.value && value.value->TypeInfo.is_type) {
+            node->TypeInfo.is_type = true;
+        }
+    }
+    if (node->_Node.Function().body->TypeInfo.is_type) {
+        node->TypeInfo.is_type = true;
+    }
+    // Inject current scope as closure
+    for (auto& symbol : current_symbol_table->symbols) {
+        node->_Node.Function().closure[symbol.first] = symbol.second.value;
+    }
+
+    // Typecheck the function body
+
+    node_ptr function = node;
+
+    auto local_scope = std::make_shared<SymbolTable>();
+    auto current_scope = std::make_shared<SymbolTable>();
+
+    current_symbol_table->child = local_scope;
+    local_scope->parent = current_symbol_table;
+
+    local_scope->child = current_scope;
+    current_scope->parent = local_scope;
+
+    // current_symbol_table 
+    //    -> local_scope 
+    //        -> current_scope
+
+    current_symbol_table = current_scope;
+    current_symbol_table->filename = function->_Node.Function().name + ": " + function->_Node.Function().decl_filename;
+    
+    // Inject closure into local scope
+
+    for (auto& elem : function->_Node.Function().closure) {
+        add_symbol(new_symbol(elem.first, elem.second), local_scope);
+    }
+
+    for (int i = 0; i < node->_Node.Function().params.size(); i++) {
+        std::string name = function->_Node.Function().params[i]->_Node.ID().value;
+        node_ptr value = function->_Node.Function().param_types[name] ? function->_Node.Function().param_types[name] : new_node(NodeType::ANY);
+        Symbol symbol = new_symbol(name, value);
+        add_symbol(symbol, current_symbol_table);
+        function->_Node.Function().args[i] = value;
+    }
+
+    node_ptr res = new_node(NodeType::NONE);
+
+    if (function->_Node.Function().body->type != NodeType::OBJECT) {
+        res = eval_node(function->_Node.Function().body);
+    } else {
+        std::vector<node_ptr> return_types;
+        for (int i = 0; i < function->_Node.Function().body->_Node.Object().elements.size(); i++) {
+            node_ptr expr = function->_Node.Function().body->_Node.Object().elements[i];
+            node_ptr evaluated_expr = eval_node(expr);
+            if (evaluated_expr->type == NodeType::ERROR) {
+                return throw_error(evaluated_expr->_Node.Error().message);
+            }
+            else if (evaluated_expr->type == NodeType::NOVALUE) {
+                continue;
+            }
+            else if (evaluated_expr->type == NodeType::LIST && evaluated_expr->_Node.List().is_union && evaluated_expr->_Node.List().elements.size() > 0) {
+                for (node_ptr& elem : evaluated_expr->_Node.List().elements) {
+                    if (elem->type == NodeType::RETURN) {
+                        if (elem->_Node.Return().value == nullptr) {
+                            return_types.push_back(new_node(NodeType::NONE));
+                        } else {
+                            return_types.push_back(eval_node(elem->_Node.Return().value));
+                        }
+                    }
+                }
+            }
+            else if (evaluated_expr->type == NodeType::RETURN) {
+                if (evaluated_expr->_Node.Return().value == nullptr) {
+                    return_types.push_back(new_node(NodeType::NONE));
+                } else {
+                    return_types.push_back(eval_node(evaluated_expr->_Node.Return().value));
+                }
+            } else if (i == function->_Node.Function().body->_Node.Object().elements.size()-1) {
+                if (evaluated_expr->type == NodeType::RETURN) {
+                    if (res->_Node.Return().value == nullptr) {
+                        return_types.push_back(new_node(NodeType::NONE));
+                    } else {
+                        return_types.push_back(evaluated_expr->_Node.Return().value);
+                    }
+                } else {
+                    return_types.push_back(evaluated_expr);
+                }
+            }
+        }
+
+        return_types.erase(std::unique(return_types.begin(), return_types.end(), compareNodeTypes), return_types.end());  
+        
+        if (return_types.size() == 1) {
+            res = return_types[0];
+        } else if (return_types.size() > 1) {                 
+            res = new_node(NodeType::LIST);
+            res->_Node.List().is_union = true;
+            res->_Node.List().elements = return_types;
+
+        }
+
+        // Check return type matches res
+
+        // Check against return type
+        if (node->_Node.Function().return_type) {
+            if (!match_types(node->_Node.Function().return_type, res)) {
+                return throw_error("Type Error in '" + node->_Node.Function().name + "': Return type does not match defined return type");
+            }
+        } else {
+            node->_Node.Function().return_type = res;
+        }
+    }
+
+    current_symbol_table = current_symbol_table->parent->parent;
+    current_symbol_table->child->child = nullptr;
+    current_symbol_table->child = nullptr;
+
+    return node;
+}
+
+node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
+    node_ptr function = new_node(NodeType::FUNC);
+    if (node->_Node.FunctionCall().inline_func) {
+        node_ptr inline_func_call = new_node(NodeType::FUNC_CALL);
+        inline_func_call->_Node.FunctionCall().args = node->_Node.FunctionCall().args;
+        return tc_func_call(inline_func_call, eval_node(node->_Node.FunctionCall().inline_func));
+    }
+    
+    if (!func) {
+        if (node->_Node.FunctionCall().name == "print") {
+            if (node->_Node.FunctionCall().args.size() == 1) {
+                node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
+                if (arg->type == NodeType::ERROR) {
+                    return arg;
+                }
+            } else {
+                for (node_ptr arg : node->_Node.FunctionCall().args) {
+                    node_ptr evaluated_arg = eval_node(arg);
+                    if (evaluated_arg->type == NodeType::ERROR) {
+                        return evaluated_arg;
+                    }
+                }
+            }
+            return new_node(NodeType::NONE);
+        }
+        if (node->_Node.FunctionCall().name == "println") {
+            if (node->_Node.FunctionCall().args.size() == 1) {
+                node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
+                if (arg->type == NodeType::ERROR) {
+                    return arg;
+                }
+            } else {
+                for (node_ptr arg : node->_Node.FunctionCall().args) {
+                    node_ptr evaluated_arg = eval_node(arg);
+                    if (evaluated_arg->type == NodeType::ERROR) {
+                        return evaluated_arg;
+                    }
+                }
+            }
+            return new_node(NodeType::NONE);
+        }
+        if (node->_Node.FunctionCall().name == "refcount") {
+            if (node->_Node.FunctionCall().args.size() != 1) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
+            }
+            node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
+            return new_number_node(0);
+        }
+        if (node->_Node.FunctionCall().name == "error") {
+            if (node->_Node.FunctionCall().args.size() != 1) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
+            }
+            node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
+            return new_node(NodeType::NONE);
+
+        }
+        if (node->_Node.FunctionCall().name == "string") {
+            if (node->_Node.FunctionCall().args.size() != 1) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
+            }
+
+            node_ptr val = eval_node(node->_Node.FunctionCall().args[0]);
+            if (val->type == NodeType::ERROR) {
+                return val;
+            }
+
+            return new_node(NodeType::STRING);
+        }
+        if (node->_Node.FunctionCall().name == "number") {
+            if (node->_Node.FunctionCall().args.size() != 1 && node->_Node.FunctionCall().args.size() != 2) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 or 2 arguments");
+            }
+            node_ptr var = eval_node(node->_Node.FunctionCall().args[0]);
+
+            if (node->_Node.FunctionCall().args.size() == 2) {
+                if (node->_Node.FunctionCall().args[1]->type != NodeType::NUMBER) {
+                    return throw_error("Function " + node->_Node.FunctionCall().name + " expects second argument to be a number");
+                }
+            }
+
+            return new_node(NodeType::NUMBER);
+        }
+        if (node->_Node.FunctionCall().name == "type") {
+            if (node->_Node.FunctionCall().args.size() != 1) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
+            }
+
+            node_ptr var = eval_node(node->_Node.FunctionCall().args[0]);
+            return new_node(NodeType::STRING);
+        }
+        if (node->_Node.FunctionCall().name == "typeof") {
+            if (node->_Node.FunctionCall().args.size() != 1) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
+            }
+
+            node_ptr var = eval_node(node->_Node.FunctionCall().args[0]);
+            return new_node(NodeType::ANY);
+        }
+        if (node->_Node.FunctionCall().name == "eval_all") {
+            if (node->_Node.FunctionCall().args.size() != 1) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
+            }
+
+            node_ptr var = eval_node(node->_Node.FunctionCall().args[0]);
+
+            if (var->type != NodeType::STRING) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 string argument");
+            }
+
+            return new_node(NodeType::NONE);
+        }
+        if (node->_Node.FunctionCall().name == "eval") {
+            if (node->_Node.FunctionCall().args.size() != 1) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
+            }
+
+            node_ptr var = eval_node(node->_Node.FunctionCall().args[0]);
+
+            if (var->type != NodeType::STRING) {
+                return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 string argument");
+            }
+
+            return new_node(NodeType::ANY);
+
+        }
+        if (node->_Node.FunctionCall().name == "load_lib") {
+            return new_node(NodeType::LIB);
+        }
+        if (node->_Node.FunctionCall().name == "exit") {
+            return new_node(NodeType::NONE);
+        }
+    }
+
+    if (func != nullptr) {
+        function->_Node.Function().name = func->_Node.Function().name;
+        function->_Node.Function().args = std::vector<node_ptr>(func->_Node.Function().args);
+        function->_Node.Function().params = std::vector<node_ptr>(func->_Node.Function().params);
+        function->_Node.Function().body = func->_Node.Function().body;
+        function->_Node.Function().closure = func->_Node.Function().closure;
+        function->_Node.Function().is_hook = func->_Node.Function().is_hook;
+        function->_Node.Function().decl_filename = func->_Node.Function().decl_filename;
+        function->Hooks.onCall = func->Hooks.onCall;
+        function->_Node.Function().param_types = func->_Node.Function().param_types;
+        function->_Node.Function().return_type = func->_Node.Function().return_type;
+        function->_Node.Function().dispatch_functions = func->_Node.Function().dispatch_functions;
+    } else if (node->_Node.FunctionCall().caller == nullptr) {
+        Symbol function_symbol = get_symbol(node->_Node.FunctionCall().name, current_symbol_table);
+        if (function_symbol.value == nullptr) {
+            return throw_error("Function '" + node->_Node.FunctionCall().name + "' is undefined");
+        }
+        if (function_symbol.value->type != NodeType::FUNC) {
+            return throw_error("Variable '" + node->_Node.FunctionCall().name + "' is not a function");
+        }
+        function->_Node.Function().name = function_symbol.name;
+        function->_Node.Function().args = std::vector<node_ptr>(function_symbol.value->_Node.Function().args);
+        function->_Node.Function().params = std::vector<node_ptr>(function_symbol.value->_Node.Function().params);
+        function->_Node.Function().body = function_symbol.value->_Node.Function().body;
+        function->_Node.Function().closure = function_symbol.value->_Node.Function().closure;
+        function->_Node.Function().is_hook = function_symbol.value->_Node.Function().is_hook;
+        function->_Node.Function().decl_filename = function_symbol.value->_Node.Function().decl_filename;
+        function->Hooks.onCall = function_symbol.value->Hooks.onCall;
+        function->_Node.Function().param_types = function_symbol.value->_Node.Function().param_types;
+        function->_Node.Function().return_type = function_symbol.value->_Node.Function().return_type;
+        function->_Node.Function().dispatch_functions = function_symbol.value->_Node.Function().dispatch_functions;
+    } else {
+        node_ptr method = node->_Node.FunctionCall().caller->_Node.Object().properties[node->_Node.FunctionCall().name];
+        if (method == nullptr) {
+            return throw_error("Method '" + node->_Node.FunctionCall().name + "' does not exist");
+        }
+        if (method->type != NodeType::FUNC) {
+            return throw_error("Variable '" + node->_Node.FunctionCall().name + "' is not a function");
+        }
+        function->_Node.Function().name = method->_Node.Function().name;
+        function->_Node.Function().args = std::vector<node_ptr>(method->_Node.Function().args);
+        function->_Node.Function().params = std::vector<node_ptr>(method->_Node.Function().params);
+        function->_Node.Function().body = method->_Node.Function().body;
+        function->_Node.Function().closure = method->_Node.Function().closure;
+        function->_Node.Function().is_hook = method->_Node.Function().is_hook;
+        function->_Node.Function().decl_filename = method->_Node.Function().decl_filename;
+        function->Hooks.onCall = method->Hooks.onCall;
+        function->_Node.Function().param_types = method->_Node.Function().param_types;
+        function->_Node.Function().return_type = method->_Node.Function().return_type;
+        function->_Node.Function().dispatch_functions = method->_Node.Function().dispatch_functions;
+    }
+
+    std::vector<node_ptr> args;
+    for (node_ptr arg : node->_Node.FunctionCall().args) {
+        args.push_back(eval_node(arg));
+    }
+
+    // Check if function args match any multiple dispatch functions
+
+    auto functions = std::vector<node_ptr>(function->_Node.Function().dispatch_functions);
+    functions.insert(functions.begin(), function);
+
+    bool func_match = false;
+
+    for (node_ptr& fx: functions) {
+
+        // If function param size does not match args size, skip
+        if (fx->_Node.Function().params.size() != args.size()) {
+            continue;
+        }
+
+        for (int i = 0; i < args.size(); i++) {
+            node_ptr param = fx->_Node.Function().params[i];
+            node_ptr param_type = fx->_Node.Function().param_types[param->_Node.ID().value];
+            if (param_type) {
+                if (!match_types(param_type, args[i])) {
+                    goto not_found;
+                }
+            } else {
+                continue;
+            }
+        }
+
+        // If we get here, we've found the function
+        function = std::make_shared<Node>(*fx);
+        func_match = true;
+        break;
+
+        not_found:
+            continue;
+    }
+
+    if (!func_match) {
+        std::string argsStr = "(";
+        for (int i = 0; i < args.size(); i++) {
+            //node_ptr arg = get_type(args[i]);
+            node_ptr arg = args[i];
+            argsStr += printable(arg);
+            if (i != args.size()-1) {
+                argsStr += ", ";
+            }
+        }
+        argsStr += ")";
+        return throw_error("Dispatch error in function '" + node->_Node.FunctionCall().name + "' - No function found matching args: " + argsStr + "\n\nAvailable functions:\n\n" + printable(functions[0]));
+    }
+
+    // auto local_scope = std::make_shared<SymbolTable>();
+    // auto current_scope = std::make_shared<SymbolTable>();
+
+    // current_symbol_table->child = local_scope;
+    // local_scope->parent = current_symbol_table;
+
+    // local_scope->child = current_scope;
+    // current_scope->parent = local_scope;
+
+    // // current_symbol_table 
+    // //    -> local_scope 
+    // //        -> current_scope
+
+    // if (node->_Node.FunctionCall().caller != nullptr) {
+    //     current_scope->symbols["this"] = new_symbol("this", node->_Node.FunctionCall().caller);
+    // }
+
+    // current_symbol_table = current_scope;
+    // current_symbol_table->filename = function->_Node.Function().name + ": " + function->_Node.Function().decl_filename;
+    
+    // // Inject closure into local scope
+
+    // for (auto& elem : function->_Node.Function().closure) {
+    //     add_symbol(new_symbol(elem.first, elem.second), local_scope);
+    // }
+
+    // int num_empty_args = std::count(function->_Node.Function().args.begin(), function->_Node.Function().args.end(), nullptr);
+
+    // if (args.size() > num_empty_args) {
+    //     return throw_error("Function '" + node->_Node.FunctionCall().name + "' expects " + std::to_string(num_empty_args) + " parameters but " + std::to_string(args.size()) + " were provided");
+    // }
+
+    // for (int i = 0; i < args.size(); i++) {
+    //     std::string name = function->_Node.Function().params[i]->_Node.ID().value;
+    //     node_ptr value = args[i];
+    //     Symbol symbol = new_symbol(name, value);
+    //     add_symbol(symbol, current_symbol_table);
+    //     function->_Node.Function().args[i] = value;
+    // }
+
+    node_ptr res = function;
+
+    // if (function->_Node.Function().body->type != NodeType::OBJECT) {
+    //     res = eval_node(function->_Node.Function().body);
+    // } else {
+    //     for (int i = 0; i < function->_Node.Function().body->_Node.Object().elements.size(); i++) {
+    //         node_ptr expr = function->_Node.Function().body->_Node.Object().elements[i];
+    //         node_ptr evaluated_expr = eval_node(expr);
+    //         if (evaluated_expr->type == NodeType::ERROR) {
+    //             return throw_error(evaluated_expr->_Node.Error().message);
+    //         }
+    //         if (evaluated_expr->type == NodeType::RETURN) {
+    //             if (evaluated_expr->_Node.Return().value == nullptr) {
+    //                 res = new_node(NodeType::NONE);
+    //             } else {
+    //                 res = eval_node(evaluated_expr->_Node.Return().value);
+    //             }
+    //             break;
+    //         } else if (i == function->_Node.Function().body->_Node.Object().elements.size()-1) {
+    //             res = evaluated_expr;
+    //             if (res->type == NodeType::RETURN) {
+    //                 if (res->_Node.Return().value == nullptr) {
+    //                     res = new_node(NodeType::NONE);
+    //                 } else {
+    //                     res = res->_Node.Return().value;
+    //                 }
+    //             }
+    //             break;
+    //         }
+    //     }
+    // }
+
+    auto allOnCallFunctionsLists = {std::cref(function->Hooks.onCall), std::cref(global_symbol_table->globalHooks_onCall)};
+
+    if (!function->_Node.Function().is_hook) {      
+        for (const auto& function_list : allOnCallFunctionsLists) {
+            for (node_ptr func : function_list.get()) {
+                node_ptr function_call = new_node(NodeType::FUNC_CALL);
+                function_call->_Node.FunctionCall().name = func->_Node.Function().name;
+                function_call->_Node.FunctionCall().args = std::vector<node_ptr>();
+                if (func->_Node.Function().params.size() > 0) {
+                    node_ptr file_info = new_node(NodeType::OBJECT);
+                    file_info->_Node.Object().properties["name"] = new_string_node(function->_Node.Function().name);
+                    node_ptr args_list = new_node(NodeType::LIST);
+                    for (node_ptr arg : args) {
+                        args_list->_Node.List().elements.push_back(arg);
+                    }
+                    file_info->_Node.Object().properties["args"] = args_list;
+                    file_info->_Node.Object().properties["result"] = res;
+                    file_info->_Node.Object().properties["filename"] = new_string_node(file_name);
+                    file_info->_Node.Object().properties["line"] = new_number_node(line);
+                    file_info->_Node.Object().properties["column"] = new_number_node(column);
+                    function_call->_Node.FunctionCall().args.push_back(file_info);
+                }
+                tc_func_call(function_call, func);
+            }
+        }
+    }
+
+    // current_symbol_table = current_symbol_table->parent->parent;
+    // current_symbol_table->child->child = nullptr;
+    // current_symbol_table->child = nullptr;
+
+    // Return the return type
+    if (res->_Node.Function().return_type) {
+        return res->_Node.Function().return_type;
+    } else {
+        return new_node(NodeType::ANY);
+    }
+}
+
+node_ptr Interpreter::tc_if_statement(node_ptr& node) {
+    node_ptr conditional = eval_node(node->_Node.IfStatement().condition);
+
+   for (node_ptr expr : node->_Node.IfStatement().body->_Node.Object().elements) {
+        node_ptr evaluated_expr = eval_node(expr);
+        if (evaluated_expr->type == NodeType::RETURN) {
+            return evaluated_expr;
+        }
+    }
+
+    return new_node(NodeType::NOVALUE);
+}
+
+node_ptr Interpreter::tc_if_block(node_ptr& node) {
+    std::vector<node_ptr> results;
+    for (node_ptr statement : node->_Node.IfBlock().statements) {
+        if (statement->type == NodeType::IF_STATEMENT) {
+            node_ptr conditional = eval_node(statement->_Node.IfStatement().condition);
+            node_ptr res = eval_node(statement);
+            if (res->type != NodeType::NOVALUE) {
+                results.push_back(res);
+            }
+        } else if (statement->type == NodeType::OBJECT) {
+            for (node_ptr expr : statement->_Node.Object().elements) {
+                if (expr->type == NodeType::RETURN) {
+                    node_ptr res = eval_node(expr);
+                    if (res->type != NodeType::NOVALUE) {
+                        results.push_back(res);
+                    }
+                }
+                eval_node(expr);
+            }
+            if (results.size() > 0) {
+                node_ptr res_union = new_node(NodeType::LIST);
+                res_union->_Node.List().is_union = true;
+                res_union->_Node.List().elements = results;
+                return res_union;
+            }
+            return new_node(NodeType::NOVALUE);
+        }
+    }
+
+    if (results.size() > 0) {
+        node_ptr res_union = new_node(NodeType::LIST);
+        res_union->_Node.List().is_union = true;
+        res_union->_Node.List().elements = results;
+        return res_union;
+    }
+
+    return new_node(NodeType::NOVALUE);
+}
+
+bool Interpreter::compareNodeTypes(node_ptr& lhs, node_ptr& rhs) {
+    return lhs->type == rhs->type;
 }

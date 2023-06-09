@@ -74,6 +74,8 @@ public:
     std::string error = "";
     // Futures
     std::unordered_map<uint32_t, std::shared_future<node_ptr>> _futures;
+    // Typecheck
+    bool tc = false;
 
 public:
     Interpreter() = default;
@@ -165,4 +167,13 @@ public:
 
     void error_and_exit(std::string message);
     node_ptr throw_error(std::string message);
+
+    // Typechecking
+    node_ptr tc_function(node_ptr& node);
+    node_ptr tc_func_call(node_ptr& node, node_ptr func = nullptr);
+    node_ptr tc_if_statement(node_ptr& node);
+    node_ptr tc_if_block(node_ptr& node);
+
+    static bool compareNodeTypes(node_ptr& lhs, node_ptr& rhs);
+
 };

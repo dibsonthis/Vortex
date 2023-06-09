@@ -13,7 +13,7 @@ enum Type
     INTERP,
 };
 
-Type type = Type::INTERP;
+Type type = Type::DEV;
 
 int main(int argc, char** argv)
 {
@@ -33,6 +33,7 @@ int main(int argc, char** argv)
         auto ast = parser.nodes;
 
         Interpreter interpreter(parser.nodes, parser.file_name);
+        interpreter.tc = true;
         interpreter.evaluate();
 
         std::cin.get();
