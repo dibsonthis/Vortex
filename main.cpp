@@ -13,7 +13,7 @@ enum Type
     INTERP,
 };
 
-Type type = Type::DEV;
+Type type = Type::INTERP;
 
 int main(int argc, char** argv)
 {
@@ -74,6 +74,13 @@ int main(int argc, char** argv)
         if (parent_path != "") {
             std::filesystem::current_path(parent_path);
         }
+
+        // Typechecking stage
+        Interpreter typechecker(parser.nodes, parser.file_name);
+        typechecker.argc = argc-1;
+        typechecker.argv = args;
+        typechecker.tc = true;
+        typechecker.evaluate();
 
         Interpreter interpreter(parser.nodes, parser.file_name);
         interpreter.argc = argc-1;
