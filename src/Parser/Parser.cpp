@@ -295,6 +295,16 @@ void Parser::parse_type(std::string end) {
         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
             break;
         }
+        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "type" && (peek()->type == NodeType::FUNC_CALL) && (peek(2)->type == NodeType::OBJECT)) {
+            current_node->type = NodeType::TYPE;
+            current_node->_Node = TypeNode();
+            current_node->_Node.Type().parametric_type = true;
+            current_node->_Node.Type().params = peek()->_Node.FunctionCall().args;
+            current_node->_Node.Type().name = peek()->_Node.FunctionCall().name;
+            current_node->_Node.Type().body = peek(2);
+            erase_next();
+            erase_next();
+        }
         if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "type" && (peek()->type == NodeType::OBJECT_DECONSTRUCT)) {
             current_node->type = NodeType::TYPE;
             current_node->_Node = TypeNode();
@@ -519,6 +529,10 @@ void Parser::parse_accessor(std::string end) {
             advance();
             continue;
         }
+		else if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "ret") {
+            advance();
+            continue;
+        }
         while ((current_node->type == NodeType::ID || current_node->type == NodeType::LIST || current_node->type == NodeType::FUNC_CALL || current_node->type == NodeType::ACCESSOR || (current_node->type == NodeType::OP && current_node->_Node.Op().value == ".") || 
         current_node->type == NodeType::NUMBER ||
         current_node->type == NodeType::STRING ||
@@ -556,11 +570,17 @@ void Parser::parse_var(std::string end) {
                 current_node->_Node = VariableDeclatationNode();
                 if (next->_Node.Op().left->type == NodeType::OP && next->_Node.Op().left->_Node.Op().value == ":") {
                     node_ptr typed_var = next->_Node.Op().left;
+                    if (typed_var->_Node.Op().left->type != NodeType::ID) {
+                        error_and_exit("Malformed declaration");
+                    }
                     current_node->_Node.VariableDeclaration().name = typed_var->_Node.Op().left->_Node.ID().value;
                     current_node->_Node.VariableDeclaration().value = next->_Node.Op().right;
                     current_node->TypeInfo.type = typed_var->_Node.Op().right;
                     current_node->TypeInfo.type->TypeInfo.is_type = true;
                 } else {
+                    if (next->_Node.Op().left->type != NodeType::ID) {
+                        error_and_exit("Malformed declaration");
+                    }
                     current_node->_Node.VariableDeclaration().name = next->_Node.Op().left->_Node.ID().value;
                     current_node->_Node.VariableDeclaration().value = next->_Node.Op().right;
                 }
@@ -592,11 +612,17 @@ void Parser::parse_const(std::string end) {
                 current_node->_Node = ConstantDeclatationNode();
                 if (next->_Node.Op().left->type == NodeType::OP && next->_Node.Op().left->_Node.Op().value == ":") {
                     node_ptr typed_var = next->_Node.Op().left;
+                    if (typed_var->_Node.Op().left->type != NodeType::ID) {
+                        error_and_exit("Malformed declaration");
+                    }
                     current_node->_Node.ConstantDeclatation().name = typed_var->_Node.Op().left->_Node.ID().value;
                     current_node->_Node.ConstantDeclatation().value = next->_Node.Op().right;
                     current_node->TypeInfo.type = typed_var->_Node.Op().right;
                     current_node->TypeInfo.type->TypeInfo.is_type = true;
                 } else {
+                    if (next->_Node.Op().left->type != NodeType::ID) {
+                        error_and_exit("Malformed declaration");
+                    }
                     current_node->_Node.ConstantDeclatation().name = next->_Node.Op().left->_Node.ID().value;
                     current_node->_Node.ConstantDeclatation().value = next->_Node.Op().right;
                 }
@@ -874,6 +900,7 @@ void Parser::parse_keywords(std::string end) {
                 current_node->type = NodeType::OBJECT;
                 current_node->_Node = ObjectNode();
                 current_node->TypeInfo.is_type = true;
+                current_node->TypeInfo.is_general_type = true;
             } else if (current_node->_Node.ID().value == "Function") {
                 current_node->type = NodeType::FUNC;
                 current_node->_Node = FuncNode();
@@ -937,8 +964,6 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_post_op({"?"}, end);
     reset(start);
-    // parse_type_ext(end);
-    // reset(start);
     parse_try_catch(end);
     reset(start);
     parse_accessor(end);
@@ -950,6 +975,8 @@ void Parser::parse(int start, std::string end) {
     parse_un_op_amb({"+", "-"}, end);
     reset(start);
     parse_un_op_amb({"&"}, end);
+    reset(start);
+	parse_bin_op({"as", "is"}, end);
     reset(start);
     parse_bin_op({"??"}, end);
     reset(start);

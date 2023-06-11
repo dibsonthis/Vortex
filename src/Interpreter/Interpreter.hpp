@@ -134,6 +134,8 @@ public:
     node_ptr eval_dot(node_ptr& node);
     node_ptr eval_plus_eq(node_ptr& node);
     node_ptr eval_minus_eq(node_ptr& node);
+    node_ptr eval_as(node_ptr& node);
+    node_ptr eval_is(node_ptr& node);
     // Builtin functions
     void builtin_print(node_ptr& node);
     node_ptr eval_load_lib(node_ptr& node);
@@ -173,7 +175,16 @@ public:
     node_ptr tc_func_call(node_ptr& node, node_ptr func = nullptr);
     node_ptr tc_if_statement(node_ptr& node);
     node_ptr tc_if_block(node_ptr& node);
+    node_ptr tc_while_loop(node_ptr& node);
+    node_ptr tc_for_loop(node_ptr& node);
+    node_ptr tc_accessor(node_ptr& node);
+    node_ptr tc_load_lib(node_ptr& node);
+    node_ptr tc_type(node_ptr& node);
+    node_ptr tc_is(node_ptr& node);
+    node_ptr tc_as(node_ptr& node);
+    node_ptr tc_dot(node_ptr& node);
+    node_ptr tc_call_lib_function(node_ptr& lib, node_ptr& node);
 
-    static bool compareNodeTypes(node_ptr& lhs, node_ptr& rhs);
+    bool compareNodeTypes(node_ptr& lhs, node_ptr& rhs);
 
 };

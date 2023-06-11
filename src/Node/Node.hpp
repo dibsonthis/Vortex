@@ -118,6 +118,7 @@ struct FuncNode {
 	std::unordered_map<std::string, node_ptr> param_types;
 	node_ptr return_type;
 	std::vector<node_ptr> dispatch_functions;
+	bool type_function = false;
 };
 
 struct AccessorNode {
@@ -128,6 +129,8 @@ struct TypeNode {
 	std::string name;
 	node_ptr body;
 	node_ptr expr;
+	bool parametric_type;
+	std::vector<node_ptr> params;
 };
 
 struct TypeExtNode {
@@ -237,7 +240,6 @@ struct TypeInfoNode {
 	bool is_literal_type = false;
 	bool is_general_type = false;
 	bool is_decl = false;
-
 	node_ptr base_type;
 };
 

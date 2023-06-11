@@ -32,8 +32,12 @@ int main(int argc, char** argv)
         parser.remove_op_node(";");
         auto ast = parser.nodes;
 
-        Interpreter interpreter(parser.nodes, parser.file_name);
-        interpreter.tc = true;
+        // Typechecking stage
+        Interpreter typechecker(parser.nodes, parser.file_name);
+        typechecker.tc = true;
+        typechecker.evaluate();
+
+        Interpreter interpreter(typechecker.nodes, parser.file_name);
         interpreter.evaluate();
 
         std::cin.get();

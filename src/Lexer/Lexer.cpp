@@ -69,6 +69,16 @@ void Lexer::build_identifier()
 		node->_Node = BooleanNode();
 		node->_Node.Boolean().value = false;
 	}
+	else if (name == "as") {
+		node->type = NodeType::OP;
+		node->_Node = OpNode();
+		node->_Node.Op().value = name;
+	}
+	else if (name == "is") {
+		node->type = NodeType::OP;
+		node->_Node = OpNode();
+		node->_Node.Op().value = name;
+	}
 	else if (name == "None")
 	{
 		node->type = NodeType::NONE;

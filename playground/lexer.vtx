@@ -1,0 +1,247 @@
+import [] : "/Users/adib/Dev/Personal/Vortex/Modules/modules/string/string"
+import io
+
+const contains = (list: [Any], elem: Any): Boolean => {
+	for (list, i, v) {
+		if (v == elem) {
+			ret true
+		}
+	}
+
+	false
+}
+
+type Node;
+
+union MaybeNode {
+	Node,
+	None
+}
+
+type Meta {
+	line: Number = 1,
+	col: Number = 1
+}
+
+type NumNode {
+	value: Number = 0,
+	meta: Meta
+}
+
+type StringNode {
+	value: String = "",
+	meta: Meta
+}
+
+type BoolNode {
+	value: Boolean = false,
+	meta: Meta
+}
+
+type IDNode {
+	value: String = "",
+	meta: Meta
+}
+
+type OpNode {
+	value: String = "",
+	left: MaybeNode = None,
+	right: MaybeNode = None,
+	meta: Meta
+}
+
+type ContainerNode {
+	value: String = "",
+	meta: Meta
+}
+
+type ConstDeclNode {
+	name: String = "",
+	value: MaybeNode = None,
+	meta: Meta
+}
+
+type VarDeclNode {
+	name: String = "",
+	value: MaybeNode = None,
+	meta: Meta
+}
+
+type FuncCallNode {
+	name: String = "",
+	args: [Node] = [],
+	meta: Meta
+}
+
+type ParenNode {
+	elements: [Node] = [],
+	meta: Meta
+}
+
+type EOFNode {}
+
+union Node {
+	NumNode,
+	StringNode,
+	BoolNode,
+	IDNode,
+	OpNode,
+	ContainerNode,
+	ConstDeclNode,
+	VarDeclNode,
+	FuncCallNode,
+	ParenNode,
+	EOFNode
+}
+
+const display = (node: ConstDeclNode) => {
+    f"ConstDeclNode: { name: ${node.name}, value: ${display(node.value)} }"
+}
+const display = (node: VarDeclNode) => {
+    f"VarDeclNode: { name: ${node.name}, value: ${display(node.value)} }"
+}
+const display = (node: OpNode) => {
+    f"OpNode: { value: ${node.value}, left: ${display(node.left)}, right: ${display(node.right)} }"
+}
+const display = (node: ParenNode) => {
+    f"ParenNode: { elements: ${node.elements.map((e) => display(e))} }"
+}
+const display = (node: IDNode) => {
+    f"IDNode: { value: ${node.value} }"
+}
+const display = (node: StringNode) => {
+    f"StringNode: { value: \"${node.value}\" }"
+}
+const display = (node: FuncCallNode) => {
+    f"FuncCallNode: { name: ${node.name}, args: ${node.args.map((e) => display(e))} }"
+}
+const display = (node: NumNode) => {
+    f"NumNode: { value: ${node.value} }"
+}
+const display = (node: BoolNode) => {
+    f"BoolNode: { value: ${node.value} }"
+}
+const display = (node: Node) => {
+    f"${node}"
+}
+
+union MaybeChar {String, None}
+
+const alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".chars()
+const digits = "0123456789".chars()
+
+type Lexer {
+	index: Number = 0,
+	line: Number = 1,
+	col: Number = 1,
+	source: String = "",
+	filePath: String = "",
+	current_char: MaybeChar = None,
+	nodes: [Node] = [],
+	load = (filePath: String) => {
+		this.filePath = filePath
+		this.source = io.readf(filePath)
+		this.current_char = this.source[0]
+	},
+	advance = () => {
+		this.index += 1
+		if (this.current_char == "\n") {
+			this.line += 1
+		}
+		this.col += 1
+		this.current_char = this.source[this.index]
+	},
+	peek = () => {
+		const i = this.index + 1
+		this.source[i]
+	},
+	tokenize = (): [Node] => {
+		// We have to do this because 'this' can't reliably be nested 
+		// As it may be replaced by 'this' from an inner scope
+		var self = this
+		var current_char = this.current_char
+		while (current_char) {
+			// String
+			if (current_char is String && current_char == "\"") {
+				var str_node = StringNode { meta: Meta { line: self.line, col: self.col }}
+				self.advance() // consume '"'
+				while (current_char != "\"") {
+					str_node.value += current_char
+					self.advance()
+				}
+				self.advance() // consume '"'
+				self.nodes.append(str_node)
+			}
+			// Number
+			else if (current_char is String && digits.contains(current_char)) {
+				var num_node = NumNode { meta: Meta { line: self.line, col: self.col } }
+				var num_str = current_char
+				self.advance()
+				while (digits.contains(current_char) || current_char == ".") {
+					num_str += current_char
+					self.advance()
+				}
+				num_node.value = number(num_str)
+				self.nodes.append(num_node)
+			}
+			// ID
+			else if (current_char is String && alpha.contains(current_char) || current_char == "_") {
+				var id_node = IDNode { meta: Meta { line: self.line, col: self.col } }
+				while (alpha.contains(current_char) || digits.contains(current_char) || current_char == "_") {
+					id_node.value += current_char
+					self.advance()
+				}
+				if (id_node.value == "true" || id_node.value == "false") {
+					self.nodes.append(BoolNode {meta: id_node.meta, value: id_node.value == "true"})
+				} else {
+					self.nodes.append(id_node)
+				}
+			}
+			// Line comment
+			else if (current_char is String && current_char == "/" && self.peek() == "/") {
+				while (current_char != "\n") {
+					self.advance()
+				}
+			}
+			// Block comment
+			else if (current_char is String && current_char == "/" && self.peek() == "*") {
+				while (true) {
+					if ((current_char == "*" && self.peek() == "/") || !current_char) {
+						self.advance() // consume *
+						self.advance() // consume /
+						break
+					}
+					self.advance()
+				}
+			}
+			// Ops
+			else if (current_char is String && current_char == "=" && self.peek() == "=") {
+				var op_node = OpNode { value: "==", meta: Meta { line: self.line, col: self.col } }
+				self.advance() // consume
+				self.advance() // consume
+				self.nodes.append(op_node)
+			}
+			else if (current_char is String && current_char == "!" && self.peek() == "=") {
+				var op_node = OpNode { value: "!=", meta: Meta { line: self.line, col: self.col } }
+				self.advance() // consume
+				self.advance() // consume
+				self.nodes.append(op_node)
+			}
+			else if (current_char is String && ["+", "-", "*", "/", "=", ","].contains(current_char)) {
+				var op_node = OpNode { value: current_char, meta: Meta { line: self.line, col: self.col } }
+				self.advance() // consume
+				self.nodes.append(op_node)
+			}
+			else if (current_char is String && ["[", "]", "{", "}", "(", ")"].contains(current_char)) {
+				var cont_node = ContainerNode { value: current_char, meta: Meta { line: self.line, col: self.col } }
+				self.advance() // consume
+				self.nodes.append(cont_node)
+			} else {
+				self.advance()
+			}
+		}
+		
+		self.nodes.append(EOFNode {})
+		ret self.nodes
+	}
+}

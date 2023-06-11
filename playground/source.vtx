@@ -1,14 +1,195 @@
-type Vec2 {
-	x: Number = 0,
-	y: Number = 0
+import [] : "lexer"
+
+type NonNullable(T) {
+	T - None
 }
 
-const someFunc = (x: String) => {
-	if (x == "1") {
-		ret true
-	} else if (x == "2") {
-		ret false
+type Parser {
+	current_node: MaybeNode = None,
+	index: Number = 0,
+	nodes: [Node] = [],
+	advance = () => {
+		this.index += 1
+		this.current_node = this.nodes[this.index]
+	},
+	reset = (i: Number) => {
+		this.index = i
+		this.current_node = this.nodes[this.index]
+	},
+	parse = (endFunc: Function, start: Number) => {
+		var self = this
+		var current_node = this.current_node
+		while (current_node is Node && current_node.endFunc()) {
+			if (!this.current_node) {
+				break;
+			}
+			if (current_node is ContainerNode && current_node.value == "(") {
+				var parenNode = ParenNode { meta: current_node.meta }
+				self.nodes[self.index] = parenNode
+				self.advance()
+				const i = self.index
+				self.parse((n: MaybeNode) => {
+					n is NonNullable(Node) && n.value != ")"
+					}, i)
+				while (current_node && current_node.value != ")") {
+					if (current_node is ParenNode) {
+						for ((self.nodes[self.index] as ParenNode).elements, _i, e) {
+							parenNode.elements.append(e)
+						}
+					} else {
+						parenNode.elements.append(self.nodes[self.index])
+					}
+					self.nodes.remove_at(self.index)
+					current_node = self.nodes[self.index]
+					if (current_node is Node && current_node.value == ")") {
+						break
+					}
+					self.advance()
+				}
+	
+				self.nodes.remove_at(self.index)
+				current_node = self.nodes[self.index]
+
+				if (current_node && current_node is EOFNode) {
+					break
+				}
+			}
+			self.advance()
+		}
+		self.reset(start)
+		while (current_node.endFunc()) {
+			if (!current_node) {
+				break;
+			}
+			if (current_node is IDNode && self.nodes[self.index+1] is ParenNode) {
+				const name = current_node.value
+				var funcCall = FuncCallNode { meta: current_node.meta, name: name }
+				const right = self.nodes[self.index+1]
+				funcCall.args = (right as ParenNode).elements
+				self.nodes[self.index] = funcCall
+				self.nodes.remove_at(self.index+1)
+			}
+			self.advance()
+		}
+		self.reset(start)
+		while (current_node.endFunc()) {
+			if (!current_node) {
+				break;
+			}
+			if (current_node is OpNode && (current_node.value == "*" || current_node.value == "/")) {
+				if (current_node.left || current_node.right) {
+					self.advance()
+					continue
+				}
+				const left = self.nodes[self.index-1]
+				const right = self.nodes[self.index+1]
+				(self.nodes[self.index] as OpNode).left = left
+				(self.nodes[self.index] as OpNode).right = right
+				self.nodes.remove_at(self.index+1)
+				self.nodes.remove_at(self.index-1)
+				self.index -= 1
+			}
+			self.advance()
+		}
+		self.reset(start)
+		while (current_node.endFunc()) {
+			if (!current_node) {
+				break;
+			}
+			if (current_node is OpNode && (current_node.value == "+" || current_node.value == "-")) {
+				if (current_node.left || current_node.right) {
+					self.advance()
+					continue
+				}
+				const left = self.nodes[self.index-1]
+				const right = self.nodes[self.index+1]
+				(self.nodes[self.index] as OpNode).left = left
+				(self.nodes[self.index] as OpNode).right = right
+				self.nodes.remove_at(self.index+1)
+				self.nodes.remove_at(self.index-1)
+				self.index -= 1
+			}
+			self.advance()
+		}
+		self.reset(start)
+		while (current_node.endFunc()) {
+			if (!current_node) {
+				break;
+			}
+			if (current_node is OpNode && current_node.value == ",") {
+				if (current_node.left || current_node.right) {
+					self.advance()
+					continue
+				}
+				const left = self.nodes[self.index-1]
+				const right = self.nodes[self.index+1]
+				(self.nodes[self.index] as OpNode).left = left
+				(self.nodes[self.index] as OpNode).right = right
+				self.nodes.remove_at(self.index+1)
+				self.nodes.remove_at(self.index-1)
+				self.index -= 1
+			}
+			self.advance()
+		}
+		self.reset(start)
+		while (current_node.endFunc()) {
+			if (!current_node) {
+				break;
+			}
+			if (current_node is OpNode && current_node.value == "=") {
+				const left = self.nodes[self.index-1]
+				const right = self.nodes[self.index+1]
+				(self.nodes[self.index] as OpNode).left = left
+				(self.nodes[self.index] as OpNode).right = right
+				self.nodes.remove_at(self.index+1)
+				self.nodes.remove_at(self.index-1)
+				self.index -= 1
+			}
+			self.advance()
+		}
+		self.reset(start)
+		while (current_node.endFunc()) {
+			if (!current_node) {
+				break;
+			}
+			if (current_node is IDNode && current_node.value == "const") {
+				var constDecl = ConstDeclNode { meta: current_node.meta }
+				const right = self.nodes[self.index+1]
+				if (right is OpNode && right.value == "=") {
+					const name = (right.left as IDNode).value
+					const value = right.right
+					constDecl.name = name
+					constDecl.value = value
+					self.nodes[self.index] = constDecl
+					self.nodes.remove_at(self.index+1)
+				}
+			}
+			self.advance()
+		}
+		self.reset(start)
+		while (current_node.endFunc()) {
+			if (!current_node) {
+				break;
+			}
+			if (current_node is IDNode && current_node.value == "var") {
+				var varDecl = VarDeclNode { meta: current_node.meta }
+				const right = self.nodes[self.index+1]
+				if (right is OpNode && right.value == "=") {
+					const name = (right.left as IDNode).value
+					const value = right.right
+					varDecl.name = name
+					varDecl.value = value
+					self.nodes[self.index] = varDecl
+					self.nodes.remove_at(self.index+1)
+				}
+			}
+			self.advance()
+		}
+		self.reset(start)
+	},
+	parse = () => {
+		this.parse((n: MaybeNode) => {
+			n is NonNullable(Node) && n.typeof() != EOFNode
+		}, 0)
 	}
 }
-
-var p: Boolean = someFunc("10")

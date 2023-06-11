@@ -16,7 +16,7 @@ std::string node_repr(node_ptr node) {
             return "Boolean";
         }
         case NodeType::LIST: {
-            if (node->_Node.List().is_union) {
+            if (node->_Node.List().is_union && node->TypeInfo.type_name != "") {
                 return node->TypeInfo.type_name;
             }
             if (node->_Node.List().elements.size() == 0) {
