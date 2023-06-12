@@ -1168,6 +1168,9 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
         node_ptr val = std::make_shared<Node>(*node->_Node.Type().expr);
         val = eval_node(val);
         val->TypeInfo.is_type = true;
+        if (val->type == NodeType::OBJECT) {
+            val->TypeInfo.type_name = node->_Node.Type().name;
+        }
         Symbol symbol = new_symbol(node->_Node.Type().name, val);
         // Check if type is function and if it returns a type
         // If it does, it's a type
@@ -3706,15 +3709,24 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
 std::string Interpreter::printable(node_ptr& node, std::vector<node_ptr> bases) {
     switch (node->type) {
         case NodeType::NUMBER: {
+            if (node->TypeInfo.is_type) {
+                return "Number";
+            }
             std::string num_str = std::to_string(node->_Node.Number().value);
             num_str.erase(num_str.find_last_not_of('0') + 1, std::string::npos);
             num_str.erase(num_str.find_last_not_of('.') + 1, std::string::npos);
             return num_str;
         }
         case NodeType::BOOLEAN: {
+            if (node->TypeInfo.is_type) {
+                return "Boolean";
+            }
             return node->_Node.Boolean().value ? "true" : "false";
         }
         case NodeType::STRING: {
+            if (node->TypeInfo.is_type) {
+                return "String";
+            }
             return node->_Node.String().value;
         }
         case NodeType::FUNC: {
@@ -5170,6 +5182,9 @@ node_ptr Interpreter::tc_type(node_ptr& node) {
         node_ptr val = std::make_shared<Node>(*node->_Node.Type().expr);
         val = eval_node(val);
         val->TypeInfo.is_type = true;
+        if (val->type == NodeType::OBJECT) {
+            val->TypeInfo.type_name = node->_Node.Type().name;
+        }
         Symbol symbol = new_symbol(node->_Node.Type().name, val);
         // Check if type is function and if it returns a type
         // If it does, it's a type
@@ -5417,6 +5432,8 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
                 for (auto& elem : left->_Node.Object().properties) {
                     keys->_Node.List().elements.push_back(new_string_node(elem.first));
                 }
+                keys->TypeInfo.type = new_node(NodeType::LIST);
+                keys->TypeInfo.type->_Node.List().elements.push_back(new_string_node(""));
                 return keys;
             }
             if (right->_Node.ID().value == "values") {

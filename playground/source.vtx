@@ -1,49 +1,18 @@
-// type Maybe(T) {
-//     union _ {
-//         T,
-//         None
-//     }
-// }
-
-// type LastOf(T) {
-//     const lastOf = (x: [T]) => x[x.length-1]
-// }
-
-// type NonNullable(T) {
-//     ret T - None
-// }
-
-// const last = LastOf(String)
-// const last = LastOf(Number)
-
-// const x: Maybe(Number) = [1, 2, 3].last()
-
-type Omit(T, K) {
-    ret T - K
-}
-
-type KeyOf(T) {
-    ret T.keys as UnionL
-}
-
-type Get(T) {
-    (t: T, key: KeyOf(T)) => {
-        ret t[key] as (t[key] - None)
-    }
-}
-
-type Or(T) {
-	ret T as Union
-}
-
-type Person {
+type Obj {
     name: String,
-    age: Number,
-    height: Number
+    age: String
 }
 
-const get = Get(Person)
+type Partial(T) {
+	var partial = {}
 
-const person = Person {name: "Steven", age: 32, height: 180}
+	for (T.keys, i, k) {
+		partial[k] = union _ {T[k], None}
+	}
 
-const age: Or([Number, String]) = person.get("age")
+	partial
+}
+
+type PartialObj = Partial(Obj)
+
+print(PartialObj)
