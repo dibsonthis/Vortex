@@ -502,6 +502,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
         function->_Node.Function().param_types = func->_Node.Function().param_types;
         function->_Node.Function().return_type = func->_Node.Function().return_type;
         function->_Node.Function().dispatch_functions = func->_Node.Function().dispatch_functions;
+        function->_Node.Function().type_function = func->_Node.Function().type_function;
     } else if (node->_Node.FunctionCall().caller == nullptr) {
         Symbol function_symbol = get_symbol(node->_Node.FunctionCall().name, current_symbol_table);
         if (function_symbol.value == nullptr) {
@@ -521,6 +522,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
         function->_Node.Function().param_types = function_symbol.value->_Node.Function().param_types;
         function->_Node.Function().return_type = function_symbol.value->_Node.Function().return_type;
         function->_Node.Function().dispatch_functions = function_symbol.value->_Node.Function().dispatch_functions;
+        function->_Node.Function().type_function = function_symbol.value->_Node.Function().type_function;
     } else {
         node_ptr method = node->_Node.FunctionCall().caller->_Node.Object().properties[node->_Node.FunctionCall().name];
         if (method == nullptr) {
@@ -540,6 +542,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
         function->_Node.Function().param_types = method->_Node.Function().param_types;
         function->_Node.Function().return_type = method->_Node.Function().return_type;
         function->_Node.Function().dispatch_functions = method->_Node.Function().dispatch_functions;
+        function->_Node.Function().type_function = method->_Node.Function().type_function;
     }
 
     std::vector<node_ptr> args;
@@ -634,7 +637,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
         node_ptr value = args[i];
         Symbol symbol = new_symbol(name, value);
         add_symbol(symbol, current_symbol_table);
-        function->_Node.Function().args[i] = value;
+        //function->_Node.Function().args[i] = value;
     }
 
     node_ptr res = function;
@@ -669,11 +672,17 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
         }
     }
 
-    // Check against return type
-    if (function->_Node.Function().return_type) {
-        if (!match_types(function->_Node.Function().return_type, res)) {
-            return throw_error("Type Error in '" + function->_Node.Function().name + "': Return type does not match defined return type");
+    if (!function->_Node.Function().type_function) {
+        // Check against return type
+        if (function->_Node.Function().return_type) {
+            if (!match_types(function->_Node.Function().return_type, res)) {
+                return throw_error("Type Error in '" + function->_Node.Function().name + "': Return type does not match defined return type");
+            }
+        } else {
+            function->_Node.Function().return_type = res;
         }
+    } else {
+        function->_Node.Function().return_type = res;
     }
 
     auto allOnCallFunctionsLists = {std::cref(function->Hooks.onCall), std::cref(global_symbol_table->globalHooks_onCall)};
@@ -1038,19 +1047,33 @@ node_ptr Interpreter::eval_accessor(node_ptr& node) {
 }
 
 node_ptr Interpreter::eval_function(node_ptr& node) {
-    node->_Node.Function().decl_filename = file_name;
-    if (node->_Node.Function().return_type) {
-        node->_Node.Function().return_type = eval_node(node->_Node.Function().return_type);
-        if (node->_Node.Function().return_type->type == NodeType::LIST) {
-            node->_Node.Function().return_type->TypeInfo.is_type = true;
-        } else if (node->_Node.Function().return_type->type == NodeType::OBJECT) {
-            node->_Node.Function().return_type->TypeInfo.is_type = true;
+    node_ptr func = new_node(NodeType::FUNC);
+    func->_Node.Function().name = func->_Node.Function().name;
+    func->_Node.Function().args = std::vector<node_ptr>(node->_Node.Function().args);
+    func->_Node.Function().params = std::vector<node_ptr>(node->_Node.Function().params);
+    func->_Node.Function().body = node->_Node.Function().body;
+    func->_Node.Function().closure = node->_Node.Function().closure;
+    func->_Node.Function().is_hook = node->_Node.Function().is_hook;
+    func->_Node.Function().decl_filename = node->_Node.Function().decl_filename;
+    func->Hooks.onCall = node->Hooks.onCall;
+    func->_Node.Function().param_types = node->_Node.Function().param_types;
+    func->_Node.Function().return_type = node->_Node.Function().return_type;
+    func->_Node.Function().dispatch_functions = node->_Node.Function().dispatch_functions;
+    func->_Node.Function().type_function = node->_Node.Function().type_function;
+    func->_Node.Function().decl_filename = file_name;
+
+    if (func->_Node.Function().return_type) {
+        func->_Node.Function().return_type = eval_node(func->_Node.Function().return_type);
+        if (func->_Node.Function().return_type->type == NodeType::LIST) {
+            func->_Node.Function().return_type->TypeInfo.is_type = true;
+        } else if (func->_Node.Function().return_type->type == NodeType::OBJECT) {
+            func->_Node.Function().return_type->TypeInfo.is_type = true;
         }
     } else {
-        node->_Node.Function().return_type = new_node(NodeType::ANY);
+        func->_Node.Function().return_type = new_node(NodeType::ANY);
     }
     // Go through params to see if they are typed, and store their types
-    for (auto& param : node->_Node.Function().params) {
+    for (auto& param : func->_Node.Function().params) {
         if (param->type == NodeType::OP && param->_Node.Op().value == ":") {
             node_ptr param_type = eval_node(param->_Node.Op().right);
             if (param_type->type == NodeType::LIST) {
@@ -1060,32 +1083,32 @@ node_ptr Interpreter::eval_function(node_ptr& node) {
             } else if (param_type->type == NodeType::FUNC) {
                 param_type->TypeInfo.is_type = true;
             }
-            node->_Node.Function().param_types[param->_Node.Op().left->_Node.ID().value] 
+            func->_Node.Function().param_types[param->_Node.Op().left->_Node.ID().value] 
                 = param_type;
             param = param->_Node.Op().left;
         }
     }
     // Check if the body is a type, if so, this function is a type
-    if (!node->_Node.Function().body) {
-        node->_Node.Function().body = new_node(NodeType::ANY);
+    if (!func->_Node.Function().body) {
+        func->_Node.Function().body = new_node(NodeType::ANY);
     }
-    if (node->_Node.Function().body->type == NodeType::ID) {
+    if (func->_Node.Function().body->type == NodeType::ID) {
         // We want to check if this ID is a type, in this case we mark
         // this function is a type
-        auto value = get_symbol(node->_Node.Function().body->_Node.ID().value, current_symbol_table);
+        auto value = get_symbol(func->_Node.Function().body->_Node.ID().value, current_symbol_table);
         if (value.value && value.value->TypeInfo.is_type) {
-            node->TypeInfo.is_type = true;
+            func->TypeInfo.is_type = true;
         }
     }
-    if (node->_Node.Function().body->TypeInfo.is_type) {
-        node->TypeInfo.is_type = true;
-        node->_Node.Function().return_type = node->_Node.Function().body;
+    if (func->_Node.Function().body->TypeInfo.is_type) {
+        func->TypeInfo.is_type = true;
+        func->_Node.Function().return_type = func->_Node.Function().body;
     }
     // Inject current scope as closure
     for (auto& symbol : current_symbol_table->symbols) {
-        node->_Node.Function().closure[symbol.first] = symbol.second.value;
+        func->_Node.Function().closure[symbol.first] = symbol.second.value;
     }
-    return node;
+    return func;
 }
 
 node_ptr Interpreter::eval_enum(node_ptr& node) {
@@ -1129,7 +1152,7 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
         node_ptr func = new_node(NodeType::FUNC);
         func->_Node.Function().name = node->_Node.Type().name;
         func->_Node.Function().params = node->_Node.Type().params;
-        func->_Node.Function().body = node->_Node.Type().body;
+        func->_Node.Function().body = std::make_shared<Node>(*node->_Node.Type().body);
         for (int i = 0; i < node->_Node.Type().params.size(); i++) {
             func->_Node.Function().args.push_back(nullptr);
         }
@@ -4251,18 +4274,32 @@ node_ptr Interpreter::throw_error(std::string message)
 // Typecheck
 
 node_ptr Interpreter::tc_function(node_ptr& node) {
+    node_ptr func = new_node(NodeType::FUNC);
+    func->_Node.Function().name = func->_Node.Function().name;
+        func->_Node.Function().args = std::vector<node_ptr>(node->_Node.Function().args);
+        func->_Node.Function().params = std::vector<node_ptr>(node->_Node.Function().params);
+        func->_Node.Function().body = node->_Node.Function().body;
+        func->_Node.Function().closure = node->_Node.Function().closure;
+        func->_Node.Function().is_hook = node->_Node.Function().is_hook;
+        func->_Node.Function().decl_filename = node->_Node.Function().decl_filename;
+        func->Hooks.onCall = node->Hooks.onCall;
+        func->_Node.Function().param_types = node->_Node.Function().param_types;
+        func->_Node.Function().return_type = node->_Node.Function().return_type;
+        func->_Node.Function().dispatch_functions = node->_Node.Function().dispatch_functions;
+        func->_Node.Function().type_function = node->_Node.Function().type_function;
     node->_Node.Function().decl_filename = file_name;
-    if (node->_Node.Function().return_type) {
-        node->_Node.Function().return_type = eval_node(node->_Node.Function().return_type);
-        if (node->_Node.Function().return_type->type == NodeType::LIST) {
-            node->_Node.Function().return_type->TypeInfo.is_type = true;
-        } else if (node->_Node.Function().return_type->type == NodeType::OBJECT) {
-            node->_Node.Function().return_type->TypeInfo.is_type = true;
+
+    if (func->_Node.Function().return_type) {
+        func->_Node.Function().return_type = eval_node(func->_Node.Function().return_type);
+        if (func->_Node.Function().return_type->type == NodeType::LIST) {
+            func->_Node.Function().return_type->TypeInfo.is_type = true;
+        } else if (func->_Node.Function().return_type->type == NodeType::OBJECT) {
+            func->_Node.Function().return_type->TypeInfo.is_type = true;
         }
     }
 
     // Go through params to see if they are typed, and store their types
-    for (auto& param : node->_Node.Function().params) {
+    for (auto& param : func->_Node.Function().params) {
         if (param->type == NodeType::OP && param->_Node.Op().value == ":") {
             node_ptr param_type = eval_node(param->_Node.Op().right);
             if (param_type->type == NodeType::LIST) {
@@ -4272,42 +4309,42 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
             } else if (param_type->type == NodeType::FUNC) {
                 param_type->TypeInfo.is_type = true;
             }
-            node->_Node.Function().param_types[param->_Node.Op().left->_Node.ID().value] 
+            func->_Node.Function().param_types[param->_Node.Op().left->_Node.ID().value] 
                 = param_type;
             param = param->_Node.Op().left;
         }
     }
     // Check if the body is a type, if so, this function is a type
-    if (!node->_Node.Function().body) {
-        node->_Node.Function().body = new_node(NodeType::ANY);
+    if (!func->_Node.Function().body) {
+        func->_Node.Function().body = new_node(NodeType::ANY);
     }
-    if (node->_Node.Function().body->type == NodeType::ID) {
+    if (func->_Node.Function().body->type == NodeType::ID) {
         // We want to check if this ID is a type, in this case we mark
         // this function as a type
-        auto value = get_symbol(node->_Node.Function().body->_Node.ID().value, current_symbol_table);
+        auto value = get_symbol(func->_Node.Function().body->_Node.ID().value, current_symbol_table);
         if (value.value && value.value->TypeInfo.is_type) {
-            node->TypeInfo.is_type = true;
+            func->TypeInfo.is_type = true;
         }
     }
-    if (node->_Node.Function().body->TypeInfo.is_type) {
-        node->_Node.Function().return_type = node->_Node.Function().body;
-        node->TypeInfo.is_type = true;
+    if (func->_Node.Function().body->TypeInfo.is_type) {
+        func->_Node.Function().return_type = func->_Node.Function().body;
+        func->TypeInfo.is_type = true;
     }
     // Inject current scope as closure
     for (auto& symbol : current_symbol_table->symbols) {
-        node->_Node.Function().closure[symbol.first] = symbol.second.value;
+        func->_Node.Function().closure[symbol.first] = symbol.second.value;
     }
 
     // We want to add the function to outside scope
     // In case it's recursive
-    if (node->_Node.Function().name != "") {
-        Symbol func_symbol = new_symbol(node->_Node.Function().name, node);
+    if (func->_Node.Function().name != "") {
+        Symbol func_symbol = new_symbol(func->_Node.Function().name, node);
         add_symbol(func_symbol, current_symbol_table);
     }
 
     // Typecheck the function body
 
-    node_ptr function = node;
+    node_ptr function = func;
 
     auto local_scope = std::make_shared<SymbolTable>();
     auto current_scope = std::make_shared<SymbolTable>();
@@ -4331,12 +4368,12 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
         add_symbol(new_symbol(elem.first, elem.second), local_scope);
     }
 
-    for (int i = 0; i < node->_Node.Function().params.size(); i++) {
+    for (int i = 0; i < func->_Node.Function().params.size(); i++) {
         std::string name = function->_Node.Function().params[i]->_Node.ID().value;
         node_ptr value = function->_Node.Function().param_types[name] ? function->_Node.Function().param_types[name] : new_node(NodeType::ANY);
         Symbol symbol = new_symbol(name, value);
         add_symbol(symbol, current_symbol_table);
-        function->_Node.Function().args[i] = value;
+        //function->_Node.Function().args[i] = value;
     }
 
     node_ptr res = new_node(NodeType::NONE);
@@ -4425,20 +4462,24 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
 
     res->TypeInfo.is_type = true;
 
-    // Check against return type
-    if (node->_Node.Function().return_type) {
-        if (!match_types(node->_Node.Function().return_type, res)) {
-            return throw_error("Type Error in '" + node->_Node.Function().name + "': Return type does not match defined return type");
+    if (!func->_Node.Function().type_function) {
+        // Check against return type
+        if (func->_Node.Function().return_type) {
+            if (!match_types(func->_Node.Function().return_type, res)) {
+                return throw_error("Type Error in '" + func->_Node.Function().name + "': Return type does not match defined return type");
+            }
+        } else {
+            func->_Node.Function().return_type = res;
         }
     } else {
-        node->_Node.Function().return_type = res;
+        func->_Node.Function().return_type = res;
     }
 
     current_symbol_table = current_symbol_table->parent->parent;
     current_symbol_table->child->child = nullptr;
     current_symbol_table->child = nullptr;
 
-    return node;
+    return func;
 }
 
 node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
@@ -4669,21 +4710,49 @@ node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
             continue;
     }
 
+    // if (!func_match) {
+    //     // If we don't find any functions, we'll return 'Any'
+    //     // Because some functions may be defined later, and we want to be able
+    //     // To call them at runtime
+    //     // TODO: Maybe find a better solution so these are all typed
+    //     return new_node(NodeType::ANY);
+    // }
+
     if (!func_match) {
-        // If we don't find any functions, we'll return 'Any'
-        // Because some functions may be defined later, and we want to be able
-        // To call them at runtime
-        // TODO: Maybe find a better solution so these are all typed
-        return new_node(NodeType::ANY);
+        std::string argsStr = "(";
+        for (int i = 0; i < args.size(); i++) {
+            //node_ptr arg = get_type(args[i]);
+            node_ptr arg = args[i];
+            argsStr += printable(arg);
+            if (i != args.size()-1) {
+                argsStr += ", ";
+            }
+        }
+        argsStr += ")";
+        return throw_error("Dispatch error in function '" + node->_Node.FunctionCall().name + "' - No function found matching args: " + argsStr + "\n\nAvailable functions:\n\n" + printable(functions[0]));
     }
 
-    node_ptr res = function;
+    node_ptr res = std::make_shared<Node>(*function);
+    // node_ptr res = new_node(NodeType::FUNC);
+    // res->_Node.Function().name = function->_Node.Function().name;
+    // res->_Node.Function().body = function->_Node.Function().body;
+    // res->_Node.Function().type_function = function->_Node.Function().type_function;
+    // res->_Node.Function().params = std::vector<node_ptr>(function->_Node.Function().params);
+    // res->_Node.Function().args = std::vector<node_ptr>(function->_Node.Function().args);
 
     if (res->_Node.Function().type_function) {
-        tc = false;
-        node_ptr result = eval_func_call(node);
-        tc = true;
-        return result;
+        // We want to inject the type we pass in as an argument
+        // To the param_types
+
+        for (int i = 0; i < node->_Node.FunctionCall().args.size(); i++) {
+            node_ptr arg = node->_Node.FunctionCall().args[i];
+            node_ptr param = res->_Node.Function().params[i];
+            std::string name = param->_Node.ID().value;
+            res->_Node.Function().param_types[name] = arg;
+        }
+
+        res = tc_function(res);
+        return res->_Node.Function().return_type;
     }
 
     auto allOnCallFunctionsLists = {std::cref(function->Hooks.onCall), std::cref(global_symbol_table->globalHooks_onCall)};

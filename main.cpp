@@ -37,7 +37,7 @@ int main(int argc, char** argv)
         typechecker.tc = true;
         typechecker.evaluate();
 
-        Interpreter interpreter(typechecker.nodes, parser.file_name);
+        Interpreter interpreter(parser.nodes, parser.file_name);
         interpreter.evaluate();
 
         std::cin.get();
