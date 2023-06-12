@@ -8,4 +8,10 @@ type Person {
     height: Number
 }
 
-const k: KeyOf(Person) = "height"
+const get = (key: KeyOf(Person), p: Person) => {
+    p[key as key[0]]
+}
+
+const person = Person {name: "Steven", age: 32, height: 180}
+
+print(get("ages", person))

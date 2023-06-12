@@ -5030,6 +5030,20 @@ node_ptr Interpreter::tc_accessor(node_ptr& node) {
         return union_res;
     }
 
+    if (container->type == NodeType::LIST && container->_Node.List().is_union) {
+        node_ptr index_node = eval_node(accessor->_Node.List().elements[0]);
+        if (index_node->type != NodeType::NUMBER) {
+            return throw_error("List accessor expects a number");
+        }
+        int index = index_node->_Node.Number().value;
+
+        if (index < 0 || index >= container->_Node.List().elements.size()) {
+            return new_node(NodeType::NONE);
+        }
+
+        return container->_Node.List().elements[index];
+    }
+
     if (container->type == NodeType::LIST) {
         node_ptr index_node = eval_node(accessor->_Node.List().elements[0]);
         if (index_node->type != NodeType::NUMBER) {
