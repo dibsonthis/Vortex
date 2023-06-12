@@ -1,19 +1,41 @@
-type Nullable(T) {
-	ret union _ {
-		T,
-		None
+// type Nullable(T) {
+// 	union _ {
+// 		T,
+// 		None
+// 	}
+// }
+
+// const p: Nullable(Boolean) = 10
+
+// type LastOf(T) {
+//     (x: [T]) => x[x.length-1]
+// }
+
+// print("hi")
+
+// const last = LastOf(String);
+// const last = LastOf(Number);
+// const last = LastOf(Boolean);
+
+// const p: Nullable(Boolean) = [true, false].last()
+// print(p)
+
+const f = () => {
+	if (true) {
+		ret 10
+	} else {
+		ret "hi"
 	}
 }
 
-type LastOf(T) {
-    (x: [T]) => x[x.length-1]
+const obj = {
+	x: f()
 }
 
-print("hi")
+if (obj.x is String) {
+	print(obj.x + "bye")
+}
 
-const last = LastOf(String);
-const last = LastOf(Number);
-const last = LastOf(Boolean);
-
-const p: Nullable(Boolean) = [true, false].last()
-print(p)
+if (obj.x is Number) {
+	print(obj.x + 10)
+}

@@ -1142,6 +1142,7 @@ node_ptr Interpreter::eval_union(node_ptr& node) {
     union_list->_Node.List().is_union = true;
     union_list->TypeInfo.type_name = node->_Node.Union().name;
     union_list->TypeInfo.is_type = true;
+    union_list->_Node.List().literal_construct = true;
     Symbol symbol = new_symbol(node->_Node.Union().name, union_list);
     add_symbol(symbol, current_symbol_table);
     return union_list;
@@ -4413,7 +4414,7 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
             else if (evaluated_expr->type == NodeType::NOVALUE) {
                 continue;
             }
-            else if (evaluated_expr->type == NodeType::LIST && evaluated_expr->_Node.List().is_union && evaluated_expr->_Node.List().elements.size() > 0) {
+            else if (evaluated_expr->type == NodeType::LIST && evaluated_expr->_Node.List().is_union && !evaluated_expr->_Node.List().literal_construct && evaluated_expr->_Node.List().elements.size() > 0) {
                 for (node_ptr& elem : evaluated_expr->_Node.List().elements) {
                     if (elem->type == NodeType::RETURN) {
                         if (elem->_Node.Return().value == nullptr) {
@@ -4422,9 +4423,6 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
                             return_types.push_back(eval_node(elem->_Node.Return().value));
                         }
                     }
-                    // else if (elem->type != NodeType::NOVALUE) {
-                    //     return_types.push_back(elem);
-                    // }
                 }
             }
             else if (evaluated_expr->type == NodeType::RETURN) {
@@ -4808,6 +4806,10 @@ node_ptr Interpreter::tc_if_statement(node_ptr& node) {
             current_symbol_table = current_symbol_table->parent;
             return evaluated_expr;
         }
+    }
+
+    for (auto& prop : current_symbol_table->cast_types) {
+        *prop.first = *prop.second;
     }
 
     current_symbol_table = current_symbol_table->parent;
@@ -5271,6 +5273,9 @@ node_ptr Interpreter::tc_is(node_ptr& node) {
             node_ptr value = std::make_shared<Node>(*right);
             value->TypeInfo.base_type = left->TypeInfo.base_type;
             add_symbol(new_symbol(node->_Node.Op().left->_Node.ID().value, value), current_symbol_table);
+        } else {
+            current_symbol_table->cast_types[left] = std::make_shared<Node>(*left);
+            *left = *right;
         }
     }
 

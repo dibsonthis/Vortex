@@ -47,15 +47,8 @@ struct SymbolTable {
     // Scope info
     std::string filename;
 
-    // Base type extensions
-    std::unordered_map<std::string, node_ptr> StringExtensions;
-    std::unordered_map<std::string, node_ptr> NumberExtensions;
-    std::unordered_map<std::string, node_ptr> ListExtensions;
-    std::unordered_map<std::string, node_ptr> BoolExtensions;
-    std::unordered_map<std::string, node_ptr> ObjectExtensions;
-    std::unordered_map<std::string, node_ptr> FunctionExtensions;
-    std::unordered_map<std::string, node_ptr> NoneExtensions;
-    std::unordered_map<std::string, std::unordered_map<std::string, node_ptr>> CustomTypeExtensions;
+    // TC
+    std::unordered_map<node_ptr, node_ptr> cast_types;
 };
 
 class Interpreter {

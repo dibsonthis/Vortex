@@ -76,6 +76,7 @@ struct OpNode {
 struct ListNode {
 	std::vector<node_ptr> elements;
 	bool is_union = false;
+	bool literal_construct = false;
 };
 
 struct ObjectNode {
