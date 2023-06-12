@@ -4746,7 +4746,7 @@ node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
             node_ptr arg = node->_Node.FunctionCall().args[i];
             node_ptr param = res->_Node.Function().params[i];
             std::string name = param->_Node.ID().value;
-            res->_Node.Function().param_types[name] = arg;
+            res->_Node.Function().param_types[name] = eval_node(arg);
         }
 
         res = tc_function(res);

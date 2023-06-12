@@ -1,41 +1,21 @@
-// type Nullable(T) {
-// 	union _ {
-// 		T,
-// 		None
-// 	}
-// }
-
-// const p: Nullable(Boolean) = 10
-
-// type LastOf(T) {
-//     (x: [T]) => x[x.length-1]
-// }
-
-// print("hi")
-
-// const last = LastOf(String);
-// const last = LastOf(Number);
-// const last = LastOf(Boolean);
-
-// const p: Nullable(Boolean) = [true, false].last()
-// print(p)
-
-const f = () => {
-	if (true) {
-		ret 10
-	} else {
-		ret "hi"
-	}
+type Maybe(T) {
+    union _ {
+        T,
+        None
+    }
 }
 
-const obj = {
-	x: f()
+type LastOf(T) {
+    const lastOf = (x: [T]) => x[x.length-1]
 }
 
-if (obj.x is String) {
-	print(obj.x + "bye")
+type NonNullable(T) {
+    ret T - None
 }
 
-if (obj.x is Number) {
-	print(obj.x + 10)
-}
+const last = LastOf(String)
+const last = LastOf(Number)
+
+const x: Maybe(Number) = [1, 2, 3].last()
+
+const p: NonNullable(Maybe(Boolean)) = true
