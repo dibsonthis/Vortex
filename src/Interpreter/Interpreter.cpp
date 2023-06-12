@@ -2575,6 +2575,18 @@ node_ptr Interpreter::eval_as(node_ptr& node) {
         return throw_error(left->_Node.Error().message);
     }
 
+    if (left->type == NodeType::LIST && node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Union") {
+        node_ptr union_list = new_node(NodeType::LIST);
+        union_list->TypeInfo.is_type = true;
+        union_list->_Node.List().is_union = true;
+        for (node_ptr& elem : left->_Node.List().elements) {
+            elem->TypeInfo.is_literal_type = true;
+            elem->TypeInfo.is_type = true;
+            union_list->_Node.List().elements.push_back(elem);
+        }
+        return union_list;
+    }
+
     return left;
 }
 

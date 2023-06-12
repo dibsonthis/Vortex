@@ -1,21 +1,11 @@
-type Maybe(T) {
-    union _ {
-        T,
-        None
-    }
+type KeyOf(T) {
+    ret T.keys as Union
 }
 
-type LastOf(T) {
-    const lastOf = (x: [T]) => x[x.length-1]
+type Person {
+    name: String,
+    age: Number,
+    height: Number
 }
 
-type NonNullable(T) {
-    ret T - None
-}
-
-const last = LastOf(String)
-const last = LastOf(Number)
-
-const x: Maybe(Number) = [1, 2, 3].last()
-
-const p: NonNullable(Maybe(Boolean)) = true
+const k: KeyOf(Person) = "height"
