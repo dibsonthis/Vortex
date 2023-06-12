@@ -2580,6 +2580,17 @@ node_ptr Interpreter::eval_as(node_ptr& node) {
         union_list->TypeInfo.is_type = true;
         union_list->_Node.List().is_union = true;
         for (node_ptr& elem : left->_Node.List().elements) {
+            elem->TypeInfo.is_type = true;
+            union_list->_Node.List().elements.push_back(elem);
+        }
+        return union_list;
+    }
+
+    if (left->type == NodeType::LIST && node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "UnionL") {
+        node_ptr union_list = new_node(NodeType::LIST);
+        union_list->TypeInfo.is_type = true;
+        union_list->_Node.List().is_union = true;
+        for (node_ptr& elem : left->_Node.List().elements) {
             elem->TypeInfo.is_literal_type = true;
             elem->TypeInfo.is_type = true;
             union_list->_Node.List().elements.push_back(elem);
@@ -5064,6 +5075,27 @@ node_ptr Interpreter::tc_accessor(node_ptr& node) {
 
     if (container->type == NodeType::OBJECT) {
         node_ptr prop_node = eval_node(accessor->_Node.List().elements[0]);
+
+        if (prop_node->type == NodeType::LIST && prop_node->_Node.List().is_union) {
+            node_ptr union_res = new_node(NodeType::LIST);
+            union_res->TypeInfo.is_type = true;
+            union_res->_Node.List().is_union = true;
+            for (node_ptr& prop: prop_node->_Node.List().elements) {
+                if (prop->type != NodeType::STRING) {
+                    return throw_error("Object accessor expects a string");
+                }
+
+                node_ptr prop_type = container->_Node.Object().properties[prop->_Node.String().value] ? container->_Node.Object().properties[prop->_Node.String().value] : new_node(NodeType::ANY);
+                union_res->_Node.List().elements.push_back(prop_type);
+            }
+
+            union_res->_Node.List().elements.push_back(new_node(NodeType::NONE));
+
+            union_res->_Node.List().elements.erase(std::unique(union_res->_Node.List().elements.begin(), union_res->_Node.List().elements.end(), [this](node_ptr& lhs, node_ptr& rhs) { return compareNodeTypes(lhs, rhs); }), union_res->_Node.List().elements.end()); 
+
+            return union_res;
+        }
+
         if (prop_node->type != NodeType::STRING) {
             return throw_error("Object accessor expects a string");
         }
@@ -5316,6 +5348,17 @@ node_ptr Interpreter::tc_as(node_ptr& node) {
     }
 
     if (left->type == NodeType::LIST && node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Union") {
+        node_ptr union_list = new_node(NodeType::LIST);
+        union_list->TypeInfo.is_type = true;
+        union_list->_Node.List().is_union = true;
+        for (node_ptr& elem : left->_Node.List().elements) {
+            elem->TypeInfo.is_type = true;
+            union_list->_Node.List().elements.push_back(elem);
+        }
+        return union_list;
+    }
+
+    if (left->type == NodeType::LIST && node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "UnionL") {
         node_ptr union_list = new_node(NodeType::LIST);
         union_list->TypeInfo.is_type = true;
         union_list->_Node.List().is_union = true;

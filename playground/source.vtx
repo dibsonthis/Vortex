@@ -1,5 +1,39 @@
+// type Maybe(T) {
+//     union _ {
+//         T,
+//         None
+//     }
+// }
+
+// type LastOf(T) {
+//     const lastOf = (x: [T]) => x[x.length-1]
+// }
+
+// type NonNullable(T) {
+//     ret T - None
+// }
+
+// const last = LastOf(String)
+// const last = LastOf(Number)
+
+// const x: Maybe(Number) = [1, 2, 3].last()
+
+type Omit(T, K) {
+    ret T - K
+}
+
 type KeyOf(T) {
-    ret T.keys as Union
+    ret T.keys as UnionL
+}
+
+type Get(T) {
+    (t: T, key: KeyOf(T)) => {
+        ret t[key] as (t[key] - None)
+    }
+}
+
+type Or(T) {
+	ret T as Union
 }
 
 type Person {
@@ -8,10 +42,8 @@ type Person {
     height: Number
 }
 
-const get = (key: KeyOf(Person), p: Person) => {
-    p[key as key[0]]
-}
+const get = Get(Person)
 
 const person = Person {name: "Steven", age: 32, height: 180}
 
-print(get("ages", person))
+const age: Or([Number, String]) = person.get("age")
