@@ -1,21 +1,13 @@
-type Partial(T) {
-	var partial = {}
+import sdl : "@modules/sdl"
+import [WindowConfig, Color, Window] : "@modules/sdl"
 
-	for (T.keys, i, k) {
-		partial[k] = union _ {T[k], None}
-	}
+var init: Number = sdl.initSDL()
 
-	partial as Type
+if (init != 0) {
+	println("Error initializing SDL")
+	exit(1)
+} else {
+	println("Initialized SDL")
 }
 
-type Obj {
-    name: String,
-    age: Number
-}
-
-type PartialObj = Partial(Obj)
-
-const p: PartialObj = PartialObj {
-    name: None,
-    age: 56
-}
+var windowConfig = WindowConfig { color: sdl.Colors.Green }

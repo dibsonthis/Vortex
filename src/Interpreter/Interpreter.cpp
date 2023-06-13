@@ -1050,7 +1050,10 @@ node_ptr Interpreter::eval_accessor(node_ptr& node) {
 
 node_ptr Interpreter::eval_function(node_ptr& node) {
     // Testing
-    return tc_function(node);
+    tc = true;
+    node_ptr res = tc_function(node);
+    tc = false;
+    return res;
 
     node_ptr func = new_node(NodeType::FUNC);
     func->_Node.Function().name = func->_Node.Function().name;
@@ -1238,6 +1241,9 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
         if (prop->_Node.Op().value == "=" && prop->_Node.Op().left->type == NodeType::ID) {
             // This is essentually an any type
             std::string name = prop->_Node.Op().left->_Node.ID().value;
+            if (prop->_Node.Op().right->type == NodeType::FUNC) {
+                prop->_Node.Op().right->_Node.Function().closure["this"] = object;
+            }
             node_ptr value = eval_node(prop->_Node.Op().right);
 
             object->_Node.Object().properties[name] = new_node(NodeType::ANY);
@@ -1251,6 +1257,9 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
         }
 
         if (prop->_Node.Op().value == "=") {
+            if (prop->_Node.Op().right->type == NodeType::FUNC) {
+                prop->_Node.Op().right->_Node.Function().closure["this"] = object;
+            }
             def_val = eval_node(prop->_Node.Op().right);
             prop = prop->_Node.Op().left;
         }
@@ -2075,12 +2084,13 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
     }
 
     if (node->_Node.Import().module->type == NodeType::LIST) {
+        node_ptr import_module = node->_Node.Import().module;
         // Before we import, we'll check to see if the import list
         // contains only IDs
-        if (node->_Node.Import().module->_Node.List().elements.size() == 1 && node->_Node.Import().module->_Node.List().elements[0]->type == NodeType::COMMA_LIST) {
-            node->_Node.Import().module = node->_Node.Import().module->_Node.List().elements[0];
+        if (import_module->_Node.List().elements.size() == 1 && import_module->_Node.List().elements[0]->type == NodeType::COMMA_LIST) {
+            import_module = import_module->_Node.List().elements[0];
         }
-        for (node_ptr elem : node->_Node.Import().module->_Node.List().elements) {
+        for (node_ptr elem : import_module->_Node.List().elements) {
             if (elem->type != NodeType::ID) {
                 return throw_error("Import list must contain identifiers");
             }
@@ -2121,7 +2131,7 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
             imported_variables[symbol.first] = symbol.second.value;
         }
 
-        if (node->_Node.Import().module->_Node.List().elements.size() == 0) {
+        if (import_module->_Node.List().elements.size() == 0) {
             for (auto& elem : import_interpreter.current_symbol_table->symbols) {
                 add_symbol(new_symbol(elem.first, elem.second.value), current_symbol_table);
             }
@@ -2129,7 +2139,7 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
             return new_node(NodeType::NONE);
         }
 
-        for (node_ptr elem : node->_Node.Import().module->_Node.List().elements) {
+        for (node_ptr elem : import_module->_Node.List().elements) {
             if (imported_variables.contains(elem->_Node.ID().value)) {
                 add_symbol(import_interpreter.current_symbol_table->symbols[elem->_Node.ID().value], current_symbol_table);
             } else {
@@ -4529,7 +4539,7 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
         func->_Node.Function().return_type = node->_Node.Function().return_type;
         func->_Node.Function().dispatch_functions = node->_Node.Function().dispatch_functions;
         func->_Node.Function().type_function = node->_Node.Function().type_function;
-    node->_Node.Function().decl_filename = file_name;
+        func->_Node.Function().decl_filename = file_name;
 
     if (func->_Node.Function().return_type) {
         func->_Node.Function().return_type = eval_node(func->_Node.Function().return_type);
