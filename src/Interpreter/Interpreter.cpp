@@ -2591,6 +2591,11 @@ node_ptr Interpreter::eval_as(node_ptr& node) {
         return throw_error(left->_Node.Error().message);
     }
 
+    if (node->_Node.Op().right->_Node.ID().value == "Type") {
+        left->TypeInfo.is_type = true;
+        return left;
+    }
+
     if (left->type == NodeType::LIST && node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Union") {
         node_ptr union_list = new_node(NodeType::LIST);
         union_list->TypeInfo.is_type = true;
@@ -2631,6 +2636,32 @@ node_ptr Interpreter::eval_is(node_ptr& node) {
     }
 
     return new_boolean_node(match_types(left, right));
+}
+
+node_ptr Interpreter::eval_in(node_ptr& node) {
+    node_ptr left = eval_node(node->_Node.Op().left);
+
+    if (left->type == NodeType::ERROR) {
+        return throw_error(left->_Node.Error().message);
+    }
+
+    node_ptr right = eval_node(node->_Node.Op().right);
+
+    if (right->type == NodeType::ERROR) {
+        return throw_error(right->_Node.Error().message);
+    }
+
+    if (right->type != NodeType::LIST) {
+        return new_boolean_node(false);
+    }
+
+    for (node_ptr& elem : right->_Node.List().elements) {
+        if (match_types(elem, left)) {
+            return new_boolean_node(true);
+        }
+    }
+
+    return new_boolean_node(false);
 }
 
 node_ptr Interpreter::eval_dot(node_ptr& node) {
@@ -3257,6 +3288,18 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
             std::string value = right->_Node.ID().value;
             if (value == "name") {
                 return new_string_node(left->_Node.Function().name);
+            }
+            if (value == "params") {
+                node_ptr obj = new_node(NodeType::OBJECT);
+                for (node_ptr& param : left->_Node.Function().params) {
+                    std::string name = param->_Node.ID().value;
+                    obj->_Node.Object().properties[name] = left->_Node.Function().param_types.count(name) && left->_Node.Function().param_types[name] ? left->_Node.Function().param_types[name] : new_node(NodeType::ANY);
+                }
+
+                return obj;
+            }
+            if (value == "return") {
+                return tc_function(left)->_Node.Function().return_type;
             }
 
             throw_error("Function does not have property '" + value + "'");
@@ -4146,6 +4189,9 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
                 }
                 return eval_is(node);
             }
+            if (node->_Node.Op().value == "in") {
+                return eval_in(node);
+            }
             if (node->_Node.Op().value == ";") {
                 return node;
             }
@@ -4800,12 +4846,11 @@ node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
         }
 
         tc_loops = true;
+        tc_conditonals = true;
         res = tc_function(res);
         tc_loops = false;
-        // tc = false;
-        // res = eval_func_call(node, res);
-        // tc = true;
-        // return res;
+        tc_conditonals = true;
+
         return res->_Node.Function().return_type;
     }
 
@@ -4850,6 +4895,10 @@ node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
 
 node_ptr Interpreter::tc_if_statement(node_ptr& node) {
 
+    if (tc_conditonals) {
+        return eval_if_statement(node);
+    }
+
     auto scope = std::make_shared<SymbolTable>();
     scope->parent = current_symbol_table;
     current_symbol_table = scope;
@@ -4874,6 +4923,11 @@ node_ptr Interpreter::tc_if_statement(node_ptr& node) {
 }
 
 node_ptr Interpreter::tc_if_block(node_ptr& node) {
+
+    if (tc_conditonals) {
+        return eval_if_block(node);
+    }
+
     std::vector<node_ptr> results;
     
     for (node_ptr statement : node->_Node.IfBlock().statements) {
@@ -5403,6 +5457,11 @@ node_ptr Interpreter::tc_as(node_ptr& node) {
 
     if (left->type == NodeType::ERROR) {
         return throw_error(left->_Node.Error().message);
+    }
+
+    if (node->_Node.Op().right->_Node.ID().value == "Type") {
+        left->TypeInfo.is_type = true;
+        return left;
     }
 
     if (left->type == NodeType::LIST && node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Union") {
@@ -6092,6 +6151,18 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
             std::string value = right->_Node.ID().value;
             if (value == "name") {
                 return new_string_node(left->_Node.Function().name);
+            }
+            if (value == "params") {
+                node_ptr obj = new_node(NodeType::OBJECT);
+                for (node_ptr& param : left->_Node.Function().params) {
+                    std::string name = param->_Node.ID().value;
+                    obj->_Node.Object().properties[name] = left->_Node.Function().param_types.count(name) && left->_Node.Function().param_types[name] ? left->_Node.Function().param_types[name] : new_node(NodeType::ANY);
+                }
+
+                return obj;
+            }
+            if (value == "return") {
+                return tc_function(left)->_Node.Function().return_type;
             }
 
             throw_error("Function does not have property '" + value + "'");

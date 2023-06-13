@@ -70,6 +70,7 @@ public:
     // Typecheck
     bool tc = false;
     bool tc_loops = false;
+    bool tc_conditonals = false;
 
 public:
     Interpreter() = default;
@@ -130,6 +131,7 @@ public:
     node_ptr eval_minus_eq(node_ptr& node);
     node_ptr eval_as(node_ptr& node);
     node_ptr eval_is(node_ptr& node);
+    node_ptr eval_in(node_ptr& node);
     // Builtin functions
     void builtin_print(node_ptr& node);
     node_ptr eval_load_lib(node_ptr& node);

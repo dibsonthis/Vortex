@@ -976,7 +976,7 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_un_op_amb({"&"}, end);
     reset(start);
-	parse_bin_op({"as", "is"}, end);
+	parse_bin_op({"as", "is", "in"}, end);
     reset(start);
     parse_bin_op({"??"}, end);
     reset(start);
