@@ -1,12 +1,11 @@
-import [] : "import"
-
-type Person {
-    name: String,
-    age: Number,
-    address: {
-        street: String,
-        postcode: Number
-    }
+type Blah {
+    name: String = ""
 }
 
-println(Items(Person))
+var b = Blah {}
+
+b.name = "John"
+
+print("hi")
+
+(b as Const).name = "Allan"

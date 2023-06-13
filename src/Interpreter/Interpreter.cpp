@@ -2622,15 +2622,23 @@ node_ptr Interpreter::eval_as(node_ptr& node) {
         return throw_error(left->_Node.Error().message);
     }
 
+    if (node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Const") {
+        node_ptr copy = std::make_shared<Node>(*left);
+        copy->Meta.is_const = true;
+        return copy;
+    }
+
     if (node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Type") {
-        left->TypeInfo.is_type = true;
-        return left;
+        node_ptr copy = std::make_shared<Node>(*left);
+        copy->TypeInfo.is_type = true;
+        return copy;
     }
 
     if (node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Literal") {
-        left->TypeInfo.is_type = true;
-        left->TypeInfo.is_literal_type = true;
-        return left;
+        node_ptr copy = std::make_shared<Node>(*left);
+        copy->TypeInfo.is_type = true;
+        copy->TypeInfo.is_literal_type = true;
+        return copy;
     }
 
     if (left->type == NodeType::LIST && node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Union") {
@@ -5534,15 +5542,23 @@ node_ptr Interpreter::tc_as(node_ptr& node) {
         return throw_error(left->_Node.Error().message);
     }
 
+    if (node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Const") {
+        node_ptr copy = std::make_shared<Node>(*left);
+        copy->Meta.is_const = true;
+        return copy;
+    }
+
     if (node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Type") {
-        left->TypeInfo.is_type = true;
-        return left;
+        node_ptr copy = std::make_shared<Node>(*left);
+        copy->TypeInfo.is_type = true;
+        return copy;
     }
 
     if (node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Literal") {
-        left->TypeInfo.is_type = true;
-        left->TypeInfo.is_literal_type = true;
-        return left;
+        node_ptr copy = std::make_shared<Node>(*left);
+        copy->TypeInfo.is_type = true;
+        copy->TypeInfo.is_literal_type = true;
+        return copy;
     }
 
     if (left->type == NodeType::LIST && node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Union") {
