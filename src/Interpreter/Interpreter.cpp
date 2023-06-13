@@ -1173,6 +1173,8 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
         val->TypeInfo.is_type = true;
         if (val->type == NodeType::OBJECT) {
             val->TypeInfo.type_name = node->_Node.Type().name;
+            val->TypeInfo.is_type = true;
+            val->TypeInfo.type = nullptr;
             Symbol symbol = new_symbol(node->_Node.Type().name, val);
             add_symbol(symbol, current_symbol_table);
             return symbol.value;
@@ -1432,10 +1434,10 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
             }
             return true;
         }
-        for (node_ptr& type : type->_Node.List().elements) {
-            if (match_types(type, value)) {
-                if (!type->TypeInfo.is_type) {
-                    if (match_values(type, value)) {
+        for (node_ptr& t : type->_Node.List().elements) {
+            if (match_types(t, value)) {
+                if (!t->TypeInfo.is_type) {
+                    if (match_values(t, value)) {
                         return true;
                     } else {
                         continue;
@@ -5220,6 +5222,8 @@ node_ptr Interpreter::tc_type(node_ptr& node) {
         val->TypeInfo.is_type = true;
         if (val->type == NodeType::OBJECT) {
             val->TypeInfo.type_name = node->_Node.Type().name;
+            val->TypeInfo.is_type = true;
+            val->TypeInfo.type = nullptr;
             Symbol symbol = new_symbol(node->_Node.Type().name, val);
             add_symbol(symbol, current_symbol_table);
             return symbol.value;
