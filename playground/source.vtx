@@ -1,2 +1,27 @@
-const f = (x: String, y) => x 
-println(f.return)
+type Items(T) {
+    T.keys.map((k) => {
+        { key: k as Literal, value: T[k] }
+    })
+}
+
+type Person {
+    name: String,
+    age: Number,
+    address: {
+        street: String,
+        postcode: Number
+    }
+}
+
+print("here")
+
+const p: Items(Person) = [
+    {key: "name", value: "Allan"},
+    {key: "age", value: 45},
+    {key: "address", value: {
+        street: "123 Fake St.",
+        postcode: 2243
+    }}
+]
+
+println(p)
