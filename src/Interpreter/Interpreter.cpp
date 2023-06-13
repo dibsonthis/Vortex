@@ -6465,6 +6465,7 @@ node_ptr Interpreter::get_type(node_ptr& node, std::vector<node_ptr> bases) {
         }
 
         obj->TypeInfo.is_type = true;
+        obj->_Node.Object().is_enum = node->_Node.Object().is_enum;
 
         return obj;
     }
@@ -6506,6 +6507,9 @@ node_ptr Interpreter::get_type(node_ptr& node, std::vector<node_ptr> bases) {
             types->_Node.List().elements.push_back(reduced);
         }
     }
+
+    types->_Node.List().is_union = node->_Node.List().is_union;
+    types->_Node.List().literal_construct = node->_Node.List().literal_construct;
 
     return types;
 }

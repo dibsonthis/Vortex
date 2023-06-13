@@ -1,22 +1,21 @@
-// import [] : string
+type Partial(T) {
+	var partial = {}
 
-// var blah = [(x: String) => x.chars(), (x: Number) => Number]
+	for (T.keys, i, k) {
+		partial[k] = union _ {T[k], None}
+	}
 
-// print(test(blah))
-
-type Person {
-    name: String,
-    age: Number,
-    address: {
-        street: String,
-        postcode: Number
-    }
+	partial as Type
 }
 
-const p: Person = Person {
-    name: "Allan", 
-    age: 34, 
-    address: {
-        street: "123 Fake st.",
-        postcode: 1234
-}}
+type Obj {
+    name: String,
+    age: Number
+}
+
+type PartialObj = Partial(Obj)
+
+const p: PartialObj = PartialObj {
+    name: None,
+    age: 56
+}
