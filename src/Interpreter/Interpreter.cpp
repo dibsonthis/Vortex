@@ -1441,13 +1441,20 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
         }
         for (node_ptr& t : type->_Node.List().elements) {
             if (match_types(t, value)) {
-                if (!t->TypeInfo.is_type) {
+                if (t->TypeInfo.is_literal_type) {
                     if (match_values(t, value)) {
                         return true;
                     } else {
                         continue;
                     }
                 }
+                // if (!t->TypeInfo.is_type) {
+                //     if (match_values(t, value)) {
+                //         return true;
+                //     } else {
+                //         continue;
+                //     }
+                // }
                 return true;
             }
         }
@@ -2003,6 +2010,8 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
         Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
         import_interpreter.global_interpreter = this;
         import_interpreter.tc = tc;
+        import_interpreter.tc_loops = tc_loops;
+        import_interpreter.tc_conditonals = tc_conditonals;
         import_interpreter.evaluate();
 
         std::filesystem::current_path(current_path);
@@ -2058,6 +2067,8 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
         Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
         import_interpreter.global_interpreter = this;
         import_interpreter.tc = tc;
+        import_interpreter.tc_loops = tc_loops;
+        import_interpreter.tc_conditonals = tc_conditonals;
         import_interpreter.evaluate();
 
         std::filesystem::current_path(current_path);
@@ -2713,6 +2724,8 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 for (auto& elem : left->_Node.Object().properties) {
                     keys->_Node.List().elements.push_back(new_string_node(elem.first));
                 }
+                keys->TypeInfo.type = new_node(NodeType::LIST);
+                keys->TypeInfo.type->_Node.List().elements.push_back(new_string_node(""));
                 return keys;
             }
             if (right->_Node.ID().value == "values") {
@@ -2828,7 +2841,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
         node_ptr list_type = left->TypeInfo.type;
         if (!list_type) {
             list_type = new_node(NodeType::ANY);
-        }else if (list_type->_Node.List().elements.size() == 1) {
+        } else if (list_type->_Node.List().elements.size() == 1) {
             list_type = list_type->_Node.List().elements[0];
         } else {
             list_type = new_node(NodeType::ANY);
@@ -4628,6 +4641,8 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
     } else {
         func->_Node.Function().return_type = res;
     }
+
+    func->_Node.Function().return_type->TypeInfo.is_type = true;
 
     current_symbol_table = current_symbol_table->parent->parent;
     current_symbol_table->child->child = nullptr;

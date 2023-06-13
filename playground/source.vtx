@@ -1,8 +1,4 @@
-type Items(T) {
-    T.keys.map((k) => {
-        { key: k as Literal, value: T[k] }
-    })
-}
+import [] : "import"
 
 type Person {
     name: String,
@@ -13,15 +9,4 @@ type Person {
     }
 }
 
-print("here")
-
-const p: Items(Person) = [
-    {key: "name", value: "Allan"},
-    {key: "age", value: 45},
-    {key: "address", value: {
-        street: "123 Fake St.",
-        postcode: 2243
-    }}
-]
-
-println(p)
+println(Items(Person))
