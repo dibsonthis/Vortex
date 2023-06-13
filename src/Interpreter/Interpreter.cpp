@@ -1047,6 +1047,9 @@ node_ptr Interpreter::eval_accessor(node_ptr& node) {
 }
 
 node_ptr Interpreter::eval_function(node_ptr& node) {
+    // Testing
+    return tc_function(node);
+
     node_ptr func = new_node(NodeType::FUNC);
     func->_Node.Function().name = func->_Node.Function().name;
     func->_Node.Function().args = std::vector<node_ptr>(node->_Node.Function().args);
@@ -1170,6 +1173,9 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
         val->TypeInfo.is_type = true;
         if (val->type == NodeType::OBJECT) {
             val->TypeInfo.type_name = node->_Node.Type().name;
+            Symbol symbol = new_symbol(node->_Node.Type().name, val);
+            add_symbol(symbol, current_symbol_table);
+            return symbol.value;
         }
         Symbol symbol = new_symbol(node->_Node.Type().name, val);
         // Check if type is function and if it returns a type
@@ -1412,6 +1418,11 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
     if (type->type == NodeType::LIST && type->_Node.List().is_union) {
         if (type->TypeInfo.is_general_type) {
             return true;
+        }
+        for (const node_ptr& elem : type->_Node.List().elements) {
+            if (elem->type == NodeType::ANY) {
+                return true;
+            }
         }
         if (value->type == NodeType::LIST && value->_Node.List().is_union) {
             for (node_ptr& elem : value->_Node.List().elements) {
@@ -3464,6 +3475,8 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
 
             if (accessed_value->type == NodeType::NONE) {
                 container->_Node.Object().properties[accessor->_Node.List().elements[0]->_Node.String().value] = right;
+            } else if (accessed_value->type == NodeType::LIST && accessed_value->_Node.List().is_union && accessed_value->_Node.List().elements.size() == 2 && accessed_value->_Node.List().elements[0]->type == NodeType::ANY && accessed_value->_Node.List().elements[1]->type == NodeType::NONE) {
+                container->_Node.Object().properties[accessor->_Node.List().elements[0]->_Node.String().value] = right;
             } else {
                 node_ptr old_value = std::make_shared<Node>(*accessed_value);
                 std::vector<node_ptr> onChangeFunctions = accessed_value->Hooks.onChange;
@@ -4580,8 +4593,8 @@ node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
             if (val->type == NodeType::ERROR) {
                 return val;
             }
-
-            return new_node(NodeType::STRING);
+            
+            return new_string_node(printable(val));
         }
         if (node->_Node.FunctionCall().name == "number") {
             if (node->_Node.FunctionCall().args.size() != 1 && node->_Node.FunctionCall().args.size() != 2) {
@@ -4784,7 +4797,13 @@ node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
             res->_Node.Function().param_types[name] = eval_node(arg);
         }
 
+        tc_loops = true;
         res = tc_function(res);
+        tc_loops = false;
+        // tc = false;
+        // res = eval_func_call(node, res);
+        // tc = true;
+        // return res;
         return res->_Node.Function().return_type;
     }
 
@@ -4901,6 +4920,11 @@ node_ptr Interpreter::tc_if_block(node_ptr& node) {
 }
 
 node_ptr Interpreter::tc_while_loop(node_ptr& node) {
+
+    if (tc_loops) {
+        return eval_while_loop(node);
+    }
+
     node_ptr conditional = eval_node(node->_Node.WhileLoop().condition);
 
     auto current_scope = current_symbol_table;
@@ -4927,6 +4951,10 @@ node_ptr Interpreter::tc_while_loop(node_ptr& node) {
 }
 
 node_ptr Interpreter::tc_for_loop(node_ptr& node) {
+
+    if (tc_loops) {
+        return eval_for_loop(node);
+    }
 
     if (node->_Node.ForLoop().iterator != nullptr) {
         node_ptr iterator = eval_node(node->_Node.ForLoop().iterator);
@@ -5117,9 +5145,17 @@ node_ptr Interpreter::tc_accessor(node_ptr& node) {
         node_ptr union_res = new_node(NodeType::LIST);
         union_res->TypeInfo.is_type = true;
         union_res->_Node.List().is_union = true;
-        node_ptr prop_type = container->_Node.Object().properties[prop] ? container->_Node.Object().properties[prop] : new_node(NodeType::ANY);
-        union_res->_Node.List().elements.push_back(prop_type);
-        union_res->_Node.List().elements.push_back(new_node(NodeType::NONE));
+        node_ptr prop_type;
+        if (prop == "" || !container->_Node.Object().properties.count(prop)) {
+            prop_type = new_node(NodeType::ANY);
+            union_res->_Node.List().elements.push_back(prop_type);
+            union_res->_Node.List().elements.push_back(new_node(NodeType::NONE));
+        } else {
+            return container->_Node.Object().properties[prop];
+        }
+        //node_ptr prop_type = container->_Node.Object().properties[prop] ? container->_Node.Object().properties[prop] : new_node(NodeType::ANY);
+        //union_res->_Node.List().elements.push_back(prop_type);
+        //union_res->_Node.List().elements.push_back(new_node(NodeType::NONE));
         return union_res;
     }
 
@@ -5184,6 +5220,9 @@ node_ptr Interpreter::tc_type(node_ptr& node) {
         val->TypeInfo.is_type = true;
         if (val->type == NodeType::OBJECT) {
             val->TypeInfo.type_name = node->_Node.Type().name;
+            Symbol symbol = new_symbol(node->_Node.Type().name, val);
+            add_symbol(symbol, current_symbol_table);
+            return symbol.value;
         }
         Symbol symbol = new_symbol(node->_Node.Type().name, val);
         // Check if type is function and if it returns a type

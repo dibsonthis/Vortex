@@ -69,6 +69,7 @@ public:
     std::unordered_map<uint32_t, std::shared_future<node_ptr>> _futures;
     // Typecheck
     bool tc = false;
+    bool tc_loops = false;
 
 public:
     Interpreter() = default;

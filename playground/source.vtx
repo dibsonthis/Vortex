@@ -1,18 +1,16 @@
-type Obj {
+type Record(Keys, Type) {
+    var obj = {}
+    for (Keys, i, k) {
+        obj[string(k)] = Type
+    }
+    obj
+}
+
+const Ids = [1001, 1002, 1003]
+
+type User {
     name: String,
-    age: String
+    age: Number
 }
 
-type Partial(T) {
-	var partial = {}
-
-	for (T.keys, i, k) {
-		partial[k] = union _ {T[k], None}
-	}
-
-	partial
-}
-
-type PartialObj = Partial(Obj)
-
-print(PartialObj)
+print(Record(Ids, User))
