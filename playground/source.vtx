@@ -1,11 +1,22 @@
-type Blah {
-    name: String = ""
+// import [] : string
+
+// var blah = [(x: String) => x.chars(), (x: Number) => Number]
+
+// print(test(blah))
+
+type Person {
+    name: String,
+    age: Number,
+    address: {
+        street: String,
+        postcode: Number
+    }
 }
 
-var b = Blah {}
-
-b.name = "John"
-
-print("hi")
-
-(b as Const).name = "Allan"
+const p: Person = Person {
+    name: "Allan", 
+    age: 34, 
+    address: {
+        street: "123 Fake st.",
+        postcode: 1234
+}}

@@ -142,7 +142,7 @@ public:
     Symbol get_symbol_local(std::string& name, sym_t_ptr& symbol_table);
     void add_symbol(Symbol symbol, sym_t_ptr& symbol_table);
     void delete_symbol(std::string name, sym_t_ptr& symbol_table);
-    bool match_types(node_ptr& _nodeA, node_ptr& _nodeB);
+    bool match_types(node_ptr& _nodeA, node_ptr& _nodeB, bool type_nodes = false);
     bool match_values(node_ptr& nodeA, node_ptr& nodeB);
 
     void erase_prev();
@@ -159,7 +159,6 @@ public:
 
     // std::string printable(node_ptr& node, node_ptr base = nullptr);
     std::string printable(node_ptr& node, std::vector<node_ptr> bases = {});
-    node_ptr get_type(node_ptr& node);
 
     void replaceAll(std::string& str, const std::string& from, const std::string& to);
 
@@ -182,5 +181,6 @@ public:
     node_ptr tc_call_lib_function(node_ptr& lib, node_ptr& node);
 
     bool compareNodeTypes(node_ptr& lhs, node_ptr& rhs);
+    node_ptr get_type(node_ptr& list, std::vector<node_ptr> bases = {});
 
 };

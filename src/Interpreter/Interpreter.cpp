@@ -40,21 +40,19 @@ node_ptr Interpreter::eval_const_decl(node_ptr& node) {
     if (!is_ref) {
         value = std::make_shared<Node>(*value);
     }
-    if (type && !match_types(type, value)) {
-        // node_ptr _type = get_type(type);
-        // node_ptr _value = get_type(value);
-        return throw_error("Variable '" + node->_Node.ConstantDeclatation().name + "' expects a value of type '" + printable(type) + "' but was instantiated with value of type '" + printable(value) + "'");
+    if (type && !match_types(type, value, true)) {
+        node_ptr _type = get_type(type);
+        node_ptr _value = get_type(value);
+        return throw_error("Variable '" + node->_Node.ConstantDeclatation().name + "' expects a value of type '" + printable(_type) + "' but was instantiated with value of type '" + printable(_value) + "'");
     }
     if (type && (type->type == NodeType::LIST && type->_Node.List().is_union) || type && (type->type == NodeType::ANY)) {
         value->TypeInfo.base_type = type;
     } else {
         value->TypeInfo.type = type;
     }
-    if (value->TypeInfo.base_type && !match_types(value->TypeInfo.base_type, value)) {
-        // node_ptr _type = get_type(value->TypeInfo.base_type);
-        // node_ptr _value = get_type(value);
-         node_ptr _type = value->TypeInfo.base_type;
-        node_ptr _value = value;
+    if (value->TypeInfo.base_type && !match_types(value->TypeInfo.base_type, value, true)) {
+        node_ptr _type = get_type(value->TypeInfo.base_type);
+        node_ptr _value = get_type(value);
         return throw_error("Variable '" + node->_Node.ConstantDeclatation().name + "' expects a value of type '" + printable(_type) + "' but was instantiated with value of type '" + printable(_value) + "'");
     }
     if (!type) {
@@ -99,21 +97,19 @@ node_ptr Interpreter::eval_var_decl(node_ptr& node) {
         return throw_error(value->_Node.Error().message);
     }
     node_ptr type = eval_node(node->TypeInfo.type);
-    if (type && !match_types(type, value)) {
-        // node_ptr _type = get_type(type);
-        // node_ptr _value = get_type(value);
-        return throw_error("Variable '" + node->_Node.VariableDeclaration().name + "' expects a value of type '" + printable(type) + "' but was instantiated with value of type '" + printable(value) + "'");
+    if (type && !match_types(type, value, true)) {
+        node_ptr _type = get_type(type);
+        node_ptr _value = get_type(value);
+        return throw_error("Variable '" + node->_Node.VariableDeclaration().name + "' expects a value of type '" + printable(_type) + "' but was instantiated with value of type '" + printable(_value) + "'");
     }
     if (type && (type->type == NodeType::LIST && type->_Node.List().is_union) || type && (type->type == NodeType::ANY)) {
         value->TypeInfo.base_type = type;
     } else {
         value->TypeInfo.type = type;
     }
-    if (value->TypeInfo.base_type && !match_types(value->TypeInfo.base_type, value)) {
-        // node_ptr _type = get_type(value->TypeInfo.base_type);
-        // node_ptr _value = get_type(value);
-        node_ptr _type = value->TypeInfo.base_type;
-        node_ptr _value = value;
+    if (value->TypeInfo.base_type && !match_types(value->TypeInfo.base_type, value, true)) {
+        node_ptr _type = get_type(value->TypeInfo.base_type);
+        node_ptr _value = get_type(value);
         return throw_error("Variable '" + node->_Node.VariableDeclaration().name + "' expects a value of type '" + printable(_type) + "' but was instantiated with value of type '" + printable(_value) + "'");
     }
     if (!type) {
@@ -166,7 +162,7 @@ node_ptr Interpreter::eval_list(node_ptr& node) {
                     list->TypeInfo.type->TypeInfo.is_type = true;
                     list->TypeInfo.type->_Node.List().elements.push_back(evaluated_elem);
                 } else if (i == 1) {
-                    if (!match_types(list->TypeInfo.type->_Node.List().elements[0], evaluated_elem)) {
+                    if (!match_types(list->TypeInfo.type->_Node.List().elements[0], evaluated_elem, true)) {
                         list->TypeInfo.type->_Node.List().elements[0] = new_node(NodeType::ANY);
                     }
                 }
@@ -276,6 +272,10 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
     }
     
     if (!func) {
+        if (node->_Node.FunctionCall().name == "test") {
+            node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
+            return get_type(arg);
+        }
         if (node->_Node.FunctionCall().name == "print") {
             if (node->_Node.FunctionCall().args.size() == 1) {
                 node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
@@ -572,7 +572,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
             node_ptr param = fx->_Node.Function().params[i];
             node_ptr param_type = fx->_Node.Function().param_types[param->_Node.ID().value];
             if (param_type) {
-                if (!match_types(param_type, args[i])) {
+                if (!match_types(param_type, args[i], true)) {
                     goto not_found;
                 }
             } else {
@@ -592,8 +592,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
     if (!func_match) {
         std::string argsStr = "(";
         for (int i = 0; i < args.size(); i++) {
-            //node_ptr arg = get_type(args[i]);
-            node_ptr arg = args[i];
+            node_ptr arg = get_type(args[i]);
             argsStr += printable(arg);
             if (i != args.size()-1) {
                 argsStr += ", ";
@@ -678,10 +677,8 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
     if (!function->_Node.Function().type_function) {
         // Check against return type
         if (function->_Node.Function().return_type) {
-            if (!match_types(function->_Node.Function().return_type, res)) {
+            if (!match_types(function->_Node.Function().return_type, res, true)) {
                 return throw_error("Type Error in '" + function->_Node.Function().name + "': Return type does not match defined return type");
-            } else {
-                func->_Node.Function().return_type = res;
             }
         } else {
             function->_Node.Function().return_type = res;
@@ -1281,7 +1278,7 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
         }
         object->_Node.Object().properties[name] = type_val;
         if (def_val) {
-            if (!type_val->TypeInfo.is_decl && !match_types(type_val, def_val)) {
+            if (!type_val->TypeInfo.is_decl && !match_types(type_val, def_val, true)) {
                 return throw_error("Default type constructor for propery '" + name + "' does not match type: Expecting value of type '" + node_repr(type_val) + "' but received value of type '" + node_repr(def_val) + "'");
             }
             if (def_val->type == NodeType::FUNC && object->_Node.Object().defaults.count(name) && object->_Node.Object().defaults[name]->type == NodeType::FUNC) {
@@ -1355,7 +1352,7 @@ bool Interpreter::match_values(node_ptr& nodeA, node_ptr& nodeB) {
     return false;
 }
 
-bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
+bool Interpreter::match_types(node_ptr& _type, node_ptr& _value, bool type_nodes) {
     if (!_type || !_value) {
         return false;
     }
@@ -1398,6 +1395,11 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
         return true;
     }
 
+    if (type_nodes) {
+        type = get_type(type);
+        value = get_type(value);
+    }
+
     if (type->type == NodeType::FUNC && type->TypeInfo.is_refinement_type) {
         node_ptr func_call = new_node(NodeType::FUNC_CALL);
         if (type->_Node.Function().params.size() != 1) {
@@ -1426,12 +1428,23 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
         if (type->TypeInfo.is_general_type) {
             return true;
         }
+
         for (const node_ptr& elem : type->_Node.List().elements) {
             if (elem->type == NodeType::ANY) {
                 return true;
             }
         }
         if (value->type == NodeType::LIST && value->_Node.List().is_union) {
+
+            for (node_ptr& elem : value->_Node.List().elements) {
+                if (!match_types(type, elem)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        if (value->type == NodeType::LIST) {
+
             for (node_ptr& elem : value->_Node.List().elements) {
                 if (!match_types(type, elem)) {
                     return false;
@@ -1475,21 +1488,28 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
         return match_values(type, value);
     }
 
+    if (value->TypeInfo.is_literal_type) {
+        return match_values(type, value);
+    }
+
     if (type->type != value->type) {
         return false;
     }
 
-    if (type->type == NodeType::FUNC && type->TypeInfo.is_type) {
+    if (type->type == NodeType::FUNC) {
         if (type->TypeInfo.is_general_type) {
             return true;
         }
-        node_ptr body = type->_Node.Function().body;
-        // Because we haven't evaluated the body here (in case the function returns a parametric type)
-        // We attempt to evaluate it here
-        if (body->type == NodeType::ID) {
-            body = get_symbol(body->_Node.ID().value, current_symbol_table).value;
-        }
-        if (!match_types(body, value->_Node.Function().return_type)) {
+        node_ptr type_func = tc_function(type);
+        node_ptr value_func = tc_function(value);
+        // node_ptr body = type->_Node.Function().body;
+        // // Because we haven't evaluated the body here (in case the function returns a parametric type)
+        // // We attempt to evaluate it here
+        // if (body->type == NodeType::ID) {
+        //     body = get_symbol(body->_Node.ID().value, current_symbol_table).value;
+        // }
+
+        if (!match_types(type_func->_Node.Function().return_type, value_func->_Node.Function().return_type)) {
             return false;
         }
 
@@ -1535,6 +1555,15 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
             list_type->_Node.List().is_union = true;
             list_type->TypeInfo.is_type = true;
 
+            if (value->type == NodeType::LIST) {
+                for (node_ptr& elem : value->_Node.List().elements) {
+                    if (!match_types(list_type, elem)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
 
             for (node_ptr& elem : value->_Node.List().elements) {
                 if (!match_types(list_type, elem)) {
@@ -1561,15 +1590,26 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
                 return true;
             }
             // node_ptr list_type = type->_Node.List().elements[0];
-            std::vector<node_ptr> list_types = type->_Node.List().elements;
-            list_types.erase(std::unique(list_types.begin(), list_types.end(), [this](node_ptr& lhs, node_ptr& rhs) { return compareNodeTypes(lhs, rhs); }), list_types.end());
-            node_ptr list_type = new_node(NodeType::LIST);
-            list_type->_Node.List().elements = list_types;
-            list_type->_Node.List().is_union = true;
-            list_type->TypeInfo.is_type = true;
 
-            for (node_ptr& elem : type->_Node.List().elements) {
-                if (!match_types(list_type, elem)) {
+            // std::vector<node_ptr> list_types = type->_Node.List().elements;
+            // list_types.erase(std::unique(list_types.begin(), list_types.end(), [this](node_ptr& lhs, node_ptr& rhs) { return compareNodeTypes(lhs, rhs); }), list_types.end());
+            // node_ptr list_type = new_node(NodeType::LIST);
+            // list_type->_Node.List().elements = list_types;
+            // list_type->_Node.List().is_union = true;
+            // list_type->TypeInfo.is_type = true;
+
+            // for (node_ptr& elem : type->_Node.List().elements) {
+            //     if (!match_types(list_type, elem)) {
+            //         return false;
+            //     }
+            // }
+
+            if (type->_Node.List().elements.size() != value->_Node.List().elements.size()) {
+                return false;
+            }
+
+            for (int i = 0; i < type->_Node.List().elements.size(); i++) {
+                if (!match_types(type->_Node.List().elements[i], value->_Node.List().elements[i])) {
                     return false;
                 }
             }
@@ -1759,7 +1799,7 @@ node_ptr Interpreter::eval_object_init(node_ptr& node) {
         node_ptr type_prop_value = prop.second;
         node_ptr obj_prop_value = object->_Node.Object().properties[prop_name];
 
-        int match = match_types(type_prop_value, obj_prop_value);
+        int match = match_types(type_prop_value, obj_prop_value, true);
         if (!match) {
             return throw_error("Error in object initialization for type '" + node->_Node.ObjectDeconstruct().name + "': Match error in property '" + prop_name + "'");
         }
@@ -2145,6 +2185,10 @@ node_ptr Interpreter::eval_add(node_ptr& node) {
         return throw_error(right->_Node.Error().message);
     }
 
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
+    }
+
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_number_node(left->_Node.Number().value + right->_Node.Number().value);
     }
@@ -2176,6 +2220,10 @@ node_ptr Interpreter::eval_sub(node_ptr& node) {
         return throw_error(right->_Node.Error().message);
     }
 
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
+    }
+
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_number_node(left->_Node.Number().value - right->_Node.Number().value);
     }
@@ -2190,7 +2238,7 @@ node_ptr Interpreter::eval_sub(node_ptr& node) {
         right->TypeInfo.type = nullptr;
 
         for (node_ptr& elem : left->_Node.List().elements) {
-            if (match_types(right, elem)) {
+            if (match_types(right, elem, true)) {
                 continue;
             }
 
@@ -2206,7 +2254,7 @@ node_ptr Interpreter::eval_sub(node_ptr& node) {
         union_list->_Node.List().is_union = true;
 
         for (node_ptr& elem : left->_Node.List().elements) {
-            if (match_types(elem, right)) {
+            if (match_types(elem, right, true)) {
                 continue;
             }
 
@@ -2232,6 +2280,10 @@ node_ptr Interpreter::eval_mul(node_ptr& node) {
         return throw_error(right->_Node.Error().message);
     }
 
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
+    }
+
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_number_node(left->_Node.Number().value * right->_Node.Number().value);
     }
@@ -2250,6 +2302,10 @@ node_ptr Interpreter::eval_div(node_ptr& node) {
 
     if (right->type == NodeType::ERROR) {
         return throw_error(right->_Node.Error().message);
+    }
+
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
     }
 
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
@@ -2272,6 +2328,10 @@ node_ptr Interpreter::eval_pow(node_ptr& node) {
         return throw_error(right->_Node.Error().message);
     }
 
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
+    }
+
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_number_node(pow(left->_Node.Number().value, right->_Node.Number().value));
     }
@@ -2292,6 +2352,10 @@ node_ptr Interpreter::eval_mod(node_ptr& node) {
         return throw_error(right->_Node.Error().message);
     }
 
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
+    }
+
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_number_node(fmod(left->_Node.Number().value, right->_Node.Number().value));
     }
@@ -2310,6 +2374,10 @@ node_ptr Interpreter::eval_eq_eq(node_ptr& node) {
 
     if (right->type == NodeType::ERROR) {
         return throw_error(right->_Node.Error().message);
+    }
+
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::BOOLEAN);
     }
 
     if (left->type != right->type) {
@@ -2355,6 +2423,10 @@ node_ptr Interpreter::eval_not_eq(node_ptr& node) {
         return throw_error(right->_Node.Error().message);
     }
 
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::BOOLEAN);
+    }
+
     if (left->type != right->type) {
         return new_boolean_node(true);
     }
@@ -2398,6 +2470,10 @@ node_ptr Interpreter::eval_lt_eq(node_ptr& node) {
         return throw_error(right->_Node.Error().message);
     }
 
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::BOOLEAN);
+    }
+
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_boolean_node(left->_Node.Number().value <= right->_Node.Number().value);
     }
@@ -2416,6 +2492,10 @@ node_ptr Interpreter::eval_gt_eq(node_ptr& node) {
 
     if (right->type == NodeType::ERROR) {
         return throw_error(right->_Node.Error().message);
+    }
+
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::BOOLEAN);
     }
 
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
@@ -2438,6 +2518,10 @@ node_ptr Interpreter::eval_lt(node_ptr& node) {
         return throw_error(right->_Node.Error().message);
     }
 
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::BOOLEAN);
+    }
+
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_boolean_node(left->_Node.Number().value < right->_Node.Number().value);
     }
@@ -2458,6 +2542,10 @@ node_ptr Interpreter::eval_gt(node_ptr& node) {
         return throw_error(right->_Node.Error().message);
     }
 
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::BOOLEAN);
+    }
+
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_boolean_node(left->_Node.Number().value > right->_Node.Number().value);
     }
@@ -2471,6 +2559,10 @@ node_ptr Interpreter::eval_and(node_ptr& node) {
 
     if (left->type == NodeType::ERROR) {
         return throw_error(left->_Node.Error().message);
+    }
+
+    if (left->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
     }
 
     node_ptr left_bool = left;
@@ -2489,6 +2581,10 @@ node_ptr Interpreter::eval_and(node_ptr& node) {
         return throw_error(right->_Node.Error().message);
     }
 
+    if (right->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
+    }
+
     return right;
 }
 
@@ -2502,6 +2598,10 @@ node_ptr Interpreter::eval_bit_and(node_ptr& node) {
 
     if (right->type == NodeType::ERROR) {
         return throw_error(right->_Node.Error().message);
+    }
+
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
     }
 
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
@@ -2524,6 +2624,10 @@ node_ptr Interpreter::eval_bit_or(node_ptr& node) {
         return throw_error(right->_Node.Error().message);
     }
 
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
+    }
+
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
         return new_number_node((long)left->_Node.Number().value | (long)right->_Node.Number().value);
     }
@@ -2540,6 +2644,10 @@ node_ptr Interpreter::eval_or(node_ptr& node) {
         return throw_error(left->_Node.Error().message);
     }
 
+    if (left->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
+    }
+
     if (left->type != NodeType::BOOLEAN) {
         left_bool = new_boolean_node(left->type != NodeType::NONE);
     }
@@ -2554,6 +2662,10 @@ node_ptr Interpreter::eval_or(node_ptr& node) {
         return throw_error(right->_Node.Error().message);
     }
 
+    if (right->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
+    }
+
     return right;
 }
 
@@ -2564,6 +2676,10 @@ node_ptr Interpreter::eval_null_op(node_ptr& node) {
         return throw_error(left->_Node.Error().message);
     }
 
+    if (left->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
+    }
+
     if (left->type != NodeType::NONE) {
         return left;
     }
@@ -2572,6 +2688,10 @@ node_ptr Interpreter::eval_null_op(node_ptr& node) {
 
     if (right->type == NodeType::ERROR) {
         return throw_error(right->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
     }
 
     return right;
@@ -2664,6 +2784,10 @@ node_ptr Interpreter::eval_as(node_ptr& node) {
         return union_list;
     }
 
+    if (left->type == NodeType::ANY) {
+        return eval_node(node->_Node.Op().right);
+    }
+
     return left;
 }
 
@@ -2680,7 +2804,7 @@ node_ptr Interpreter::eval_is(node_ptr& node) {
         return throw_error(right->_Node.Error().message);
     }
 
-    return new_boolean_node(match_types(left, right));
+    return new_boolean_node(match_types(left, right, true));
 }
 
 node_ptr Interpreter::eval_in(node_ptr& node) {
@@ -2701,7 +2825,7 @@ node_ptr Interpreter::eval_in(node_ptr& node) {
     }
 
     for (node_ptr& elem : right->_Node.List().elements) {
-        if (match_types(elem, left)) {
+        if (match_types(elem, left, true)) {
             return new_boolean_node(true);
         }
     }
@@ -2710,6 +2834,11 @@ node_ptr Interpreter::eval_in(node_ptr& node) {
 }
 
 node_ptr Interpreter::eval_dot(node_ptr& node) {
+
+    if (tc) {
+        return tc_dot(node);
+    }
+
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = node->_Node.Op().right;
 
@@ -2719,6 +2848,10 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
     if (right->type == NodeType::ERROR) {
         return throw_error(right->_Node.Error().message);
+    }
+
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
     }
 
     if (left->type == NodeType::OBJECT) {
@@ -2891,8 +3024,10 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 }
                 node_ptr arg = eval_node(right->_Node.FunctionCall().args[0]);
                 // Type check
-                if (!match_types(list_type, arg)) {
-                    return throw_error("Cannot insert value of type '" + node_repr(arg) + "' into container of type '" + node_repr(left->TypeInfo.type) + "'");
+                if (!match_types(list_type, arg, true)) {
+                    node_ptr _type = get_type(arg);
+                    node_ptr _value = get_type(left->TypeInfo.type);
+                    return throw_error("Cannot insert value of type '" + printable(_type) + "' into container of type '" + printable(_value) + "'");
                 }
                 left->_Node.List().elements.push_back(arg);
                 return left;
@@ -2906,8 +3041,10 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 }
                 node_ptr arg = eval_node(right->_Node.FunctionCall().args[0]);
                 // Type check
-                if (!match_types(list_type, arg)) {
-                    return throw_error("Cannot insert value of type '" + node_repr(arg) + "' into container of type '" + node_repr(left->TypeInfo.type) + "'");
+                if (!match_types(list_type, arg, true)) {
+                    node_ptr _type = get_type(arg);
+                    node_ptr _value = get_type(left->TypeInfo.type);
+                    return throw_error("Cannot insert value of type '" + printable(_type) + "' into container of type '" + printable(_value) + "'");
                 }
                 left->_Node.List().elements.insert(left->_Node.List().elements.begin(), arg);
                 return left;
@@ -2923,8 +3060,10 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 node_ptr index_node = eval_node(right->_Node.FunctionCall().args[1]);
 
                 // Type check
-                if (!match_types(list_type, value)) {
-                    return throw_error("Cannot insert value of type '" + node_repr(value) + "' into container of type '" + node_repr(left->TypeInfo.type) + "'");
+                if (!match_types(list_type, value, true)) {
+                    node_ptr _type = get_type(value);
+                    node_ptr _value = get_type(left->TypeInfo.type);
+                    return throw_error("Cannot insert value of type '" + printable(_type) + "' into container of type '" + printable(_value) + "'");
                 }
 
                 if (index_node->type != NodeType::NUMBER) {
@@ -3050,7 +3189,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 // Check that the param_types is null or matches
                 node_ptr param_type = function->_Node.Function().param_types[list_param_name];
                 if (param_type) {
-                    if (!match_types(list_type, param_type)) {
+                    if (!match_types(list_type, param_type, true)) {
                         return throw_error("Map function expects a parameter of type '" + printable(list_type) + "' but received '" + printable(param_type) + "'");
                     }
                 } else {
@@ -3104,7 +3243,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 // Check that the param_types is null or matches
                 node_ptr param_type = function->_Node.Function().param_types[list_param_name];
                 if (param_type) {
-                    if (!match_types(list_type, param_type)) {
+                    if (!match_types(list_type, param_type, true)) {
                         return throw_error("Map function expects a parameter of type '" + printable(list_type) + "' but received '" + printable(param_type) + "'");
                     }
                 } else {
@@ -3449,7 +3588,7 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
 
             // Type check
             if (!accessed_value->Meta.is_untyped_property) {
-                if (!match_types(accessed_value, right)) {
+                if (!match_types(accessed_value, right, true)) {
                     return throw_error("Cannot modify object property type '" + node_repr(accessed_value) + "'");
                 }
             }
@@ -3519,9 +3658,8 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
 
         // Type check
         if (!accessed_value->Meta.is_untyped_property) {
-            if (!match_types(accessed_value, right)) {
-                //node_ptr _type = get_type(accessed_value);
-                node_ptr _type = accessed_value;
+            if (!match_types(accessed_value, right, true)) {
+                node_ptr _type = get_type(accessed_value);
                 return throw_error("Type error in property '" + prop->_Node.ID().value + "' - Cannot modify object property type '" + printable(_type) + "'");
             }
         }
@@ -3606,7 +3744,7 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
                 std::vector<node_ptr> onChangeFunctions = accessed_value->Hooks.onChange;
 
                 if (!accessed_value->Meta.is_untyped_property) {
-                    if (!match_types(accessed_value, right)) {
+                    if (!match_types(accessed_value, right, true)) {
                         return throw_error("Cannot modify object property type '" + node_repr(accessed_value) + "'");
                     }
                 }
@@ -3670,15 +3808,14 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
                 return throw_error("Cannot modify constant '" + symbol.name + "'");
             }
 
-            if (!match_types(symbol.value, right)) {
+            if (!match_types(symbol.value, right, true)) {
                 node_ptr type = symbol.value;
                 if (!type->TypeInfo.is_type && type->TypeInfo.type) {
                     type = type->TypeInfo.type;
                 }
-                // node_ptr _type = get_type(type);
-                // node_ptr _value = get_type(right);
-                node_ptr _value = right;
-                return throw_error("Cannot modify type of variable '" + symbol.name + "': Expected '" + printable(type) + "' but received '" + printable(_value) + "'");
+                node_ptr _type = get_type(type);
+                node_ptr _value = get_type(right);
+                return throw_error("Cannot modify type of variable '" + symbol.name + "': Expected '" + printable(_type) + "' but received '" + printable(_value) + "'");
             }
 
             node_ptr old_value = std::make_shared<Node>(*symbol.value);
@@ -3846,7 +3983,8 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
 std::string Interpreter::printable(node_ptr& node, std::vector<node_ptr> bases) {
     switch (node->type) {
         case NodeType::NUMBER: {
-            if (node->TypeInfo.is_type) {
+            if (node->TypeInfo.is_literal_type) {}
+            else if (node->TypeInfo.is_type) {
                 return "Number";
             }
             std::string num_str = std::to_string(node->_Node.Number().value);
@@ -3855,13 +3993,15 @@ std::string Interpreter::printable(node_ptr& node, std::vector<node_ptr> bases) 
             return num_str;
         }
         case NodeType::BOOLEAN: {
-            if (node->TypeInfo.is_type) {
+            if (node->TypeInfo.is_literal_type) {}
+            else if (node->TypeInfo.is_type) {
                 return "Boolean";
             }
             return node->_Node.Boolean().value ? "true" : "false";
         }
         case NodeType::STRING: {
-            if (node->TypeInfo.is_type) {
+            if (node->TypeInfo.is_literal_type) {}
+            else if (node->TypeInfo.is_type) {
                 return "String";
             }
             return node->_Node.String().value;
@@ -3872,8 +4012,7 @@ std::string Interpreter::printable(node_ptr& node, std::vector<node_ptr> bases) 
                 node_ptr& param = node->_Node.Function().params[i];
                 node_ptr& type = node->_Node.Function().param_types[param->_Node.ID().value];
                 if (type) {
-                    //node_ptr _type = get_type(type);
-                    node_ptr _type = type;
+                    node_ptr _type = get_type(type);
                     res += param->_Node.ID().value + ": " + printable(_type);
                 } else {
                     res += param->_Node.ID().value;
@@ -3983,79 +4122,6 @@ std::string Interpreter::printable(node_ptr& node, std::vector<node_ptr> bases) 
         }
         default: {
             return "<not implemented>";
-        }
-    }
-}
-
-node_ptr Interpreter::get_type(node_ptr& node) {
-    node_ptr _node = node->TypeInfo.base_type ? node->TypeInfo.base_type : node;
-    switch (_node->type) {
-        case NodeType::NUMBER: {
-            if (node->TypeInfo.is_literal_type) {
-                return new_string_node(printable(node));
-            }
-            return new_string_node("Number");
-        }
-        case NodeType::BOOLEAN: {
-            if (node->TypeInfo.is_literal_type) {
-                return new_string_node(printable(node));
-            }
-            return new_string_node("Boolean");
-        }
-        case NodeType::STRING: {
-            if (node->TypeInfo.is_literal_type) {
-                return node;
-            }
-            return new_string_node("String");
-        }
-        case NodeType::FUNC: {
-            return node;
-        }
-        case NodeType::LIST: {
-            std::vector<node_ptr> list;
-            for (int i = 0; i < _node->_Node.List().elements.size(); i++) {
-                if (_node->_Node.List().elements[i] == _node) {
-                    list.push_back(_node->_Node.List().elements[i]);
-                } else {
-                    list.push_back(get_type(_node->_Node.List().elements[i]));
-                }
-            }
-            node_ptr list_node = new_node(NodeType::LIST);
-            list_node->_Node.List().elements = list;
-            list_node->TypeInfo = _node->TypeInfo;
-            return list_node;
-        }
-        case NodeType::OBJECT: {
-            node_ptr obj = new_node(NodeType::OBJECT);
-            obj->TypeInfo = _node->TypeInfo;
-            for (auto& elem : _node->_Node.Object().properties) {
-                node_ptr value;
-                if (_node == elem.second) {
-                    value = elem.second;
-                } else {
-                    value = get_type(elem.second);
-                }
-                obj->_Node.Object().properties[elem.first] = value;
-            }
-            return obj;
-        }
-        case NodeType::POINTER: {
-            return new_string_node("Pointer");
-        }
-        case NodeType::LIB: {
-            return new_string_node("Library");
-        }
-        case NodeType::NONE: {
-            return new_string_node("None");
-        }
-        case NodeType::ANY: {
-            return new_string_node("Any");
-        }
-        case NodeType::ID: {
-            return new_string_node(_node->_Node.ID().value);
-        }
-        default: {
-            return node;
         }
     }
 }
@@ -4638,10 +4704,8 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
     if (!func->_Node.Function().type_function) {
         // Check against return type
         if (func->_Node.Function().return_type) {
-            if (!match_types(func->_Node.Function().return_type, res)) {
+            if (!match_types(func->_Node.Function().return_type, res, true)) {
                 return throw_error("Type Error in '" + func->_Node.Function().name + "': Return type does not match defined return type");
-            } else {
-                func->_Node.Function().return_type = res;
             }
         } else {
             func->_Node.Function().return_type = res;
@@ -4668,6 +4732,10 @@ node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
     }
     
     if (!func) {
+        if (node->_Node.FunctionCall().name == "test") {
+            node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
+            return get_type(arg);
+        }
         if (node->_Node.FunctionCall().name == "print") {
             if (node->_Node.FunctionCall().args.size() == 1) {
                 node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
@@ -4870,7 +4938,7 @@ node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
             node_ptr param = fx->_Node.Function().params[i];
             node_ptr param_type = fx->_Node.Function().param_types[param->_Node.ID().value];
             if (param_type) {
-                if (!match_types(param_type, args[i])) {
+                if (!match_types(param_type, args[i], true)) {
                     goto not_found;
                 }
             } else {
@@ -4898,8 +4966,7 @@ node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
     if (!func_match) {
         std::string argsStr = "(";
         for (int i = 0; i < args.size(); i++) {
-            //node_ptr arg = get_type(args[i]);
-            node_ptr arg = args[i];
+            node_ptr arg = get_type(args[i]);
             argsStr += printable(arg);
             if (i != args.size()-1) {
                 argsStr += ", ";
@@ -5202,6 +5269,10 @@ node_ptr Interpreter::tc_accessor(node_ptr& node) {
     node_ptr container = eval_node(node->_Node.Accessor().container);
     node_ptr accessor = eval_node(node->_Node.Accessor().accessor);
 
+    if (container->type == NodeType::ANY || accessor->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
+    }
+
     if (accessor->_Node.List().elements.size() != 1) {
         return throw_error("Malformed accessor");
     }
@@ -5240,6 +5311,16 @@ node_ptr Interpreter::tc_accessor(node_ptr& node) {
             return throw_error("List accessor expects a number");
         }
         int index = index_node->_Node.Number().value;
+
+        if (!container->TypeInfo.type) {
+            std::vector<node_ptr> list_types = container->_Node.List().elements;
+            list_types.erase(std::unique(list_types.begin(), list_types.end(), [this](node_ptr& lhs, node_ptr& rhs) { return compareNodeTypes(lhs, rhs); }), list_types.end());
+            node_ptr list_type = new_node(NodeType::LIST);
+            list_type->_Node.List().elements = list_types;
+            list_type->_Node.List().is_union = true;
+            list_type->TypeInfo.is_type = true;
+            return list_type;
+        }
 
         node_ptr union_res = new_node(NodeType::LIST);
         union_res->TypeInfo.is_type = true;
@@ -5310,6 +5391,10 @@ node_ptr Interpreter::tc_call_lib_function(node_ptr& lib, node_ptr& node) {
     node_ptr name = eval_node(args[0]);
     node_ptr func_args = eval_node(args[1]);
 
+    if (name->type == NodeType::ANY || func_args->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
+    }
+
     if (name->type != NodeType::STRING) {
         return throw_error("Library function calls expects first argument to be a string");
     }
@@ -5328,6 +5413,10 @@ node_ptr Interpreter::tc_load_lib(node_ptr& node) {
     }
 
     node_ptr path = eval_node(args[0]);
+
+    if (path->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
+    }
 
     if (path->type != NodeType::STRING) {
         return throw_error("Library loading expects 1 string argument");
@@ -5477,7 +5566,7 @@ node_ptr Interpreter::tc_type(node_ptr& node) {
         }
         object->_Node.Object().properties[name] = type_val;
         if (def_val) {
-            if (!type_val->TypeInfo.is_decl && !match_types(type_val, def_val)) {
+            if (!type_val->TypeInfo.is_decl && !match_types(type_val, def_val, true)) {
                 return throw_error("Default type constructor for propery '" + name + "' does not match type: Expecting value of type '" + node_repr(type_val) + "' but received value of type '" + node_repr(def_val) + "'");
             }
             if (def_val->type == NodeType::FUNC && object->_Node.Object().defaults.count(name) && object->_Node.Object().defaults[name]->type == NodeType::FUNC) {
@@ -5521,7 +5610,7 @@ node_ptr Interpreter::tc_is(node_ptr& node) {
         return throw_error(right->_Node.Error().message);
     }
 
-    if (match_types(left, right)) {
+    if (match_types(left, right, true)) {
         if (node->_Node.Op().left->type == NodeType::ID) {
             node_ptr value = std::make_shared<Node>(*right);
             value->TypeInfo.base_type = left->TypeInfo.base_type;
@@ -5597,7 +5686,7 @@ node_ptr Interpreter::tc_as(node_ptr& node) {
     // During typechecking
     if (left->type == NodeType::LIST && left->_Node.List().is_union) {
         // Check to see if type we're casting to is contained inside the union
-        bool match = match_types(left, right);
+        bool match = match_types(left, right, true);
         if (match) {
             return right;
         }
@@ -5607,6 +5696,10 @@ node_ptr Interpreter::tc_as(node_ptr& node) {
 
     if (left->type == right->type) {
         return left;
+    }
+
+    if (left->type == NodeType::ANY) {
+        return right;
     }
 
     return throw_error("Cannot perform operation 'as' on types: " + node_repr(left) + ", " + node_repr(right));
@@ -5622,6 +5715,10 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
 
     if (right->type == NodeType::ERROR) {
         return throw_error(right->_Node.Error().message);
+    }
+
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
     }
 
     if (left->type == NodeType::OBJECT) {
@@ -5808,8 +5905,10 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
                 }
                 node_ptr arg = eval_node(right->_Node.FunctionCall().args[0]);
                 // Type check
-                if (!match_types(list_type, arg)) {
-                    return throw_error("Cannot insert value of type '" + node_repr(arg) + "' into container of type '" + node_repr(left->TypeInfo.type) + "'");
+                if (!match_types(list_type, arg, true)) {
+                    node_ptr _type = get_type(arg);
+                    node_ptr _value = get_type(left->TypeInfo.type);
+                    return throw_error("Cannot insert value of type '" + node_repr(_type) + "' into container of type '" + node_repr(_value) + "'");
                 }
                 left->_Node.List().elements.push_back(arg);
                 return left;
@@ -5823,8 +5922,10 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
                 }
                 node_ptr arg = eval_node(right->_Node.FunctionCall().args[0]);
                 // Type check
-                if (!match_types(list_type, arg)) {
-                    return throw_error("Cannot insert value of type '" + node_repr(arg) + "' into container of type '" + node_repr(left->TypeInfo.type) + "'");
+                if (!match_types(list_type, arg, true)) {
+                    node_ptr _type = get_type(arg);
+                    node_ptr _value = get_type(left->TypeInfo.type);
+                    return throw_error("Cannot insert value of type '" + node_repr(_type) + "' into container of type '" + node_repr(_value) + "'");
                 }
                 left->_Node.List().elements.insert(left->_Node.List().elements.begin(), arg);
                 return left;
@@ -5840,8 +5941,10 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
                 node_ptr index_node = eval_node(right->_Node.FunctionCall().args[1]);
 
                 // Type check
-                if (!match_types(list_type, value)) {
-                    return throw_error("Cannot insert value of type '" + node_repr(value) + "' into container of type '" + node_repr(left->TypeInfo.type) + "'");
+                if (!match_types(list_type, value, true)) {
+                    node_ptr _type = get_type(value);
+                    node_ptr _value = get_type(left->TypeInfo.type);
+                    return throw_error("Cannot insert value of type '" + printable(_type) + "' into container of type '" + printable(_value) + "'");
                 }
 
                 if (index_node->type != NodeType::NUMBER) {
@@ -5967,7 +6070,7 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
                 // Check that the param_types is null or matches
                 node_ptr param_type = function->_Node.Function().param_types[list_param_name];
                 if (param_type) {
-                    if (!match_types(list_type, param_type)) {
+                    if (!match_types(list_type, param_type, true)) {
                         return throw_error("Map function expects a parameter of type '" + printable(list_type) + "' but received '" + printable(param_type) + "'");
                     }
                 } else {
@@ -6021,7 +6124,7 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
                 // Check that the param_types is null or matches
                 node_ptr param_type = function->_Node.Function().param_types[list_param_name];
                 if (param_type) {
-                    if (!match_types(list_type, param_type)) {
+                    if (!match_types(list_type, param_type, true)) {
                         return throw_error("Map function expects a parameter of type '" + printable(list_type) + "' but received '" + printable(param_type) + "'");
                     }
                 } else {
@@ -6334,4 +6437,75 @@ bool Interpreter::compareNodeTypes(node_ptr& lhs, node_ptr& rhs) {
         }
     }
     return match_types(lhs, rhs);
+}
+
+node_ptr Interpreter::get_type(node_ptr& node, std::vector<node_ptr> bases) {
+
+    for (node_ptr& base : bases) {
+        if (node == base) {
+            return node;
+        }
+    }
+
+    bases.push_back(node);
+
+    if (node->type == NodeType::FUNC) {
+        node_ptr func = tc_function(node);
+        func->_Node.Function().return_type = get_type(func->_Node.Function().return_type, bases);
+        func->TypeInfo.is_type = true;
+        return func;
+    }
+
+    if (node->type == NodeType::OBJECT) {
+        node_ptr obj = new_node(NodeType::OBJECT);
+        obj->TypeInfo = node->TypeInfo;
+
+        for (auto& prop : node->_Node.Object().properties) {
+            obj->_Node.Object().properties[prop.first] = get_type(prop.second, bases);
+        }
+
+        obj->TypeInfo.is_type = true;
+
+        return obj;
+    }
+
+    if (node->type != NodeType::LIST) {
+        node_ptr res = std::make_shared<Node>(*node);
+        res->TypeInfo.is_type = true;
+        return res;
+    }
+
+    node_ptr types = new_node(NodeType::LIST);
+
+    for (node_ptr& elem : node->_Node.List().elements) {
+
+        bool match = false;
+
+        node_ptr reduced = get_type(elem, bases);
+        reduced->TypeInfo.is_type = true;
+
+        if (reduced->type == NodeType::LIST) {
+            sort(reduced->_Node.List().elements.begin(), reduced->_Node.List().elements.end(), 
+            [this](node_ptr& a, node_ptr& b)
+            { 
+                return a->type < b->type;
+            });
+        }
+
+        if (types->_Node.List().elements.size() == 0) {
+            types->_Node.List().elements.push_back(reduced);
+            continue;
+        }
+        for (node_ptr& t_elem : types->_Node.List().elements) {
+            if (match_types(t_elem, reduced)) {
+                match = true;
+            }
+        }
+
+        if (!match) {
+            types->_Node.List().elements.push_back(reduced);
+        }
+    }
+
+    return types;
 }
