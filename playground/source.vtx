@@ -1,25 +1,11 @@
-type Implements(T, FunctionName, F) {
-    for (T.keys, index, key) {
-        if (key == FunctionName) {
-            if (T[key] is F) {
-                ret T
-            }
-        }
-    }
+import sdl : "@modules/sdl"
+import [WindowConfig, Color, Window] : "@modules/sdl"
 
-    None
+var init: Number = sdl.initSDL()
+
+if (init != 0) {
+	println("Error initializing SDL")
+	exit(1)
+} else {
+	println("Initialized SDL")
 }
-
-type Blah {
-    name: String,
-    getName: () => String = () => this.name
-}
-
-const person = {
-    name: "John",
-    getName: () => this.name
-}
-
-print("here")
-
-const blooop: Implements(Blah, "getName", () => String) = Blah {name: "John"}

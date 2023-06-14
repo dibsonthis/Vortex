@@ -1509,14 +1509,14 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value, bool type_nodes
         if (type->TypeInfo.is_general_type) {
             return true;
         }
+
+        bool tc_status = tc;
+        tc = true;
+
         node_ptr type_func = tc_function(type);
         node_ptr value_func = tc_function(value);
-        // node_ptr body = type->_Node.Function().body;
-        // // Because we haven't evaluated the body here (in case the function returns a parametric type)
-        // // We attempt to evaluate it here
-        // if (body->type == NodeType::ID) {
-        //     body = get_symbol(body->_Node.ID().value, current_symbol_table).value;
-        // }
+
+        tc = tc_status;
 
         if (!match_types(type_func->_Node.Function().return_type, value_func->_Node.Function().return_type)) {
             return false;
@@ -6510,7 +6510,10 @@ node_ptr Interpreter::get_type(node_ptr& node, std::vector<node_ptr> bases) {
     bases.push_back(node);
 
     if (node->type == NodeType::FUNC) {
+        bool tc_status = tc;
+        tc = true;
         node_ptr func = tc_function(node);
+        tc = tc_status;
         func->_Node.Function().return_type = get_type(func->_Node.Function().return_type, bases);
         func->TypeInfo.is_type = true;
         return func;
