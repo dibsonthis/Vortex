@@ -910,6 +910,7 @@ void Parser::parse_keywords(std::string end) {
                 current_node->_Node = FuncNode();
                 current_node->TypeInfo.is_type = true;
                 current_node->TypeInfo.is_general_type = true;
+                current_node->_Node.Function().return_type = new_node(NodeType::ANY);
             } else if (current_node->_Node.ID().value == "Pointer") {
                 current_node->type = NodeType::POINTER;
                 current_node->_Node = PointerNode();

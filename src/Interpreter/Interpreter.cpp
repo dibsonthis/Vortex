@@ -1048,12 +1048,9 @@ node_ptr Interpreter::eval_accessor(node_ptr& node) {
 }
 
 node_ptr Interpreter::eval_function(node_ptr& node) {
-    // Testing
-    // tc = true;
-    // node_ptr res = tc_function(node);
-    // tc = false;
-    // return res;
-
+    if (node->TypeInfo.is_general_type) {
+        return node;
+    }
     node_ptr func = new_node(NodeType::FUNC);
     func->_Node.Function().name = func->_Node.Function().name;
     func->_Node.Function().args = std::vector<node_ptr>(node->_Node.Function().args);
@@ -4542,6 +4539,9 @@ node_ptr Interpreter::throw_error(std::string message)
 // Typecheck
 
 node_ptr Interpreter::tc_function(node_ptr& node) {
+    if (node->TypeInfo.is_general_type) {
+        return node;
+    }
     node_ptr func = new_node(NodeType::FUNC);
     func->_Node.Function().name = func->_Node.Function().name;
         func->_Node.Function().args = std::vector<node_ptr>(node->_Node.Function().args);

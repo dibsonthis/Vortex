@@ -1,19 +1,2 @@
-import [] : string
-
-const runTest = (test: Function) => {
-	var res = {
-		passed: false,
-		error: ""
-	}
-	try {
-		test()
-		res.passed = true
-	} catch (e) {
-		res.passed = false
-		res.error = e.trim()
-		ret [res]
-	}
-	ret res
-}
-
-print(runTest)
+const f: Function = (x: String) => x
+print(f)
