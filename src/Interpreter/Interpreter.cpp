@@ -679,7 +679,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
             if (!match_types(function->_Node.Function().return_type, res, true)) {
                 node_ptr defined_ret_type = get_type(func->_Node.Function().return_type);
                 node_ptr ret_type = get_type(res);
-                return throw_error("Type Error in '" + func->_Node.Function().name + "': Return type '" + printable(ret_type) + "' does not match defined return type '" + printable(defined_ret_type) + "'");
+                return throw_error("Type Error in '" + node->_Node.Function().name + "': Return type '" + printable(ret_type) + "' does not match defined return type '" + printable(defined_ret_type) + "'");
             }
         } else {
             function->_Node.Function().return_type = res;
@@ -4561,20 +4561,20 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
     if (node->TypeInfo.is_general_type) {
         return node;
     }
-        node_ptr func = new_node(NodeType::FUNC);
-        func->_Node.Function().name = node->_Node.Function().name;
-        func->_Node.Function().args = std::vector<node_ptr>(node->_Node.Function().args);
-        func->_Node.Function().params = std::vector<node_ptr>(node->_Node.Function().params);
-        func->_Node.Function().body = node->_Node.Function().body;
-        func->_Node.Function().closure = node->_Node.Function().closure;
-        func->_Node.Function().is_hook = node->_Node.Function().is_hook;
-        func->_Node.Function().decl_filename = node->_Node.Function().decl_filename;
-        func->Hooks.onCall = node->Hooks.onCall;
-        func->_Node.Function().param_types = node->_Node.Function().param_types;
-        func->_Node.Function().return_type = node->_Node.Function().return_type;
-        func->_Node.Function().dispatch_functions = node->_Node.Function().dispatch_functions;
-        func->_Node.Function().type_function = node->_Node.Function().type_function;
-        func->_Node.Function().decl_filename = file_name;
+    node_ptr func = new_node(NodeType::FUNC);
+    func->_Node.Function().name = func->_Node.Function().name;
+    func->_Node.Function().args = std::vector<node_ptr>(node->_Node.Function().args);
+    func->_Node.Function().params = std::vector<node_ptr>(node->_Node.Function().params);
+    func->_Node.Function().body = node->_Node.Function().body;
+    func->_Node.Function().closure = node->_Node.Function().closure;
+    func->_Node.Function().is_hook = node->_Node.Function().is_hook;
+    func->_Node.Function().decl_filename = node->_Node.Function().decl_filename;
+    func->Hooks.onCall = node->Hooks.onCall;
+    func->_Node.Function().param_types = node->_Node.Function().param_types;
+    func->_Node.Function().return_type = node->_Node.Function().return_type;
+    func->_Node.Function().dispatch_functions = node->_Node.Function().dispatch_functions;
+    func->_Node.Function().type_function = node->_Node.Function().type_function;
+    func->_Node.Function().decl_filename = file_name;
 
     if (func->_Node.Function().return_type) {
         func->_Node.Function().return_type = eval_node(func->_Node.Function().return_type);
@@ -4792,7 +4792,7 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
             if (!match_types(func->_Node.Function().return_type, res, true)) {
                 node_ptr defined_ret_type = get_type(func->_Node.Function().return_type);
                 node_ptr ret_type = get_type(res);
-                return throw_error("Type Error in '" + func->_Node.Function().name + "': Return type '" + printable(ret_type) + "' does not match defined return type '" + printable(defined_ret_type) + "'");
+                return throw_error("Type Error in '" + node->_Node.Function().name + "': Return type '" + printable(ret_type) + "' does not match defined return type '" + printable(defined_ret_type) + "'");
             }
         } else {
             func->_Node.Function().return_type = res;
