@@ -1063,7 +1063,7 @@ node_ptr Interpreter::eval_function(node_ptr& node) {
         return node;
     }
     node_ptr func = new_node(NodeType::FUNC);
-    func->_Node.Function().name = func->_Node.Function().name;
+    func->_Node.Function().name = node->_Node.Function().name;
     func->_Node.Function().args = std::vector<node_ptr>(node->_Node.Function().args);
     func->_Node.Function().params = std::vector<node_ptr>(node->_Node.Function().params);
     func->_Node.Function().body = node->_Node.Function().body;
@@ -3044,14 +3044,16 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
     if (left->type == NodeType::LIST) {
 
-        node_ptr list_type = left->TypeInfo.type;
-        if (!list_type) {
-            list_type = new_node(NodeType::ANY);
-        } else if (list_type->_Node.List().elements.size() == 1) {
-            list_type = list_type->_Node.List().elements[0];
-        } else {
-            list_type = new_node(NodeType::ANY);
-        }
+        // node_ptr list_type = left->TypeInfo.type;
+        // if (!list_type) {
+        //     list_type = new_node(NodeType::ANY);
+        // } else if (list_type->_Node.List().elements.size() == 1) {
+        //     list_type = list_type->_Node.List().elements[0];
+        // } else {
+        //     list_type = new_node(NodeType::ANY);
+        // }
+
+        node_ptr list_type = get_type(left);
 
         // List Properties
         if (right->type == NodeType::ID) {

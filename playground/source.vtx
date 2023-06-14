@@ -1,2 +1,2 @@
-import [] : "import"
-print(func.name)
+import tests : "import"
+print(tests.values.map((v) => v.name))
