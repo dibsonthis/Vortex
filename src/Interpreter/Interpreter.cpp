@@ -677,7 +677,9 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
         // Check against return type
         if (function->_Node.Function().return_type) {
             if (!match_types(function->_Node.Function().return_type, res, true)) {
-                return throw_error("Type Error in '" + function->_Node.Function().name + "': Return type does not match defined return type");
+                node_ptr defined_ret_type = get_type(func->_Node.Function().return_type);
+                node_ptr ret_type = get_type(res);
+                return throw_error("Type Error in '" + func->_Node.Function().name + "': Return type '" + printable(ret_type) + "' does not match defined return type '" + printable(defined_ret_type) + "'");
             }
         } else {
             function->_Node.Function().return_type = res;
@@ -4559,8 +4561,8 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
     if (node->TypeInfo.is_general_type) {
         return node;
     }
-    node_ptr func = new_node(NodeType::FUNC);
-    func->_Node.Function().name = func->_Node.Function().name;
+        node_ptr func = new_node(NodeType::FUNC);
+        func->_Node.Function().name = node->_Node.Function().name;
         func->_Node.Function().args = std::vector<node_ptr>(node->_Node.Function().args);
         func->_Node.Function().params = std::vector<node_ptr>(node->_Node.Function().params);
         func->_Node.Function().body = node->_Node.Function().body;
@@ -4788,7 +4790,9 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
         // Check against return type
         if (func->_Node.Function().return_type) {
             if (!match_types(func->_Node.Function().return_type, res, true)) {
-                return throw_error("Type Error in '" + func->_Node.Function().name + "': Return type does not match defined return type");
+                node_ptr defined_ret_type = get_type(func->_Node.Function().return_type);
+                node_ptr ret_type = get_type(res);
+                return throw_error("Type Error in '" + func->_Node.Function().name + "': Return type '" + printable(ret_type) + "' does not match defined return type '" + printable(defined_ret_type) + "'");
             }
         } else {
             func->_Node.Function().return_type = res;

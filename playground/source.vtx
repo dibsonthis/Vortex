@@ -1,13 +1,30 @@
-var Matrix = [[Number]]
+union StringOrNum {String, Number}
 
-var f = (m: Matrix) => {
-	if (true) {
-		ret m
-	}
+const add = (a: [String], b: [Number]): [String, Number] => a + b + b;
 
-	var n: Matrix = [[1, 2, 3]]
+// const test_universal_function_calls_lists = () => {
+// 	union BoolOrNum {Boolean, Number}
+// 	union StringOrNum {String, Number}
 
-	ret n
-}
+// 	const add = (a: [String], b: [String]): [String] => a + b;
+// 	const add = (a: [Number], b: [Number]): [Number] => a + b;
+// 	const add = (a: [String], b: [Number]): [StringOrNum] => a + b;
+// 	const add = (a: [BoolOrNum], b: [Number]): [Number] => {
+// 		a.map((x) => number(x)) + b
+// 	};
 
-const l: String = f(Matrix)
+// 	shouldBe(["a", "b"].add(["c", "d"]), ["a", "b", "c", "d"])
+// 	shouldBe([1, 2, 3].add([4, 5, 6]), [1, 2, 3, 4, 5, 6])
+// 	shouldBe(["a", "b"].add([4,5,6]), ["a", "b", 4, 5, 6])
+// 	shouldBe([false, true, 2, 3].add([4,5,6]), [0, 1, 2, 3, 4, 5, 6])
+
+// 	try {
+// 		[true, false].add(false, true)
+// 		error("UFC error handling failed")
+// 	} catch (e) {
+// 		// If we're here, we successfully threw and caught the error
+// 		const add = (a: [Boolean], b: [Boolean]): [Boolean] => a + b
+// 		const res = [true, false].add([false, true])
+// 		shouldBe(res, [true, false, false, true])
+// 	}
+// }
