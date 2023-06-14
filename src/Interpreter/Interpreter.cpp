@@ -69,6 +69,9 @@ node_ptr Interpreter::eval_const_decl(node_ptr& node) {
     if (value->type == NodeType::HOOK) {
         value->_Node.Hook().name = node->_Node.ConstantDeclatation().name;
     }
+    if (value->type == NodeType::FUNC) {
+        value->_Node.Function().name = node->_Node.ConstantDeclatation().name;
+    }
     if (existing_symbol != nullptr && value->type == NodeType::FUNC) {
         existing_symbol->_Node.Function().dispatch_functions.push_back(value);
         return value;
@@ -131,7 +134,13 @@ node_ptr Interpreter::eval_var_decl(node_ptr& node) {
     if (value->type == NodeType::HOOK) {
         value->_Node.Hook().name = node->_Node.VariableDeclaration().name;
     }
-
+    if (value->type == NodeType::FUNC) {
+        value->_Node.Function().name = node->_Node.VariableDeclaration().name;
+    }
+    if (existing_symbol != nullptr && value->type == NodeType::FUNC) {
+        existing_symbol->_Node.Function().dispatch_functions.push_back(value);
+        return value;
+    }
     if ((value->type == NodeType::OBJECT && value->_Node.Object().is_enum) || value->TypeInfo.is_type || (value->type == NodeType::LIST && value->_Node.List().is_union)) {
         value->TypeInfo.type_name = node->_Node.VariableDeclaration().name;
     }
@@ -1424,9 +1433,6 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value, bool type_nodes
         }
 
         if (tc) {
-            // Spit out a warning saying refinement types won't be fully type checked
-            std::cout << "Warning: Refinement type '" + type->_Node.Function().name + "' cannot be fully type checked statically. Be careful, this may cause runtime errors.\n" << std::flush;
-            
             // If we've matched at the param, that's the best we can do at compile time
             if (!value->TypeInfo.is_type) {
                 func_call->_Node.FunctionCall().name = type->_Node.Function().name;

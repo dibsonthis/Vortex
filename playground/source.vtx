@@ -1,13 +1,2 @@
-type PosNum = (num: Number) => num > 0
-type NegNum = (num: Number) => num < 0
-
-const numfunc = (num: PosNum) => "pos"
-const numfunc = (num: NegNum) => "neg"
-const numfunc = (num: Number) => "0"
-
-var res = numfunc(10)
-println(res)
-res = numfunc(0)
-println(res)
-res = numfunc(-10)
-println(res)
+import [] : "import"
+print(func.name)
