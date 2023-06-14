@@ -1,1 +1,29 @@
-const func = (x: String) => [x]
+import [] : string
+	
+	const map = (self: List, func: (x) => Any) => {
+		var list = []
+		for (self, index, value) {
+			list.append(func(value))
+		}
+		list
+	}
+
+	const map = (self: [String], func: (x: String, i: Number) => String) => {
+		var list = []
+		for (self, index, value) {
+			list.append(func(value, index))
+		}
+		list
+	}
+
+	const map = (self: List, func: (x: Any, i: Number, ls: List) => Any) => {
+		var list = []
+		for (self, index, value) {
+			list.append(func(value, index, self))
+		}
+		list
+	}
+
+	const list = "My name is John Bartholomew Jacobson".split()
+	const new_list: [Number] = list.map((x: Number, i: Number, k: [Number]) => k.length)
+    print(new_list)

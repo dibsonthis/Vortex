@@ -1387,8 +1387,10 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value, bool type_nodes
         type = type->TypeInfo.base_type;
     }
 
-    if (!type->TypeInfo.is_type && type->TypeInfo.type) {
-        type = type->TypeInfo.type;
+    if (!tc) {
+        if (!type->TypeInfo.is_type && type->TypeInfo.type) {
+            type = type->TypeInfo.type;
+        }
     }
 
     node_ptr value = std::make_shared<Node>(*_value);
@@ -3232,6 +3234,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 }
 
                 node_ptr function = right->_Node.FunctionCall().args[0];
+                function = eval_node(right->_Node.FunctionCall().args[0]);
                 // Get first param and inject type into it
                 node_ptr list_param = function->_Node.Function().params[0];
                 std::string list_param_name = list_param->_Node.ID().value;
@@ -3239,13 +3242,11 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 node_ptr param_type = function->_Node.Function().param_types[list_param_name];
                 if (param_type) {
                     if (!match_types(list_type, param_type, true)) {
-                        return throw_error("Map function expects a parameter of type '" + printable(list_type) + "' but received '" + printable(param_type) + "'");
+                        return throw_error("Map function expects a parameter of type '" + printable(list_type->_Node.List().elements[0]) + "' but received '" + printable(param_type) + "'");
                     }
                 } else {
                     function->_Node.Function().param_types[list_param_name] = list_type;
                 }
-                
-                function = eval_node(right->_Node.FunctionCall().args[0]);
 
                 if (function->type != NodeType::FUNC) {
                     return throw_error("List function '" + prop + "' expects 1 function argument");
@@ -3261,14 +3262,29 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                     }
                     if (function->_Node.Function().params.size() > 0) {
                         func_call->_Node.FunctionCall().args.push_back(value);
+                        function->_Node.Function().param_types[list_param_name] = value;
                     }
                     if (function->_Node.Function().params.size() > 1) {
                         func_call->_Node.FunctionCall().args.push_back(new_number_node(_index));
+                        std::string name = function->_Node.Function().params[1]->_Node.ID().value;
+                        node_ptr num = new_node(NodeType::NUMBER);
+                        if (function->_Node.Function().param_types[name]) {
+                            if (!match_types(function->_Node.Function().param_types[name], num, true)) {
+                                return throw_error("Map function expects index parameter of type 'Number' but received '" + printable(function->_Node.Function().param_types[name]) + "'");
+                            }
+                        }
+                        function->_Node.Function().param_types[name] = new_node(NodeType::NUMBER);
                     }
                     if (function->_Node.Function().params.size() > 2) {
                         func_call->_Node.FunctionCall().args.push_back(left);
+                        std::string name = function->_Node.Function().params[2]->_Node.ID().value;
+                        if (function->_Node.Function().param_types[name]) {
+                            if (!match_types(function->_Node.Function().param_types[name], list_type, true)) {
+                                return throw_error("Map function expects list parameter of type '" + printable(list_type) + "' but received '" + printable(function->_Node.Function().param_types[name]) + "'");
+                            }
+                        }
+                        function->_Node.Function().param_types[name] = list_type;
                     }
-                    function->_Node.Function().param_types[list_param_name] = value;
                     // Reset the typed function because it will conflict with what the value actually is
                     function->_Node.Function().return_type = nullptr;
                     function = tc_function(function);
@@ -6189,6 +6205,7 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
                 }
 
                 node_ptr function = right->_Node.FunctionCall().args[0];
+                function = eval_node(right->_Node.FunctionCall().args[0]);
                 // Get first param and inject type into it
                 node_ptr list_param = function->_Node.Function().params[0];
                 std::string list_param_name = list_param->_Node.ID().value;
@@ -6196,13 +6213,11 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
                 node_ptr param_type = function->_Node.Function().param_types[list_param_name];
                 if (param_type) {
                     if (!match_types(list_type, param_type, true)) {
-                        return throw_error("Map function expects a parameter of type '" + printable(list_type) + "' but received '" + printable(param_type) + "'");
+                        return throw_error("Map function expects a parameter of type '" + printable(list_type->_Node.List().elements[0]) + "' but received '" + printable(param_type) + "'");
                     }
                 } else {
                     function->_Node.Function().param_types[list_param_name] = list_type;
                 }
-                
-                function = eval_node(right->_Node.FunctionCall().args[0]);
 
                 if (function->type != NodeType::FUNC) {
                     return throw_error("List function '" + prop + "' expects 1 function argument");
@@ -6218,14 +6233,29 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
                     }
                     if (function->_Node.Function().params.size() > 0) {
                         func_call->_Node.FunctionCall().args.push_back(value);
+                        function->_Node.Function().param_types[list_param_name] = value;
                     }
                     if (function->_Node.Function().params.size() > 1) {
                         func_call->_Node.FunctionCall().args.push_back(new_number_node(_index));
+                        std::string name = function->_Node.Function().params[1]->_Node.ID().value;
+                        node_ptr num = new_node(NodeType::NUMBER);
+                        if (function->_Node.Function().param_types[name]) {
+                            if (!match_types(function->_Node.Function().param_types[name], num, true)) {
+                                return throw_error("Map function expects index parameter of type 'Number' but received '" + printable(function->_Node.Function().param_types[name]) + "'");
+                            }
+                        }
+                        function->_Node.Function().param_types[name] = new_node(NodeType::NUMBER);
                     }
                     if (function->_Node.Function().params.size() > 2) {
                         func_call->_Node.FunctionCall().args.push_back(left);
+                        std::string name = function->_Node.Function().params[2]->_Node.ID().value;
+                        if (function->_Node.Function().param_types[name]) {
+                            if (!match_types(function->_Node.Function().param_types[name], list_type, true)) {
+                                return throw_error("Map function expects list parameter of type '" + printable(list_type) + "' but received '" + printable(function->_Node.Function().param_types[name]) + "'");
+                            }
+                        }
+                        function->_Node.Function().param_types[name] = list_type;
                     }
-                    function->_Node.Function().param_types[list_param_name] = value;
                     // Reset the typed function because it will conflict with what the value actually is
                     function->_Node.Function().return_type = nullptr;
                     node_ptr res = tc_function(function)->_Node.Function().return_type;
