@@ -4562,7 +4562,7 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
         return node;
     }
     node_ptr func = new_node(NodeType::FUNC);
-    func->_Node.Function().name = func->_Node.Function().name;
+    func->_Node.Function().name = node->_Node.Function().name;
     func->_Node.Function().args = std::vector<node_ptr>(node->_Node.Function().args);
     func->_Node.Function().params = std::vector<node_ptr>(node->_Node.Function().params);
     func->_Node.Function().body = node->_Node.Function().body;
@@ -4624,10 +4624,21 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
 
     // We want to add the function to outside scope
     // In case it's recursive
+
+    // if (func->_Node.Function().name != "") {
+    //     Symbol func_symbol = new_symbol(func->_Node.Function().name, node);
+    //     add_symbol(func_symbol, current_symbol_table);
+    // }
     if (func->_Node.Function().name != "") {
-        Symbol func_symbol = new_symbol(func->_Node.Function().name, node);
-        add_symbol(func_symbol, current_symbol_table);
+        Symbol existing = get_symbol(func->_Node.Function().name, current_symbol_table);
+        if (existing.value && existing.value->type == NodeType::FUNC) {
+            existing.value->_Node.Function().dispatch_functions.push_back(func);
+        } else {
+            Symbol func_symbol = new_symbol(func->_Node.Function().name, func);
+            add_symbol(func_symbol, current_symbol_table);
+        }
     }
+
 
     // Typecheck the function body
 
@@ -4792,7 +4803,7 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
             if (!match_types(func->_Node.Function().return_type, res, true)) {
                 node_ptr defined_ret_type = get_type(func->_Node.Function().return_type);
                 node_ptr ret_type = get_type(res);
-                return throw_error("Type Error in '" + node->_Node.Function().name + "': Return type '" + printable(ret_type) + "' does not match defined return type '" + printable(defined_ret_type) + "'");
+                return throw_error("Type Error in '" + func->_Node.Function().name + "': Return type '" + printable(ret_type) + "' does not match defined return type '" + printable(defined_ret_type) + "'");
             }
         } else {
             func->_Node.Function().return_type = res;

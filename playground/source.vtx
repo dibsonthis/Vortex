@@ -1,4 +1,4 @@
-const add = (x: String, y: String): [Number] => x + y 
+const add = (x: String, y: String): Number => x + y 
 const add = (x: Number, y: Number) => x + y
 
-const x: String = add("10", "10")
+const x: [String] = add("10", "10")
