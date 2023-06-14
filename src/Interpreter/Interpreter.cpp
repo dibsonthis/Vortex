@@ -4639,6 +4639,11 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
         } else {
             res = evaluated_res;
         }
+
+        if (tc_conditonals) {
+            goto typed_func_jump_single;
+        }
+
     } else {
         std::vector<node_ptr> return_types;
         for (int i = 0; i < function->_Node.Function().body->_Node.Object().elements.size(); i++) {
@@ -4649,6 +4654,10 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
             // Append 'None'
             if (expr->type == NodeType::IF_STATEMENT && evaluated_expr->type == NodeType::NOVALUE && i == function->_Node.Function().body->_Node.Object().elements.size()-1) {
                 return_types.push_back(new_node(NodeType::NONE));
+
+                if (tc_conditonals) {
+                    return new_node(NodeType::NONE);
+                }
             }
             // Check if we've evaluated an if block
             // If we have and it's the last expression AND the number of returns does not match the number of statements
@@ -4656,6 +4665,10 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
             else if (expr->type == NodeType::IF_BLOCK && (evaluated_expr->type == NodeType::LIST && evaluated_expr->_Node.List().is_union) && i == function->_Node.Function().body->_Node.Object().elements.size()-1) {
                 if (evaluated_expr->_Node.List().elements.size() != expr->_Node.IfBlock().statements.size()) {
                     return_types.push_back(new_node(NodeType::NONE));
+                }
+
+                if (tc_conditonals) {
+                    return new_node(NodeType::NONE);
                 }
             }
 
@@ -4672,8 +4685,15 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
                     if (elem->type == NodeType::RETURN) {
                         if (elem->_Node.Return().value == nullptr) {
                             return_types.push_back(new_node(NodeType::NONE));
+                            if (tc_conditonals) {
+                                goto typed_func_jump;
+                            }
                         } else {
-                            return_types.push_back(eval_node(elem->_Node.Return().value));
+                            node_ptr evaluated_value = eval_node(elem->_Node.Return().value);
+                            return_types.push_back(evaluated_value);
+                            if (tc_conditonals) {
+                                goto typed_func_jump;
+                            }
                         }
                     }
                 }
@@ -4681,21 +4701,39 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
             else if (evaluated_expr->type == NodeType::RETURN) {
                 if (evaluated_expr->_Node.Return().value == nullptr) {
                     return_types.push_back(new_node(NodeType::NONE));
+                    if (tc_conditonals) {
+                        goto typed_func_jump;
+                    }
                 } else {
-                    return_types.push_back(eval_node(evaluated_expr->_Node.Return().value));
+                    node_ptr evaluated_value = eval_node(evaluated_expr->_Node.Return().value);
+                    return_types.push_back(evaluated_value);
+                    if (tc_conditonals) {
+                        goto typed_func_jump;
+                    }
                 }
             } else if (i == function->_Node.Function().body->_Node.Object().elements.size()-1) {
                 if (evaluated_expr->type == NodeType::RETURN) {
                     if (res->_Node.Return().value == nullptr) {
                         return_types.push_back(new_node(NodeType::NONE));
+                        if (tc_conditonals) {
+                            goto typed_func_jump;
+                        }
                     } else {
                         return_types.push_back(evaluated_expr->_Node.Return().value);
+                        if (tc_conditonals) {
+                            goto typed_func_jump;
+                        }
                     }
                 } else {
                     return_types.push_back(evaluated_expr);
+                    if (tc_conditonals) {
+                        goto typed_func_jump;
+                    }
                 }
             }
         }
+
+        typed_func_jump:
 
         return_types.erase(std::unique(return_types.begin(), return_types.end(), [this](node_ptr& lhs, node_ptr& rhs) { return compareNodeTypes(lhs, rhs); }), return_types.end());  
 
@@ -4711,6 +4749,8 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
         }
     }
 
+    typed_func_jump_single:
+
     if (!func->_Node.Function().type_function) {
         // Check against return type
         if (func->_Node.Function().return_type) {
@@ -4723,8 +4763,6 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
     } else {
         func->_Node.Function().return_type = res;
     }
-
-    //func->_Node.Function().return_type->TypeInfo.is_type = true;
 
     current_symbol_table = current_symbol_table->parent->parent;
     current_symbol_table->child->child = nullptr;
