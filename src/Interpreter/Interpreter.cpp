@@ -2061,6 +2061,7 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
         import_interpreter.tc = tc;
         import_interpreter.tc_loops = tc_loops;
         import_interpreter.tc_conditonals = tc_conditonals;
+        import_interpreter.tc_errors = tc_errors;
         import_interpreter.evaluate();
 
         std::filesystem::current_path(current_path);
@@ -2119,6 +2120,7 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
         import_interpreter.tc = tc;
         import_interpreter.tc_loops = tc_loops;
         import_interpreter.tc_conditonals = tc_conditonals;
+        import_interpreter.tc_errors = tc_errors;
         import_interpreter.evaluate();
 
         std::filesystem::current_path(current_path);
@@ -4788,8 +4790,16 @@ node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
                 return throw_error("Function " + node->_Node.FunctionCall().name + " expects 1 argument");
             }
             node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
-            return new_node(NodeType::NONE);
+            // Allow parametric type to error so that we can exit at tc instead of just at runtime
+            if (tc_errors) {
+                node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
+                std::string message = printable(arg);
+                line = node->line;
+                column = node->column;
+                return throw_error(message);
+            }
 
+            return new_node(NodeType::NOVALUE);
         }
         if (node->_Node.FunctionCall().name == "string") {
             if (node->_Node.FunctionCall().args.size() != 1) {
@@ -5005,9 +5015,11 @@ node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
 
         tc_loops = true;
         tc_conditonals = true;
+        tc_errors = true;
         res = tc_function(res);
         tc_loops = false;
-        tc_conditonals = true;
+        tc_conditonals = false;
+        tc_errors = false;
 
         return res->_Node.Function().return_type;
     }

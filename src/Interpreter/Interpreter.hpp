@@ -71,6 +71,7 @@ public:
     bool tc = false;
     bool tc_loops = false;
     bool tc_conditonals = false;
+    bool tc_errors = false;
 
 public:
     Interpreter() = default;

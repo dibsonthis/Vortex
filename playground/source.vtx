@@ -1,9 +1,30 @@
+type Implements(T, FunctionName, F) {
+    for (T.keys, index, key) {
+        if (key == FunctionName) {
+            if (T[key] is F) {
+                ret true
+            }
+        }
+    }
+
+    error(f"${T} does not implement ${FunctionName}")
+}
+
+type Blah {
+    name: String,
+    getName: () => String
+}
+
+type Person {
+    name: String,
+    age: Number
+}
+
 const person = {
     name: "John",
-	age: 45,
     getName: () => this.name
 }
 
+print("here")
 
-println(person.name)
-println(person.age)
+Person.Implements("getName", () => String)
