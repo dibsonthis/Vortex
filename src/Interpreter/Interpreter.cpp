@@ -1136,6 +1136,9 @@ node_ptr Interpreter::eval_union(node_ptr& node) {
         union_body = union_body->_Node.Object().elements[0];
         for (node_ptr elem : union_body->_Node.List().elements) {
             node_ptr ev_elem = eval_node(elem);
+            if (!ev_elem->TypeInfo.is_type) {
+                ev_elem->TypeInfo.is_literal_type = true;
+            }
             union_list->_Node.List().elements.push_back(ev_elem);
         }
     } else {

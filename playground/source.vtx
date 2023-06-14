@@ -1,12 +1,7 @@
-const f = () => {
-	try {
-		const p: Number = 10
-		ret p
-	} catch (e) {
-		const p: String = "10"
-		ret p
-	}
+union Status {
+	"active",
+	"inactive",
+	"on-hold"
 }
 
-const p = f()
-print(p)
+const p: Status = "blah"
