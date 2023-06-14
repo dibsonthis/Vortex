@@ -1387,11 +1387,11 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value, bool type_nodes
         type = type->TypeInfo.base_type;
     }
 
-    if (!tc) {
-        if (!type->TypeInfo.is_type && type->TypeInfo.type) {
-            type = type->TypeInfo.type;
-        }
-    }
+    // if (!tc) {
+    //     if (!type->TypeInfo.is_type && type->TypeInfo.type) {
+    //         type = type->TypeInfo.type;
+    //     }
+    // }
 
     node_ptr value = std::make_shared<Node>(*_value);
 
