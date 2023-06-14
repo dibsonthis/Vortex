@@ -1,2 +1,3 @@
-import tests : "import"
-print(tests.values.map((v) => v.name))
+var passed = []
+passed.append("hi")
+passed.append("bye")

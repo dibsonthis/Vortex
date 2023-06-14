@@ -1462,7 +1462,7 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value, bool type_nodes
         return res->_Node.Boolean().value;
     }
 
-    if (type->type == NodeType::LIST && type->_Node.List().is_union) {
+    if (type->type == NodeType::LIST && (type->_Node.List().is_union || type->TypeInfo.is_type)) {
         if (type->TypeInfo.is_general_type) {
             return true;
         }
@@ -1499,13 +1499,6 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value, bool type_nodes
                         continue;
                     }
                 }
-                // if (!t->TypeInfo.is_type) {
-                //     if (match_values(t, value)) {
-                //         return true;
-                //     } else {
-                //         continue;
-                //     }
-                // }
                 return true;
             }
         }
@@ -3044,16 +3037,8 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
 
     if (left->type == NodeType::LIST) {
 
-        // node_ptr list_type = left->TypeInfo.type;
-        // if (!list_type) {
-        //     list_type = new_node(NodeType::ANY);
-        // } else if (list_type->_Node.List().elements.size() == 1) {
-        //     list_type = list_type->_Node.List().elements[0];
-        // } else {
-        //     list_type = new_node(NodeType::ANY);
-        // }
-
         node_ptr list_type = get_type(left);
+        list_type->TypeInfo.is_type = true;
 
         // List Properties
         if (right->type == NodeType::ID) {
@@ -3093,8 +3078,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 // Type check
                 if (!match_types(list_type, arg, true)) {
                     node_ptr _type = get_type(arg);
-                    node_ptr _value = get_type(left->TypeInfo.type);
-                    return throw_error("Cannot insert value of type '" + printable(_type) + "' into container of type '" + printable(_value) + "'");
+                    return throw_error("Cannot insert value of type '" + printable(_type) + "' into container of type '" + printable(list_type) + "'");
                 }
                 left->_Node.List().elements.push_back(arg);
                 return left;
@@ -3110,8 +3094,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 // Type check
                 if (!match_types(list_type, arg, true)) {
                     node_ptr _type = get_type(arg);
-                    node_ptr _value = get_type(left->TypeInfo.type);
-                    return throw_error("Cannot insert value of type '" + printable(_type) + "' into container of type '" + printable(_value) + "'");
+                    return throw_error("Cannot insert value of type '" + printable(_type) + "' into container of type '" + printable(list_type) + "'");
                 }
                 left->_Node.List().elements.insert(left->_Node.List().elements.begin(), arg);
                 return left;
@@ -3129,8 +3112,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 // Type check
                 if (!match_types(list_type, value, true)) {
                     node_ptr _type = get_type(value);
-                    node_ptr _value = get_type(left->TypeInfo.type);
-                    return throw_error("Cannot insert value of type '" + printable(_type) + "' into container of type '" + printable(_value) + "'");
+                    return throw_error("Cannot insert value of type '" + printable(_type) + "' into container of type '" + printable(list_type) + "'");
                 }
 
                 if (index_node->type != NodeType::NUMBER) {
@@ -6012,14 +5994,8 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
  
     if (left->type == NodeType::LIST) {
 
-        node_ptr list_type = left->TypeInfo.type;
-        if (!list_type) {
-            list_type = new_node(NodeType::ANY);
-        }else if (list_type->_Node.List().elements.size() == 1) {
-            list_type = list_type->_Node.List().elements[0];
-        } else {
-            list_type = new_node(NodeType::ANY);
-        }
+        node_ptr list_type = get_type(left);
+        list_type->TypeInfo.is_type = true;
 
         // List Properties
         if (right->type == NodeType::ID) {
@@ -6059,8 +6035,7 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
                 // Type check
                 if (!match_types(list_type, arg, true)) {
                     node_ptr _type = get_type(arg);
-                    node_ptr _value = get_type(left->TypeInfo.type);
-                    return throw_error("Cannot insert value of type '" + node_repr(_type) + "' into container of type '" + node_repr(_value) + "'");
+                    return throw_error("Cannot insert value of type '" + printable(_type) + "' into container of type '" + printable(list_type) + "'");
                 }
                 left->_Node.List().elements.push_back(arg);
                 return left;
@@ -6076,8 +6051,7 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
                 // Type check
                 if (!match_types(list_type, arg, true)) {
                     node_ptr _type = get_type(arg);
-                    node_ptr _value = get_type(left->TypeInfo.type);
-                    return throw_error("Cannot insert value of type '" + node_repr(_type) + "' into container of type '" + node_repr(_value) + "'");
+                    return throw_error("Cannot insert value of type '" + printable(_type) + "' into container of type '" + printable(list_type) + "'");
                 }
                 left->_Node.List().elements.insert(left->_Node.List().elements.begin(), arg);
                 return left;
@@ -6095,8 +6069,7 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
                 // Type check
                 if (!match_types(list_type, value, true)) {
                     node_ptr _type = get_type(value);
-                    node_ptr _value = get_type(left->TypeInfo.type);
-                    return throw_error("Cannot insert value of type '" + printable(_type) + "' into container of type '" + printable(_value) + "'");
+                    return throw_error("Cannot insert value of type '" + printable(_type) + "' into container of type '" + printable(list_type) + "'");
                 }
 
                 if (index_node->type != NodeType::NUMBER) {
@@ -6665,6 +6638,11 @@ node_ptr Interpreter::get_type(node_ptr& node, std::vector<node_ptr> bases) {
 
     types->_Node.List().is_union = node->_Node.List().is_union;
     types->_Node.List().literal_construct = node->_Node.List().literal_construct;
+    types->TypeInfo = node->TypeInfo;
+
+    if (types->_Node.List().elements.size() == 0) {
+        types->_Node.List().elements.push_back(new_node(NodeType::ANY));
+    }
 
     return types;
 }
