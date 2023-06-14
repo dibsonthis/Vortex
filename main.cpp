@@ -32,7 +32,7 @@ int main(int argc, char** argv)
         parser.remove_op_node(";");
         auto ast = parser.nodes;
 
-        // Typechecking stage
+        ////Typechecking stage
         Interpreter typechecker(parser.nodes, parser.file_name);
         typechecker.tc = true;
         typechecker.evaluate();

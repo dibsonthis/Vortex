@@ -4709,8 +4709,6 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
         }
     }
 
-    res->TypeInfo.is_type = true;
-
     if (!func->_Node.Function().type_function) {
         // Check against return type
         if (func->_Node.Function().return_type) {
@@ -4724,7 +4722,7 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
         func->_Node.Function().return_type = res;
     }
 
-    func->_Node.Function().return_type->TypeInfo.is_type = true;
+    //func->_Node.Function().return_type->TypeInfo.is_type = true;
 
     current_symbol_table = current_symbol_table->parent->parent;
     current_symbol_table->child->child = nullptr;

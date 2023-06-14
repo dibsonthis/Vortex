@@ -1,13 +1,9 @@
-import sdl : "@modules/sdl"
-import [WindowConfig, Color, Window] : "@modules/sdl"
-
-var init: Number = sdl.initSDL()
-
-if (init != 0) {
-	println("Error initializing SDL")
-	exit(1)
-} else {
-	println("Initialized SDL")
+const person = {
+    name: "John",
+	age: 45,
+    getName: () => this.name
 }
 
-var windowConfig = WindowConfig { color: sdl.Colors.Green }
+
+println(person.name)
+println(person.age)
