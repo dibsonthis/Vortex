@@ -1,7 +1,5 @@
-union Status {
-	"active",
-	"inactive",
-	"on-hold"
-}
+const Matrix = [[Number]]
 
-const p: Status = "blah"
+const f = (m: Matrix) => {
+	const p: String = [][12]
+}

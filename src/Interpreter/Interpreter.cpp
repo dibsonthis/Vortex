@@ -5392,25 +5392,33 @@ node_ptr Interpreter::tc_accessor(node_ptr& node) {
         }
         int index = index_node->_Node.Number().value;
 
-        if (!container->TypeInfo.type) {
-            std::vector<node_ptr> list_types = container->_Node.List().elements;
-            list_types.erase(std::unique(list_types.begin(), list_types.end(), [this](node_ptr& lhs, node_ptr& rhs) { return compareNodeTypes(lhs, rhs); }), list_types.end());
-            node_ptr list_type = new_node(NodeType::LIST);
-            list_type->_Node.List().elements = list_types;
-            list_type->_Node.List().is_union = true;
-            list_type->TypeInfo.is_type = true;
-            return list_type;
+        node_ptr type = get_type(container);
+        if (type->type == NodeType::LIST && type->_Node.List().elements.size() > 0) {
+            type = type->_Node.List().elements[0];
+            return type;
+        } else {
+            return new_node(NodeType::ANY);
         }
 
-        node_ptr union_res = new_node(NodeType::LIST);
-        union_res->TypeInfo.is_type = true;
-        union_res->_Node.List().is_union = true;
-        node_ptr list_type = container->TypeInfo.type && container->TypeInfo.type->type == NodeType::LIST && container->TypeInfo.type->_Node.List().elements.size() == 1
-        ? container->TypeInfo.type->_Node.List().elements[0]
-        : new_node(NodeType::ANY); 
-        union_res->_Node.List().elements.push_back(list_type);
-        union_res->_Node.List().elements.push_back(new_node(NodeType::NONE));
-        return union_res;
+        // if (!container->TypeInfo.type) {
+        //     node_ptr type = get_type(container);
+        //     if (type->type == NodeType::LIST && type->_Node.List().elements.size() > 0) {
+        //         type = type->_Node.List().elements[0];
+        //         return type;
+        //     } else {
+        //         return new_node(NodeType::ANY);
+        //     }
+        // }
+
+        // node_ptr union_res = new_node(NodeType::LIST);
+        // union_res->TypeInfo.is_type = true;
+        // union_res->_Node.List().is_union = true;
+        // node_ptr list_type = container->TypeInfo.type && container->TypeInfo.type->type == NodeType::LIST && container->TypeInfo.type->_Node.List().elements.size() == 1
+        // ? container->TypeInfo.type->_Node.List().elements[0]
+        // : new_node(NodeType::ANY); 
+        // union_res->_Node.List().elements.push_back(list_type);
+        // union_res->_Node.List().elements.push_back(new_node(NodeType::NONE));
+        // return union_res;
     }
 
     if (container->type == NodeType::OBJECT) {
