@@ -686,9 +686,9 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
         // Check against return type
         if (function->_Node.Function().return_type) {
             if (!match_types(function->_Node.Function().return_type, res, true)) {
-                node_ptr defined_ret_type = get_type(func->_Node.Function().return_type);
+                node_ptr defined_ret_type = get_type(function->_Node.Function().return_type);
                 node_ptr ret_type = get_type(res);
-                return throw_error("Type Error in '" + node->_Node.Function().name + "': Return type '" + printable(ret_type) + "' does not match defined return type '" + printable(defined_ret_type) + "'");
+                return throw_error("Type Error in '" + function->_Node.Function().name + "': Return type '" + printable(ret_type) + "' does not match defined return type '" + printable(defined_ret_type) + "'");
             }
         } else {
             function->_Node.Function().return_type = res;

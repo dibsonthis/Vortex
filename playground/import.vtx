@@ -1,29 +1,37 @@
+
 import [] : string
-	
-	const map = (self: List, func: (x) => Any) => {
-		var list = []
-		for (self, index, value) {
-			list.append(func(value))
-		}
-		list
-	}
 
-	const map = (self: [String], func: (x: String, i: Number) => String) => {
-		var list = []
-		for (self, index, value) {
-			list.append(func(value, index))
-		}
-		list
-	}
+type Item {
+    key: String, 
+    value: Any
+}
 
-	const map = (self: List, func: (x: Any, i: Number, ls: List) => Any) => {
-		var list = []
-		for (self, index, value) {
-			list.append(func(value, index, self))
-		}
-		list
-	}
+const map = (self: Object, func: (item: Item) => Any): Object => {
+    var new_obj = {}
+    for (self.keys, index, key) {
+        const value = self[key]
+        new_obj[key] = func(Item {key: key, value: value})
+    }
+    new_obj
+}
 
-	const list = "My name is John Bartholomew Jacobson".split()
-	const new_list: [Number] = list.map((x: Number, i: Number, k: [Number]) => k.length)
-    print(new_list)
+const obj = {
+    name: "John",
+    age: 34,
+    nums: [1, 3, 8, 16],
+    address: {
+        street: "123 Test St.",
+        city: "Testville",
+        postCode: 1234
+    }
+}
+
+const new_obj = obj.map((item: Item) => {
+    if (type(item.value) == "String") {
+        ret item.value.chars()
+    } else if (type(item.value) == "Number") {
+        ret item.value * 2
+    } else {
+        ret item.value
+    }
+ })
