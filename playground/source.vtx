@@ -2,22 +2,17 @@ type Implements(T, FunctionName, F) {
     for (T.keys, index, key) {
         if (key == FunctionName) {
             if (T[key] is F) {
-                ret true
+                ret T
             }
         }
     }
 
-    error(f"${T} does not implement ${FunctionName}")
+    None
 }
 
 type Blah {
     name: String,
-    getName: () => String
-}
-
-type Person {
-    name: String,
-    age: Number
+    getName: () => String = () => this.name
 }
 
 const person = {
@@ -27,4 +22,4 @@ const person = {
 
 print("here")
 
-Person.Implements("getName", () => String)
+const blooop: Implements(Blah, "getName", () => String) = Blah {name: "John"}

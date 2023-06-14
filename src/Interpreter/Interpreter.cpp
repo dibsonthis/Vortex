@@ -4656,7 +4656,7 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
                 return_types.push_back(new_node(NodeType::NONE));
 
                 if (tc_conditonals) {
-                    return new_node(NodeType::NONE);
+                    goto typed_func_jump;
                 }
             }
             // Check if we've evaluated an if block
@@ -4668,7 +4668,7 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
                 }
 
                 if (tc_conditonals) {
-                    return new_node(NodeType::NONE);
+                    goto typed_func_jump;
                 }
             }
 
@@ -5677,9 +5677,11 @@ node_ptr Interpreter::tc_is(node_ptr& node) {
             current_symbol_table->cast_types[left] = std::make_shared<Node>(*left);
             *left = *right;
         }
+
+        return new_boolean_node(true);
     }
 
-    return new_node(NodeType::NOVALUE);
+    return new_boolean_node(false);
 }
 
 node_ptr Interpreter::tc_as(node_ptr& node) {
