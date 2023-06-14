@@ -1422,6 +1422,27 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value, bool type_nodes
         if (!match_types(param_type, value)) {
             return false;
         }
+
+        if (tc) {
+            // Spit out a warning saying refinement types won't be fully type checked
+            std::cout << "Warning: Refinement type '" + type->_Node.Function().name + "' cannot be fully type checked statically. Be careful, this may cause runtime errors.\n" << std::flush;
+            
+            // If we've matched at the param, that's the best we can do at compile time
+            if (!value->TypeInfo.is_type) {
+                func_call->_Node.FunctionCall().name = type->_Node.Function().name;
+                func_call->_Node.FunctionCall().args.push_back(value);
+                tc = false;
+                node_ptr res = eval_func_call(func_call, type);
+                tc = true;
+                if (res->type != NodeType::BOOLEAN) {
+                    return false;
+                }
+                return res->_Node.Boolean().value;
+            } else {
+                return true;
+            }
+        }
+
         func_call->_Node.FunctionCall().name = type->_Node.Function().name;
         func_call->_Node.FunctionCall().args.push_back(value);
         node_ptr res = eval_func_call(func_call, type);
@@ -4045,6 +4066,9 @@ std::string Interpreter::printable(node_ptr& node, std::vector<node_ptr> bases) 
             return node->_Node.String().value;
         }
         case NodeType::FUNC: {
+            if (node->TypeInfo.is_refinement_type && node->_Node.Function().name != "") {
+                return node->_Node.Function().name;
+            }
             std::string res = "(";
             for (int i = 0; i < node->_Node.Function().params.size(); i++) {
                 node_ptr& param = node->_Node.Function().params[i];
@@ -4575,6 +4599,7 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
     func->_Node.Function().dispatch_functions = node->_Node.Function().dispatch_functions;
     func->_Node.Function().type_function = node->_Node.Function().type_function;
     func->_Node.Function().decl_filename = file_name;
+    func->TypeInfo = node->TypeInfo;
 
     if (func->_Node.Function().return_type) {
         func->_Node.Function().return_type = eval_node(func->_Node.Function().return_type);
@@ -4977,6 +5002,7 @@ node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
         function->_Node.Function().return_type = func->_Node.Function().return_type;
         function->_Node.Function().dispatch_functions = func->_Node.Function().dispatch_functions;
         function->_Node.Function().type_function = func->_Node.Function().type_function;
+        function->TypeInfo = func->TypeInfo;
     } else if (node->_Node.FunctionCall().caller == nullptr) {
         Symbol function_symbol = get_symbol(node->_Node.FunctionCall().name, current_symbol_table);
         if (function_symbol.value == nullptr) {
@@ -4997,6 +5023,7 @@ node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
         function->_Node.Function().return_type = function_symbol.value->_Node.Function().return_type;
         function->_Node.Function().dispatch_functions = function_symbol.value->_Node.Function().dispatch_functions;
         function->_Node.Function().type_function = function_symbol.value->_Node.Function().type_function;
+        function->TypeInfo = function_symbol.value->TypeInfo;
     } else {
         node_ptr method = node->_Node.FunctionCall().caller->_Node.Object().properties[node->_Node.FunctionCall().name];
         if (method == nullptr) {
@@ -5017,6 +5044,7 @@ node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
         function->_Node.Function().return_type = method->_Node.Function().return_type;
         function->_Node.Function().dispatch_functions = method->_Node.Function().dispatch_functions;
         function->_Node.Function().type_function = method->_Node.Function().type_function;
+        function->TypeInfo = method->TypeInfo;
     }
 
     std::vector<node_ptr> args;
