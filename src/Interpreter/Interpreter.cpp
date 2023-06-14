@@ -647,6 +647,9 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
     if (function->_Node.Function().body->type != NodeType::OBJECT) {
         res = eval_node(function->_Node.Function().body);
     } else {
+        if (function->_Node.Function().body->_Node.Object().elements.size() == 0) {
+            res = new_node(NodeType::NONE);
+        }
         for (int i = 0; i < function->_Node.Function().body->_Node.Object().elements.size(); i++) {
             node_ptr expr = function->_Node.Function().body->_Node.Object().elements[i];
             node_ptr evaluated_expr = eval_node(expr);
