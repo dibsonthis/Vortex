@@ -1556,29 +1556,43 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value, bool type_nodes
                 return true;
             }
 
-            //node_ptr list_type = type->_Node.List().elements[0];
-            std::vector<node_ptr> list_types = type->_Node.List().elements;
-            list_types.erase(std::unique(list_types.begin(), list_types.end(), [this](node_ptr& lhs, node_ptr& rhs) { return compareNodeTypes(lhs, rhs); }), list_types.end());
-            node_ptr list_type = new_node(NodeType::LIST);
-            list_type->_Node.List().elements = list_types;
-            list_type->_Node.List().is_union = true;
-            list_type->TypeInfo.is_type = true;
+            node_ptr t_type = get_type(type);
+            node_ptr t_value = get_type(value);
 
-            if (value->type == NodeType::LIST) {
-                for (node_ptr& elem : value->_Node.List().elements) {
-                    if (!match_types(list_type, elem)) {
-                        return false;
-                    }
-                }
-                return true;
+            if (t_type->_Node.List().elements.size() != t_type->_Node.List().elements.size()) {
+                return false;
             }
 
-
-            for (node_ptr& elem : value->_Node.List().elements) {
-                if (!match_types(list_type, elem)) {
+            for (int i = 0; i < t_type->_Node.List().elements.size(); i++) {
+                if (!match_types(t_type->_Node.List().elements[i], t_value->_Node.List().elements[i])) {
                     return false;
                 }
             }
+
+            return true;
+
+            // //node_ptr list_type = type->_Node.List().elements[0];
+            // std::vector<node_ptr> list_types = type->_Node.List().elements;
+            // list_types.erase(std::unique(list_types.begin(), list_types.end(), [this](node_ptr& lhs, node_ptr& rhs) { return compareNodeTypes(lhs, rhs); }), list_types.end());
+            // node_ptr list_type = new_node(NodeType::LIST);
+            // list_type->_Node.List().elements = list_types;
+            // list_type->_Node.List().is_union = true;
+            // list_type->TypeInfo.is_type = true;
+
+            // if (value->type == NodeType::LIST) {
+            //     for (node_ptr& elem : value->_Node.List().elements) {
+            //         if (!match_types(list_type, elem)) {
+            //             return false;
+            //         }
+            //     }
+            //     return true;
+            // }
+
+            // for (node_ptr& elem : value->_Node.List().elements) {
+            //     if (!match_types(list_type, elem)) {
+            //         return false;
+            //     }
+            // }
 
             return true;
         } else if (value->TypeInfo.is_type) {
@@ -4752,7 +4766,7 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
 
         typed_func_jump:
 
-        return_types.erase(std::unique(return_types.begin(), return_types.end(), [this](node_ptr& lhs, node_ptr& rhs) { return compareNodeTypes(lhs, rhs); }), return_types.end());  
+        return_types.erase(std::unique(return_types.begin(), return_types.end(), [this](node_ptr& lhs, node_ptr& rhs) { return compareNodeTypes(lhs, rhs); }), return_types.end());
 
         if (return_types.size() == 1) {
             res = return_types[0];
@@ -4764,10 +4778,7 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
                 r->TypeInfo.is_type = true;
                 res->_Node.List().elements.push_back(r);
             }
-            // res->_Node.List().elements = return_types;
-            // for (node_ptr& elem : res->_Node.List().elements) {
-            //     //elem->TypeInfo.is_type = true;
-            // }
+            res = get_type(res);
         }
     }
 

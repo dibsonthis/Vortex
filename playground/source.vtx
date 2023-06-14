@@ -1,5 +1,13 @@
-const Matrix = [[Number]]
+var Matrix = [[Number]]
 
-const f = (m: Matrix) => {
-	const p: String = [][12]
+var f = (m: Matrix) => {
+	if (true) {
+		ret m
+	}
+
+	var n: Matrix = [[1, 2, 3]]
+
+	ret n
 }
+
+const l: String = f(Matrix)
