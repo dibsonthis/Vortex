@@ -1148,7 +1148,9 @@ node_ptr Interpreter::eval_union(node_ptr& node) {
         for (node_ptr elem : union_body->_Node.List().elements) {
             node_ptr ev_elem = eval_node(elem);
             if (!ev_elem->TypeInfo.is_type) {
-                ev_elem->TypeInfo.is_literal_type = true;
+                if (ev_elem->type != NodeType::FUNC) {
+                    ev_elem->TypeInfo.is_literal_type = true;
+                }
             }
             union_list->_Node.List().elements.push_back(ev_elem);
         }
@@ -2886,6 +2888,9 @@ node_ptr Interpreter::eval_in(node_ptr& node) {
 
     for (node_ptr& elem : right->_Node.List().elements) {
         if (match_types(elem, left, true)) {
+            return new_boolean_node(true);
+        }
+        if (match_types(left, elem, true)) {
             return new_boolean_node(true);
         }
     }
@@ -6610,6 +6615,7 @@ node_ptr Interpreter::get_type(node_ptr& node, std::vector<node_ptr> bases) {
         node_ptr func = tc_function(node);
         tc = tc_status;
         func->_Node.Function().return_type = get_type(func->_Node.Function().return_type, bases);
+        func->TypeInfo = node->TypeInfo;
         func->TypeInfo.is_type = true;
         return func;
     }

@@ -1,37 +1,28 @@
+// type Items(T) {
+//     T.keys.map((k: String) => {
+//         { key: k as Literal, value: T[k] }
+//     })
+// }
 
-import [] : string
+// type Person {
+//     name: String,
+//     age: Number
+// }
 
-type Item {
-    key: String, 
-    value: Any
+// type Animal {
+//     name: String,
+//     speed: Number
+// }
+
+// print(Items(Person))
+
+// const x: Items(Animal)[1] = {value: 100, key: "speed" as Literal}
+
+union SomeTypes {
+    String,
+    Number,
+    Boolean,
+    //() => Number
 }
 
-const map = (self: Object, func: (item: Item) => Any): Object => {
-    var new_obj = {}
-    for (self.keys, index, key) {
-        const value = self[key]
-        new_obj[key] = func(Item {key: key, value: value})
-    }
-    new_obj
-}
-
-const obj = {
-    name: "John",
-    age: 34,
-    nums: [1, 3, 8, 16],
-    address: {
-        street: "123 Test St.",
-        city: "Testville",
-        postCode: 1234
-    }
-}
-
-const new_obj = obj.map((item: Item) => {
-    if (type(item.value) == "String") {
-        ret item.value.chars()
-    } else if (type(item.value) == "Number") {
-        ret item.value * 2
-    } else {
-        ret item.value
-    }
- })
+print(Function in SomeTypes)
