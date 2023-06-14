@@ -179,6 +179,7 @@ public:
     node_ptr tc_is(node_ptr& node);
     node_ptr tc_as(node_ptr& node);
     node_ptr tc_dot(node_ptr& node);
+    node_ptr tc_try_catch(node_ptr& node);
     node_ptr tc_call_lib_function(node_ptr& lib, node_ptr& node);
 
     bool compareNodeTypes(node_ptr& lhs, node_ptr& rhs);

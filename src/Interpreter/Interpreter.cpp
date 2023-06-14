@@ -272,10 +272,6 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func) {
     }
     
     if (!func) {
-        if (node->_Node.FunctionCall().name == "test") {
-            node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
-            return get_type(arg);
-        }
         if (node->_Node.FunctionCall().name == "print") {
             if (node->_Node.FunctionCall().args.size() == 1) {
                 node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
@@ -4048,7 +4044,8 @@ std::string Interpreter::printable(node_ptr& node, std::vector<node_ptr> bases) 
                 }
             }
             if (node->_Node.Function().return_type) {
-                res += ") => " + node_repr(node->_Node.Function().return_type);
+                node_ptr _return_type = get_type(node->_Node.Function().return_type);
+                res += ") => " + printable(_return_type);
             } else {
                 res += ") => ...";
             }
@@ -4272,6 +4269,9 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
             return eval_object_init(node);
         }
         case NodeType::TRY_CATCH: {
+            if (tc) {
+                return tc_try_catch(node);
+            }
             return eval_try_catch(node);
         }
         case NodeType::OP: {
@@ -4798,10 +4798,6 @@ node_ptr Interpreter::tc_func_call(node_ptr& node, node_ptr func) {
     }
     
     if (!func) {
-        if (node->_Node.FunctionCall().name == "test") {
-            node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
-            return get_type(arg);
-        }
         if (node->_Node.FunctionCall().name == "print") {
             if (node->_Node.FunctionCall().args.size() == 1) {
                 node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
@@ -6593,4 +6589,46 @@ node_ptr Interpreter::get_type(node_ptr& node, std::vector<node_ptr> bases) {
     types->_Node.List().literal_construct = node->_Node.List().literal_construct;
 
     return types;
+}
+
+node_ptr Interpreter::tc_try_catch(node_ptr& node) {
+    std::vector<node_ptr> returns;
+    //global_interpreter->try_catch++;
+    std::string error = "";
+    for (node_ptr& expr : node->_Node.TryCatch().try_body->_Node.Object().elements) {
+        node_ptr evaluated_expr = eval_node(expr);
+        if (evaluated_expr->type == NodeType::ERROR) {
+            error = evaluated_expr->_Node.Error().message;
+            return evaluated_expr;
+        }
+        if (evaluated_expr->type == NodeType::RETURN) {
+            returns.push_back(evaluated_expr);
+        }
+    }
+    sym_t_ptr catch_sym_table = std::make_shared<SymbolTable>();
+    catch_sym_table->parent = current_symbol_table;
+    node_ptr error_arg = node->_Node.TryCatch().catch_keyword->_Node.FunctionCall().args[0];
+    node_ptr error_node = new_string_node(error);
+    add_symbol(new_symbol(error_arg->_Node.ID().value, error_node), catch_sym_table);
+    current_symbol_table = catch_sym_table;
+
+    for (node_ptr& expr : node->_Node.TryCatch().catch_body->_Node.Object().elements) {
+        node_ptr evaluated_expr = eval_node(expr);
+        if (evaluated_expr->type == NodeType::RETURN) {
+            returns.push_back(evaluated_expr);
+        }
+    }
+
+    current_symbol_table = current_symbol_table->parent;
+
+    if (returns.size() == 0) {
+        return new_node(NodeType::NOVALUE);
+    }
+    
+    node_ptr union_list = new_node(NodeType::LIST);
+    union_list->_Node.List().elements = returns;
+    union_list->_Node.List().is_union = true;
+    union_list->TypeInfo.is_type = true;
+
+    return union_list;
 }
