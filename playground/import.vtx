@@ -1,5 +1,1 @@
-type Items(T) {
-    T.keys.map((k) => {
-        { key: k as Literal, value: T[k] }
-    })
-}
+const func = (x: String) => [x]

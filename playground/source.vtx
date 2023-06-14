@@ -9,3 +9,22 @@ if (init != 0) {
 } else {
 	println("Initialized SDL")
 }
+
+var windowConfig = WindowConfig { color: sdl.Colors.Green }
+
+const window: Pointer = sdl.createWindow(windowConfig)
+const renderer: Pointer = sdl.createRenderer(window, -1)
+
+const win = Window { window: window, renderer: renderer }
+win.changeColor(sdl.Colors.Green)
+
+var running = true
+var xPos = 0
+var yPos = 0
+
+const onQuit = () => {
+	sdl.destroyWindow(window)
+	sdl.quitSDL()
+	println("Done")
+	running = false
+}

@@ -1050,10 +1050,10 @@ node_ptr Interpreter::eval_accessor(node_ptr& node) {
 
 node_ptr Interpreter::eval_function(node_ptr& node) {
     // Testing
-    tc = true;
-    node_ptr res = tc_function(node);
-    tc = false;
-    return res;
+    // tc = true;
+    // node_ptr res = tc_function(node);
+    // tc = false;
+    // return res;
 
     node_ptr func = new_node(NodeType::FUNC);
     func->_Node.Function().name = func->_Node.Function().name;
@@ -1070,53 +1070,54 @@ node_ptr Interpreter::eval_function(node_ptr& node) {
     func->_Node.Function().type_function = node->_Node.Function().type_function;
     func->_Node.Function().decl_filename = file_name;
 
-    if (func->_Node.Function().return_type) {
-        func->_Node.Function().return_type = eval_node(func->_Node.Function().return_type);
-        if (func->_Node.Function().return_type->type == NodeType::LIST) {
-            func->_Node.Function().return_type->TypeInfo.is_type = true;
-        } else if (func->_Node.Function().return_type->type == NodeType::OBJECT) {
-            func->_Node.Function().return_type->TypeInfo.is_type = true;
-        }
-    } else {
-        func->_Node.Function().return_type = new_node(NodeType::ANY);
-    }
-    // Go through params to see if they are typed, and store their types
-    for (auto& param : func->_Node.Function().params) {
-        if (param->type == NodeType::OP && param->_Node.Op().value == ":") {
-            node_ptr param_type = eval_node(param->_Node.Op().right);
-            if (param_type->type == NodeType::LIST) {
-                param_type->TypeInfo.is_type = true;
-            } else if (param_type->type == NodeType::OBJECT) {
-                param_type->TypeInfo.is_type = true;
-            } else if (param_type->type == NodeType::FUNC) {
-                param_type->TypeInfo.is_type = true;
-            }
-            func->_Node.Function().param_types[param->_Node.Op().left->_Node.ID().value] 
-                = param_type;
-            param = param->_Node.Op().left;
-        }
-    }
-    // Check if the body is a type, if so, this function is a type
-    if (!func->_Node.Function().body) {
-        func->_Node.Function().body = new_node(NodeType::ANY);
-    }
-    if (func->_Node.Function().body->type == NodeType::ID) {
-        // We want to check if this ID is a type, in this case we mark
-        // this function is a type
-        auto value = get_symbol(func->_Node.Function().body->_Node.ID().value, current_symbol_table);
-        if (value.value && value.value->TypeInfo.is_type) {
-            func->TypeInfo.is_type = true;
-        }
-    }
-    if (func->_Node.Function().body->TypeInfo.is_type) {
-        func->TypeInfo.is_type = true;
-        func->_Node.Function().return_type = func->_Node.Function().body;
-    }
+    // if (func->_Node.Function().return_type) {
+    //     func->_Node.Function().return_type = eval_node(func->_Node.Function().return_type);
+    //     if (func->_Node.Function().return_type->type == NodeType::LIST) {
+    //         func->_Node.Function().return_type->TypeInfo.is_type = true;
+    //     } else if (func->_Node.Function().return_type->type == NodeType::OBJECT) {
+    //         func->_Node.Function().return_type->TypeInfo.is_type = true;
+    //     }
+    // } else {
+    //     func->_Node.Function().return_type = new_node(NodeType::ANY);
+    // }
+    // // Go through params to see if they are typed, and store their types
+    // for (auto& param : func->_Node.Function().params) {
+    //     if (param->type == NodeType::OP && param->_Node.Op().value == ":") {
+    //         node_ptr param_type = eval_node(param->_Node.Op().right);
+    //         if (param_type->type == NodeType::LIST) {
+    //             param_type->TypeInfo.is_type = true;
+    //         } else if (param_type->type == NodeType::OBJECT) {
+    //             param_type->TypeInfo.is_type = true;
+    //         } else if (param_type->type == NodeType::FUNC) {
+    //             param_type->TypeInfo.is_type = true;
+    //         }
+    //         func->_Node.Function().param_types[param->_Node.Op().left->_Node.ID().value] 
+    //             = param_type;
+    //         param = param->_Node.Op().left;
+    //     }
+    // }
+    // // Check if the body is a type, if so, this function is a type
+    // if (!func->_Node.Function().body) {
+    //     func->_Node.Function().body = new_node(NodeType::ANY);
+    // }
+    // if (func->_Node.Function().body->type == NodeType::ID) {
+    //     // We want to check if this ID is a type, in this case we mark
+    //     // this function is a type
+    //     auto value = get_symbol(func->_Node.Function().body->_Node.ID().value, current_symbol_table);
+    //     if (value.value && value.value->TypeInfo.is_type) {
+    //         func->TypeInfo.is_type = true;
+    //     }
+    // }
+    // if (func->_Node.Function().body->TypeInfo.is_type) {
+    //     func->TypeInfo.is_type = true;
+    //     func->_Node.Function().return_type = func->_Node.Function().body;
+    // }
     // Inject current scope as closure
     for (auto& symbol : current_symbol_table->symbols) {
         func->_Node.Function().closure[symbol.first] = symbol.second.value;
     }
     return func;
+    // return node;
 }
 
 node_ptr Interpreter::eval_enum(node_ptr& node) {
@@ -2056,6 +2057,11 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
             return throw_error("No such file or directory: '" + parent_path.string() + "'");
         }
 
+        Interpreter import_tc(import_parser.nodes, import_parser.file_name);
+        import_tc.global_interpreter = this;
+        import_tc.tc = true;
+        import_tc.evaluate();
+
         Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
         import_interpreter.global_interpreter = this;
         import_interpreter.tc = tc;
@@ -2114,6 +2120,11 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
         } catch(...) {
             return throw_error("No such file or directory: '" + parent_path.string() + "'");
         }
+
+        Interpreter import_tc(import_parser.nodes, import_parser.file_name);
+        import_tc.global_interpreter = this;
+        import_tc.tc = true;
+        import_tc.evaluate();
 
         Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
         import_interpreter.global_interpreter = this;
@@ -4763,6 +4774,10 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
     } else {
         func->_Node.Function().return_type = res;
     }
+
+    node->_Node.Function().return_type = func->_Node.Function().return_type;
+    node->_Node.Function().params = func->_Node.Function().params;
+    node->_Node.Function().param_types = func->_Node.Function().param_types;
 
     current_symbol_table = current_symbol_table->parent->parent;
     current_symbol_table->child->child = nullptr;
