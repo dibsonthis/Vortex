@@ -4756,10 +4756,15 @@ node_ptr Interpreter::tc_function(node_ptr& node) {
         } else if (return_types.size() > 1) {                 
             res = new_node(NodeType::LIST);
             res->_Node.List().is_union = true;
-            res->_Node.List().elements = return_types;
-            for (node_ptr& elem : res->_Node.List().elements) {
-                elem->TypeInfo.is_type = true;
+            for (node_ptr& elem : return_types) {
+                node_ptr r = std::make_shared<Node>(*elem);
+                r->TypeInfo.is_type = true;
+                res->_Node.List().elements.push_back(r);
             }
+            // res->_Node.List().elements = return_types;
+            // for (node_ptr& elem : res->_Node.List().elements) {
+            //     //elem->TypeInfo.is_type = true;
+            // }
         }
     }
 
@@ -6593,7 +6598,10 @@ node_ptr Interpreter::get_type(node_ptr& node, std::vector<node_ptr> bases) {
 
 node_ptr Interpreter::tc_try_catch(node_ptr& node) {
     std::vector<node_ptr> returns;
-    //global_interpreter->try_catch++;
+    sym_t_ptr try_sym_table = std::make_shared<SymbolTable>();
+    try_sym_table->parent = current_symbol_table;
+    current_symbol_table = try_sym_table;
+
     std::string error = "";
     for (node_ptr& expr : node->_Node.TryCatch().try_body->_Node.Object().elements) {
         node_ptr evaluated_expr = eval_node(expr);
@@ -6602,9 +6610,13 @@ node_ptr Interpreter::tc_try_catch(node_ptr& node) {
             return evaluated_expr;
         }
         if (evaluated_expr->type == NodeType::RETURN) {
+            evaluated_expr->_Node.Return().value = eval_node(evaluated_expr->_Node.Return().value);
             returns.push_back(evaluated_expr);
         }
     }
+
+    current_symbol_table = current_symbol_table->parent;
+
     sym_t_ptr catch_sym_table = std::make_shared<SymbolTable>();
     catch_sym_table->parent = current_symbol_table;
     node_ptr error_arg = node->_Node.TryCatch().catch_keyword->_Node.FunctionCall().args[0];
@@ -6615,6 +6627,7 @@ node_ptr Interpreter::tc_try_catch(node_ptr& node) {
     for (node_ptr& expr : node->_Node.TryCatch().catch_body->_Node.Object().elements) {
         node_ptr evaluated_expr = eval_node(expr);
         if (evaluated_expr->type == NodeType::RETURN) {
+            evaluated_expr->_Node.Return().value = eval_node(evaluated_expr->_Node.Return().value);
             returns.push_back(evaluated_expr);
         }
     }

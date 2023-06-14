@@ -1,2 +1,12 @@
-const f: Function = (x: String) => x
-print(f)
+const f = () => {
+	try {
+		const p: Number = 10
+		ret p
+	} catch (e) {
+		const p: String = "10"
+		ret p
+	}
+}
+
+const p = f()
+print(p)
