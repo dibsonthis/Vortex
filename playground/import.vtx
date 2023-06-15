@@ -1,28 +1,5 @@
-// type Items(T) {
-//     T.keys.map((k: String) => {
-//         { key: k as Literal, value: T[k] }
-//     })
-// }
-
-// type Person {
-//     name: String,
-//     age: Number
-// }
-
-// type Animal {
-//     name: String,
-//     speed: Number
-// }
-
-// print(Items(Person))
-
-// const x: Items(Animal)[1] = {value: 100, key: "speed" as Literal}
-
-union SomeTypes {
-    String,
-    Number,
-    Boolean,
-    //() => Number
+type Items(T) {
+    T.keys.map((k: String) => {
+        { key: k as Literal, value: T[k as String] }
+    })
 }
-
-print(Function in SomeTypes)

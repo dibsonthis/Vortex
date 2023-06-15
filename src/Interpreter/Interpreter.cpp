@@ -77,9 +77,9 @@ node_ptr Interpreter::eval_const_decl(node_ptr& node) {
         return value;
     }
 
-    if ((value->type == NodeType::OBJECT && value->_Node.Object().is_enum) || value->TypeInfo.is_type || (value->type == NodeType::LIST && value->_Node.List().is_union)) {
-        value->TypeInfo.type_name = node->_Node.ConstantDeclatation().name;
-    }
+    // if ((value->type == NodeType::OBJECT && value->_Node.Object().is_enum) || value->TypeInfo.is_type || (value->type == NodeType::LIST && value->_Node.List().is_union)) {
+    //     value->TypeInfo.type_name = node->_Node.ConstantDeclatation().name;
+    // }
 
     Symbol symbol = new_symbol(node->_Node.ConstantDeclatation().name, value);
     add_symbol(symbol, current_symbol_table);
@@ -141,9 +141,9 @@ node_ptr Interpreter::eval_var_decl(node_ptr& node) {
         existing_symbol->_Node.Function().dispatch_functions.push_back(value);
         return value;
     }
-    if ((value->type == NodeType::OBJECT && value->_Node.Object().is_enum) || value->TypeInfo.is_type || (value->type == NodeType::LIST && value->_Node.List().is_union)) {
-        value->TypeInfo.type_name = node->_Node.VariableDeclaration().name;
-    }
+    // if ((value->type == NodeType::OBJECT && value->_Node.Object().is_enum) || value->TypeInfo.is_type || (value->type == NodeType::LIST && value->_Node.List().is_union)) {
+    //     value->TypeInfo.type_name = node->_Node.VariableDeclaration().name;
+    // }
 
     Symbol symbol = new_symbol(node->_Node.VariableDeclaration().name, value);
     add_symbol(symbol, current_symbol_table);
@@ -3239,7 +3239,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 }
 
                 node_ptr function = right->_Node.FunctionCall().args[0];
-                function = eval_node(right->_Node.FunctionCall().args[0]);
+                function = tc_function(right->_Node.FunctionCall().args[0]);
                 // Get first param and inject type into it
                 node_ptr list_param = function->_Node.Function().params[0];
                 std::string list_param_name = list_param->_Node.ID().value;
@@ -3306,7 +3306,11 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                     return throw_error("List function '" + prop + "' expects 1 argument");
                 }
 
-                node_ptr function = right->_Node.FunctionCall().args[0];
+                if (right->_Node.FunctionCall().args[0]->type != NodeType::FUNC) {
+                    return throw_error("List function '" + prop + "' expects 1 function argument");
+                }
+
+                node_ptr function = tc_function(right->_Node.FunctionCall().args[0]);
                 // Get first param and inject type into it
                 node_ptr list_param = function->_Node.Function().params[0];
                 std::string list_param_name = list_param->_Node.ID().value;
@@ -3314,16 +3318,10 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                 node_ptr param_type = function->_Node.Function().param_types[list_param_name];
                 if (param_type) {
                     if (!match_types(list_type, param_type, true)) {
-                        return throw_error("Map function expects a parameter of type '" + printable(list_type) + "' but received '" + printable(param_type) + "'");
+                        return throw_error("Filter function expects a parameter of type '" + printable(list_type) + "' but received '" + printable(param_type) + "'");
                     }
                 } else {
                     function->_Node.Function().param_types[list_param_name] = list_type;
-                }
-                
-                function = eval_node(right->_Node.FunctionCall().args[0]);
-
-                if (function->type != NodeType::FUNC) {
-                    return throw_error("List function '" + prop + "' expects 1 function argument");
                 }
 
                 node_ptr new_list = new_node(NodeType::LIST);
@@ -3336,6 +3334,7 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                     }
                     if (function->_Node.Function().params.size() > 0) {
                         func_call->_Node.FunctionCall().args.push_back(value);
+                        function->_Node.Function().param_types[list_param_name] = value;
                     }
                     if (function->_Node.Function().params.size() > 1) {
                         func_call->_Node.FunctionCall().args.push_back(new_number_node(_index));
@@ -3343,6 +3342,9 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
                     if (function->_Node.Function().params.size() > 2) {
                         func_call->_Node.FunctionCall().args.push_back(left);
                     }
+
+                    function->_Node.Function().return_type = nullptr;
+                    function = tc_function(function);
                     node_ptr res = eval_func_call(func_call, function);
 
                     if (res->type != NodeType::BOOLEAN) {
@@ -6277,7 +6279,11 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
                     return throw_error("List function '" + prop + "' expects 1 argument");
                 }
 
-                node_ptr function = right->_Node.FunctionCall().args[0];
+                if (right->_Node.FunctionCall().args[0]->type != NodeType::FUNC) {
+                    return throw_error("List function '" + prop + "' expects 1 function argument");
+                }
+
+                node_ptr function = tc_function(right->_Node.FunctionCall().args[0]);
                 // Get first param and inject type into it
                 node_ptr list_param = function->_Node.Function().params[0];
                 std::string list_param_name = list_param->_Node.ID().value;
@@ -6285,18 +6291,12 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
                 node_ptr param_type = function->_Node.Function().param_types[list_param_name];
                 if (param_type) {
                     if (!match_types(list_type, param_type, true)) {
-                        return throw_error("Map function expects a parameter of type '" + printable(list_type) + "' but received '" + printable(param_type) + "'");
+                        return throw_error("Filter function expects a parameter of type '" + printable(list_type->_Node.List().elements[0]) + "' but received '" + printable(param_type) + "'");
                     }
                 } else {
-                    function->_Node.Function().param_types[list_param_name] = list_type;
+                    function->_Node.Function().param_types[list_param_name] = list_type->_Node.List().elements[0];
                 }
                 
-                function = eval_node(right->_Node.FunctionCall().args[0]);
-
-                if (function->type != NodeType::FUNC) {
-                    return throw_error("List function '" + prop + "' expects 1 function argument");
-                }
-
                 node_ptr new_list = new_node(NodeType::LIST);
 
                 for (int _index = 0; _index < left->_Node.List().elements.size(); _index++) {
@@ -6307,6 +6307,7 @@ node_ptr Interpreter::tc_dot(node_ptr& node) {
                     }
                     if (function->_Node.Function().params.size() > 0) {
                         func_call->_Node.FunctionCall().args.push_back(value);
+                        function->_Node.Function().param_types[list_param_name] = value;
                     }
                     if (function->_Node.Function().params.size() > 1) {
                         func_call->_Node.FunctionCall().args.push_back(new_number_node(_index));

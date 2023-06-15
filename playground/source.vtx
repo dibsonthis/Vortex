@@ -1,1 +1,15 @@
 import [] : "import"
+
+type Person {
+    name: String = "",
+    age: Number = 455,
+    address: {
+        street: String,
+        postcode: Number
+    } = {
+        street: "123 Fake St.",
+        postcode: 0
+    }
+}
+
+println(Items(Person {}).filter((x) => !(x.value is String)))
