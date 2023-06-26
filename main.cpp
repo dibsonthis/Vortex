@@ -1,11 +1,10 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
-#include <iomanip>
-#include "src/libs/JSON/json.hpp"
 #include "src/Lexer/Lexer.hpp"
 #include "src/Parser/Parser.hpp"
 #include "src/Interpreter/Interpreter.hpp"
+#include "src/Typechecker/Typechecker.hpp"
 
 enum Type
 {
@@ -19,9 +18,6 @@ int main(int argc, char** argv)
 {
     if (type == Type::DEV)
     {
-        // std::filesystem::current_path("../../../playground/project_4");
-        // Lexer lexer("main.vtx");
-
         std::filesystem::current_path("../../../playground");
         Lexer lexer("source.vtx");
 
@@ -32,12 +28,10 @@ int main(int argc, char** argv)
         parser.remove_op_node(";");
         auto ast = parser.nodes;
 
-        ////Typechecking stage
-        Interpreter typechecker(parser.nodes, parser.file_name);
-        typechecker.tc = true;
-        typechecker.evaluate();
+        Typechecker typechecker(parser.nodes, parser.file_name);
+        typechecker.typecheck();
 
-        Interpreter interpreter(parser.nodes, parser.file_name);
+        Interpreter interpreter(typechecker.nodes, parser.file_name);
         interpreter.evaluate();
 
         std::cin.get();
@@ -75,16 +69,10 @@ int main(int argc, char** argv)
             std::filesystem::current_path(parent_path);
         }
 
-        // Typechecking stage
-        Interpreter typechecker(parser.nodes, parser.file_name);
-        typechecker.argc = argc-1;
-        typechecker.argv = args;
-        typechecker.tc = true;
-        typechecker.evaluate();
+        Typechecker typechecker(parser.nodes, parser.file_name);
+        typechecker.typecheck();
 
-        Interpreter interpreter(parser.nodes, parser.file_name);
-        interpreter.argc = argc-1;
-        interpreter.argv = args;
+        Interpreter interpreter(typechecker.nodes, parser.file_name);
         interpreter.evaluate();
         
         exit(0);

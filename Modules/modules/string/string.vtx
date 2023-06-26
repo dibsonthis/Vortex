@@ -19,4 +19,4 @@ const first = (str: String)
 	=> str[0]
 
 const last = (str: String) 
-	=> str[str.length-1]
+	=> str[str.length()-1]

@@ -1,22 +1,13 @@
 const lib = load_lib("./bin/sdl")
 
-type Color {
+type Color = {
 	r: Number = 0,
 	g: Number = 0,
 	b: Number = 0,
 	a: Number = 255
 };
 
-[Color.r, Color.g, Color.b]::onChange = (color) => {
-	if (color > 255) {
-		color = 0
-	}
-	if (color < 0) {
-		color = 255
-	}
-}
-
-type WindowConfig {
+type WindowConfig = {
 	width: Number = 1000,
 	height: Number = 600,
 	title: String = "Test Window",
@@ -25,7 +16,7 @@ type WindowConfig {
 	color: Color = Color {}
 }
 
-enum Colors {
+const Colors = {
 	Red: Color { r: 255 },
 	Green: Color { g: 255 },
 	Blue: Color { b: 255 },
@@ -33,7 +24,7 @@ enum Colors {
 	White: Color { r: 255, g: 255, b: 255 }
 }
 
-enum EventType {
+const EventType = {
 	SDL_QUIT: 256,
 	SDL_KEYDOWN: 768,
 	SDL_KEYUP: 769,
@@ -42,13 +33,13 @@ enum EventType {
 	SDL_MOUSEBUTTONUP: 1026
 }
 
-enum ButtonTypeEnum {
+const ButtonTypeEnum = {
 	SDL_BUTTON_LEFT: 1,
 	SDL_BUTTON_MIDDLE: 2,
 	SDL_BUTTON_RIGHT: 3
 }
 
-enum StateTypeEnum {
+const StateTypeEnum = {
 	SDL_RELEASED: 0,
 	SDL_PRESSED: 1,
 }
@@ -89,10 +80,6 @@ var drawLine = (renderer: Pointer, x1: Number, y1: Number, x2: Number, y2: Numbe
 var delay = (ms: Number): None 
 	=> lib.call("sdl_delay", [ms])
 
-/* Events can be different values, 
-so we leave the return untyped 
--- essentially "any" */
-
 var pollEvent = (evt: Any) => {
 	const eventObj = lib.call("poll_event", [])
 	evt = eventObj.event
@@ -114,8 +101,8 @@ var interpolate = (value: Number, x0: Number, x1: Number, y0: Number, y1: Number
 	y0 + (value - x0) * ((y0 - y1)/(x0 - x1))
 }
 
-type Window {
+type Window = {
 	window: Pointer,
 	renderer: Pointer,
-	changeColor: (color: Color) => None = (color: Color) => changeBackgroundColor(this.renderer, color)
+	changeColor: ((color: Color) => None) = (color: Color) => changeBackgroundColor(this.renderer, color)
 }

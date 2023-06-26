@@ -1,5 +1,110 @@
-type Items(T) {
-    T.keys.map((k: String) => {
-        { key: k as Literal, value: T[k as String] }
-    })
+// const keyOf = (x: Object) => x.keys() as Union
+
+const lib = load_lib("/usr/local/share/vortex/modules/sdl/bin/sdl")
+
+type Color = {
+	r: Number = 0,
+	g: Number = 0,
+	b: Number = 0,
+	a: Number = 255
+};
+
+type WindowConfig = {
+	width: Number = 1000,
+	height: Number = 600,
+	title: String = "Test Window",
+	xPos: Number = 300,
+	yPos: Number = 100,
+	color: Color = Color {}
+}
+
+const Colors = {
+	Red: Color { r: 255 },
+	Green: Color { g: 255 },
+	Blue: Color { b: 255 },
+	Black: Color { },
+	White: Color { r: 255, g: 255, b: 255 }
+}
+
+const EventType = {
+	SDL_QUIT: 256,
+	SDL_KEYDOWN: 768,
+	SDL_KEYUP: 769,
+	SDL_MOUSEMOTION: 1024,
+	SDL_MOUSEBUTTONDOWN: 1025,
+	SDL_MOUSEBUTTONUP: 1026
+}
+
+const ButtonTypeEnum = {
+	SDL_BUTTON_LEFT: 1,
+	SDL_BUTTON_MIDDLE: 2,
+	SDL_BUTTON_RIGHT: 3
+}
+
+const StateTypeEnum = {
+	SDL_RELEASED: 0,
+	SDL_PRESSED: 1,
+}
+
+var initSDL = (): Number 
+	=> lib.call("sdl_init", [])
+
+var createWindow = (windowConfig: WindowConfig): Pointer
+	=> lib.call("create_window", [windowConfig.title, windowConfig.xPos, windowConfig.yPos, windowConfig.width, windowConfig.height])
+
+var destroyWindow = (window: Pointer): None
+	=> lib.call("destroy_window", [window])
+
+var createRenderer = (window: Pointer, index: Number): Pointer
+	=> lib.call("create_renderer", [window, index])
+
+var setRenderDrawColor = (renderer: Pointer, color: Color): None
+	=> lib.call("set_render_draw_color", [renderer, color.r, color.g, color.b, color.a])
+
+var renderClear = (renderer: Pointer): None
+	=> lib.call("render_clear", [renderer])
+
+var renderPresent = (renderer: Pointer): None 
+	=> lib.call("render_present", [renderer])
+
+var destroyRenderer = (renderer: Pointer): None 
+	=> lib.call("destroy_renderer", [renderer])
+
+var getKeyName = (keyCode: Number): String 
+	=> lib.call("get_key_name", [keyCode])
+
+var drawPoint = (renderer: Pointer, xPos: Number, yPos: Number): None 
+	=> lib.call("draw_point", [renderer, xPos, yPos])
+
+var drawLine = (renderer: Pointer, x1: Number, y1: Number, x2: Number, y2: Number): None 
+	=> lib.call("draw_line", [renderer, x1, y1, x2, y2])
+
+var delay = (ms: Number): None 
+	=> lib.call("sdl_delay", [ms])
+
+var pollEvent = (evt: Any) => {
+	const eventObj = lib.call("poll_event", [])
+	evt = eventObj.event
+	eventObj.status
+}
+
+var quitSDL = (): None
+	=> lib.call("sdl_quit", [])
+
+// Helper Functions
+
+var changeBackgroundColor = (renderer: Pointer, color: Color): None => {
+	setRenderDrawColor(renderer, color)
+	renderClear(renderer)
+	renderPresent(renderer)
+}
+
+var interpolate = (value: Number, x0: Number, x1: Number, y0: Number, y1: Number): Number => {
+	y0 + (value - x0) * ((y0 - y1)/(x0 - x1))
+}
+
+type Window = {
+	window: Pointer,
+	renderer: Pointer,
+	changeColor: (color: Color) => None = (color: Color) => changeBackgroundColor(this.renderer, color)
 }

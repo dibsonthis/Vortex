@@ -1,15 +1,8 @@
-import [] : "import"
+type KeyOf[T: Object] = T.keys() as Union
+type ValueOf[T: Object] = T.values() as Union
 
-type Person {
-    name: String = "",
-    age: Number = 455,
-    address: {
-        street: String,
-        postcode: Number
-    } = {
-        street: "123 Fake St.",
-        postcode: 0
-    }
-}
+type get_t = (T: Object, K: KeyOf(T)): ValueOf(T) => T[K] as Literal
 
-println(Items(Person {}).filter((x) => !(x.value is String)))
+const x: String = get_t({a: "John", b: "Stacey"}, "a")
+
+println(x)

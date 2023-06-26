@@ -1,4 +1,3 @@
-#pragma once
 #include "Parser.hpp"
 
 void Parser::advance(int n) {
@@ -295,61 +294,64 @@ void Parser::parse_type(std::string end) {
         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
             break;
         }
-        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "type" && (peek()->type == NodeType::FUNC_CALL) && (peek(2)->type == NodeType::OBJECT)) {
-            current_node->type = NodeType::TYPE;
-            current_node->_Node = TypeNode();
-            current_node->_Node.Type().parametric_type = true;
-            current_node->_Node.Type().params = peek()->_Node.FunctionCall().args;
-            current_node->_Node.Type().name = peek()->_Node.FunctionCall().name;
-            current_node->_Node.Type().body = peek(2);
-            erase_next();
-            erase_next();
-        }
-        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "type" && (peek()->type == NodeType::OBJECT_DECONSTRUCT)) {
-            current_node->type = NodeType::TYPE;
-            current_node->_Node = TypeNode();
-            current_node->_Node.Type().name = peek()->_Node.ObjectDeconstruct().name;
-            current_node->_Node.Type().body = peek()->_Node.ObjectDeconstruct().body;
-            erase_next();
-        } else if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "type" && (peek()->type == NodeType::ID || peek()->type == NodeType::ACCESSOR) && peek(2)->type == NodeType::OP && peek(2)->_Node.Op().value == "=") {
-            current_node->type = NodeType::TYPE;
-            current_node->_Node = TypeNode();
-            current_node->_Node.Type().name = peek()->_Node.ID().value;
-            current_node->_Node.Type().expr = peek(3);
-            current_node->_Node.Type().expr->TypeInfo.is_type = true;
-            if (current_node->_Node.Type().expr->type == NodeType::FUNC) {
-                current_node->_Node.Type().expr->_Node.Function().name = current_node->_Node.Type().name;
+
+        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "type") {
+            node_ptr next = peek();
+            if (next->type == NodeType::OP && next->_Node.Op().value == "=") {
+                current_node->type = NodeType::TYPE;
+                current_node->_Node = TypeNode();
+
+                node_ptr name;
+                node_ptr parametric_list;
+
+                if (next->_Node.Op().left->type == NodeType::ACCESSOR) {
+                    name = next->_Node.Op().left->_Node.Accessor().container;
+                    parametric_list = next->_Node.Op().left->_Node.Accessor().accessor;
+                } else if (next->_Node.Op().left->type == NodeType::ID) {
+                    name = next->_Node.Op().left;
+                } else {
+                    error_and_exit("Malformed type definition");
+                }
+
+                current_node->_Node.Type().name = name->_Node.ID().value;
+                current_node->_Node.Type().body = next->_Node.Op().right;
+                erase_next();
+
+                if (parametric_list) {
+                    current_node->_Node.Type().parametric_type = true;
+                    if (parametric_list->_Node.List().elements.size() == 1 && parametric_list->_Node.List().elements[0]->type == NodeType::COMMA_LIST) {
+                        parametric_list = parametric_list->_Node.List().elements[0];
+                    }
+                    for (node_ptr& param : parametric_list->_Node.List().elements) {
+                        if (param->type == NodeType::OP && param->_Node.Op().value == ":") {
+                            node_ptr param_name = param->_Node.Op().left;
+                            if (param_name->type != NodeType::ID) {
+                                error_and_exit("Parametric type must be an identifier");
+                            }
+                            current_node->_Node.Type().params.push_back(param_name);
+                            current_node->_Node.Type().param_types[param_name->_Node.ID().value] = param->_Node.Op().right;
+                        } else if (param->type == NodeType::ID) {
+                            current_node->_Node.Type().params.push_back(param);
+                        } else {
+                            error_and_exit("Malformed parametric type definition");
+                        }
+                    }
+                }
+            } else {
+                current_node->type = NodeType::TYPE;
+                current_node->_Node = TypeNode();
+                node_ptr name = peek();
+                if (name->type != NodeType::ID) {
+                    error_and_exit("Type definition expects a name");
+                }
+                current_node->_Node.Type().name = name->_Node.ID().value;
+                current_node->TypeInfo.is_decl = true;
+                erase_next();
             }
-            erase_next();
-            erase_next();
-            erase_next();
-        } else if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "type" && (peek()->type == NodeType::ID)) {
-            current_node->type = NodeType::TYPE;
-            current_node->_Node = TypeNode();
-            current_node->_Node.Type().name = peek()->_Node.ID().value;
-            current_node->_Node.Type().body = nullptr;
-            current_node->TypeInfo.is_decl = true;
         }
         advance();
     }
 }
-
-// void Parser::parse_type_ext(std::string end) {
-//     while (current_node->type != NodeType::END_OF_FILE) {
-//         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
-//             break;
-//         }
-//         if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "extend" && peek(2)->type == NodeType::OBJECT) {
-//             current_node->type = NodeType::TYPE_EXT;
-//             current_node->_Node = TypeExtNode();
-//             current_node->_Node.TypeExt().type = peek();
-//             current_node->_Node.TypeExt().body = peek(2);
-//             erase_next();
-//             erase_next();
-//         }
-//         advance();
-//     }
-// }
 
 void Parser::parse_hook_implementation(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
@@ -375,47 +377,116 @@ void Parser::parse_func_def(std::string end) {
             break;
         }
         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == "=>" && peek()->type != NodeType::END_OF_FILE) {
-            if (peek(-1)->type == NodeType::PAREN)
-            {
-                current_node->type = NodeType::FUNC;
-                current_node->_Node = FuncNode();
-                node_ptr params = peek(-1);
-                if (params->_Node.Paren().elements.size() == 1 && params->_Node.Paren().elements[0]->type == NodeType::COMMA_LIST) {
-                    for (node_ptr& elem : params->_Node.Paren().elements[0]->_Node.List().elements) {
-                        current_node->_Node.Function().params.push_back(elem);
-                        current_node->_Node.Function().args.push_back(nullptr);
-                    }
-                } else if (params->_Node.Paren().elements.size() == 1) {
-                    current_node->_Node.Function().params.push_back(params->_Node.Paren().elements[0]);
-                    current_node->_Node.Function().args.push_back(nullptr);
-                }
-                current_node->_Node.Function().body = peek();
-                erase_next();
-                erase_prev();
-            } else if ( 
-                peek(-2)->type == NodeType::OP && peek(-2)->_Node.Op().value == ":" && 
-                peek(-3)->type == NodeType::PAREN)
-            {
-                current_node->type = NodeType::FUNC;
-                current_node->_Node = FuncNode();
-                node_ptr return_type = peek(-1);
-                node_ptr params = peek(-3);
+            current_node->type = NodeType::FUNC;
+            current_node->_Node = FuncNode();
 
-                if (params->_Node.Paren().elements.size() == 1 && params->_Node.Paren().elements[0]->type == NodeType::COMMA_LIST) {
-                    for (node_ptr& elem : params->_Node.Paren().elements[0]->_Node.List().elements) {
-                        current_node->_Node.Function().params.push_back(elem);
-                        current_node->_Node.Function().args.push_back(nullptr);
+            node_ptr params_node;
+
+            if (peek(-2)->type == NodeType::OP && peek(-2)->_Node.Op().value == ":" && peek(-3)->type == NodeType::PAREN) {
+                params_node = peek(-3);
+                current_node->_Node.Function().return_type = peek(-1);
+                erase_prev();
+                erase_prev();
+                erase_prev();
+            } else {
+                params_node = peek(-1);
+                erase_prev();
+            }
+
+            current_node->_Node.Function().body = peek(1);
+            erase_next();
+
+            if (params_node->type == NodeType::PAREN)
+            {
+                node_ptr params = params_node;
+
+                if (params->type == NodeType::PAREN && params->_Node.Paren().elements.size() == 0) {
+                    node_ptr list = new_node(NodeType::LIST);
+                    list->_Node = ListNode();
+                    list->type = NodeType::COMMA_LIST;
+                    params->_Node.Paren().elements.push_back(list);
+                } 
+                
+                else if (params->type == NodeType::PAREN && params->_Node.Paren().elements.size() == 1 && params->_Node.Paren().elements[0]->type != NodeType::COMMA_LIST) {
+                    node_ptr list = new_node(NodeType::LIST);
+                    list->_Node = ListNode();
+                    list->type = NodeType::COMMA_LIST;
+                    list->_Node.List().elements.push_back(params->_Node.Paren().elements[0]);
+                    params->_Node.Paren().elements[0] = list;
+                }
+
+                for (node_ptr& elem : params->_Node.Paren().elements[0]->_Node.List().elements) {
+                    // x: String
+                    
+                    // Check if we already have defaults, if we do, we raise an error
+                    // Because we can't have non-default params after default params
+
+                    if (current_node->_Node.Function().default_values.size() > 0) {
+                        error_and_exit("Cannot define non-default parameters after default parameters");
                     }
-                } else if (params->_Node.Paren().elements.size() == 1) {
-                    current_node->_Node.Function().params.push_back(params->_Node.Paren().elements[0]);
+
+                    if (elem->type == NodeType::OP && elem->_Node.Op().value == ":") {
+
+                        node_ptr param_name = elem->_Node.Op().left;
+                        node_ptr param_type = elem->_Node.Op().right;
+
+                        if (param_name->type != NodeType::ID) {
+                            error_and_exit("Parameter names must be identifiers");
+                        }
+
+                        current_node->_Node.Function().params.push_back(param_name);
+
+                        current_node->_Node.Function().param_types[param_name->_Node.ID().value] = param_type;
+                    }
+                    // x: String = "hi"
+                    else if (elem->type == NodeType::OP && elem->_Node.Op().value == "=") {
+                        node_ptr left = elem->_Node.Op().left;
+                        node_ptr param_name;
+                        node_ptr param_type;
+                        node_ptr default_value = elem->_Node.Op().right;
+
+                        if (left->type == NodeType::ID) {
+                            param_name = left;
+                        } else if (left->type == NodeType::OP && left->_Node.Op().value == ":") {
+                            param_name = left->_Node.Op().left;
+                            param_type = left->_Node.Op().right;
+                        }
+
+                        if (param_name->type != NodeType::ID) {
+                            error_and_exit("Parameter names must be identifiers");
+                        }
+
+                        current_node->_Node.Function().params.push_back(param_name);
+
+                        if (param_type) {
+                            current_node->_Node.Function().param_types[param_name->_Node.ID().value] = param_type;
+                        } else {
+                            current_node->_Node.Function().param_types[param_name->_Node.ID().value] = new_node(NodeType::ANY);
+                        }
+
+                        current_node->_Node.Function().default_values[param_name->_Node.ID().value] = default_value;
+                    } else if (elem->type == NodeType::ID) {
+
+                        // Check if we already have defaults, if we do, we raise an error
+                        // Because we can't have non-default params after default params
+
+                        if (current_node->_Node.Function().default_values.size() > 0) {
+                            error_and_exit("Cannot define non-default parameters after default parameters");
+                        }
+
+                        node_ptr param_name = elem;
+                        node_ptr param_type = new_node(NodeType::ANY);
+
+                        current_node->_Node.Function().params.push_back(param_name);
+                        current_node->_Node.Function().param_types[param_name->_Node.ID().value] = param_type;
+                    }
+
                     current_node->_Node.Function().args.push_back(nullptr);
                 }
-                current_node->_Node.Function().body = peek();
-                current_node->_Node.Function().return_type = return_type;
-                erase_next();
-                erase_prev();
-                erase_prev();
-                erase_prev();
+
+                // current_node->_Node.Function().body = peek();
+                // erase_next();
+                // erase_prev();
             }
 
             if (current_node->type == NodeType::FUNC && current_node->_Node.Function().body->type == NodeType::OBJECT) {
@@ -575,8 +646,7 @@ void Parser::parse_var(std::string end) {
                     }
                     current_node->_Node.VariableDeclaration().name = typed_var->_Node.Op().left->_Node.ID().value;
                     current_node->_Node.VariableDeclaration().value = next->_Node.Op().right;
-                    current_node->TypeInfo.type = typed_var->_Node.Op().right;
-                    current_node->TypeInfo.type->TypeInfo.is_type = true;
+                    current_node->_Node.VariableDeclaration().type = typed_var->_Node.Op().right;
                 } else {
                     if (next->_Node.Op().left->type != NodeType::ID) {
                         error_and_exit("Malformed declaration");
@@ -589,13 +659,13 @@ void Parser::parse_var(std::string end) {
                 current_node->type = NodeType::VARIABLE_DECLARATION;
                 current_node->_Node = VariableDeclatationNode();
                 current_node->_Node.VariableDeclaration().name = next->_Node.Op().left->_Node.ID().value;
-                current_node->TypeInfo.type = next->_Node.Op().right;
-                if (current_node->TypeInfo.type->type == NodeType::ANY) {
+                current_node->_Node.VariableDeclaration().type = next->_Node.Op().right;
+
+                if (current_node->_Node.VariableDeclaration().type->type == NodeType::ANY) {
                     current_node->_Node.VariableDeclaration().value = new_node(NodeType::ANY);
                 } else {
                     current_node->_Node.VariableDeclaration().value = new_node(NodeType::NONE);
                 }
-                current_node->TypeInfo.type->TypeInfo.is_type = true;
                 erase_next();
             }
         }
@@ -621,8 +691,7 @@ void Parser::parse_const(std::string end) {
                     }
                     current_node->_Node.ConstantDeclatation().name = typed_var->_Node.Op().left->_Node.ID().value;
                     current_node->_Node.ConstantDeclatation().value = next->_Node.Op().right;
-                    current_node->TypeInfo.type = typed_var->_Node.Op().right;
-                    current_node->TypeInfo.type->TypeInfo.is_type = true;
+                    current_node->_Node.ConstantDeclatation().type = typed_var->_Node.Op().right;
                 } else {
                     if (next->_Node.Op().left->type != NodeType::ID) {
                         error_and_exit("Malformed declaration");
@@ -944,6 +1013,18 @@ void Parser::flatten_commas(std::string end) {
     }
 }
 
+void Parser::flatten_pipes(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
+            break;
+        }
+        if (current_node->type == NodeType::OP && current_node->_Node.Op().value == "|") {
+            current_node = flatten_pipe_node(current_node);
+        }
+        advance();
+    }
+}
+
 void Parser::parse(int start, std::string end) {
     parse_paren(end);
     reset(start);
@@ -999,13 +1080,13 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_bin_op({"&", "|"}, end);
     reset(start);
+    flatten_pipes(end);
+    reset(start);
     parse_bin_op({".."}, end);
     reset(start);
     parse_object_desconstruct(end);
     reset(start);
     parse_func_def(end);
-    reset(start);
-    parse_type(end);
     reset(start);
     parse_hook_implementation(end);
     reset(start);
@@ -1022,6 +1103,8 @@ void Parser::parse(int start, std::string end) {
     parse_var(end);
     reset(start);
     parse_const(end);
+    reset(start);
+    parse_type(end);
     reset(start);
     parse_return(end);
     reset(start);
@@ -1078,6 +1161,40 @@ node_ptr Parser::flatten_comma_node(node_ptr node) {
     }
 
     *node = *comma_list;
+    
+    return node;
+}
+
+node_ptr Parser::flatten_pipe_node(node_ptr node) {
+    node_ptr pipe_list = new_node(NodeType::LIST);
+    pipe_list->type = NodeType::PIPE_LIST;
+
+    if (node->type == NodeType::OP && node->_Node.Op().left->type == NodeType::OP && node->_Node.Op().left->_Node.Op().value == "|") {
+        node->_Node.Op().left = flatten_pipe_node(node->_Node.Op().left);
+    } else {
+        pipe_list->_Node.List().elements.push_back(node->_Node.Op().left);
+    }
+
+    if (node->type == NodeType::OP && node->_Node.Op().left->type == NodeType::PIPE_LIST) {
+        for (auto& child_node : node->_Node.Op().left->_Node.List().elements) {
+            pipe_list->_Node.List().elements.push_back(child_node);
+        }
+    }
+
+
+    if (node->type == NodeType::OP && node->_Node.Op().right->type == NodeType::OP && node->_Node.Op().right->_Node.Op().value == "|") {
+        node->_Node.Op().right = flatten_comma_node(node->_Node.Op().right);
+    } else {
+        pipe_list->_Node.List().elements.push_back(node->_Node.Op().right);
+    }
+
+    if (node->type == NodeType::OP && node->_Node.Op().right->type == NodeType::PIPE_LIST) {
+        for (auto& child_node : node->_Node.Op().right->_Node.List().elements) {
+            pipe_list->_Node.List().elements.push_back(child_node);
+        }
+    }
+
+    *node = *pipe_list;
     
     return node;
 }
