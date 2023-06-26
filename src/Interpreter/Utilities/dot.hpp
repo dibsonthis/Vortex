@@ -663,7 +663,7 @@ node_ptr Interpreter::list_method_foreach(node_ptr& list, node_ptr& function) {
 
     // Get first param and it's type
     std::string elem_param_name = function->_Node.Function().params[0]->_Node.ID().value;
-    node_ptr elem_param_type = function->_Node.Function().param_types[elem_param_name];
+    node_ptr elem_param_type = eval_node(function->_Node.Function().param_types[elem_param_name]);
 
     // If type exists, we typecheck against the inferred elem_type
     if (elem_param_type) {
@@ -679,7 +679,7 @@ node_ptr Interpreter::list_method_foreach(node_ptr& list, node_ptr& function) {
     // Check if second param provided, if so we should typecheck it
     if (function->_Node.Function().params.size() > 1) {
         std::string index_param_name = function->_Node.Function().params[1]->_Node.ID().value;
-        node_ptr index_param_type = function->_Node.Function().param_types[index_param_name];
+        node_ptr index_param_type = eval_node(function->_Node.Function().param_types[index_param_name]);
 
         // If type exists, we typecheck against the inferred elem_type
         if (index_param_type) {
@@ -696,7 +696,7 @@ node_ptr Interpreter::list_method_foreach(node_ptr& list, node_ptr& function) {
     // Check if third param provided, if so we should typecheck it
     if (function->_Node.Function().params.size() > 2) {
         std::string list_param_name = function->_Node.Function().params[2]->_Node.ID().value;
-        node_ptr list_param_type = function->_Node.Function().param_types[list_param_name];
+        node_ptr list_param_type = eval_node(function->_Node.Function().param_types[list_param_name]);
 
         // If type exists, we typecheck against the inferred elem_type
         if (list_param_type) {
@@ -739,7 +739,7 @@ node_ptr Interpreter::list_method_map(node_ptr& list, node_ptr& function) {
 
     // Get first param and it's type
     std::string elem_param_name = function->_Node.Function().params[0]->_Node.ID().value;
-    node_ptr elem_param_type = function->_Node.Function().param_types[elem_param_name];
+    node_ptr elem_param_type = eval_node(function->_Node.Function().param_types[elem_param_name]);
 
     // If type exists, we typecheck against the inferred elem_type
     if (elem_param_type) {
@@ -755,7 +755,7 @@ node_ptr Interpreter::list_method_map(node_ptr& list, node_ptr& function) {
     // Check if second param provided, if so we should typecheck it
     if (function->_Node.Function().params.size() > 1) {
         std::string index_param_name = function->_Node.Function().params[1]->_Node.ID().value;
-        node_ptr index_param_type = function->_Node.Function().param_types[index_param_name];
+        node_ptr index_param_type = eval_node(function->_Node.Function().param_types[index_param_name]);
 
         // If type exists, we typecheck against the inferred elem_type
         if (index_param_type) {
@@ -772,7 +772,7 @@ node_ptr Interpreter::list_method_map(node_ptr& list, node_ptr& function) {
     // Check if third param provided, if so we should typecheck it
     if (function->_Node.Function().params.size() > 2) {
         std::string list_param_name = function->_Node.Function().params[2]->_Node.ID().value;
-        node_ptr list_param_type = function->_Node.Function().param_types[list_param_name];
+        node_ptr list_param_type = eval_node(function->_Node.Function().param_types[list_param_name]);
 
         // If type exists, we typecheck against the inferred elem_type
         if (list_param_type) {
@@ -818,7 +818,7 @@ node_ptr Interpreter::list_method_filter(node_ptr& list, node_ptr& function) {
 
     // Get first param and it's type
     std::string elem_param_name = function->_Node.Function().params[0]->_Node.ID().value;
-    node_ptr elem_param_type = function->_Node.Function().param_types[elem_param_name];
+    node_ptr elem_param_type = eval_node(function->_Node.Function().param_types[elem_param_name]);
 
     // If type exists, we typecheck against the inferred elem_type
     if (elem_param_type) {
@@ -834,7 +834,7 @@ node_ptr Interpreter::list_method_filter(node_ptr& list, node_ptr& function) {
     // Check if second param provided, if so we should typecheck it
     if (function->_Node.Function().params.size() > 1) {
         std::string index_param_name = function->_Node.Function().params[1]->_Node.ID().value;
-        node_ptr index_param_type = function->_Node.Function().param_types[index_param_name];
+        node_ptr index_param_type = eval_node(function->_Node.Function().param_types[index_param_name]);
 
         // If type exists, we typecheck against the inferred elem_type
         if (index_param_type) {
@@ -851,7 +851,7 @@ node_ptr Interpreter::list_method_filter(node_ptr& list, node_ptr& function) {
     // Check if third param provided, if so we should typecheck it
     if (function->_Node.Function().params.size() > 2) {
         std::string list_param_name = function->_Node.Function().params[2]->_Node.ID().value;
-        node_ptr list_param_type = function->_Node.Function().param_types[list_param_name];
+        node_ptr list_param_type = eval_node(function->_Node.Function().param_types[list_param_name]);
 
         // If type exists, we typecheck against the inferred elem_type
         if (list_param_type) {
@@ -908,7 +908,7 @@ node_ptr Interpreter::list_method_reduce(node_ptr& list, node_ptr& function) {
 
     // Get first param and it's type
     std::string elem_a_param_name = function->_Node.Function().params[0]->_Node.ID().value;
-    node_ptr elem_a_param_type = function->_Node.Function().param_types[elem_a_param_name];
+    node_ptr elem_a_param_type = eval_node(function->_Node.Function().param_types[elem_a_param_name]);
 
     // If type exists, we typecheck against the inferred elem_type
     if (elem_a_param_type) {
@@ -923,7 +923,7 @@ node_ptr Interpreter::list_method_reduce(node_ptr& list, node_ptr& function) {
 
     // Get second param and it's type
     std::string elem_b_param_name = function->_Node.Function().params[1]->_Node.ID().value;
-    node_ptr elem_b_param_type = function->_Node.Function().param_types[elem_b_param_name];
+    node_ptr elem_b_param_type = eval_node(function->_Node.Function().param_types[elem_b_param_name]);
 
     // If type exists, we typecheck against the inferred elem_type
     if (elem_b_param_type) {
@@ -939,7 +939,7 @@ node_ptr Interpreter::list_method_reduce(node_ptr& list, node_ptr& function) {
     // Check if third param provided, if so we should typecheck it
     if (function->_Node.Function().params.size() > 2) {
         std::string index_param_name = function->_Node.Function().params[2]->_Node.ID().value;
-        node_ptr index_param_type = function->_Node.Function().param_types[index_param_name];
+        node_ptr index_param_type = eval_node(function->_Node.Function().param_types[index_param_name]);
 
         // If type exists, we typecheck against the inferred elem_type
         if (index_param_type) {
@@ -956,7 +956,7 @@ node_ptr Interpreter::list_method_reduce(node_ptr& list, node_ptr& function) {
     // Check if third param provided, if so we should typecheck it
     if (function->_Node.Function().params.size() > 3) {
         std::string list_param_name = function->_Node.Function().params[3]->_Node.ID().value;
-        node_ptr list_param_type = function->_Node.Function().param_types[list_param_name];
+        node_ptr list_param_type = eval_node(function->_Node.Function().param_types[list_param_name]);
 
         // If type exists, we typecheck against the inferred elem_type
         if (list_param_type) {
