@@ -7,7 +7,11 @@ node_ptr Interpreter::get_type(node_ptr& node, std::vector<node_ptr> bases = {})
         return new_node(NodeType::ANY);
     }
 
-    if (node->type != NodeType::OBJECT && node->type != NodeType::LIST && node->TypeInfo.type) {
+    // if (node->type != NodeType::OBJECT && node->type != NodeType::LIST && node->TypeInfo.type) {
+    //     return node->TypeInfo.type;
+    // }
+
+    if (node->TypeInfo.type) {
         return node->TypeInfo.type;
     }
 
@@ -81,11 +85,7 @@ node_ptr Interpreter::get_type(node_ptr& node, std::vector<node_ptr> bases = {})
         }
     }
 
-    sort(types->_Node.List().elements.begin(), types->_Node.List().elements.end(), 
-        [this](node_ptr& a, node_ptr& b)
-        { 
-            return a->type < b->type;
-        });
+    types->_Node.List().elements = sort_and_unique(types->_Node.List().elements);
 
     node_ptr list = new_node(NodeType::LIST);
 

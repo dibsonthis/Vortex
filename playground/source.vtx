@@ -1,31 +1,72 @@
-var num_chain = {
-    value: 0
+type Topping = "cheese" | "bacon" | "pineapple" | "olives"
+type Size = "s" | "m" | "l" | "xl"
+
+var order_num = 0
+
+type Burger = {
+    toppings: [Topping] = [],
+    size: Size = "s",
+    meal: Boolean = false
 }
 
-var num_chain2 = {
-    value: 0,
-    id: 1002
+type Pizza = {
+    toppings: [Topping] = [],
+    size: Size = "s",
+    meal: Boolean = false
 }
 
-var num_chain3 = {
-    value: "",
-    id: 1003
+type Item = Burger | Pizza
+
+type Order = {
+    id: Number = order_num,
+    item: Item,
+    _init = () => {
+        println(this)
+        order_num += 1
+    }
 }
 
-type add = (T, x: Number = 0) => {
-    T.value += x
-    T
+var orders: [Order] = []
+
+type addTopping = (b: Item, t: Topping) => {
+    b.toppings.append(t)
+    b
 }
 
-type sub = (T, x: Number = 0) => {
-    T.value -= x
-    T
+type setSize = (b: Item, s: Size) => {
+    b.size = s
+    b
 }
 
-type get = (T) => {
-    T.value as Literal
+type setMeal = (b: Item, check: Boolean = true) => {
+    b.meal = check
+    b
 }
 
-println("hi")
+type make = (item: Item | Pizza) => {
+    const order = Order {
+        item: item
+    }
 
-num_chain2.add(10).println()
+    orders.append(order)
+}
+
+(Burger {}).addTopping("cheese")
+      .addTopping("bacon")
+      .setSize("xl")
+      .addTopping("pineapple")
+      .setMeal()
+      .make()
+
+(Burger {}).addTopping("cheese")
+      .addTopping("bacon")
+      .setSize("m")
+      .setMeal()
+      .make()
+
+(Pizza {}).addTopping("cheese")
+      .setSize("s")
+      .setMeal(false)
+      .make()
+
+const x: String = 0

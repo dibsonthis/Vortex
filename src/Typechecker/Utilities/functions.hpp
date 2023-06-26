@@ -205,9 +205,9 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
 
     if (function->_Node.Function().return_type->type == NodeType::FUNC) {
         function->_Node.Function().return_type = tc_function(function->_Node.Function().return_type);
-    } else {
+    } /* else {
         function->_Node.Function().return_type->TypeInfo.is_type = true;
-    }
+    }*/
 
     current_scope = current_scope->parent->parent;
     current_scope->child->child = nullptr;
