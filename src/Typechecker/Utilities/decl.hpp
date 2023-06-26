@@ -26,7 +26,12 @@ node_ptr Typechecker::tc_const_decl(node_ptr& node) {
         }
     }
 
-    value->TypeInfo.type = node->_Node.ConstantDeclatation().type;
+    if (!node->_Node.ConstantDeclatation().type->TypeInfo.is_refinement_type) {
+        value->TypeInfo.type = node->_Node.ConstantDeclatation().type;
+    } else {
+        std::string first_param_name = node->_Node.ConstantDeclatation().type->_Node.Function().params[0]->_Node.ID().value;
+        value->TypeInfo.type = node->_Node.ConstantDeclatation().type->_Node.Function().param_types[first_param_name];
+    }
 
     if (var && value->type == NodeType::FUNC) {
         var->_Node.Function().dispatch_functions.push_back(value);
@@ -64,7 +69,12 @@ node_ptr Typechecker::tc_var_decl(node_ptr& node) {
         }
     }
 
-    value->TypeInfo.type = node->_Node.VariableDeclaration().type;
+    if (!node->_Node.ConstantDeclatation().type->TypeInfo.is_refinement_type) {
+        value->TypeInfo.type = node->_Node.ConstantDeclatation().type;
+    } else {
+        std::string first_param_name = node->_Node.ConstantDeclatation().type->_Node.Function().params[0]->_Node.ID().value;
+        value->TypeInfo.type = node->_Node.ConstantDeclatation().type->_Node.Function().param_types[first_param_name];
+    }
 
     if (var && value->type == NodeType::FUNC) {
         var->_Node.Function().dispatch_functions.push_back(value);

@@ -1,18 +1,2 @@
-
-type Order = {
-    id: Number
-}
-
-var orders: [Order] = [Order {id: 10}]
-
-const f = () => {
-    var p = orders[0]
-    if (p) {
-        ret p
-    }
-    
-    ret {id: 10}
-}
-
-const b = f()
-print(b)
+type Is42 = (x) => x == 42 as Refinement
+const blah: Is42 = 42
