@@ -1,1 +1,6 @@
-[1, 2, 3].forEach((e: dsijdsd) => println(e))
+type Exclude[T, U] = {
+    T - U
+}
+
+type T = String | Number | Boolean
+T.Exclude(String | Boolean)

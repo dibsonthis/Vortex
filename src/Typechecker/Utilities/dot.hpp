@@ -18,6 +18,39 @@ node_ptr Typechecker::tc_dot(node_ptr& node) {
         return throw_error(right->_Node.Error().message);
     }
 
+    if (left->type == NodeType::PIPE_LIST) {
+
+        // If right is a call to generic function, we'll skip this
+        if (right->type == NodeType::FUNC_CALL) {
+            node_ptr func = get_symbol(right->_Node.FunctionCall().name, current_scope);
+            if (func && func->_Node.Function().type_function) {
+                // skip
+                goto generic_func;
+            }
+        }
+
+        node_ptr list = new_node(NodeType::LIST);
+        list->type = NodeType::PIPE_LIST;
+
+        for (node_ptr& elem : left->_Node.List().elements) {
+            node_ptr dot_op = new_node(NodeType::OP);
+            dot_op->_Node.Op().value = ".";
+            dot_op->_Node.Op().left = elem;
+            dot_op->_Node.Op().right = right;
+            node_ptr res = tc_dot(dot_op);
+            res->TypeInfo.is_type = true;
+            list->_Node.List().elements.push_back(res);
+        }
+
+        list->_Node.List().elements = sort_and_unique(list->_Node.List().elements);
+        if (list->_Node.List().elements.size() == 1) {
+            return list->_Node.List().elements[0];
+        }
+        return list;
+    }
+
+    generic_func:
+
     if (left->type == NodeType::STRING) {
         return tc_dot_string(left, right);
     }

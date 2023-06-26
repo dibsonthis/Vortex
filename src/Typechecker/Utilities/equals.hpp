@@ -95,6 +95,27 @@ node_ptr Typechecker::tc_eq_dot(node_ptr& left, node_ptr& value, bool is_ref) {
 
     node_ptr object = tc_node(left->_Node.Op().left);
 
+    if (object->type == NodeType::PIPE_LIST) {
+        node_ptr list = new_node(NodeType::LIST);
+        list->type = NodeType::PIPE_LIST;
+
+        for (node_ptr& elem : object->_Node.List().elements) {
+            node_ptr dot_op = new_node(NodeType::OP);
+            dot_op->_Node.Op().value = ".";
+            dot_op->_Node.Op().left = elem;
+            dot_op->_Node.Op().right = left->_Node.Op().right;
+            node_ptr res = tc_eq_dot(dot_op, value, is_ref);
+            res->TypeInfo.is_type = true;
+            list->_Node.List().elements.push_back(res);
+        }
+
+        list->_Node.List().elements = sort_and_unique(list->_Node.List().elements);
+        if (list->_Node.List().elements.size() == 1) {
+            return list->_Node.List().elements[0];
+        }
+        return list;
+    }
+
     if (object->type != NodeType::OBJECT) {
         return throw_error("Left hand side of '.' must be an object");
     }

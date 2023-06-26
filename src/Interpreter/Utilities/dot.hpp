@@ -57,44 +57,6 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
     }
 
     return throw_error("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
-
-    // if (left->type == NodeType::NUMBER) {
-    //     if (right->type == NodeType::FUNC_CALL) {
-    //         std::string func_name = right->_Node.FunctionCall().name;
-
-    //         node_ptr func_call = std::make_shared<Node>(*right);
-    //         func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
-    //         return eval_func_call(func_call);
-    //     }
-
-    //     return throw_error("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
-    // }
-
-    // if (left->type == NodeType::BOOLEAN) {
-    //     if (right->type == NodeType::FUNC_CALL) {
-    //         std::string func_name = right->_Node.FunctionCall().name;
-
-    //         node_ptr func_call = std::make_shared<Node>(*right);
-    //         func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
-    //         return eval_func_call(func_call);
-    //     }
-
-    //     return throw_error("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
-    // }
-
-    // if (left->type == NodeType::NONE) {
-    //     if (right->type == NodeType::FUNC_CALL) {
-    //         std::string func_name = right->_Node.FunctionCall().name;
-
-    //         node_ptr func_call = std::make_shared<Node>(*right);
-    //         func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
-    //         return eval_func_call(func_call);
-    //     }
-
-    //     return throw_error("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
-    // }
-
-    return throw_error("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
 }
 
 node_ptr Interpreter::eval_dot_string(node_ptr& left, node_ptr& right) {
