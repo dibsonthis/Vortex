@@ -26,10 +26,10 @@ node_ptr Typechecker::tc_object(node_ptr& node) {
             return throw_error("Object properties must be in the shape of 'key: value'");
         }
 
-        // // If function, add "this"
-        // if (elem->_Node.Op().right->type == NodeType::FUNC) {
-        //     elem->_Node.Op().right->_Node.Function().closure["this"] = object;
-        // }
+        // If function, add "this"
+        if (elem->_Node.Op().right->type == NodeType::FUNC) {
+            elem->_Node.Op().right->_Node.Function().closure["this"] = object;
+        }
 
         node_ptr left = elem->_Node.Op().left;
         node_ptr right = elem->_Node.Op().right;
@@ -56,8 +56,6 @@ node_ptr Typechecker::tc_object(node_ptr& node) {
         object->_Node.Object().properties[prop_name] = right;
 
         if (object->_Node.Object().properties[prop_name]->type == NodeType::FUNC) {
-            elem->_Node.Op().right->_Node.Function().closure["this"] = object;
-            elem->_Node.Op().right = tc_function(elem->_Node.Op().right);
             object->_Node.Object().properties[prop_name]->_Node.Function().closure["this"] = object;
             object->_Node.Object().properties[prop_name] = tc_function(object->_Node.Object().properties[prop_name]);
         }
@@ -465,4 +463,41 @@ node_ptr Typechecker::tc_object_init(node_ptr& node) {
     }
 
     return object;
+}
+
+node_ptr Typechecker::copy_node(node_ptr& node, std::vector<node_ptr> bases) {
+
+    if (!node) {
+        return node;
+    }
+
+    for (node_ptr& elem : bases) {
+        if (node == elem) {
+            return node;
+        }
+    }
+
+    bases.push_back(node);
+
+    if (node->type == NodeType::LIST) {
+        node_ptr list = new_node(NodeType::LIST);
+        list->Meta = node->Meta;
+        list->TypeInfo = node->TypeInfo;
+        for (node_ptr elem : node->_Node.List().elements) {
+            list->_Node.List().elements.push_back(copy_node(elem, bases));
+        }
+        return list;
+    }
+
+    if (node->type == NodeType::OBJECT) {
+        node_ptr obj = new_node(NodeType::OBJECT);
+        obj->Meta = node->Meta;
+        obj->TypeInfo = node->TypeInfo;
+        for (auto prop : node->_Node.Object().properties) {
+            obj->_Node.Object().properties[prop.first] = copy_node(prop.second, bases);
+        }
+        return obj;
+    }
+
+    return std::make_shared<Node>(*node);
 }

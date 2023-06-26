@@ -1,14 +1,31 @@
-type KeyOf[T: Object] = T.keys() as Union
-
-type ValueOf[T: Object] = T.values() as Union
-
-type Bloop = (T: Object) => {
-    ret (T: T, K: KeyOf(T)) => ValueOf(T)
+var num_chain = {
+    value: 0
 }
 
-const obj = {
-    name: "Hi",
-    age: 34
+var num_chain2 = {
+    value: 0,
+    id: 1002
 }
 
-println(Bloop(obj).return)
+var num_chain3 = {
+    value: "",
+    id: 1003
+}
+
+type add = (T, x: Number = 0) => {
+    T.value += x
+    T
+}
+
+type sub = (T, x: Number = 0) => {
+    T.value -= x
+    T
+}
+
+type get = (T) => {
+    T.value as Literal
+}
+
+println("hi")
+
+num_chain2.add(10).println()

@@ -500,8 +500,9 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
                     return throw_error("Type function '" + function->_Node.Function().name + "' expects argument '" + param->_Node.ID().value + "' to be of type '" + printable(param_type) + "'", node);
                 }
             }
-            func_call->_Node.FunctionCall().args.push_back(args[i]);
-            add_symbol(param->_Node.ID().value, args[i], current_scope);
+            node_ptr arg_copy = copy_node(args[i]);
+            func_call->_Node.FunctionCall().args.push_back(arg_copy);
+            add_symbol(param->_Node.ID().value, arg_copy, current_scope);
         }
 
         node_ptr result = interp.eval_function_direct(func_call, function);

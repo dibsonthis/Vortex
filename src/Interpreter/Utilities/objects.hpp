@@ -53,8 +53,6 @@ node_ptr Interpreter::eval_object(node_ptr& node) {
         object->_Node.Object().properties[prop_name] = right;
 
         if (object->_Node.Object().properties[prop_name]->type == NodeType::FUNC) {
-            elem->_Node.Op().right->_Node.Function().closure["this"] = object;
-            elem->_Node.Op().right = eval_node(elem->_Node.Op().right);
             object->_Node.Object().properties[prop_name]->_Node.Function().closure["this"] = object;
             object->_Node.Object().properties[prop_name] = eval_node(object->_Node.Object().properties[prop_name]);
         }
