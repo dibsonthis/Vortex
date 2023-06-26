@@ -323,7 +323,11 @@ node_ptr Interpreter::eval_dot_function(node_ptr& left, node_ptr& right) {
             return obj;
         }
         if (value == "return") {
-            return left->_Node.Function().return_type;
+            if (left->_Node.Function().return_type) {
+                return left->_Node.Function().return_type;
+            }
+
+            return new_node(NodeType::ANY);
         }
 
         return throw_error("Function does not have property '" + value + "'");

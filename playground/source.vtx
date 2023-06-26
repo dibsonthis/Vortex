@@ -1,8 +1,14 @@
 type KeyOf[T: Object] = T.keys() as Union
+
 type ValueOf[T: Object] = T.values() as Union
 
-type get_t = (T: Object, K: KeyOf(T)): ValueOf(T) => T[K] as Literal
+type Bloop = (T: Object) => {
+    ret (T: T, K: KeyOf(T)) => ValueOf(T)
+}
 
-const x: String = get_t({a: "John", b: "Stacey"}, "a")
+const obj = {
+    name: "Hi",
+    age: 34
+}
 
-println(x)
+println(Bloop(obj).return)
