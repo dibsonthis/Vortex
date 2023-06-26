@@ -32,12 +32,13 @@ node_ptr Typechecker::tc_dot(node_ptr& node) {
         node_ptr list = new_node(NodeType::LIST);
         list->type = NodeType::PIPE_LIST;
 
-        for (node_ptr& elem : left->_Node.List().elements) {
+        for (node_ptr elem : left->_Node.List().elements) {
             node_ptr dot_op = new_node(NodeType::OP);
             dot_op->_Node.Op().value = ".";
             dot_op->_Node.Op().left = elem;
             dot_op->_Node.Op().right = right;
             node_ptr res = tc_dot(dot_op);
+            res = copy_node(res);
             res->TypeInfo.is_type = true;
             list->_Node.List().elements.push_back(res);
         }

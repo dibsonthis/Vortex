@@ -1,6 +1,18 @@
-type Exclude[T, U] = {
-    T - U
+
+type Order = {
+    id: Number
 }
 
-type T = String | Number | Boolean
-T.Exclude(String | Boolean)
+var orders: [Order] = [Order {id: 10}]
+
+const f = () => {
+    var p = orders[0]
+    if (p) {
+        ret p
+    }
+    
+    ret {id: 10}
+}
+
+const b = f()
+print(b)

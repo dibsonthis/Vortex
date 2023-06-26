@@ -12,9 +12,10 @@ node_ptr Typechecker::tc_if_statement(node_ptr& node) {
    for (node_ptr expr : node->_Node.IfStatement().body->_Node.Object().elements) {
         node_ptr evaluated_expr = tc_node(expr);
         if (evaluated_expr->type == NodeType::RETURN) {
-            evaluated_expr->_Node.Return().value = tc_node(evaluated_expr->_Node.Return().value);
+            node_ptr ret_clone = new_node(NodeType::RETURN);
+            ret_clone->_Node.Return().value = tc_node(evaluated_expr->_Node.Return().value);
             current_scope = current_scope->parent;
-            return evaluated_expr;
+            return ret_clone;
         }
     }
 

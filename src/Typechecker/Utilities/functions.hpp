@@ -179,7 +179,7 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
             res = new_node(NodeType::LIST);
             res->type = NodeType::PIPE_LIST;
             for (node_ptr& elem : return_types) {
-                node_ptr r = std::make_shared<Node>(*elem);
+                node_ptr r = copy_node(elem);
                 r->TypeInfo.is_type = true;
                 res->_Node.List().elements.push_back(r);
             }
