@@ -1,2 +1,4 @@
-type Is42 = (x) => x == 42 as Refinement
-const blah: Is42 = 42
+type LessThan10 = (x: Number) => x < 10
+type Is42 = (x: Number) => x == 42
+
+const blah: Is42 = 44

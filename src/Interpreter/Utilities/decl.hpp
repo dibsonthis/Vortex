@@ -22,16 +22,13 @@ node_ptr Interpreter::eval_const_decl(node_ptr& node) {
     if (node->_Node.ConstantDeclatation().type) {
         node->_Node.ConstantDeclatation().type = eval_node(node->_Node.ConstantDeclatation().type);
         node_ptr value_type = get_type(value);
-        if (!match_types(node->_Node.ConstantDeclatation().type, value_type)) {
+        if (!match_types(node->_Node.ConstantDeclatation().type, value)) {
             return throw_error("Variable '" + var_name + "' expects value of type '" + printable(node->_Node.ConstantDeclatation().type) + "' but received value of type '" + printable(value_type) + "'");
         }
     }
 
     if (!node->_Node.ConstantDeclatation().type->TypeInfo.is_refinement_type) {
         value->TypeInfo.type = node->_Node.ConstantDeclatation().type;
-    } else {
-        std::string first_param_name = node->_Node.ConstantDeclatation().type->_Node.Function().params[0]->_Node.ID().value;
-        value->TypeInfo.type = node->_Node.ConstantDeclatation().type->_Node.Function().param_types[first_param_name];
     }
 
     if (var && value->type == NodeType::FUNC) {
@@ -65,16 +62,13 @@ node_ptr Interpreter::eval_var_decl(node_ptr& node) {
     if (node->_Node.VariableDeclaration().type) {
         node->_Node.VariableDeclaration().type = eval_node(node->_Node.VariableDeclaration().type);
         node_ptr value_type = get_type(value);
-        if (!match_types(node->_Node.VariableDeclaration().type, value_type)) {
+        if (!match_types(node->_Node.VariableDeclaration().type, value)) {
             return throw_error("Variable '" + var_name + "' expects value of type '" + printable(node->_Node.VariableDeclaration().type) + "' but received value of type '" + printable(value_type) + "'");
         }
     }
 
-    if (!node->_Node.ConstantDeclatation().type->TypeInfo.is_refinement_type) {
-        value->TypeInfo.type = node->_Node.ConstantDeclatation().type;
-    } else {
-        std::string first_param_name = node->_Node.ConstantDeclatation().type->_Node.Function().params[0]->_Node.ID().value;
-        value->TypeInfo.type = node->_Node.ConstantDeclatation().type->_Node.Function().param_types[first_param_name];
+    if (!node->_Node.VariableDeclaration().type->TypeInfo.is_refinement_type) {
+        value->TypeInfo.type = node->_Node.VariableDeclaration().type;
     }
 
     if (var && value->type == NodeType::FUNC) {
