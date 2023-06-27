@@ -98,71 +98,124 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
         }
 
         if (res->type == NodeType::PIPE_LIST) {
-            res->_Node.List().elements.erase(std::unique(res->_Node.List().elements.begin(), res->_Node.List().elements.end(), [this](node_ptr& lhs, node_ptr& rhs) { return compareNodeTypes(lhs, rhs); }), res->_Node.List().elements.end());
+            res->_Node.List().elements = sort_and_unique(res->_Node.List().elements);
 
             if (res->_Node.List().elements.size() == 1) {
                 res = copy_node(res->_Node.List().elements[0]);
                 res->TypeInfo.is_type = true;
-
             }
         }
-
     } else {
         std::vector<node_ptr> return_types;
-        for (int i = 0; i < function->_Node.Function().body->_Node.Object().elements.size(); i++) {
+        int body_size = function->_Node.Function().body->_Node.Object().elements.size();
+        for (int i = 0; i < body_size; i++) {
             node_ptr expr = function->_Node.Function().body->_Node.Object().elements[i];
             node_ptr evaluated_expr = tc_node(expr);
-            // Check if we've evaluated an if statement
-            // If we have and we have no returns AND this is the last expression
-            // Append 'None'
-            if (expr->type == NodeType::IF_STATEMENT && evaluated_expr->type == NodeType::NOVALUE && i == function->_Node.Function().body->_Node.Object().elements.size()-1) {
-                return_types.push_back(new_node(NodeType::NONE));
-            }
-            // Check if we've evaluated an if block
-            // If we have and it's the last expression AND the number of returns does not match the number of statements
-            // Append 'None'
-            else if (expr->type == NodeType::IF_BLOCK && (evaluated_expr->type == NodeType::PIPE_LIST) && i == function->_Node.Function().body->_Node.Object().elements.size()-1) {
-                if (evaluated_expr->_Node.List().elements.size() != expr->_Node.IfBlock().statements.size()) {
-                    return_types.push_back(new_node(NodeType::NONE));
-                }
+
+            // If we reach a return statement
+
+            if (expr->type == NodeType::RETURN) {
+                evaluated_expr = tc_node(expr->_Node.Return().value);
+                return_types.push_back(evaluated_expr);
+                break;
             }
 
-            // TODO: Nested branching doesn't really get captured - not good.
+            if (evaluated_expr->type == NodeType::RETURN) {
+                evaluated_expr = tc_node(evaluated_expr->_Node.Return().value);
+                return_types.push_back(evaluated_expr);
+                continue;;
+            }
+
+
+            if (expr->type == NodeType::IF_STATEMENT) {
+                if (i == body_size-1) {
+                    return_types.push_back(new_node(NodeType::NONE));
+                }
+
+                if (evaluated_expr->type == NodeType::RETURN) {
+                    evaluated_expr = tc_node(evaluated_expr->_Node.Return().value);
+                    return_types.push_back(evaluated_expr);
+                }
+
+                if (evaluated_expr->type == NodeType::PIPE_LIST) {
+                    for (node_ptr& e : evaluated_expr->_Node.List().elements) {
+                        if (e->type == NodeType::RETURN) {
+                            node_ptr res = tc_node(e->_Node.Return().value);
+                            return_types.push_back(res);
+                        } else {
+                            return_types.push_back(e);
+                        }
+                    }
+                }
+
+                continue;
+            }
+
+            if (expr->type == NodeType::IF_BLOCK) {
+                int num_statements = expr->_Node.IfBlock().statements.size();
+                int num_returns = evaluated_expr->_Node.List().elements.size();
+                bool has_else = expr->_Node.IfBlock().statements[num_statements-1]->type == NodeType::OBJECT;
+
+                if (!has_else) {
+                    return_types.push_back(new_node(NodeType::NONE));
+                }
+
+                if (has_else && num_statements > num_returns) {
+                    return_types.push_back(new_node(NodeType::NONE));
+                }
+
+                for (node_ptr& ret : evaluated_expr->_Node.List().elements) {
+                    node_ptr res = tc_node(ret->_Node.Return().value);
+                    return_types.push_back(res);
+                }
+
+                if (has_else) {
+                    // Check if else statement
+                    node_ptr tc_else = new_node(NodeType::IF_BLOCK);
+                    tc_else->_Node.IfBlock().statements.push_back(expr->_Node.IfBlock().statements[num_statements-1]);
+                    node_ptr res = tc_if_block(tc_else);
+
+                    if (res->type == NodeType::PIPE_LIST) {
+                        for (node_ptr& e : res->_Node.List().elements) {
+                            if (e->type == NodeType::RETURN) {
+                                goto end_early;
+                            }
+                        }
+                    }
+
+                    if (res->type == NodeType::RETURN) {
+                        break;
+                    }
+                }
+
+                continue;
+                end_early:
+                    break;
+            }
 
             if (evaluated_expr->type == NodeType::ERROR) {
                 return throw_error(evaluated_expr->_Node.Error().message);
             }
-            else if (evaluated_expr->type == NodeType::NOVALUE) {
+
+            if (evaluated_expr->type == NodeType::NOVALUE) {
                 continue;
             }
-            else if (evaluated_expr->type == NodeType::PIPE_LIST && !evaluated_expr->Meta.literal_construct && evaluated_expr->_Node.List().elements.size() > 0) {
-                for (node_ptr& elem : evaluated_expr->_Node.List().elements) {
-                    if (elem->type == NodeType::RETURN) {
-                        if (elem->_Node.Return().value == nullptr) {
-                            return_types.push_back(new_node(NodeType::NONE));
-                        } else {
-                            node_ptr evaluated_value = tc_node(elem->_Node.Return().value);
-                            return_types.push_back(evaluated_value);
-                        }
+
+            if (evaluated_expr->type == NodeType::PIPE_LIST) {
+                for (node_ptr& e : evaluated_expr->_Node.List().elements) {
+                    if (e->type == NodeType::RETURN) {
+                        node_ptr res = tc_node(e->_Node.Return().value);
+                        return_types.push_back(res);
+                    } else {
+                        return_types.push_back(e);
                     }
                 }
             }
-            else if (evaluated_expr->type == NodeType::RETURN) {
-                if (evaluated_expr->_Node.Return().value == nullptr) {
-                    return_types.push_back(new_node(NodeType::NONE));
-                } else {
-                    node_ptr evaluated_value = tc_node(evaluated_expr->_Node.Return().value);
-                    return_types.push_back(evaluated_value);
-                }
-            } 
-            
-            if (i == function->_Node.Function().body->_Node.Object().elements.size()-1) {
+
+            if (i == body_size-1) {
                 if (evaluated_expr->type == NodeType::RETURN) {
-                    if (evaluated_expr->_Node.Return().value == nullptr) {
-                        return_types.push_back(new_node(NodeType::NONE));
-                    } else {
-                        return_types.push_back(tc_node(evaluated_expr->_Node.Return().value));
-                    }
+                    node_ptr res = tc_node(evaluated_expr->_Node.Return().value);
+                    return_types.push_back(res);
                 } else {
                     return_types.push_back(evaluated_expr);
                 }
@@ -174,7 +227,11 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
         for (node_ptr& t : return_types) {
             if (t->type == NodeType::PIPE_LIST) {
                 for (node_ptr& e : t->_Node.List().elements) {
-                    set.push_back(e);
+                    if (e->type == NodeType::RETURN) {
+                        set.push_back(tc_node(e->_Node.Return().value));
+                    } else {
+                        set.push_back(e);
+                    }
                 }
             } else {
                 set.push_back(t);

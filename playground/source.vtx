@@ -1,2 +1,23 @@
-const add = (a: Number, b: Number) => a + b
-println(add)
+const some_func = (x: Number) => {
+    if (x == 10) {
+        if (x == 5) {
+            if (x == 5) {
+                ret ["hello"]
+            } else if (x == 9) {
+                while (x != 10) {
+                    if (x == 0) {
+                        ret [true]
+                    } else {
+                        ret (() => String)
+                    }
+                }
+            }
+        } else {
+            ret [12]
+        }
+    }
+
+    ret true
+}
+
+println(some_func)

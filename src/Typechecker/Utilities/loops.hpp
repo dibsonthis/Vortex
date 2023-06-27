@@ -43,6 +43,23 @@ node_ptr Typechecker::tc_for_loop(node_ptr& node) {
                 current_scope = curr_scope;
                 return evaluated_expr;
             }
+            if (evaluated_expr->type == NodeType::PIPE_LIST) {
+                node_ptr ret_list = new_node(NodeType::LIST);
+                ret_list->type = NodeType::PIPE_LIST;
+
+                for (node_ptr& e : evaluated_expr->_Node.List().elements) {
+                    if (e->type == NodeType::RETURN) {
+                        node_ptr clone = new_node(NodeType::RETURN);
+                        clone->_Node.Return().value = tc_node(e->_Node.Return().value);
+                        ret_list->_Node.List().elements.push_back(clone);
+                    }
+                }
+
+                ret_list = tc_pipe_list(ret_list);
+                current_scope = current_scope->parent;
+                current_scope = curr_scope;
+                return ret_list;
+            }
         }
 
         // Cleanup
@@ -95,6 +112,23 @@ node_ptr Typechecker::tc_for_loop(node_ptr& node) {
             current_scope = curr_scope;
             return evaluated_expr;
         }
+        if (evaluated_expr->type == NodeType::PIPE_LIST) {
+            node_ptr ret_list = new_node(NodeType::LIST);
+            ret_list->type = NodeType::PIPE_LIST;
+
+            for (node_ptr& e : evaluated_expr->_Node.List().elements) {
+                if (e->type == NodeType::RETURN) {
+                    node_ptr clone = new_node(NodeType::RETURN);
+                    clone->_Node.Return().value = tc_node(e->_Node.Return().value);
+                    ret_list->_Node.List().elements.push_back(clone);
+                }
+            }
+
+            ret_list = tc_pipe_list(ret_list);
+            current_scope = current_scope->parent;
+            current_scope = curr_scope;
+            return ret_list;
+        }
     }
 
     // Cleanup
@@ -130,6 +164,23 @@ node_ptr Typechecker::tc_while_loop(node_ptr& node) {
         if (evaluated_expr->type == NodeType::RETURN) {
             current_scope = curr_scope;
             return evaluated_expr;
+        }
+        if (evaluated_expr->type == NodeType::PIPE_LIST) {
+            node_ptr ret_list = new_node(NodeType::LIST);
+            ret_list->type = NodeType::PIPE_LIST;
+
+            for (node_ptr& e : evaluated_expr->_Node.List().elements) {
+                if (e->type == NodeType::RETURN) {
+                    node_ptr clone = new_node(NodeType::RETURN);
+                    clone->_Node.Return().value = tc_node(e->_Node.Return().value);
+                    ret_list->_Node.List().elements.push_back(clone);
+                }
+            }
+
+            ret_list = tc_pipe_list(ret_list);
+            current_scope = current_scope->parent;
+            current_scope = curr_scope;
+            return ret_list;
         }
     }
 
