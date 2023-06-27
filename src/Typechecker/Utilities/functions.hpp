@@ -93,14 +93,17 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
         if (evaluated_res->type == NodeType::NOVALUE) {
             res = new_node(NodeType::NONE);
         } else {
-            res = evaluated_res;
+            res = copy_node(evaluated_res);
+            res->TypeInfo.is_type = true;
         }
 
         if (res->type == NodeType::PIPE_LIST) {
             res->_Node.List().elements.erase(std::unique(res->_Node.List().elements.begin(), res->_Node.List().elements.end(), [this](node_ptr& lhs, node_ptr& rhs) { return compareNodeTypes(lhs, rhs); }), res->_Node.List().elements.end());
 
             if (res->_Node.List().elements.size() == 1) {
-                res = res->_Node.List().elements[0];
+                res = copy_node(res->_Node.List().elements[0]);
+                res->TypeInfo.is_type = true;
+
             }
         }
 
@@ -183,7 +186,8 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
         return_types = set;
 
         if (return_types.size() == 1) {
-            res = return_types[0];
+            res = copy_node(return_types[0]);
+            res->TypeInfo.is_type = true;
         } else if (return_types.size() > 1) {                 
             res = new_node(NodeType::LIST);
             res->type = NodeType::PIPE_LIST;
@@ -602,6 +606,9 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
     auto functions = std::vector<node_ptr>(function->_Node.Function().dispatch_functions);
     functions.insert(functions.begin(), function);
 
+    node_ptr res_list = new_node(NodeType::LIST);
+    res_list->type = NodeType::PIPE_LIST;
+
     bool func_match = false;
 
     for (node_ptr& fx: functions) {
@@ -624,7 +631,11 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
             node_ptr param_type = fx->_Node.Function().param_types[param->_Node.ID().value];
             if (param_type) {
                 if (!match_types(param_type, args[i])) {
-                    goto not_found;
+                    if (res_list->_Node.List().elements.size() == 0) {
+                        goto not_found;
+                    } else {
+                        goto end;
+                    }
                 }
             } else {
                 continue;
@@ -634,13 +645,21 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
         // If we get here, we've found the function
         function = std::make_shared<Node>(*fx);
         func_match = true;
-        break;
+        // Instead of breaking, we accumulate all matches
+        // until we run out of dispatch OR we find a mismatch
+        if (function->_Node.Function().return_type) {
+            res_list->_Node.List().elements.push_back(function->_Node.Function().return_type);
+        } else {
+            res_list->_Node.List().elements.push_back(new_node(NodeType::ANY));
+        }
 
         not_found:
             continue;
     }
 
-    if (!func_match) {
+    end:
+
+    if (res_list->_Node.List().elements.size() == 0) {
         std::string argsStr = "(";
         for (int i = 0; i < args.size(); i++) {
             node_ptr arg = get_type(args[i]);
@@ -652,6 +671,10 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
         argsStr += ")";
         return throw_error("Dispatch error in function '" + node->_Node.FunctionCall().name + "' - No function found matching args: " + argsStr + "\n\nAvailable functions:\n\n" + printable(functions[0]));
     }
+
+    res_list = tc_pipe_list(res_list);
+
+    return res_list;
 
     auto local_scope = std::make_shared<SymbolTable>();
     auto curr_scope = std::make_shared<SymbolTable>();
