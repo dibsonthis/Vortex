@@ -6,7 +6,10 @@ node_ptr Typechecker::tc_for_loop(node_ptr& node) {
     if (node->_Node.ForLoop().iterator != nullptr) {
         node_ptr iterator = tc_node(node->_Node.ForLoop().iterator);
 
-        // TODO: Implement for object looping
+        if (iterator->type == NodeType::ANY) {
+            iterator = new_node(NodeType::LIST);
+            iterator->_Node.List().elements.push_back(new_node(NodeType::ANY));
+        }
 
         if (iterator->type != NodeType::LIST) {
             return throw_error("For loop iterator must be a list");

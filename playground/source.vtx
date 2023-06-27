@@ -1,9 +1,3 @@
-const obj = {
-    name: String | Number
-}
+import [] : "import"
 
-if (obj.name is String) {
-    println("String")
-} else {
-    println("Number")
-}
+println(KeyOf(import("import")))

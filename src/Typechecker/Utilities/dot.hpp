@@ -78,16 +78,16 @@ node_ptr Typechecker::tc_dot(node_ptr& node) {
         return throw_error("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
     }
 
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
+    }
+
     if (right->type == NodeType::FUNC_CALL) {
         std::string func_name = right->_Node.FunctionCall().name;
 
         node_ptr func_call = std::make_shared<Node>(*right);
         func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
         return tc_func_call(func_call);
-    }
-
-    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
-        return new_node(NodeType::ANY);
     }
 
     return throw_error("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
@@ -493,6 +493,9 @@ node_ptr Typechecker::tc_dot_list(node_ptr& left, node_ptr& right) {
 
             //node_ptr function = tc_node(right->_Node.FunctionCall().args[0]);
             node_ptr function = right->_Node.FunctionCall().args[0];
+            if (function->type == NodeType::ID) {
+                function = tc_node(function);
+            }
 
             if (function->type != NodeType::FUNC) {
                 return throw_error("List function '" + right->_Node.FunctionCall().name + "' expects a function argument");
@@ -511,6 +514,9 @@ node_ptr Typechecker::tc_dot_list(node_ptr& left, node_ptr& right) {
 
             //node_ptr function = tc_node(right->_Node.FunctionCall().args[0]);
             node_ptr function = right->_Node.FunctionCall().args[0];
+            if (function->type == NodeType::ID) {
+                function = tc_node(function);
+            }
 
             if (function->type != NodeType::FUNC) {
                 return throw_error("List function '" + right->_Node.FunctionCall().name + "' expects a function argument");
@@ -529,6 +535,9 @@ node_ptr Typechecker::tc_dot_list(node_ptr& left, node_ptr& right) {
 
             //node_ptr function = tc_node(right->_Node.FunctionCall().args[0]);
             node_ptr function = right->_Node.FunctionCall().args[0];
+            if (function->type == NodeType::ID) {
+                function = tc_node(function);
+            }
 
             if (function->type != NodeType::FUNC) {
                 return throw_error("List function '" + right->_Node.FunctionCall().name + "' expects a function argument");
@@ -547,6 +556,9 @@ node_ptr Typechecker::tc_dot_list(node_ptr& left, node_ptr& right) {
 
             //node_ptr function = tc_node(right->_Node.FunctionCall().args[0]);
             node_ptr function = right->_Node.FunctionCall().args[0];
+            if (function->type == NodeType::ID) {
+                function = tc_node(function);
+            }
 
             if (function->type != NodeType::FUNC) {
                 return throw_error("List function '" + right->_Node.FunctionCall().name + "' expects a function argument");
@@ -865,7 +877,7 @@ node_ptr Typechecker::list_method_filter(node_ptr& list, node_ptr& function) {
     }
 
     // Typecheck the function
-    node_ptr result = tc_function(function);
+    node_ptr result = tc_function(function)->_Node.Function().return_type;
 
     if (result->type != NodeType::BOOLEAN) {
         return throw_error("Filter function must return a boolean value");

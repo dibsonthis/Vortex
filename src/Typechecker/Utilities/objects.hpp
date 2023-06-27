@@ -138,6 +138,10 @@ node_ptr Typechecker::tc_accessor(node_ptr& node) {
         return throw_error("Malformed accessor");
     }
 
+    if (container->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
+    }
+
     if (container->type == NodeType::STRING) {
         node_ptr index_node = tc_node(accessor->_Node.List().elements[0]);
         if (index_node->type != NodeType::NUMBER) {
@@ -169,6 +173,10 @@ node_ptr Typechecker::tc_accessor(node_ptr& node) {
 
     if (container->type == NodeType::OBJECT) {
         node_ptr prop_node = tc_node(accessor->_Node.List().elements[0]);
+
+        if (prop_node->type == NodeType::ANY) {
+            return new_node(NodeType::ANY);
+        }
 
         if (prop_node->type == NodeType::PIPE_LIST) {
             for (node_ptr& elem: prop_node->_Node.List().elements)  {
@@ -206,6 +214,10 @@ node_ptr Typechecker::tc_type(node_ptr& node) {
         for (int i = 0; i < node->_Node.Type().params.size(); i++) {
             func->_Node.Function().args.push_back(nullptr);
         }
+
+        // Typecheck here for structural weirdnesses
+        node_ptr func_copy = copy_function(func);
+        tc_function(func_copy);
 
         func->_Node.Function().type_function = true;
 

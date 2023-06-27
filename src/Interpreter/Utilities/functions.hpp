@@ -72,6 +72,55 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func = nullptr) {
         return get_type(arg);
     }
 
+    if (node->_Node.FunctionCall().name == "import") {
+
+        int num_args = 1;
+
+        if (node->_Node.FunctionCall().args.size() != num_args) {
+            return throw_error("Function '" + node->_Node.FunctionCall().name + "' expects " + std::to_string(num_args) + " argument(s)");
+        }
+
+        node_ptr file_path = eval_node(node->_Node.FunctionCall().args[0]);
+
+        if (file_path->type != NodeType::STRING) {
+            return throw_error("Function '" + node->_Node.FunctionCall().name + "' expects argument 'filePath' to be a String");
+        }
+
+        std::string path = file_path->_Node.String().value + ".vtx";
+
+        node_ptr import_obj = new_node(NodeType::OBJECT);
+
+        Lexer import_lexer(path);
+        import_lexer.file_name = path;
+        import_lexer.tokenize();
+
+        Parser import_parser(import_lexer.nodes, import_lexer.file_name);
+        import_parser.parse(0, "_");
+        import_parser.remove_op_node(";");
+        
+        auto current_path = std::filesystem::current_path();
+        auto parent_path = std::filesystem::path(path).parent_path();
+        try {
+            if (parent_path != "") {
+                std::filesystem::current_path(parent_path);
+            }
+        } catch(...) {
+            return throw_error("No such file or directory: '" + parent_path.string() + "'");
+        }
+
+        Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
+        import_interpreter.global_interpreter = this;
+        import_interpreter.evaluate();
+
+        std::filesystem::current_path(current_path);
+
+        for (auto& symbol : import_interpreter.current_scope->symbols) {
+            import_obj->_Node.Object().properties[symbol.first] = symbol.second;
+        }
+
+        return import_obj;
+    }
+
     if (node->_Node.FunctionCall().name == "print") {
         if (node->_Node.FunctionCall().args.size() == 1) {
             node_ptr evaluated_arg = eval_node(node->_Node.FunctionCall().args[0]);
@@ -343,6 +392,11 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func = nullptr) {
         symt_ptr call_scope = std::make_shared<SymbolTable>();
         call_scope->parent = current_scope;
         current_scope = call_scope;
+
+        // Inject closure here, because the function is untyped, but may reference types from outer type if exists
+        for (auto& symbol : function->_Node.Function().closure) {
+            current_scope->symbols[symbol.first] = symbol.second;
+        }
 
         for (int i = 0; i < args.size(); i++) {
             node_ptr param = function->_Node.Function().params[i];

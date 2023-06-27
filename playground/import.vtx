@@ -1,110 +1,142 @@
-// const keyOf = (x: Object) => x.keys() as Union
+/* Helpers */
 
-const lib = load_lib("/usr/local/share/vortex/modules/sdl/bin/sdl")
+const MatchArray = (a: List, b: List) 
+    => a.map((e, i) => e is b[i]).reduce((a, b) => a && b)
 
-type Color = {
-	r: Number = 0,
-	g: Number = 0,
-	b: Number = 0,
-	a: Number = 255
-};
+/* Utility Types */
 
-type WindowConfig = {
-	width: Number = 1000,
-	height: Number = 600,
-	title: String = "Test Window",
-	xPos: Number = 300,
-	yPos: Number = 100,
-	color: Color = Color {}
+type Partial[T] = {
+
+    if (T is Object) {
+        var partial = {}
+
+        for (T.keys(), i, k) {
+            partial[k] = T[k] | None
+        }
+
+        ret partial
+    }
+
+    ret T
 }
 
-const Colors = {
-	Red: Color { r: 255 },
-	Green: Color { g: 255 },
-	Blue: Color { b: 255 },
-	Black: Color { },
-	White: Color { r: 255, g: 255, b: 255 }
+type NestedPartialObject[T: Object] = {
+    var partial = {}
+    for (T.keys(), i, k) {
+        if (T[k] is Object) {
+            partial[k] = NestedPartialObject(T[k]) | None
+        } else {
+            partial[k] = T[k] | None
+        }
+    }
+
+    ret partial
 }
 
-const EventType = {
-	SDL_QUIT: 256,
-	SDL_KEYDOWN: 768,
-	SDL_KEYUP: 769,
-	SDL_MOUSEMOTION: 1024,
-	SDL_MOUSEBUTTONDOWN: 1025,
-	SDL_MOUSEBUTTONUP: 1026
+type NestedPartial[T] = {
+    if (T is Object) {
+        ret NestedPartialObject(T)
+    }
+
+    T | None
 }
 
-const ButtonTypeEnum = {
-	SDL_BUTTON_LEFT: 1,
-	SDL_BUTTON_MIDDLE: 2,
-	SDL_BUTTON_RIGHT: 3
+type Readonly[T: Object] = {
+	T as Const
 }
 
-const StateTypeEnum = {
-	SDL_RELEASED: 0,
-	SDL_PRESSED: 1,
+type Record[Keys, Type] = {
+    var obj = {}
+    for (Keys as Iterator, i, k) {
+        obj[string(k)] = Type
+    }
+    obj
 }
 
-var initSDL = (): Number 
-	=> lib.call("sdl_init", [])
-
-var createWindow = (windowConfig: WindowConfig): Pointer
-	=> lib.call("create_window", [windowConfig.title, windowConfig.xPos, windowConfig.yPos, windowConfig.width, windowConfig.height])
-
-var destroyWindow = (window: Pointer): None
-	=> lib.call("destroy_window", [window])
-
-var createRenderer = (window: Pointer, index: Number): Pointer
-	=> lib.call("create_renderer", [window, index])
-
-var setRenderDrawColor = (renderer: Pointer, color: Color): None
-	=> lib.call("set_render_draw_color", [renderer, color.r, color.g, color.b, color.a])
-
-var renderClear = (renderer: Pointer): None
-	=> lib.call("render_clear", [renderer])
-
-var renderPresent = (renderer: Pointer): None 
-	=> lib.call("render_present", [renderer])
-
-var destroyRenderer = (renderer: Pointer): None 
-	=> lib.call("destroy_renderer", [renderer])
-
-var getKeyName = (keyCode: Number): String 
-	=> lib.call("get_key_name", [keyCode])
-
-var drawPoint = (renderer: Pointer, xPos: Number, yPos: Number): None 
-	=> lib.call("draw_point", [renderer, xPos, yPos])
-
-var drawLine = (renderer: Pointer, x1: Number, y1: Number, x2: Number, y2: Number): None 
-	=> lib.call("draw_line", [renderer, x1, y1, x2, y2])
-
-var delay = (ms: Number): None 
-	=> lib.call("sdl_delay", [ms])
-
-var pollEvent = (evt: Any) => {
-	const eventObj = lib.call("poll_event", [])
-	evt = eventObj.event
-	eventObj.status
+type Exclude[T, U] = {
+    T - U
 }
 
-var quitSDL = (): None
-	=> lib.call("sdl_quit", [])
-
-// Helper Functions
-
-var changeBackgroundColor = (renderer: Pointer, color: Color): None => {
-	setRenderDrawColor(renderer, color)
-	renderClear(renderer)
-	renderPresent(renderer)
+type Extract[T, U] = {
+    (T as Iterator).filter((E) => U is E) as Union
 }
 
-var interpolate = (value: Number, x0: Number, x1: Number, y0: Number, y1: Number): Number => {
-	y0 + (value - x0) * ((y0 - y1)/(x0 - x1))
+type KeyOf[T: Object] = T.keys() as Union
+
+type ValueOf[T: Object] = T.values() as Union
+
+type Pick[T, Keys: KeyOf(T)] = {
+    var partial = {}
+
+	for (T.keys(), i, k) {
+        if (k in Keys) {
+            partial[k] = T[k]
+        }
+	}
+
+	partial
 }
 
-type Window = {
-	window: Pointer,
-	renderer: Pointer,
-	changeColor: (color: Color) => None = (color: Color) => changeBackgroundColor(this.renderer, color)
+type Omit[T: Object, Keys: KeyOf(T)] = {
+    var partial = {}
+
+	for (T.keys(), i, k) {
+        if (!(k in Keys)) {
+            partial[k] = T[k]
+        }
+	}
+
+	partial
+}
+
+type NonNullable[T] = T - None
+
+type Nullable[T] = T | None
+
+type Intersect[T: Object, U: Object] = {
+    var partial = {}
+
+	for (T.keys(), i, k) {
+        partial[k] = T[k]
+	}
+
+    for (U.keys(), i, k) {
+        partial[k] = U[k]
+	}
+
+	partial
+}
+
+type Common[T: Object, U: Object] = {
+    var partial = {}
+
+	for (T.keys(), i, k) {
+        if (k in KeyOf(U)) {
+            partial[k] = T[k]
+        }
+	}
+
+	partial
+}
+
+type ReturnType[T: Function] = T.return
+
+type Parameters[T: Function] = T.params
+
+type Items[T: Object] = T.keys().map((k: String) => {
+    { key: k as Literal, value: T[k] }
+})
+
+type Length[T: Object | String | List] = T.length() as Literal
+
+type At[T: List, I: Number] = T[I] as Literal
+
+type Get[T: Object, K: KeyOf(T)] = T[K] as Literal
+
+type ListToObj[L: List] = {
+    var obj = {}
+    for (L, index, e) {
+        obj[string(e)] = e as Literal
+    }
+    obj
 }

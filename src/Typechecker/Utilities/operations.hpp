@@ -624,20 +624,24 @@ node_ptr Typechecker::tc_as(node_ptr& node) {
         return copy;
     }
 
-    if (left->type == NodeType::LIST && node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Union") {
-        node_ptr union_list = new_node(NodeType::LIST);
-        union_list->type = NodeType::PIPE_LIST;
-        for (node_ptr& elem : left->_Node.List().elements) {
-            node_ptr elem_copy = std::make_shared<Node>(*elem);
-            if (!elem_copy->TypeInfo.is_type) {
-                if (elem_copy->type != NodeType::OBJECT && elem_copy->type != NodeType::LIST) {
-                    elem_copy->TypeInfo.is_literal_type = true;
+    if (node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Union") {
+        if (left->type == NodeType::LIST) {
+            node_ptr union_list = new_node(NodeType::LIST);
+            union_list->type = NodeType::PIPE_LIST;
+            for (node_ptr& elem : left->_Node.List().elements) {
+                node_ptr elem_copy = std::make_shared<Node>(*elem);
+                if (!elem_copy->TypeInfo.is_type) {
+                    if (elem_copy->type != NodeType::OBJECT && elem_copy->type != NodeType::LIST) {
+                        elem_copy->TypeInfo.is_literal_type = true;
+                    }
                 }
+                union_list->_Node.List().elements.push_back(elem_copy);
             }
-            union_list->_Node.List().elements.push_back(elem_copy);
+            union_list->_Node.List().elements = sort_and_unique(union_list->_Node.List().elements);
+            return union_list;
         }
-        union_list->_Node.List().elements = sort_and_unique(union_list->_Node.List().elements);
-        return union_list;
+
+        return left;
     }
 
     if (node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Iterator") {
@@ -713,7 +717,7 @@ node_ptr Typechecker::tc_is(node_ptr& node) {
             node_ptr value = std::make_shared<Node>(*right);
             add_symbol(node->_Node.Op().left->_Node.ID().value, value, current_scope);
         } else {
-            current_scope->cast_types[left] = std::make_shared<Node>(*left);
+            current_scope->cast_types[left] = copy_node(left);
             *left = *right;
         }
 
