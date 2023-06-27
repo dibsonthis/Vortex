@@ -26,7 +26,7 @@ node_ptr Typechecker::tc_const_decl(node_ptr& node) {
         }
     }
 
-    if (!node->_Node.ConstantDeclatation().type->TypeInfo.is_refinement_type) {
+    if (node->_Node.ConstantDeclatation().type && !node->_Node.ConstantDeclatation().type->TypeInfo.is_refinement_type) {
         value->TypeInfo.type = node->_Node.ConstantDeclatation().type;
     }
 
@@ -66,7 +66,7 @@ node_ptr Typechecker::tc_var_decl(node_ptr& node) {
         }
     }
 
-    if (!node->_Node.VariableDeclaration().type->TypeInfo.is_refinement_type) {
+    if (node->_Node.VariableDeclaration().type && !node->_Node.VariableDeclaration().type->TypeInfo.is_refinement_type) {
         value->TypeInfo.type = node->_Node.VariableDeclaration().type;
     }
 

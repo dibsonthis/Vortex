@@ -160,6 +160,11 @@ node_ptr Typechecker::tc_div(node_ptr& node) {
     }
 
     if (left->type == NodeType::NUMBER && right->type == NodeType::NUMBER) {
+        if (right->_Node.Number().value == 0) {
+            node_ptr res = new_number_node(0);
+            res->TypeInfo.is_type = true;
+            return res;
+        }
         return new_number_node(left->_Node.Number().value / right->_Node.Number().value);
     }
 
@@ -625,7 +630,9 @@ node_ptr Typechecker::tc_as(node_ptr& node) {
         for (node_ptr& elem : left->_Node.List().elements) {
             node_ptr elem_copy = std::make_shared<Node>(*elem);
             if (!elem_copy->TypeInfo.is_type) {
-                elem_copy->TypeInfo.is_literal_type = true;
+                if (elem_copy->type != NodeType::OBJECT && elem_copy->type != NodeType::LIST) {
+                    elem_copy->TypeInfo.is_literal_type = true;
+                }
             }
             union_list->_Node.List().elements.push_back(elem_copy);
         }

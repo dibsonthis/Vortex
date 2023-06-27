@@ -104,7 +104,9 @@ node_ptr Interpreter::eval_pipe_list(node_ptr& node) {
     for (node_ptr& elem : node->_Node.List().elements) {
         node_ptr evaluated_elem = eval_node(elem);
         if (!evaluated_elem->TypeInfo.is_type) {
-            evaluated_elem->TypeInfo.is_literal_type = true;
+            if (evaluated_elem->type != NodeType::OBJECT && evaluated_elem->type != NodeType::LIST) {
+                evaluated_elem->TypeInfo.is_literal_type = true;
+            }
         }
         if (evaluated_elem->type == NodeType::PIPE_LIST) {
             for (node_ptr& elem : evaluated_elem->_Node.List().elements) {

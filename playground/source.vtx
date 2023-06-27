@@ -1,4 +1,12 @@
-type LessThan10 = (x: Number) => x < 10
-type Is42 = (x: Number) => x == 42
+type Some[T] = {{value: T}}
+type Option[T] = Some(T) | None
 
-const blah: Is42 = 44
+const div = (x: Number, y: Number): Option(Number) => {
+    if (y == 0) {
+        ret None
+    }
+
+    Some(x / y)
+}
+
+println(div(10, 0))
