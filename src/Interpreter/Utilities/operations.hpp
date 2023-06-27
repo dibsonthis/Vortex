@@ -682,6 +682,18 @@ node_ptr Interpreter::eval_is(node_ptr& node) {
         return throw_error(right->_Node.Error().message);
     }
 
+    // We want to temporarily remove TypeInfo.type in here
+    // So that we don't match on the pre-existing type, which could be a union
+    // And instead match on the current runtime valie
+
+    if (left->TypeInfo.type) {
+        node_ptr& type = left->TypeInfo.type;
+        left->TypeInfo.type = nullptr;
+        bool match = match_types(left, right);
+        left->TypeInfo.type = type;
+        return new_boolean_node(match);
+    }
+
     return new_boolean_node(match_types(left, right));
 }
 

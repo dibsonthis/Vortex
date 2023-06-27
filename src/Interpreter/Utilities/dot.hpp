@@ -158,6 +158,17 @@ node_ptr Interpreter::eval_dot_object(node_ptr& left, node_ptr& right) {
             return eval_func_call(right);
         }
 
+        if (func_name == "name") {
+
+            int num_args = 0;
+
+            if (right->_Node.FunctionCall().args.size() != num_args) {
+                return throw_error("Object function '" + right->_Node.FunctionCall().name + "' expects " + std::to_string(num_args) + " argument(s)");
+            }
+
+            return new_string_node(left->TypeInfo.type_name);
+        }
+
         if (func_name == "keys") {
 
             int num_args = 0;

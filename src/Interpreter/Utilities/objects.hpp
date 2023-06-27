@@ -319,6 +319,9 @@ node_ptr Interpreter::eval_type(node_ptr& node) {
         res->_Node.Function().name = node->_Node.Type().name;
         res->_Node.Function().type_function = true;
     }
+    if (res->type == NodeType::PIPE_LIST) {
+        res->TypeInfo.type_name = node->_Node.Type().name;
+    }
     res->TypeInfo.is_type = true;
     *object = *res;
     return object;
@@ -392,8 +395,8 @@ node_ptr Interpreter::eval_object_init(node_ptr& node) {
             return throw_error("Error in object initialization for type '" + node->_Node.ObjectDeconstruct().name + "': Match error in property '" + prop_name + "': Expected value of type '" + printable(type_prop_value) + "' but received value of type '" + printable(obj_prop_value) + "'");
         }
 
-        object->_Node.Object().properties[prop_name]->Meta = type_prop_value->Meta;
-        object->_Node.Object().properties[prop_name]->TypeInfo.type_name = type_prop_value->TypeInfo.type_name;
+        // object->_Node.Object().properties[prop_name]->Meta = type_prop_value->Meta;
+        // object->_Node.Object().properties[prop_name]->TypeInfo.type_name = type_prop_value->TypeInfo.type_name;
         object->_Node.Object().properties[prop_name]->TypeInfo.type = type_prop_value;
     }
 

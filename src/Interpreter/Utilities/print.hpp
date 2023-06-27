@@ -91,6 +91,9 @@ std::string Interpreter::printable(node_ptr& node, std::vector<node_ptr> bases) 
             return res;
         }
         case NodeType::PIPE_LIST: {
+            if (node->TypeInfo.type_name != "") {
+                return node->TypeInfo.type_name;
+            }
             bases.push_back(node);
             std::string res = "";
             for (int i = 0; i < node->_Node.List().elements.size(); i++) {

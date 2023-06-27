@@ -1,12 +1,9 @@
-type Some[T] = {{value: T}}
-type Option[T] = Some(T) | None
-
-const div = (x: Number, y: Number): Option(Number) => {
-    if (y == 0) {
-        ret None
-    }
-
-    Some(x / y)
+const obj = {
+    name: String | Number
 }
 
-println(div(10, 0))
+if (obj.name is String) {
+    println("String")
+} else {
+    println("Number")
+}

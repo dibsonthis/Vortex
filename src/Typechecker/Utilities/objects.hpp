@@ -352,6 +352,9 @@ node_ptr Typechecker::tc_type(node_ptr& node) {
         res->_Node.Function().name = node->_Node.Type().name;
         res->_Node.Function().type_function = true;
     }
+    if (res->type == NodeType::PIPE_LIST) {
+        res->TypeInfo.type_name = node->_Node.Type().name;
+    }
     res->TypeInfo.is_type = true;
     *object = *res;
     return object;
