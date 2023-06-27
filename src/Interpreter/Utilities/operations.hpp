@@ -640,7 +640,11 @@ node_ptr Interpreter::eval_as(node_ptr& node) {
     if (node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Iterator") {
         if (left->type == NodeType::PIPE_LIST) {
             node_ptr list = new_node(NodeType::LIST);
-            list->_Node.List().elements = left->_Node.List().elements;
+            for (node_ptr& e : left->_Node.List().elements) {;
+                node_ptr copy = std::make_shared<Node>(*e);
+                copy->TypeInfo.is_literal_type = false;
+                list->_Node.List().elements.push_back(copy);
+            }
             return list;
         }
 

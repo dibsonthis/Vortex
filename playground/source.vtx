@@ -1,12 +1,2 @@
-type Person = {
-    name: String,
-    age: Number
-}
-
-const func = (x: Object | None) => {
-    if (x is Object) {
-        ret x.keys()
-    }
-}
-
-print(func)
+const g = ["a", "b", "c"] as Union as Iterator
+print(typeof(g))
