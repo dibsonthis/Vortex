@@ -179,6 +179,18 @@ std::string Interpreter::printable(node_ptr& node, std::vector<node_ptr> bases) 
         case NodeType::ACCESSOR: {
             return printable(node->_Node.Accessor().container) + printable(node->_Node.Accessor().accessor, bases);
         }
+        case NodeType::FUNC_CALL: {
+            std::string name = node->_Node.FunctionCall().name;
+            std::string res = name + "(";
+            for (int i = 0; i < node->_Node.FunctionCall().args.size(); i++) {
+                res += printable(node->_Node.FunctionCall().args[i]);
+                if (i < node->_Node.FunctionCall().args.size()-1) {
+                    res += ", ";
+                }
+            }
+            res += ")";
+            return res;
+        }
         default: {
             return "<not implemented>";
         }

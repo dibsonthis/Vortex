@@ -78,16 +78,16 @@ node_ptr Typechecker::tc_dot(node_ptr& node) {
         return throw_error("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
     }
 
-    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
-        return new_node(NodeType::ANY);
-    }
-
     if (right->type == NodeType::FUNC_CALL) {
         std::string func_name = right->_Node.FunctionCall().name;
 
         node_ptr func_call = std::make_shared<Node>(*right);
         func_call->_Node.FunctionCall().args.insert(func_call->_Node.FunctionCall().args.begin(), left);
         return tc_func_call(func_call);
+    }
+
+    if (left->type == NodeType::ANY || right->type == NodeType::ANY) {
+        return new_node(NodeType::ANY);
     }
 
     return throw_error("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));

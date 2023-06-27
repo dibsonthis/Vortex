@@ -142,7 +142,7 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
                     }
                 }
 
-                if (evaluated_expr->type == NodeType::PIPE_LIST) {
+                else if (evaluated_expr->type == NodeType::PIPE_LIST) {
                     for (node_ptr& e : evaluated_expr->_Node.List().elements) {
                         if (e->type == NodeType::RETURN) {
                             node_ptr res = tc_node(e->_Node.Return().value);
