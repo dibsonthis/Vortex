@@ -1,23 +1,11 @@
-const some_func = (x: Number) => {
-    if (x == 10) {
-        if (x == 5) {
-            if (x == 5) {
-                ret ["hello"]
-            } else if (x == 9) {
-                while (x != 10) {
-                    if (x == 0) {
-                        ret [true]
-                    } else {
-                        ret (() => String)
-                    }
-                }
-            }
-        } else {
-            ret [12]
-        }
+const capColor = (c: Number) => {
+    if (c < 0) {
+        c = 0
+    } else if (c > 255) {
+        c = 255
     }
 
-    ret true
+    true
 }
 
-println(some_func)
+println(capColor)

@@ -116,16 +116,27 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
 
             if (expr->type == NodeType::RETURN) {
                 evaluated_expr = tc_node(expr->_Node.Return().value);
-                return_types.push_back(evaluated_expr);
+                if (evaluated_expr) {
+                    return_types.push_back(evaluated_expr);
+                } else {
+                    return_types.push_back(new_node(NodeType::NONE));
+                }
                 break;
             }
 
             if (evaluated_expr->type == NodeType::RETURN) {
                 evaluated_expr = tc_node(evaluated_expr->_Node.Return().value);
-                return_types.push_back(evaluated_expr);
+                if (evaluated_expr) {
+                    return_types.push_back(evaluated_expr);
+                } else {
+                    return_types.push_back(new_node(NodeType::NONE));
+                }
                 continue;;
             }
 
+            if (evaluated_expr->type == NodeType::NOVALUE) {
+                continue;;
+            }
 
             if (expr->type == NodeType::IF_STATEMENT) {
                 if (i == body_size-1) {
@@ -134,14 +145,22 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
 
                 if (evaluated_expr->type == NodeType::RETURN) {
                     evaluated_expr = tc_node(evaluated_expr->_Node.Return().value);
-                    return_types.push_back(evaluated_expr);
+                    if (evaluated_expr) {
+                        return_types.push_back(evaluated_expr);
+                    } else {
+                        return_types.push_back(new_node(NodeType::NONE));
+                    }
                 }
 
                 if (evaluated_expr->type == NodeType::PIPE_LIST) {
                     for (node_ptr& e : evaluated_expr->_Node.List().elements) {
                         if (e->type == NodeType::RETURN) {
                             node_ptr res = tc_node(e->_Node.Return().value);
-                            return_types.push_back(res);
+                            if (res) {
+                                return_types.push_back(res);
+                            } else {
+                                return_types.push_back(new_node(NodeType::NONE));
+                            }
                         } else {
                             return_types.push_back(e);
                         }
@@ -166,7 +185,11 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
 
                 for (node_ptr& ret : evaluated_expr->_Node.List().elements) {
                     node_ptr res = tc_node(ret->_Node.Return().value);
-                    return_types.push_back(res);
+                    if (res) {
+                        return_types.push_back(res);
+                    } else {
+                        return_types.push_back(new_node(NodeType::NONE));
+                    }
                 }
 
                 if (has_else) {
@@ -205,7 +228,11 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
                 for (node_ptr& e : evaluated_expr->_Node.List().elements) {
                     if (e->type == NodeType::RETURN) {
                         node_ptr res = tc_node(e->_Node.Return().value);
-                        return_types.push_back(res);
+                        if (res) {
+                            return_types.push_back(res);
+                        } else {
+                            return_types.push_back(new_node(NodeType::NONE));
+                        }
                     } else {
                         return_types.push_back(e);
                     }
@@ -215,7 +242,11 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
             if (i == body_size-1) {
                 if (evaluated_expr->type == NodeType::RETURN) {
                     node_ptr res = tc_node(evaluated_expr->_Node.Return().value);
-                    return_types.push_back(res);
+                    if (res) {
+                        return_types.push_back(res);
+                    } else {
+                        return_types.push_back(new_node(NodeType::NONE));
+                    }
                 } else {
                     return_types.push_back(evaluated_expr);
                 }
