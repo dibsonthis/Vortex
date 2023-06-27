@@ -217,7 +217,9 @@ node_ptr Typechecker::tc_type(node_ptr& node) {
 
         // Typecheck here for structural weirdnesses
         node_ptr func_copy = copy_function(func);
+        store_func_type = false;
         tc_function(func_copy);
+        store_func_type = true;
 
         func->_Node.Function().type_function = true;
 
@@ -510,8 +512,20 @@ node_ptr Typechecker::copy_node(node_ptr& node, std::vector<node_ptr> bases) {
         node_ptr obj = new_node(NodeType::OBJECT);
         obj->Meta = node->Meta;
         obj->TypeInfo = node->TypeInfo;
+        for (auto elem : node->_Node.Object().elements) {
+            obj->_Node.Object().elements.push_back(copy_node(elem, bases));
+        }
         for (auto prop : node->_Node.Object().properties) {
             obj->_Node.Object().properties[prop.first] = copy_node(prop.second, bases);
+        }
+        for (auto prop : node->_Node.Object().defaults) {
+            obj->_Node.Object().defaults[prop.first] = copy_node(prop.second, bases);
+        }
+        for (auto key : node->_Node.Object().keys) {
+            obj->_Node.Object().keys.push_back(key);
+        }
+        for (auto value : node->_Node.Object().values) {
+            obj->_Node.Object().values.push_back(copy_node(value, bases));
         }
         return obj;
     }

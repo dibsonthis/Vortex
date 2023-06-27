@@ -226,7 +226,9 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
     // Testing: change the node's return_type here so that the evaluator will have
     // a fully typed function
 
-    node->_Node.Function().return_type = std::make_shared<Node>(*function->_Node.Function().return_type);
+    if (store_func_type) {
+        node->_Node.Function().return_type = std::make_shared<Node>(*function->_Node.Function().return_type);
+    }
 
     return function;
 }
@@ -751,7 +753,7 @@ node_ptr Typechecker::copy_function(node_ptr& func) {
     function->_Node.Function().args = std::vector<node_ptr>(func->_Node.Function().args);
     function->_Node.Function().params = std::vector<node_ptr>(func->_Node.Function().params);
     function->_Node.Function().default_values = func->_Node.Function().default_values;
-    function->_Node.Function().body = std::make_shared<Node>(*func->_Node.Function().body);
+    function->_Node.Function().body = copy_node(func->_Node.Function().body);
     function->_Node.Function().closure = func->_Node.Function().closure;
     function->_Node.Function().is_hook = func->_Node.Function().is_hook;
     function->_Node.Function().decl_filename = func->_Node.Function().decl_filename;

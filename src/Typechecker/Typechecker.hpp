@@ -42,6 +42,7 @@ public:
     std::vector<std::string> argv;
     int try_catch = 0;
     std::string error = "";
+    bool store_func_type = true;
 
     // Threading API
     std::unordered_map<uint32_t, std::shared_future<node_ptr>> _futures;
