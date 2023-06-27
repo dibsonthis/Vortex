@@ -136,7 +136,9 @@ node_ptr Typechecker::tc_dot_string(node_ptr& left, node_ptr& right) {
             }
 
             if (list->_Node.List().elements.size() == 0) {
-                list->_Node.List().elements.push_back(new_node(NodeType::STRING));
+                node_ptr string = new_node(NodeType::STRING);
+                string->TypeInfo.is_type = true;
+                list->_Node.List().elements.push_back(string);
             }
 
             return list;
@@ -225,7 +227,9 @@ node_ptr Typechecker::tc_dot_object(node_ptr& left, node_ptr& right) {
             keys->TypeInfo.type->_Node.List().elements.push_back(new_string_node(""));
 
             if (keys->_Node.List().elements.size() == 0) {
-                keys->TypeInfo.type->_Node.List().elements.push_back(new_string_node(""));
+                node_ptr string = new_node(NodeType::STRING);
+                string->TypeInfo.is_type = true;
+                keys->_Node.List().elements.push_back(string);
             }
 
             return keys;

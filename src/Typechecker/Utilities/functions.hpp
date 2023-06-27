@@ -124,16 +124,6 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
                 break;
             }
 
-            if (evaluated_expr->type == NodeType::RETURN) {
-                evaluated_expr = tc_node(evaluated_expr->_Node.Return().value);
-                if (evaluated_expr) {
-                    return_types.push_back(evaluated_expr);
-                } else {
-                    return_types.push_back(new_node(NodeType::NONE));
-                }
-                continue;;
-            }
-
             if (evaluated_expr->type == NodeType::NOVALUE) {
                 continue;;
             }
@@ -175,7 +165,7 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
                 int num_returns = evaluated_expr->_Node.List().elements.size();
                 bool has_else = expr->_Node.IfBlock().statements[num_statements-1]->type == NodeType::OBJECT;
 
-                if (!has_else) {
+                if (!has_else && i == body_size-1) {
                     return_types.push_back(new_node(NodeType::NONE));
                 }
 
@@ -220,10 +210,6 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
                 return throw_error(evaluated_expr->_Node.Error().message);
             }
 
-            if (evaluated_expr->type == NodeType::NOVALUE) {
-                continue;
-            }
-
             if (evaluated_expr->type == NodeType::PIPE_LIST) {
                 for (node_ptr& e : evaluated_expr->_Node.List().elements) {
                     if (e->type == NodeType::RETURN) {
@@ -237,6 +223,16 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
                         return_types.push_back(e);
                     }
                 }
+            }
+
+            if (evaluated_expr->type == NodeType::RETURN) {
+                evaluated_expr = tc_node(evaluated_expr->_Node.Return().value);
+                if (evaluated_expr) {
+                    return_types.push_back(evaluated_expr);
+                } else {
+                    return_types.push_back(new_node(NodeType::NONE));
+                }
+                continue;;
             }
 
             if (i == body_size-1) {
