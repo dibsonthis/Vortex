@@ -630,6 +630,9 @@ node_ptr Typechecker::tc_as(node_ptr& node) {
 
     if (node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Union") {
         if (left->type == NodeType::LIST) {
+            if (left->_Node.List().elements.size() == 0) {
+                return new_node(NodeType::ANY);
+            }
             node_ptr union_list = new_node(NodeType::LIST);
             union_list->type = NodeType::PIPE_LIST;
             for (node_ptr& elem : left->_Node.List().elements) {
@@ -674,6 +677,10 @@ node_ptr Typechecker::tc_as(node_ptr& node) {
 
     if (right->type == NodeType::ERROR) {
         return throw_error(right->_Node.Error().message);
+    }
+
+    if (right->type == NodeType::ANY) {
+        return right;
     }
 
     // During typechecking
