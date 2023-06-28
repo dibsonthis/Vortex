@@ -71,7 +71,13 @@ node_ptr Typechecker::get_type(node_ptr& node, std::vector<node_ptr> bases = {})
         }
 
         if (types->_Node.List().elements.size() == 0) {
-            types->_Node.List().elements.push_back(reduced);
+            if (reduced->type == NodeType::PIPE_LIST) {
+                for (node_ptr e : reduced->_Node.List().elements) {
+                    types->_Node.List().elements.push_back(e);
+                }
+            } else {
+                types->_Node.List().elements.push_back(reduced);
+            }
             continue;
         }
         for (node_ptr& t_elem : types->_Node.List().elements) {
@@ -81,7 +87,13 @@ node_ptr Typechecker::get_type(node_ptr& node, std::vector<node_ptr> bases = {})
         }
 
         if (!match) {
-            types->_Node.List().elements.push_back(reduced);
+            if (reduced->type == NodeType::PIPE_LIST) {
+                for (node_ptr e : reduced->_Node.List().elements) {
+                    types->_Node.List().elements.push_back(e);
+                }
+            } else {
+                types->_Node.List().elements.push_back(reduced);
+            };
         }
     }
 
@@ -295,6 +307,21 @@ bool Typechecker::match_types(node_ptr& _type, node_ptr& _value) {
     }
 
     if (type->type == NodeType::LIST) {
+
+        if (_type->TypeInfo.is_tuple) {
+            if (_type->_Node.List().elements.size() != _value->_Node.List().elements.size()) {
+                return false;
+            }
+
+            for (int i = 0; i < _type->_Node.List().elements.size(); i++) {
+                if (!match_types(_type->_Node.List().elements[i], _value->_Node.List().elements[i])) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         // If [] or List
         if (type->_Node.List().elements.size() == 0 && type->TypeInfo.is_type) {
             return true;

@@ -372,8 +372,6 @@ void Interpreter::evaluate() {
             return a->type < b->type;
         });
 
-    // list.erase(std::unique(list.begin(), list.end(), [this](node_ptr& lhs, node_ptr& rhs) { return compareNodeTypes(lhs, rhs); }), list.end());
-
     std::vector<node_ptr> unique_list;
 
     for (node_ptr& elem : list) {

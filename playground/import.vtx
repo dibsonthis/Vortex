@@ -65,7 +65,7 @@ type KeyOf[T: Object] = T.keys() as Union
 
 type ValueOf[T: Object] = T.values() as Union
 
-type Pick[T, Keys: KeyOf(T)] = {
+type Pick[T: Object, Keys: KeyOf(T)] = {
     var partial = {}
 
 	for (T.keys(), i, k) {

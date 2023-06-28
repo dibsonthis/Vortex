@@ -372,11 +372,9 @@ void Typechecker::typecheck() {
             return a->type < b->type;
         });
 
-        // list.erase(std::unique(list.begin(), list.end(), [this](node_ptr& lhs, node_ptr& rhs) { return compareNodeTypes(lhs, rhs); }), list.end());
-
     std::vector<node_ptr> unique_list;
 
-    for (node_ptr& elem : list) {
+    for (node_ptr elem : list) {
         bool match = false;
         if (unique_list.size() == 0) {
             unique_list.push_back(elem);
@@ -396,6 +394,4 @@ void Typechecker::typecheck() {
     }
 
     return unique_list;
-
-    //return list;
  }

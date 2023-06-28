@@ -613,7 +613,11 @@ node_ptr Typechecker::tc_as(node_ptr& node) {
     if (node->_Node.Op().right->type == NodeType::ID && node->_Node.Op().right->_Node.ID().value == "Literal") {
         node_ptr copy = std::make_shared<Node>(*left);
         copy->TypeInfo.is_type = true;
-        copy->TypeInfo.is_literal_type = true;
+        if (copy->type == NodeType::LIST) {
+            copy->TypeInfo.is_tuple = true;
+        } else {
+            copy->TypeInfo.is_literal_type = true;
+        }
         return copy;
     }
 
@@ -635,7 +639,13 @@ node_ptr Typechecker::tc_as(node_ptr& node) {
                         elem_copy->TypeInfo.is_literal_type = true;
                     }
                 }
-                union_list->_Node.List().elements.push_back(elem_copy);
+                if (elem_copy->type == NodeType::PIPE_LIST) {
+                    for (node_ptr e: elem_copy->_Node.List().elements) {
+                        union_list->_Node.List().elements.push_back(e);
+                    }
+                } else {
+                    union_list->_Node.List().elements.push_back(elem_copy);
+                }
             }
             union_list->_Node.List().elements = sort_and_unique(union_list->_Node.List().elements);
             return union_list;

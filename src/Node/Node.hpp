@@ -250,6 +250,7 @@ struct TypeInfoNode {
 	bool is_decl = false;
 	bool is_enum = false;
 	bool is_union = false;
+	bool is_tuple = false;
 };
 
 struct ErrorNode {

@@ -113,7 +113,7 @@ node_ptr Typechecker::tc_pipe_list(node_ptr& node) {
         }
         if (evaluated_elem->type == NodeType::PIPE_LIST) {
             for (node_ptr& elem : evaluated_elem->_Node.List().elements) {
-                list->_Node.List().elements.push_back(elem);
+                list->_Node.List().elements.push_back(tc_node(elem));
             }
         } else {
             list->_Node.List().elements.push_back(evaluated_elem);

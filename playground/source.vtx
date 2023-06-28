@@ -1,87 +1,39 @@
 
+type KeyOf[T: Object] = T.keys() as Union
+type ValueOf[T: Object] = T.values().typeof() as Union
 
-type Topping = "cheese" | "bacon" | "pineapple" | "olives"
-type Size = "s" | "m" | "l" | "xl"
-
-var order_num = 0
-
-type Burger = {
-    toppings: [Topping] = [],
-    size: Size = "s",
-    meal: Boolean = false
+type Admin = {
+    id: String,
+    firstName: String,
+    lastName: String,
+    email: String,
+    phone: String | None,
+    level: Number
 }
 
-type Pizza = {
-    toppings: [Topping] = [],
-    size: Size = "s",
-    meal: Boolean = false
+const admin = Admin {
+    id: "0001",
+    firstName: "John",
+    lastName: "Smith",
+    email: "js@test.com",
+    phone: "0400000000",
+    level: 1
 }
 
-type Item = Burger | Pizza
+type ObjectMap = (T: Object, F: (x: ValueOf(T)) => Any) => {
+    var obj = {}
+    T.keys().map((k) => {
+        obj[k] = F(T[k])
+    })
+    obj
+}
 
-type Order = {
-    id: Number = order_num,
-    item: Item,
-    _init = () => {
-        order_num += 1
+println(admin.ObjectMap((x: ValueOf(admin)) => {
+    if (x is String) {
+        ret x + "_"
+    } else if (x is Number) {
+        ret x + 10
+    } else {
+        ret x
     }
-}
-
-var orders: [Order] = []
-
-const addTopping = (item: Item, t: Topping) => {
-    item.toppings.append(t)
-    item
-}
-
-const setSize = (item: Item, s: Size) => {
-    item.size = s
-    item
-}
-
-const setMeal = (item: Item, check: Boolean = true) => {
-    item.meal = check
-    item
-}
-
-const make = (item: Item) => {
-    const order = Order {
-        item: item
-    }
-
-    orders.append(order)
-}
-
-(Burger {}).addTopping("cheese")
-      .addTopping("bacon")
-      .setSize("xl")
-      .addTopping("pineapple")
-      .setMeal()
-      .make()
-
-(Pizza {}).addTopping("cheese")
-      .addTopping("bacon")
-      .setSize("m")
-      .setMeal()
-      .make()
-
-(Pizza {}).addTopping("cheese")
-      .setSize("s")
-      .setMeal(false)
-      .make()
-
-const processOrder = () => {
-    if (orders.empty()) {
-        println("Out of orders to process")
-        ret
-    }
-
-    var order = orders[0]
-    orders.remove_at(0)
-
-    println(f"Processed order ${order.id}: ${order.item.name()}")
-    ret order
-}
-
-processOrder()
-processOrder()
+}))

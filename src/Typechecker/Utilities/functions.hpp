@@ -282,7 +282,7 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
             }
         }
 
-        res = get_type(res);
+        // res = get_type(res);
     }
 
     if (!function->_Node.Function().type_function) {
