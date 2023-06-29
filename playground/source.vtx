@@ -12,12 +12,12 @@
 //     mapped
 // }
 
-import [] : string
+import io : "/Users/adib/Dev/Personal/Vortex/Modules/modules/io/io"
 
-print("here")
+io.input()
 
 type SomeType = (T: Object) => {
-    T.keys().map((k) => k.split())
+    io.input()
 }
 
 type T = SomeType({
@@ -25,4 +25,4 @@ type T = SomeType({
     age: 32
 })
 
-const g: T = 0
+// const g: T = 0

@@ -30,6 +30,12 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
 
     node_ptr function = copy_function(node);
 
+    // Inject current scope into closure
+
+    for (auto& symbol : current_scope->symbols) {
+        function->_Node.Function().closure[symbol.first] = symbol.second;
+    }
+
     auto local_scope = std::make_shared<SymbolTable>();
     auto curr_scope = std::make_shared<SymbolTable>();
 

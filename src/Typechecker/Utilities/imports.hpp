@@ -69,16 +69,6 @@ node_ptr Typechecker::tc_import(node_ptr& node) {
             import_obj->_Node.Object().properties[symbol.first] = symbol.second;
         }
 
-        // We also want to import hooks into the current scope
-
-        // for (auto& hook : import_Typechecker.global_symbol_table->globalHooks_onChange) {
-        //     global_symbol_table->globalHooks_onChange.push_back(hook);
-        // }
-
-        // for (auto& hook : import_Typechecker.current_scope->globalHooks_onCall) {
-        //     current_scope->globalHooks_onCall.push_back(hook);
-        // }
-
         add_symbol(module_name, import_obj, current_scope);
         return new_node(NodeType::NONE);
     }
