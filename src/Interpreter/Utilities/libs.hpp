@@ -170,14 +170,8 @@ node_ptr Interpreter::eval_call_lib_function(node_ptr& lib, node_ptr& node) {
     if (tc) {
         bool should_run = false;
 
-        if (vector_contains_string(lib->Meta.tags, "impure") && vector_contains_string(node->Meta.tags, "pure")) {
+        if (vector_contains_string(node->Meta.tags, "pure") || vector_contains_string(lib->Meta.tags, "pure")) {
             should_run = true;
-        }
-        else if (vector_contains_string(lib->Meta.tags, "pure") && !(vector_contains_string(lib->Meta.tags, "impure"))) {
-            should_run = true;
-        }
-        else {
-            should_run = false;
         }
 
         if (!should_run) {

@@ -1,4 +1,3 @@
-@[pure, impure]
 const lib = load_lib("./bin/io")
 
 const OpenMode = {

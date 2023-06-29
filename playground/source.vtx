@@ -1,18 +1,58 @@
-// // Why doesn't the union type of functions work?
-
-// type ObjectMap = (T: Object, fn: ((k: String, v: ValueOf(T)) => Any) | ((v: ValueOf(T)) => Any)) => {
-//     var mapped = {}
-//     T.keys().forEach((k) => {
-//         if (fn.params.size() == 1) {
-//             mapped[k] = fn(T[k])
-//         } else {
-//             mapped[k] = fn(k, T[k])
-//         }
-//     })
-//     mapped
-// }
-
 import [] : string
-import io : "/Users/adib/Dev/Personal/Vortex/Modules/modules/io/io"
 
-io.open("")
+type ValueOf[T: Object] = T.values().typeof() as Union
+
+type ObjectMap = (T: Object, fn: ((v: ValueOf(T)) => Any) | ((k: String, v: ValueOf(T)) => Any)) => {
+    var mapped = {}
+    T.keys().forEach((k) => {
+        if (fn is (v: ValueOf(T)) => Any) {
+            mapped[k] = fn(T[k])
+        } else {
+            mapped[k] = fn(k, T[k])
+        }
+    })
+    mapped
+}
+
+type User = {
+    id: Number,
+    firstName: String,
+    lastName: String,
+    email: String,
+    phone: String | None
+}
+
+println("HEREE")
+
+const user = User {
+    id: 10,
+    firstName: "John",
+    lastName: "Smith",
+    email: "js@test.com",
+    phone: "0400000000",
+}
+
+type AnonUser = user.ObjectMap((v) => {
+    if (v is String) {
+        ret "***"
+    }
+})
+
+const g: AnonUser = 9
+
+// type AnonUser = user.ObjectMap((k, v) => {
+//     if (k == "firstName" || k == "lastName") {
+//         ret f"${v[0]}****"
+//     }
+
+//     if (k == "email") {
+//         const sp = v.split("@")
+//         ret f"*****@${sp[1]}"
+//     }
+
+//     if (k == "phone") {
+//         ret f"${v[0]}${v[1]}********"
+//     }
+
+//     ret v
+// })
