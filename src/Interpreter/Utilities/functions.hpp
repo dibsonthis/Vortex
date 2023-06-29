@@ -47,6 +47,22 @@ node_ptr Interpreter::eval_function(node_ptr& node) {
         func->_Node.Function().return_type = eval_node(func->_Node.Function().return_type);
     }
 
+    // Pass tags to body
+    node_ptr& body = func->_Node.Function().body;
+    if (body && node->Meta.tags.size() > 0) {
+        if (body->type == NodeType::OBJECT) {
+            for (node_ptr& e: body->_Node.Object().elements) {
+                for (std::string tag : node->Meta.tags) {
+                    e->Meta.tags.push_back(tag);
+                }
+            }
+        } else {
+            for (std::string tag : node->Meta.tags) {
+                body->Meta.tags.push_back(tag);
+            }
+        }
+    }
+
     return func;
 }
 

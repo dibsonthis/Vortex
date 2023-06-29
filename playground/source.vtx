@@ -13,17 +13,6 @@
 // }
 
 import [] : string
-import [] : io
+import io : "/Users/adib/Dev/Personal/Vortex/Modules/modules/io/io"
 
-type SomeType = (T: Object) => {
-    "hello world".split()
-    readf("")
-    writef("h.txt", "g")
-}
-
-type T = SomeType({
-    name: "John",
-    age: 32
-})
-
-// const g: T = 0
+io.open("")

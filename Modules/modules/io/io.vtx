@@ -8,32 +8,42 @@ const OpenMode = {
 	trunc: 32,
 }
 
-const open = (filePath: String, openMode: Number = 8): Pointer 
-	=> { @pure lib.call("open", [filePath, openMode]) }
+@pure
+const open = (filePath: String, openMode: Number = OpenMode.read): Pointer 
+	=> lib.call("open", [filePath, openMode])
 
+@pure
 const close = (fileHandle: Pointer): None 
-	=> { @pure lib.call("close", [fileHandle]) }
+	=> lib.call("close", [fileHandle])
 
+@pure
 const read = (fileHandle: Pointer): String 
-	=> { @pure lib.call("read", [fileHandle]) }
+	=> lib.call("read", [fileHandle])
 
-const write = (fileHandle: Pointer, content: String): None 
-	=> lib.call("write", [fileHandle, content])
-
-const input = (): String 
-	=> lib.call("input", [])
-
+@pure
 const readf = (filePath: String): String => {
 	const file = open(filePath, OpenMode.read)
 	const content = read(file)
 	close(file)
 	content
 }
+
+const open_impure = (filePath: String, openMode: Number = 8): Pointer 
+	=> { lib.call("open", [filePath, openMode]) }
+
+const close_impure = (fileHandle: Pointer): None 
+	=> lib.call("close", [fileHandle])
+
+const write = (fileHandle: Pointer, content: String): None 
+	=> lib.call("write", [fileHandle, content])
+
+const input = (): String 
+	=> lib.call("input", [])
 	
 const writef = (filePath: String, content: String): None => {
-	const file = open(filePath, OpenMode.write or OpenMode.trunc)
+	const file = open_impure(filePath, OpenMode.write or OpenMode.trunc)
 	write(file, content)
-	close(file)
+	close_impure(file)
 }
 	
 const appendf = (filePath: String, content: String): None => {

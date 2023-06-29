@@ -10,6 +10,10 @@ node_ptr Typechecker::tc_dot(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
     node_ptr right = node->_Node.Op().right;
 
+    for (std::string tag : node->Meta.tags) {
+        right->Meta.tags.push_back(tag);
+    }
+
     if (left->type == NodeType::ERROR) {
         return throw_error(left->_Node.Error().message);
     }

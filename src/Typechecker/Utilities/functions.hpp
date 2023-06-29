@@ -92,6 +92,11 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
         add_symbol(name, param_type, current_scope);
     }
 
+    // Evaluate defaults
+    for (auto& def : function->_Node.Function().default_values) {
+        def.second = tc_node(def.second);
+    }
+
     node_ptr res = new_node(NodeType::NONE);
 
     if (function->_Node.Function().body->type != NodeType::OBJECT) {
@@ -322,6 +327,22 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
 
     if (store_func_type) {
         node->_Node.Function().return_type = std::make_shared<Node>(*function->_Node.Function().return_type);
+    }
+
+    // Pass tags to body
+    node_ptr& body = function->_Node.Function().body;
+    if (body && node->Meta.tags.size() > 0) {
+        if (body->type == NodeType::OBJECT) {
+            for (node_ptr& e: body->_Node.Object().elements) {
+                for (std::string tag : node->Meta.tags) {
+                    e->Meta.tags.push_back(tag);
+                }
+            }
+        } else {
+            for (std::string tag : node->Meta.tags) {
+                body->Meta.tags.push_back(tag);
+            }
+        }
     }
 
     return function;
@@ -630,7 +651,7 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
 
         if (args.size() < function->_Node.Function().params.size()) {
             for (auto& def : function->_Node.Function().default_values) {
-                args.push_back(def.second);
+                args.push_back(tc_node(def.second));
             }
         }
 
@@ -708,7 +729,7 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
 
         if (args.size() < fx->_Node.Function().params.size()) {
             for (auto& def : fx->_Node.Function().default_values) {
-                args.push_back(def.second);
+                args.push_back(tc_node(def.second));
             }
         }
 
