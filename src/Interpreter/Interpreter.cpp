@@ -312,10 +312,10 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
             if (node->_Node.Op().value == "??") {
                 return eval_null_op(node);
             }
-            if (node->_Node.Op().value == "&") {
+            if (node->_Node.Op().value == "and") {
                 return eval_bit_and(node);
             }
-            if (node->_Node.Op().value == "|") {
+            if (node->_Node.Op().value == "or") {
                 return eval_bit_or(node);
             }
             if (node->_Node.Op().value == "+=") {

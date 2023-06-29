@@ -19,7 +19,11 @@ node_ptr Typechecker::tc_load_lib(node_ptr& node) {
 
     node_ptr lib_node = new_node(NodeType::LIB);
 
-    if (vector_contains_string(node->Meta.tags, "pure")) {
+    for (std::string tag : node->Meta.tags) {
+        lib_node->Meta.tags.push_back(tag);
+    }
+
+    if (vector_contains_string(lib_node->Meta.tags, "pure")) {
         Interpreter interp;
         lib_node = interp.eval_load_lib(node);
     }

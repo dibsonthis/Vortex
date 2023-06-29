@@ -745,6 +745,9 @@ void Parser::parse_tag(std::string end) {
             if (tag->type == NodeType::ID) {
                 tags.push_back(tag->_Node.ID().value);
             } else if (tag->type == NodeType::LIST) {
+                if (tag->_Node.List().elements.size() == 1 && tag->_Node.List().elements[0]->type == NodeType::COMMA_LIST) {
+                    tag = tag->_Node.List().elements[0];
+                }
                 for (node_ptr& t : tag->_Node.List().elements) {
                     if (t->type != NodeType::ID) {
                         error_and_exit("Tags must be identifiers");
@@ -766,6 +769,10 @@ void Parser::parse_tag(std::string end) {
                     for (std::string tag : tags) {
                         next->_Node.VariableDeclaration().value->Meta.tags.push_back(tag);
                     }
+                }
+            } else if (next->type == NodeType::OP && next->_Node.Op().value == ".") {
+                for (std::string tag : tags) {
+                    next->_Node.Op().right->Meta.tags.push_back(tag);
                 }
             } else {
                 for (std::string tag : tags) {
@@ -1127,6 +1134,8 @@ void Parser::parse(int start, std::string end) {
     parse_bin_op({"&&", "||", "??"}, end);
     reset(start);
     parse_bin_op({"&", "|"}, end);
+    reset(start);
+    parse_bin_op({"and", "or"}, end);
     reset(start);
     flatten_pipes(end);
     reset(start);

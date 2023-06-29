@@ -15,8 +15,8 @@ node_ptr Interpreter::eval_load_lib(node_ptr& node) {
 
     node_ptr lib_node = new_node(NodeType::LIB);
 
-    if (vector_contains_string(node->Meta.tags, "pure")) {
-        lib_node->Meta.tags.push_back("pure");
+    for (std::string tag : node->Meta.tags) {
+        lib_node->Meta.tags.push_back(tag);
     }
 
     if (tc) {
@@ -168,7 +168,12 @@ node_ptr Interpreter::eval_call_lib_function(node_ptr& lib, node_ptr& node) {
     }
 
     if (tc) {
-        if (!vector_contains_string(lib->Meta.tags, "pure")) {
+        if (vector_contains_string(lib->Meta.tags, "impure")) {
+            // This means that the call MUST have a @pure tag
+            if (!vector_contains_string(node->Meta.tags, "pure")) {
+                return new_node(NodeType::NOVALUE);
+            }
+        } else if (!vector_contains_string(node->Meta.tags, "pure")) {
             return new_node(NodeType::NOVALUE);
         }
     }

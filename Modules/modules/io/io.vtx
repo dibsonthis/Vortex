@@ -1,0 +1,43 @@
+@[pure, impure]
+const lib = load_lib("./bin/io")
+
+enum OpenMode {
+	app: 1,
+	read: 8,
+	write: 16,
+	trunc: 32,
+}
+
+const open = (filePath: String, openMode: Number): Pointer 
+	=> lib.call("open", [filePath, openMode])
+
+const close = (fileHandle: Pointer): None 
+	=> lib.call("close", [fileHandle])
+
+const read = (fileHandle: Pointer): String 
+	=> lib.call("read", [fileHandle])
+
+const write = (fileHandle: Pointer, content: String): None 
+	=> lib.call("write", [fileHandle, content])
+
+const input = (): String 
+	=> lib.call("input", [])
+
+const readf = (filePath: String): String => {
+	const file = open(filePath, OpenMode.read)
+	const content = read(file)
+	close(file)
+	content
+}
+	
+const writef = (filePath: String, content: String): None => {
+	const file = open(filePath, OpenMode.write or OpenMode.trunc)
+	write(file, content)
+	close(file)
+}
+	
+const appendf = (filePath: String, content: String): None => {
+	const file = open(filePath, OpenMode.write or OpenMode.app)
+	write(file, content)
+	close(file)
+}

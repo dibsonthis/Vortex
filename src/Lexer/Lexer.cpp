@@ -83,6 +83,16 @@ void Lexer::build_identifier()
 		node->_Node = OpNode();
 		node->_Node.Op().value = name;
 	}
+	else if (name == "or") {
+		node->type = NodeType::OP;
+		node->_Node = OpNode();
+		node->_Node.Op().value = name;
+	}
+		else if (name == "and") {
+		node->type = NodeType::OP;
+		node->_Node = OpNode();
+		node->_Node.Op().value = name;
+	}
 	else if (name == "None")
 	{
 		node->type = NodeType::NONE;
