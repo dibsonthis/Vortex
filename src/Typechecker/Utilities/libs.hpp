@@ -18,6 +18,12 @@ node_ptr Typechecker::tc_load_lib(node_ptr& node) {
     }
 
     node_ptr lib_node = new_node(NodeType::LIB);
+
+    if (vector_contains_string(node->Meta.tags, "pure")) {
+        Interpreter interp;
+        lib_node = interp.eval_load_lib(node);
+    }
+
     return lib_node;
 }
 

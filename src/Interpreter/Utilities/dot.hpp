@@ -525,7 +525,7 @@ node_ptr Interpreter::list_method_append(node_ptr& list, node_ptr& list_type, no
         return throw_error("Cannot insert value of type '" + printable(_type) + "' into container of type '" + printable(list_type) + "'");
     }
 
-    list->_Node.List().elements.push_back(value);
+    list->_Node.List().elements.push_back(std::make_shared<Node>(*value));
     return list;
 }
 
@@ -543,7 +543,7 @@ node_ptr Interpreter::list_method_prepend(node_ptr& list, node_ptr& list_type, n
         return throw_error("Cannot insert value of type '" + printable(_type) + "' into container of type '" + printable(list_type) + "'");
     }
 
-    list->_Node.List().elements.insert(list->_Node.List().elements.begin(), value);
+    list->_Node.List().elements.insert(list->_Node.List().elements.begin(), std::make_shared<Node>(*value));
     return list;
 }
 
@@ -567,7 +567,7 @@ node_ptr Interpreter::list_method_insert(node_ptr& list, node_ptr& list_type, no
         index = list->_Node.List().elements.size();
     }
 
-    list->_Node.List().elements.insert(list->_Node.List().elements.begin() + index, value);
+    list->_Node.List().elements.insert(list->_Node.List().elements.begin() + index, std::make_shared<Node>(*value));
     return list;
 }
 

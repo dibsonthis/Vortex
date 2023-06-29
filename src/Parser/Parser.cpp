@@ -733,6 +733,52 @@ void Parser::parse_import(std::string end) {
     }
 }
 
+void Parser::parse_tag(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
+            break;
+        }
+
+        if (current_node->type == NodeType::OP && current_node->_Node.Op().value == "@") {
+            node_ptr tag = current_node->_Node.Op().right;
+            std::vector<std::string> tags;
+            if (tag->type == NodeType::ID) {
+                tags.push_back(tag->_Node.ID().value);
+            } else if (tag->type == NodeType::LIST) {
+                for (node_ptr& t : tag->_Node.List().elements) {
+                    if (t->type != NodeType::ID) {
+                        error_and_exit("Tags must be identifiers");
+                    }
+                    tags.push_back(t->_Node.ID().value);
+                }
+            } else {
+                error_and_exit("Tag must be an identifier");
+            }
+
+            node_ptr next = peek();
+
+            if (next->type == NodeType::CONSTANT_DECLARATION) {
+                for (std::string tag : tags) {
+                    next->_Node.ConstantDeclatation().value->Meta.tags.push_back(tag);
+                }
+            } else if (next->type == NodeType::VARIABLE_DECLARATION) {
+                if (next->_Node.VariableDeclaration().value) {
+                    for (std::string tag : tags) {
+                        next->_Node.VariableDeclaration().value->Meta.tags.push_back(tag);
+                    }
+                }
+            } else {
+                for (std::string tag : tags) {
+                    next->Meta.tags.push_back(tag);
+                }
+            }
+
+            erase_curr();
+        }
+        advance();
+    }
+}
+
 void Parser::parse_for_loop(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
@@ -1056,6 +1102,8 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_dot(end);
     reset(start);
+    parse_un_op({"@"}, end);
+    reset(start);
     parse_un_op({"!"}, end);
     reset(start);
     parse_un_op_amb({"+", "-"}, end);
@@ -1105,6 +1153,8 @@ void Parser::parse(int start, std::string end) {
     parse_const(end);
     reset(start);
     parse_type(end);
+    reset(start);
+    parse_tag(end);
     reset(start);
     parse_return(end);
     reset(start);

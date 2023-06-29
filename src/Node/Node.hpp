@@ -223,6 +223,8 @@ struct MetaInformation {
 	node_ptr onChangeFunction;
 	node_ptr onCallFunction;
 	node_ptr onInitFunction;
+	// Tags
+	std::vector<std::string> tags;
 };
 
 struct Hooks {

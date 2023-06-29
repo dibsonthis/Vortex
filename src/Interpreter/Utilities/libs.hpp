@@ -15,8 +15,14 @@ node_ptr Interpreter::eval_load_lib(node_ptr& node) {
 
     node_ptr lib_node = new_node(NodeType::LIB);
 
+    if (vector_contains_string(node->Meta.tags, "pure")) {
+        lib_node->Meta.tags.push_back("pure");
+    }
+
     if (tc) {
-        return lib_node;
+        if (!vector_contains_string(node->Meta.tags, "pure")) {
+            return lib_node;
+        }
     }
 
     #if GCC_COMPILER
@@ -162,7 +168,9 @@ node_ptr Interpreter::eval_call_lib_function(node_ptr& lib, node_ptr& node) {
     }
 
     if (tc) {
-        return new_node(NodeType::NOVALUE);
+        if (!vector_contains_string(lib->Meta.tags, "pure")) {
+            return new_node(NodeType::NOVALUE);
+        }
     }
 
     return lib->_Node.Lib().call_function(name->_Node.String().value, func_args->_Node.List().elements);

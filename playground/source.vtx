@@ -14,59 +14,15 @@
 
 import [] : string
 
-type ValueOf[T: Object] = T.values().typeof() as Union
-
-type ObjectMap = (T: Object, fn: (k: String, v: ValueOf(T)) => Any) => {
-    var mapped = {}
-    T.keys().forEach((k) => {
-        mapped[k] = fn(k, T[k])
-    })
-    mapped
-}
-
-type User = {
-    id: Number,
-    firstName: String,
-    lastName: String,
-    email: String,
-    phone: String | None
-}
-
-type Admin = {
-    id: String,
-    firstName: String,
-    lastName: String,
-    email: String,
-    phone: String | None,
-    level: Number
-}
-
-const admin = Admin {
-    id: "0001",
-    firstName: "John",
-    lastName: "Smith",
-    email: "js@test.com",
-    phone: "0400000000",
-    level: 1
-}
-
-const user = User {
-    id: 10,
-    firstName: "John",
-    lastName: "Smith",
-    email: "js@test.com",
-    phone: "0400000000",
-}
-
 print("here")
 
-const h = user.ObjectMap((k, v) => {
-    if (k == "email") {
-        const sp = v.split("@")
-        ret f"*****@${sp[1]}"
-    } else {
-        ret v
-    }
+type SomeType = (T: Object) => {
+    T.keys().map((k) => k.split())
+}
+
+type T = SomeType({
+    name: "John",
+    age: 32
 })
 
-println(h)
+const g: T = 0
