@@ -61,6 +61,7 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
 
         Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
         import_interpreter.global_interpreter = this;
+        import_interpreter.tc = tc;
         import_interpreter.evaluate();
 
         std::filesystem::current_path(current_path);
@@ -68,16 +69,6 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
         for (auto& symbol : import_interpreter.current_scope->symbols) {
             import_obj->_Node.Object().properties[symbol.first] = symbol.second;
         }
-
-        // We also want to import hooks into the current scope
-
-        // for (auto& hook : import_interpreter.global_symbol_table->globalHooks_onChange) {
-        //     global_symbol_table->globalHooks_onChange.push_back(hook);
-        // }
-
-        // for (auto& hook : import_interpreter.current_scope->globalHooks_onCall) {
-        //     current_scope->globalHooks_onCall.push_back(hook);
-        // }
 
         add_symbol(module_name, import_obj, current_scope);
         return new_node(NodeType::NONE);
@@ -116,6 +107,7 @@ node_ptr Interpreter::eval_import(node_ptr& node) {
 
         Interpreter import_interpreter(import_parser.nodes, import_parser.file_name);
         import_interpreter.global_interpreter = this;
+        import_interpreter.tc = tc;
         import_interpreter.evaluate();
 
         std::filesystem::current_path(current_path);

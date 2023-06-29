@@ -1,6 +1,36 @@
+// // Why doesn't the union type of functions work?
 
-type KeyOf[T: Object] = T.keys() as Union
+// type ObjectMap = (T: Object, fn: ((k: String, v: ValueOf(T)) => Any) | ((v: ValueOf(T)) => Any)) => {
+//     var mapped = {}
+//     T.keys().forEach((k) => {
+//         if (fn.params.size() == 1) {
+//             mapped[k] = fn(T[k])
+//         } else {
+//             mapped[k] = fn(k, T[k])
+//         }
+//     })
+//     mapped
+// }
+
+import [] : string
+
 type ValueOf[T: Object] = T.values().typeof() as Union
+
+type ObjectMap = (T: Object, fn: (k: String, v: ValueOf(T)) => Any) => {
+    var mapped = {}
+    T.keys().forEach((k) => {
+        mapped[k] = fn(k, T[k])
+    })
+    mapped
+}
+
+type User = {
+    id: Number,
+    firstName: String,
+    lastName: String,
+    email: String,
+    phone: String | None
+}
 
 type Admin = {
     id: String,
@@ -20,22 +50,23 @@ const admin = Admin {
     level: 1
 }
 
-println(admin)
-
-type MapObject[T: Object] = (obj: T, fn: (k: KeyOf(T), v: ValueOf(T)) => Any) => {
-    var mapped = {}
-    obj.keys().map((k) => {
-        mapped[k] = fn(k as KeyOf(obj), obj[k])
-    })
-    mapped
+const user = User {
+    id: 10,
+    firstName: "John",
+    lastName: "Smith",
+    email: "js@test.com",
+    phone: "0400000000",
 }
 
-const AdminMap = MapObject(admin)
+print("here")
 
-admin.AdminMap((k, v) => {
-    if (v is String && k != "phone") {
-        ret "_" + v + "_"
+const h = user.ObjectMap((k, v) => {
+    if (k == "email") {
+        const sp = v.split("@")
+        ret f"*****@${sp[1]}"
+    } else {
+        ret v
     }
+})
 
-    ret v
-}).println()
+println(h)

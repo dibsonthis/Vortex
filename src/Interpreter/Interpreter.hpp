@@ -52,6 +52,9 @@ public:
     int try_catch = 0;
     std::string error = "";
 
+    // Limits the evaluator when called at compile time
+    bool tc = false;
+
     // Threading API
     std::unordered_map<uint32_t, std::shared_future<node_ptr>> _futures;
 

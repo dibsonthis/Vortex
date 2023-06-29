@@ -188,7 +188,6 @@ node_ptr Interpreter::eval_pow(node_ptr& node) {
     }
 
     return throw_error("Cannot perform operation '^' on types: " + node_repr(left) + ", " + node_repr(right));
-    return new_node(NodeType::NONE);
 }
 
 node_ptr Interpreter::eval_mod(node_ptr& node) {

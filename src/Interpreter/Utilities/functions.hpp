@@ -124,10 +124,16 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func = nullptr) {
     if (node->_Node.FunctionCall().name == "print") {
         if (node->_Node.FunctionCall().args.size() == 1) {
             node_ptr evaluated_arg = eval_node(node->_Node.FunctionCall().args[0]);
+            if (tc) {
+                return new_node(NodeType::NONE);
+            }
             std::cout << printable(evaluated_arg) << std::flush;
         } else {
             for (node_ptr arg : node->_Node.FunctionCall().args) {
                 node_ptr evaluated_arg = eval_node(arg);
+                if (tc) {
+                    return new_node(NodeType::NONE);
+                }
                 std::cout << printable(evaluated_arg) << std::flush;
             }
         }
@@ -137,11 +143,17 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func = nullptr) {
     if (node->_Node.FunctionCall().name == "println") {
         if (node->_Node.FunctionCall().args.size() == 1) {
             node_ptr evaluated_arg = eval_node(node->_Node.FunctionCall().args[0]);
+            if (tc) {
+                return new_node(NodeType::NONE);
+            }
             std::cout << printable(evaluated_arg) << std::flush;
             std::cout << "\n";
         } else {
             for (node_ptr arg : node->_Node.FunctionCall().args) {
                 node_ptr evaluated_arg = eval_node(arg);
+                if (tc) {
+                    return new_node(NodeType::NONE);
+                }
                 std::cout << printable(evaluated_arg) << std::flush;
                 std::cout << '\n';
             }
@@ -547,6 +559,16 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func = nullptr) {
                     }
                 }
                 break;
+            }
+        }
+    }
+
+    if (tc) {
+        if (res->type == NodeType::NOVALUE) {
+            if (function->_Node.Function().return_type) {
+                res = function->_Node.Function().return_type;
+            } else {
+                res = new_node(NodeType::ANY);
             }
         }
     }

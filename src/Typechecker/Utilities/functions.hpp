@@ -638,9 +638,10 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
         symt_ptr call_scope = std::make_shared<SymbolTable>();
         call_scope->file_name = node->_Node.FunctionCall().name;
         call_scope->parent = current_scope;
-        current_scope = call_scope;
+        //current_scope = call_scope;
 
         Interpreter interp;
+        interp.tc = true;
         interp.current_scope = call_scope;
 
         for (int i = 0; i < args.size(); i++) {
@@ -680,7 +681,7 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
             result = tc_function(result);
         }
 
-        current_scope = current_scope->parent;
+        //current_scope = current_scope->parent;
 
         return result;
     }

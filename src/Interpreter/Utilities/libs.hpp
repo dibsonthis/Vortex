@@ -15,6 +15,10 @@ node_ptr Interpreter::eval_load_lib(node_ptr& node) {
 
     node_ptr lib_node = new_node(NodeType::LIB);
 
+    if (tc) {
+        return lib_node;
+    }
+
     #if GCC_COMPILER
         #if __apple__ || __linux__
             void* handle = dlopen(path->_Node.String().value.c_str(), RTLD_LAZY);
@@ -155,6 +159,10 @@ node_ptr Interpreter::eval_call_lib_function(node_ptr& lib, node_ptr& node) {
 
     if (func_args->type != NodeType::LIST) {
         return throw_error("Library function calls expects second argument to be a list");
+    }
+
+    if (tc) {
+        return new_node(NodeType::NOVALUE);
     }
 
     return lib->_Node.Lib().call_function(name->_Node.String().value, func_args->_Node.List().elements);
