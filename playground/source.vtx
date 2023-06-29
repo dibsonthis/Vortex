@@ -12,12 +12,13 @@
 //     mapped
 // }
 
-import io : "/Users/adib/Dev/Personal/Vortex/Modules/modules/io/io"
-
-io.input()
+import [] : string
+import [] : io
 
 type SomeType = (T: Object) => {
-    io.input()
+    "hello world".split()
+    readf("")
+    writef("h.txt", "g")
 }
 
 type T = SomeType({
