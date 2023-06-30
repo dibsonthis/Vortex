@@ -370,6 +370,22 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
         return get_type(arg);
     }
 
+    if (node->_Node.FunctionCall().name == "tags") {
+
+        int num_args = 1;
+
+        if (node->_Node.FunctionCall().args.size() != num_args) {
+            return throw_error("Function '" + node->_Node.FunctionCall().name + "' expects " + std::to_string(num_args) + " argument(s)");
+        }
+
+        node_ptr arg = tc_node(node->_Node.FunctionCall().args[0]);
+        node_ptr tags_list = new_node(NodeType::LIST);
+        for (std::string tag : arg->Meta.tags) {
+            tags_list->_Node.List().elements.push_back(new_string_node(tag));
+        }
+        return tags_list;
+    }
+
     if (node->_Node.FunctionCall().name == "import") {
 
         int num_args = 1;

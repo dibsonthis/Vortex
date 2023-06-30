@@ -770,7 +770,7 @@ void Parser::parse_tag(std::string end) {
                         next->_Node.VariableDeclaration().value->Meta.tags.push_back(tag);
                     }
                 }
-            } else if (next->type == NodeType::OP && next->_Node.Op().value == ".") {
+            } else if (next->type == NodeType::OP && (next->_Node.Op().value == "." || next->_Node.Op().value == ":")) {
                 for (std::string tag : tags) {
                     next->_Node.Op().right->Meta.tags.push_back(tag);
                 }
@@ -1117,8 +1117,6 @@ void Parser::parse(int start, std::string end) {
     reset(start);
     parse_un_op_amb({"&"}, end);
     reset(start);
-	parse_bin_op({"as", "is", "in"}, end);
-    reset(start);
     parse_bin_op({"??"}, end);
     reset(start);
     parse_bin_op({"^"}, end);
@@ -1144,6 +1142,8 @@ void Parser::parse(int start, std::string end) {
     parse_object_desconstruct(end);
     reset(start);
     parse_func_def(end);
+    reset(start);
+    parse_bin_op({"as", "is", "in"}, end);
     reset(start);
     parse_hook_implementation(end);
     reset(start);

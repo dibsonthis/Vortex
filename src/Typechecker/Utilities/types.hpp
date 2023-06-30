@@ -370,6 +370,19 @@ bool Typechecker::match_types(node_ptr& _type, node_ptr& _value) {
             return true;
         }
 
+        // If type is an object with a single element, it means it's a type object
+        // In this case, we need to create a new object with the same keys as the value
+        // but with the type provided in the type object
+
+        if (type->_Node.Object().elements.size() == 1 && type->_Node.Object().properties.size() == 0) {
+            node_ptr index_type = tc_node(type->_Node.Object().elements[0]);
+            for (auto& prop : value->_Node.Object().properties) {
+                type->_Node.Object().properties[prop.first] = index_type;
+            }
+            type->_Node.Object().elements.clear();
+            _type = type;
+        }
+
         // Remove references to _init() here
 
         if (type->_Node.Object().properties.count("_init")) {

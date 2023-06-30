@@ -193,7 +193,7 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
             return eval_pipe_list(node);
         }
         case NodeType::OBJECT: {
-            if (node->_Node.Object().elements.size() == 1 && (node->_Node.Object().elements[0]->type == NodeType::COMMA_LIST || node->_Node.Object().elements[0]->_Node.Op().value == ":")) {
+            if (node->_Node.Object().elements.size() == 1 && (node->_Node.Object().elements[0]->type == NodeType::COMMA_LIST || node->_Node.Object().elements[0]->type == NodeType::OP && node->_Node.Object().elements[0]->_Node.Op().value == ":")) {
                 return eval_object(node);
             }
             return node;
