@@ -1,0 +1,74 @@
+const lib = load_lib("./bin/sqlite")
+
+const _connect = (filePath: String)
+	=> lib.call("connect", [filePath])
+
+const _execute = (dbPtr: Pointer, statement: String)
+	=> lib.call("execute", [dbPtr, statement])
+
+const _close = (dbPtr: Pointer)
+	=> lib.call("close", [dbPtr])
+
+type SqliteDB = {
+	_ref: Pointer,
+	execute: ((x: String) => List) = (statement: String) => _execute(this._ref, statement),
+	close: Function = () => _close(this._ref)
+}
+
+const connect = (filePath: String): SqliteDB => {
+	const ref = _connect(filePath)
+	if (type(ref) == "Error") {
+		ret SqliteDB {
+			_ref: Pointer
+		}
+	}
+	SqliteDB {
+		_ref: ref
+	}
+}
+
+const QueryResultType = [{columns: [String], values: [String]}]
+
+const toDicts = (queryResult: QueryResultType, schema: Object) => {
+
+	if (queryResult.empty()) {
+		ret queryResult
+	}
+
+	// Map out a type
+	var ResultType = {}
+	for ((queryResult[0] ?? []).columns, i, col) {
+		ResultType[col] = Any
+	}
+
+	const dict = queryResult.map((elem) => {
+		var mapping = {}
+		for (elem.columns, i, column) {
+			if (schema.keys().filter((key) => (key == column)).empty()) {
+				mapping[column] = elem.values[i]
+			} else if (schema[column] == Number) {
+				try {
+					mapping[column] = number(elem.values[i])
+				} catch (e) {
+					println(f"Warning: Could not transform '${column}' to number, defaulting to string")
+					mapping[column] = elem.values[i]
+				}
+			} else if (schema[column] == Boolean) {
+				mapping[column] = (elem.values[i] == "TRUE")
+			} else if (schema[column] == None) {
+				if (mapping[column] == "NULL") {
+					mapping[column] = None
+				} else {
+					println(f"Warning: Could not transform '${column}' to None, defaulting to string")
+				}
+			} else {
+				mapping[column] = elem.values[i]
+			}
+		}
+		const typed_mapping: ResultType = mapping
+	})
+}
+
+const toDicts = (queryResult: QueryResultType) => {
+	queryResult.toDicts({})
+}

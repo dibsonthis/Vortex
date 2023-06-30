@@ -18,7 +18,7 @@ node_ptr Typechecker::tc_const_decl(node_ptr& node) {
         value = tc_node(value->_Node.Ref().value);
     }
 
-    if (node->_Node.ConstantDeclatation().type) {
+    if (node->_Node.ConstantDeclatation().type && value->type != NodeType::NOVALUE) {
         node->_Node.ConstantDeclatation().type = tc_node(node->_Node.ConstantDeclatation().type);
         node_ptr value_type = get_type(value);
         node_ptr declared_type = node->_Node.ConstantDeclatation().type;
@@ -47,6 +47,10 @@ node_ptr Typechecker::tc_const_decl(node_ptr& node) {
 
     if (node->_Node.ConstantDeclatation().type && !node->_Node.ConstantDeclatation().type->TypeInfo.is_refinement_type) {
         value->TypeInfo.type = node->_Node.ConstantDeclatation().type;
+        // Support for NOVALUE in case it's a typed function running an impure lib call
+        if (value->type == NodeType::ANY || value->type == NodeType::NOVALUE) {
+            value = value->TypeInfo.type;
+        }
     }
 
     if (var && value->type == NodeType::FUNC) {
@@ -77,7 +81,7 @@ node_ptr Typechecker::tc_var_decl(node_ptr& node) {
         value = tc_node(value->_Node.Ref().value);
     }
 
-    if (node->_Node.VariableDeclaration().type) {
+    if (node->_Node.VariableDeclaration().type && value->type != NodeType::NOVALUE) {
         node->_Node.VariableDeclaration().type = tc_node(node->_Node.VariableDeclaration().type);
         node_ptr value_type = get_type(value);
         node_ptr declared_type = node->_Node.VariableDeclaration().type;
@@ -106,6 +110,10 @@ node_ptr Typechecker::tc_var_decl(node_ptr& node) {
 
     if (node->_Node.VariableDeclaration().type && !node->_Node.VariableDeclaration().type->TypeInfo.is_refinement_type) {
         value->TypeInfo.type = node->_Node.VariableDeclaration().type;
+        // Support for NOVALUE in case it's a typed function running an impure lib call
+        if (value->type == NodeType::ANY || value->type == NodeType::NOVALUE) {
+            value = value->TypeInfo.type;
+        }
     }
 
     if (var && value->type == NodeType::FUNC) {

@@ -161,7 +161,7 @@ node_ptr Typechecker::tc_accessor(node_ptr& node) {
         if (container->Meta.is_const) {
 
             if (index >= container->_Node.List().elements.size() || index < 0) {
-                return new_node(NodeType::NONE);
+                return new_node(NodeType::ANY);
             }
 
             return container->_Node.List().elements[index];

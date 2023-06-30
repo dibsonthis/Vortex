@@ -61,10 +61,13 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
     // Inject current function into scope,
     // If not typed, make it Any to avoid recursion
 
-    if (function->_Node.Function().return_type) {
-        add_symbol(function->_Node.Function().name, function, curr_scope);
-    } else {
-        add_symbol(function->_Node.Function().name, function, curr_scope);
+    node_ptr existing_func = get_symbol(function->_Node.Function().name, curr_scope);
+    if (!existing_func) {
+        if (function->_Node.Function().return_type) {
+            add_symbol(function->_Node.Function().name, function, curr_scope);
+        } else {
+            add_symbol(function->_Node.Function().name, function, curr_scope);
+        }
     }
 
     for (int i = 0; i < function->_Node.Function().params.size(); i++) {

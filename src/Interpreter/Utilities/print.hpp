@@ -167,6 +167,12 @@ std::string Interpreter::printable(node_ptr& node, std::vector<node_ptr> bases) 
         case NodeType::ANY: {
             return "Any";
         }
+        case NodeType::NOVALUE: {
+            return "NoValue";
+        }
+        case NodeType::ERROR: {
+            return "Error";
+        }
         case NodeType::ID: {
             return node->_Node.ID().value;
         }

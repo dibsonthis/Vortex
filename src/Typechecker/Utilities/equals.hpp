@@ -313,7 +313,7 @@ node_ptr Typechecker::tc_eq_accessor(node_ptr& left, node_ptr& value, bool is_re
                     return throw_error("Cannot add object property of type '" + printable(_type) + "', accepted types are: " + printable(index_type), value);
                 }
             }
-            container->_Node.Object().properties[accessor->_Node.List().elements[0]->_Node.String().value] = value;
+            // container->_Node.Object().properties[accessor->_Node.List().elements[0]->_Node.String().value] = value;
             return value;
         }
 

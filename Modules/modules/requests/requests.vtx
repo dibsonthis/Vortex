@@ -1,0 +1,104 @@
+const lib = load_lib("./bin/requests")
+const json_lib = load_lib("../json/bin/json")
+const str_lib = load_lib("../string/bin/string")
+
+const _split = (str: String, delim: String): [String] => str_lib.call("split", [str, delim])
+
+type Response = {
+	version: String = "",
+	status: Number = 0,
+	body: String = "",
+	location: String = "",
+	headers: [String] = [],
+	toJson: Function = (): Object | List => json_lib.call("parse", [this.body])
+}
+
+const ContentTypes = {
+	html: "text/html",
+	json: "application/json"
+}
+
+type ContentType = ContentTypes.values() as Union
+
+const get = (url: String, endpoint: String): Response => { 
+	const obj = lib.call("get", [url, endpoint])
+	const res = Response {
+		version: obj.version,
+		status: obj.status,
+		body: obj.body,
+		location: obj.location,
+		headers: obj.headers
+	}
+	ret res
+}
+
+const get = (url: String): Response => {
+	const split = _split(url, "/")
+	if (split.length() == 4) {
+		ret get(split[0] + "//" + split[1] + split[2], "/" + split[3])
+	}
+	ret Response {}
+}
+
+const post = (url: String, endpoint: String, payload: Object | String): Response => { 
+	const obj = lib.call("post", [url, endpoint, payload])
+	const res = Response {
+		version: obj.version,
+		status: obj.status,
+		body: obj.body,
+		location: obj.location,
+		headers: obj.headers
+	}
+	ret res
+}
+
+const post = (url: String, endpoint: String): Response => { 
+	ret post(url, endpoint, {})
+}
+
+const _server = (): Pointer => 
+	lib.call("server", [])
+
+const _server_ssl = (cert_path: String, private_key_path: String): Pointer => 
+	lib.call("server_ssl", [cert_path, private_key_path])
+
+const start = (server: Pointer, host: String, port: Number, ssl: Boolean) => 
+	lib.call("start", [server, host, port, ssl])
+
+const set_get = (server: Pointer, route: String, callback: Function, content_type: ContentType, ssl: Boolean) => 
+	lib.call("set_get", [server, route, callback, content_type, ssl])
+
+const set_post = 
+	(server: Pointer, route: String, callback: Function, content_type: ContentType, ssl: Boolean) => 
+		lib.call("set_post", [server, route, callback, content_type, ssl])
+
+type Server = {
+	_ref: Pointer,
+	start: Function = (host: String, port: Number) => start(this._ref, host, port, false),
+	get: Function = (route: String, callback: Function, content_type: ContentType) => set_get(this._ref, route, callback, content_type, false),
+	get: Function = (route: String, callback: Function) => set_get(this._ref, route, callback, ContentTypes.json, false),
+	post: Function = (route: String, callback: Function, content_type: ContentType) => set_post(this._ref, route, callback, content_type, false),
+	post: Function = (route: String, callback: Function) => set_post(this._ref, route, callback, ContentTypes.json, false)
+}
+
+type ServerSSL = {
+	_ref: Pointer,
+	start: Function = (host: String, port: Number) => start(this._ref, host, port, true),
+	get: Function = (route: String, callback: Function, content_type: ContentType) => set_get(this._ref, route, callback, content_type, true),
+	get: Function = (route: String, callback: Function) => set_get(this._ref, route, callback, ContentTypes.json, true),
+	post: Function = (route: String, callback: Function, content_type: ContentType) => set_post(this._ref, route, callback, content_type, true),
+	post: Function = (route: String, callback: Function) => set_post(this._ref, route, callback, ContentTypes.json, true)
+}
+
+const server = () => Server {_ref: _server()}
+const server_ssl = 
+	(cert_path: String, private_key_path: String) 
+		=> ServerSSL {_ref: _server_ssl(cert_path, private_key_path)}
+
+type Redirect = {
+	route: String
+}
+
+const redirect = (route: String): Redirect => {
+	Redirect { route: route }
+}

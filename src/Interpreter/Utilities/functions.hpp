@@ -20,7 +20,11 @@ node_ptr Interpreter::eval_function(node_ptr& node) {
     }
 
     if (func->_Node.Function().name != "") {
-        func->_Node.Function().closure[func->_Node.Function().name] = func;
+        if (func->_Node.Function().closure.count(func->_Node.Function().name) && func->_Node.Function().closure[func->_Node.Function().name]) {
+            func->_Node.Function().closure[func->_Node.Function().name]->_Node.Function().dispatch_functions.push_back(func);
+        } else {
+            func->_Node.Function().closure[func->_Node.Function().name] = func;
+        }
     }
 
     // Go through param types and evaluate them
@@ -42,7 +46,13 @@ node_ptr Interpreter::eval_function(node_ptr& node) {
     if (func->_Node.Function().body->type == NodeType::ID) {
         node_ptr symbol = get_symbol(func->_Node.Function().body->_Node.ID().value, current_scope);
         if (symbol) {
-            func->_Node.Function().body = symbol;
+            func->_Node.Function().return_type = symbol;
+            if (symbol->type == NodeType::OBJECT) {
+                func->_Node.Function().body = new_node(NodeType::OBJECT);
+                func->_Node.Function().body->_Node.Object().elements.push_back(symbol);
+            } else {
+                func->_Node.Function().body = symbol;
+            }
         }
     } else if (func->_Node.Function().body->TypeInfo.is_type) {
         func->_Node.Function().body = eval_node(func->_Node.Function().body);

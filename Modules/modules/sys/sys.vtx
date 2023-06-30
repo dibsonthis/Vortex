@@ -1,0 +1,10 @@
+const lib = load_lib("./bin/sys")
+
+@pure
+const argc = lib.call("argc", [])
+
+@pure
+const argv = lib.call("argv", [])
+
+const pause = (): None 
+	=> lib.call("pause", [])

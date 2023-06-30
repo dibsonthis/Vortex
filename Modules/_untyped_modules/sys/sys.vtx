@@ -1,7 +1,0 @@
-const lib = load_lib("./bin/sys")
-
-var argc = lib.call("argc", [])
-var argv = lib.call("argv", [])
-
-var pause = (): None 
-	=> lib.call("pause", [])
