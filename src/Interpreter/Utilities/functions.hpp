@@ -31,6 +31,19 @@ node_ptr Interpreter::eval_function(node_ptr& node) {
         def.second = eval_node(def.second);
     }
 
+    // Check if it's a type:
+    //  - if body is an ID
+    //  - if body is a type
+
+    if (func->_Node.Function().body->type == NodeType::ID) {
+        node_ptr symbol = get_symbol(func->_Node.Function().body->_Node.ID().value, current_scope);
+        if (symbol) {
+            func->_Node.Function().body = symbol;
+        }
+    } else if (func->_Node.Function().body->TypeInfo.is_type) {
+        func->_Node.Function().body = eval_node(func->_Node.Function().body);
+    }
+
     // Check if default values match the type
 
     for (auto& def : func->_Node.Function().default_values) {

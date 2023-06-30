@@ -185,7 +185,10 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
                 }
 
                 for (node_ptr& ret : evaluated_expr->_Node.List().elements) {
-                    node_ptr res = tc_node(ret->_Node.Return().value);
+                    node_ptr res = nullptr;
+                    if (ret->type == NodeType::RETURN) {
+                        res = tc_node(ret->_Node.Return().value);
+                    }
                     if (res) {
                         return_types.push_back(res);
                     } else {

@@ -711,12 +711,12 @@ node_ptr Interpreter::eval_is(node_ptr& node) {
     if (left->TypeInfo.type) {
         node_ptr& type = left->TypeInfo.type;
         left->TypeInfo.type = nullptr;
-        bool match = match_types(left, right);
+        bool match = match_types(right, left);
         left->TypeInfo.type = type;
         return new_boolean_node(match);
     }
 
-    return new_boolean_node(match_types(left, right));
+    return new_boolean_node(match_types(right, left));
 }
 
 node_ptr Interpreter::eval_in(node_ptr& node) {
