@@ -19,6 +19,10 @@ node_ptr Interpreter::eval_function(node_ptr& node) {
         func->_Node.Function().closure[symbol.first] = symbol.second;
     }
 
+    if (func->_Node.Function().name != "") {
+        func->_Node.Function().closure[func->_Node.Function().name] = func;
+    }
+
     // Go through param types and evaluate them
 
     for (auto& param_type : func->_Node.Function().param_types) {
@@ -580,7 +584,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func = nullptr) {
     // Inject closure into local scope
 
     for (auto& elem : function->_Node.Function().closure) {
-        add_symbol(elem.first, elem.second, curr_scope);
+        add_symbol(elem.first, elem.second, current_scope);
     }
 
     int num_empty_args = std::count(function->_Node.Function().args.begin(), function->_Node.Function().args.end(), nullptr);
@@ -592,7 +596,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func = nullptr) {
     for (int i = 0; i < args.size(); i++) {
         std::string name = function->_Node.Function().params[i]->_Node.ID().value;
         node_ptr value = args[i];
-        add_symbol(name, value, curr_scope);
+        add_symbol(name, value, current_scope);
     }
 
     node_ptr res = function;

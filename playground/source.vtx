@@ -1,61 +1,13 @@
-type ValueOf[T: Object] = T.values().typeof() as Union
+import os
 
-type User = {
-    id: Number,
-    firstName: String,
-    lastName: String,
-    email: String,
-    phone: String | None
+const printDirs = (path: String) => {
+	for (os.listDir(path), index, item) {
+		if (item.isDir) {
+			println(item.filePath)
+			printDirs(item.filePath)
+		}
+	}
 }
 
-type Admin = {
-    id: String,
-    firstName: String,
-    lastName: String,
-    email: String,
-    phone: String | None,
-    level: Number
-}
-
-const admin = Admin {
-    id: "0001",
-    firstName: "John",
-    lastName: "Smith",
-    email: "js@test.com",
-    phone: "0400000000",
-    level: 1
-}
-
-const user = User {
-    id: 10,
-    firstName: "John",
-    lastName: "Smith",
-    email: "js@test.com",
-    phone: "0400000000",
-}
-
-type Alter[T: Object, V] = {
-    var obj = {}
-    T.keys().forEach((k) => {
-        obj[k] = V
-    })
-    obj
-}
-
-type ObjectMap[T: Object, V] = (obj: T, fn: ((v: ValueOf(T)) => V) | ((k: String, v: ValueOf(T)) => V)) => {
-    var mapped: Alter(T, V) = Alter(T, V)
-    obj.keys().forEach((k) => {
-        if (fn is (v: ValueOf(T)) => V) {
-            mapped[k] = fn(obj[k])
-        } else if (fn is (k: String, v: ValueOf(T)) => V) {
-            mapped[k] = fn(k, obj[k])
-        }
-    })
-    mapped
-}
-
-const map = ObjectMap(Admin, String)
-const map = ObjectMap(User, String | Number)
-
-const admin2 = admin.map((e) => "****")
-const user2 = user.map((e) => "****")
+printDirs(".")
+println(os.osName())
