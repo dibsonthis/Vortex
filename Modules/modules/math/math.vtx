@@ -1,3 +1,4 @@
+@pure
 const lib = load_lib("./bin/math")
 
 const e = 2.718281828459045

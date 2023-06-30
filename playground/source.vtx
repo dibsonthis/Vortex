@@ -34,27 +34,28 @@ const user = User {
     phone: "0400000000",
 }
 
+type Alter[T: Object, V] = {
+    var obj = {}
+    T.keys().forEach((k) => {
+        obj[k] = V
+    })
+    obj
+}
+
 type ObjectMap[T: Object, V] = (obj: T, fn: ((v: ValueOf(T)) => V) | ((k: String, v: ValueOf(T)) => V)) => {
-    var mapped: { V } = {}
+    var mapped: Alter(T, V) = Alter(T, V)
     obj.keys().forEach((k) => {
         if (fn is (v: ValueOf(T)) => V) {
             mapped[k] = fn(obj[k])
         } else if (fn is (k: String, v: ValueOf(T)) => V) {
             mapped[k] = fn(k, obj[k])
-        } else {
-            println(V)
         }
     })
     mapped
 }
 
+const map = ObjectMap(Admin, String)
+const map = ObjectMap(User, String | Number)
 
-println("here")
-
-const map = ObjectMap(Admin, Number | String)
-
-const anonAdmin = admin.map((v) => "*****")
-
-const g: anonAdmin = {x: true}
-
-println(anonAdmin)
+const admin2 = admin.map((e) => "****")
+const user2 = user.map((e) => "****")

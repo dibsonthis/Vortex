@@ -1,3 +1,4 @@
+@pure
 const lib = load_lib("./bin/random")
 
 var rand = (): Number 

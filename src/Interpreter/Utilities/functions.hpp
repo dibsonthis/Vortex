@@ -117,6 +117,28 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func = nullptr) {
         return tags_list;
     }
 
+    if (node->_Node.FunctionCall().name == "meta") {
+
+        int num_args = 1;
+
+        if (node->_Node.FunctionCall().args.size() != num_args) {
+            return throw_error("Function '" + node->_Node.FunctionCall().name + "' expects " + std::to_string(num_args) + " argument(s)");
+        }
+
+        node_ptr arg = eval_node(node->_Node.FunctionCall().args[0]);
+
+        node_ptr meta_obj = new_node(NodeType::OBJECT);
+        meta_obj->_Node.Object().properties["is_type"] = new_boolean_node(arg->TypeInfo.is_type);
+        meta_obj->_Node.Object().properties["is_literal"] = new_boolean_node(arg->TypeInfo.is_literal_type);
+        meta_obj->_Node.Object().properties["is_general"] = new_boolean_node(arg->TypeInfo.is_general_type);
+        meta_obj->_Node.Object().properties["is_tuple"] = new_boolean_node(arg->TypeInfo.is_tuple);
+        meta_obj->_Node.Object().properties["is_refinement"] = new_boolean_node(arg->TypeInfo.is_refinement_type);
+        meta_obj->_Node.Object().properties["type_name"] = new_string_node(arg->TypeInfo.type_name);
+        meta_obj->_Node.Object().properties["type_const"] = new_boolean_node(arg->Meta.is_const);
+
+        return meta_obj;
+    }
+
     if (node->_Node.FunctionCall().name == "import") {
 
         int num_args = 1;
@@ -687,7 +709,7 @@ node_ptr Interpreter::copy_function(node_ptr& func) {
     function->_Node.Function().args = std::vector<node_ptr>(func->_Node.Function().args);
     function->_Node.Function().params = std::vector<node_ptr>(func->_Node.Function().params);
     function->_Node.Function().default_values = func->_Node.Function().default_values;
-    function->_Node.Function().body = std::make_shared<Node>(*func->_Node.Function().body);
+    function->_Node.Function().body = copy_node(func->_Node.Function().body);
     function->_Node.Function().closure = func->_Node.Function().closure;
     function->_Node.Function().is_hook = func->_Node.Function().is_hook;
     function->_Node.Function().decl_filename = func->_Node.Function().decl_filename;

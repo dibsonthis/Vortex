@@ -208,9 +208,9 @@ node_ptr Typechecker::tc_type(node_ptr& node) {
     if (node->_Node.Type().parametric_type) {
         node_ptr func = new_node(NodeType::FUNC);
         func->_Node.Function().name = node->_Node.Type().name;
-        func->_Node.Function().params = node->_Node.Type().params;
+        func->_Node.Function().params = std::vector<node_ptr>(node->_Node.Type().params);
         func->_Node.Function().param_types = node->_Node.Type().param_types;
-        func->_Node.Function().body = std::make_shared<Node>(*node->_Node.Type().body);
+        func->_Node.Function().body = copy_node(node->_Node.Type().body);
         for (int i = 0; i < node->_Node.Type().params.size(); i++) {
             func->_Node.Function().args.push_back(nullptr);
         }
@@ -528,6 +528,10 @@ node_ptr Typechecker::copy_node(node_ptr& node, std::vector<node_ptr> bases) {
             obj->_Node.Object().values.push_back(copy_node(value, bases));
         }
         return obj;
+    }
+
+    if (node->type == NodeType::FUNC) {
+        return copy_function(node);
     }
 
     return std::make_shared<Node>(*node);

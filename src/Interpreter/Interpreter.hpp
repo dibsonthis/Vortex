@@ -180,6 +180,7 @@ public:
     bool compareNodeTypes(node_ptr& lhs, node_ptr& rhs);
 
     node_ptr copy_function(node_ptr& func);
+    node_ptr copy_node(node_ptr& node, std::vector<node_ptr> bases = {});
 
     std::string printable(node_ptr& node, std::vector<node_ptr> bases = {});
 

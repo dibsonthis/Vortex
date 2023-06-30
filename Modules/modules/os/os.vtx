@@ -1,21 +1,24 @@
 const lib = load_lib("./bin/os")
 
-type Path {
+type Path = {
 	filePath: String,
 	isDir: Boolean
 }
 
+@pure
 const getEnv = (var: String): String 
 	=> lib.call("get_env", [var])
 
-const setEnv = (name: String, value: String): Number 
-	=> lib.call("set_env", [name, value])
-
+@pure
 const osName = (): String 
 	=> lib.call("os_name", [])
 
+@pure
 const listDir = (filePath: String): [Path] 
 	=> lib.call("list_dir", [filePath])
+
+const setEnv = (name: String, value: String): Number 
+	=> lib.call("set_env", [name, value])
 
 const createDir = (filePath: String): Boolean
 	=> lib.call("create_dir", [filePath])

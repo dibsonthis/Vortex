@@ -727,7 +727,9 @@ node_ptr Typechecker::tc_is(node_ptr& node) {
         return throw_error(left->_Node.Error().message);
     }
 
-    node_ptr right = tc_node(node->_Node.Op().right);
+    node_ptr right = copy_node(node->_Node.Op().right);
+
+    right = tc_node(right);
 
     if (right->type == NodeType::ERROR) {
         return throw_error(right->_Node.Error().message);

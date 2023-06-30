@@ -351,6 +351,7 @@ node_ptr Interpreter::eval_eq_accessor(node_ptr& left, node_ptr& value, bool is_
 
         accessed_value->Meta = old->Meta;
         accessed_value->TypeInfo = old->TypeInfo;
+        accessed_value->TypeInfo.is_type = value->TypeInfo.is_type;
 
         // ------  Evaluate Property Hooks ------ //
 

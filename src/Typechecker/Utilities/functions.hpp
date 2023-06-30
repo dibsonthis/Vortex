@@ -386,7 +386,34 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
         for (std::string tag : arg->Meta.tags) {
             tags_list->_Node.List().elements.push_back(new_string_node(tag));
         }
+        if (arg->Meta.tags.size() == 0) {
+            node_ptr str = new_string_node("");
+            str->TypeInfo.is_type = true;
+            tags_list->_Node.List().elements.push_back(str);
+        }
         return tags_list;
+    }
+
+        if (node->_Node.FunctionCall().name == "meta") {
+
+        int num_args = 1;
+
+        if (node->_Node.FunctionCall().args.size() != num_args) {
+            return throw_error("Function '" + node->_Node.FunctionCall().name + "' expects " + std::to_string(num_args) + " argument(s)");
+        }
+
+        node_ptr arg = tc_node(node->_Node.FunctionCall().args[0]);
+
+        node_ptr meta_obj = new_node(NodeType::OBJECT);
+        meta_obj->_Node.Object().properties["is_type"] = new_boolean_node(arg->TypeInfo.is_type);
+        meta_obj->_Node.Object().properties["is_literal"] = new_boolean_node(arg->TypeInfo.is_literal_type);
+        meta_obj->_Node.Object().properties["is_general"] = new_boolean_node(arg->TypeInfo.is_general_type);
+        meta_obj->_Node.Object().properties["is_tuple"] = new_boolean_node(arg->TypeInfo.is_tuple);
+        meta_obj->_Node.Object().properties["is_refinement"] = new_boolean_node(arg->TypeInfo.is_refinement_type);
+        meta_obj->_Node.Object().properties["type_name"] = new_string_node(arg->TypeInfo.type_name);
+        meta_obj->_Node.Object().properties["type_const"] = new_boolean_node(arg->Meta.is_const);
+
+        return meta_obj;
     }
 
     if (node->_Node.FunctionCall().name == "import") {

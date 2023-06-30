@@ -78,8 +78,6 @@ node_ptr Typechecker::tc_dot(node_ptr& node) {
                 return tc_call_lib_function(left, right);
             }
         }
-
-        return throw_error("Cannot perform '.' on types: " + node_repr(left) + ", " + node_repr(right));
     }
 
     if (right->type == NodeType::FUNC_CALL) {
@@ -418,6 +416,24 @@ node_ptr Typechecker::tc_dot_list(node_ptr& left, node_ptr& right) {
 
             left->_Node.List().elements.clear();
             return left;
+        }
+        if (prop == "contains") {
+
+            int num_args = 1;
+
+            if (right->_Node.FunctionCall().args.size() != num_args) {
+                return throw_error("List function '" + right->_Node.FunctionCall().name + "' expects " + std::to_string(num_args) + " argument(s)");
+            }
+
+            node_ptr value = tc_node(right->_Node.FunctionCall().args[0]);
+
+            for (node_ptr& e : left->_Node.List().elements) {
+                if (match_values(e, value)) {
+                    return new_boolean_node(true);
+                }
+            }
+
+            return new_boolean_node(false);
         }
         if (prop == "append") {
 
