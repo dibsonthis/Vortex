@@ -1,5 +1,7 @@
 const lib = load_lib("./bin/sqlite")
 
+type QueryResultType = [{columns: [String], values: [String]}]
+
 const _connect = (filePath: String)
 	=> lib.call("connect", [filePath])
 
@@ -11,7 +13,7 @@ const _close = (dbPtr: Pointer)
 
 type SqliteDB = {
 	_ref: Pointer,
-	execute: ((x: String) => List) = (statement: String) => _execute(this._ref, statement),
+	execute: ((x: String) => QueryResultType) = (statement: String) => _execute(this._ref, statement),
 	close: Function = () => _close(this._ref)
 }
 
@@ -26,8 +28,6 @@ const connect = (filePath: String): SqliteDB => {
 		_ref: ref
 	}
 }
-
-const QueryResultType = [{columns: [String], values: [String]}]
 
 const toDicts = (queryResult: QueryResultType, schema: Object) => {
 
