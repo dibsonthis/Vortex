@@ -304,7 +304,15 @@ node_ptr Typechecker::tc_eq_accessor(node_ptr& left, node_ptr& value, bool is_re
             return throw_error("Property does not exist on type '" + container->TypeInfo.type_name + "'");
         }  
 
-        if (accessed_value->type == NodeType::NONE) {
+        if (accessed_value->type == NodeType::ANY) {
+            // Check if object has a signature, and typecheck against it
+            if (container->TypeInfo.type && container->TypeInfo.type->_Node.Object().elements.size() == 1) {
+                node_ptr index_type = tc_node(container->TypeInfo.type->_Node.Object().elements[0]);
+                if (!match_types(index_type, value)) {
+                    node_ptr _type = get_type(value);
+                    return throw_error("Cannot add object property of type '" + printable(_type) + "', accepted types are: " + printable(index_type), value);
+                }
+            }
             container->_Node.Object().properties[accessor->_Node.List().elements[0]->_Node.String().value] = value;
             return value;
         }

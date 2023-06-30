@@ -1,5 +1,8 @@
-const obj: { Number | String } = {
+var obj: { Number | String } = {
     name: "John",
     age: 34,
-    sex: true
+    sex: "M"
 }
+
+obj["height"] = 180
+obj["alive"] = "true"

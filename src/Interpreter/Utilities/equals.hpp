@@ -318,6 +318,14 @@ node_ptr Interpreter::eval_eq_accessor(node_ptr& left, node_ptr& value, bool is_
         }  
 
         if (accessed_value->type == NodeType::NONE) {
+            // Check if object has a signature, and typecheck against it
+            if (container->TypeInfo.type && container->TypeInfo.type->_Node.Object().elements.size() == 1) {
+                node_ptr index_type = eval_node(container->TypeInfo.type->_Node.Object().elements[0]);
+                if (!match_types(index_type, value)) {
+                    node_ptr _type = get_type(value);
+                    return throw_error("Cannot add object property of type '" + printable(_type) + "', accepted types are: " + printable(index_type), value);
+                }
+            }
             container->_Node.Object().properties[accessor->_Node.List().elements[0]->_Node.String().value] = value;
             return value;
         }
