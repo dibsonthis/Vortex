@@ -51,8 +51,10 @@ type ObjectMap[T: Object, V] = (obj: T, fn: ((v: ValueOf(T)) => V) | ((k: String
 
 println("here")
 
-const map = ObjectMap(Admin, Number | Boolean)
+const map = ObjectMap(Admin, Number | String)
 
 const anonAdmin = admin.map((v) => "*****")
+
+const g: anonAdmin = {x: true}
 
 println(anonAdmin)

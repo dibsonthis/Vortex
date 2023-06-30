@@ -195,6 +195,11 @@ node_ptr Typechecker::tc_node(node_ptr& node) {
         case NodeType::OBJECT: {
             if (node->_Node.Object().elements.size() == 1 && (node->_Node.Object().elements[0]->type == NodeType::COMMA_LIST || node->_Node.Object().elements[0]->type == NodeType::OP && node->_Node.Object().elements[0]->_Node.Op().value == ":")) {
                 return tc_object(node);
+            }  else if (node->_Node.Object().elements.size() == 1) {
+                node_ptr obj = new_node(NodeType::OBJECT);
+                obj->Meta = node->Meta;
+                obj->_Node.Object().elements.push_back(tc_node(node->_Node.Object().elements[0]));
+                return obj;
             }
             return node;
         }
