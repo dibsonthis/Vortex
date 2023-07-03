@@ -63,7 +63,7 @@ node_ptr Interpreter::eval_eq_id(node_ptr& id, node_ptr& value, bool is_ref) {
         var = value;
         add_symbol(var_name, var, current_scope);
     } else {
-        *var = *value;
+        *var = *copy_node(value);
     }
 
     var->Meta = old->Meta;
@@ -138,7 +138,7 @@ node_ptr Interpreter::eval_eq_dot(node_ptr& left, node_ptr& value, bool is_ref) 
         if (is_ref) {
             accessed_value = value;
         } else {
-            *accessed_value = *value;
+            *accessed_value = *copy_node(value);
         }
 
         accessed_value->Meta = old->Meta;
@@ -199,7 +199,7 @@ node_ptr Interpreter::eval_eq_dot(node_ptr& left, node_ptr& value, bool is_ref) 
     if (is_ref) {
         accessed_value = value;
     } else {
-        *accessed_value = *value;
+        *accessed_value = *copy_node(value);
     }
 
     accessed_value->Meta = old->Meta;
@@ -346,7 +346,7 @@ node_ptr Interpreter::eval_eq_accessor(node_ptr& left, node_ptr& value, bool is_
         if (is_ref) {
             accessed_value = value;
         } else {
-            *accessed_value = *value;
+            *accessed_value = *copy_node(value);
         }
 
         accessed_value->Meta = old->Meta;

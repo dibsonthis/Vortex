@@ -9,13 +9,16 @@ node_ptr Typechecker::tc_if_statement(node_ptr& node) {
 
     node_ptr conditional = tc_node(node->_Node.IfStatement().condition);
 
+    std::vector<node_ptr> returns;
+
    for (node_ptr expr : node->_Node.IfStatement().body->_Node.Object().elements) {
         node_ptr evaluated_expr = tc_node(expr);
         if (evaluated_expr->type == NodeType::RETURN) {
             node_ptr ret_clone = new_node(NodeType::RETURN);
             ret_clone->_Node.Return().value = tc_node(evaluated_expr->_Node.Return().value);
-            current_scope = current_scope->parent;
-            return ret_clone;
+            returns.push_back(ret_clone);
+            // current_scope = current_scope->parent;
+            // return ret_clone;
         }
         if (evaluated_expr->type == NodeType::PIPE_LIST) {
             node_ptr ret_list = new_node(NodeType::LIST);
@@ -30,8 +33,9 @@ node_ptr Typechecker::tc_if_statement(node_ptr& node) {
             }
 
             ret_list = tc_pipe_list(ret_list);
-            current_scope = current_scope->parent;
-            return ret_list;
+            returns.push_back(ret_list);
+            // current_scope = current_scope->parent;
+            // return ret_list;
         }
     }
 
@@ -40,6 +44,17 @@ node_ptr Typechecker::tc_if_statement(node_ptr& node) {
     }
 
     current_scope = current_scope->parent;
+    
+    if (returns.size() == 0) {
+        return new_node(NodeType::NOVALUE);
+    } else if (returns.size() == 1) {
+        return returns[0];
+    } else {
+        node_ptr ret_list = new_node(NodeType::LIST);
+        ret_list->type = NodeType::PIPE_LIST;
+        ret_list->_Node.List().elements = returns;
+        return ret_list;
+    }
 
     return new_node(NodeType::NOVALUE);
 }

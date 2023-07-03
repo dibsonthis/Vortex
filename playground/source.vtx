@@ -1,50 +1,21 @@
-import os
-import sqlite : "/Users/adib/Dev/Personal/Vortex/Modules/modules/sqlite/sqlite"
-import [toDicts, SqliteDB] : sqlite
+const func = () => {
+    if (true) {
+        if (true) {
+            ret "hi"
+        }
 
-print("here")
+        if (false) {
+            ret 12
+        }
 
-os.createDir("db")
+        if (true) {
+            ret 100
+        }
 
-const db: SqliteDB = sqlite.connect("db/test.db")
-
-const create_table_query = "
-		DROP TABLE IF EXISTS COMPANY;
-
-		CREATE TABLE COMPANY(
-			ID INT PRIMARY KEY NOT NULL,
-			FIRSTNAME TEXT NOT NULL,
-			LASTNAME TEXT NOT NULL,
-			AGE INT NOT NULL,
-			ADDRESS CHAR(50),
-			SALARY REAL 
-		);"
-
-db.execute(create_table_query)
-
-const insert_into_table_query = 
-        "INSERT INTO COMPANY (ID,FIRSTNAME, LASTNAME,AGE,ADDRESS,SALARY)
-        	VALUES (1, 'Paul', 'Rogerson', 32, 'California', 20000.00 );
-        INSERT INTO COMPANY (ID,FIRSTNAME, LASTNAME,AGE,ADDRESS,SALARY)
-        	VALUES (2, 'Allen', 'Jones', 25, 'Texas', 15000.00 );
-        INSERT INTO COMPANY (ID,FIRSTNAME, LASTNAME,AGE,ADDRESS,SALARY)
-        	VALUES (3, 'Teddy', 'Roosevelt', 23, 'Norway', 20000.00 );
-        INSERT INTO COMPANY (ID,FIRSTNAME, LASTNAME,AGE,ADDRESS,SALARY)
-        	VALUES (4, 'Mark', 'Robertson', 25, 'Rich-Mond', 65000.00 );"
-
-db.execute(insert_into_table_query)
-
-const select_query = "SELECT * FROM COMPANY WHERE ID >= 3"
-
-const res = db.execute(select_query)
-
-const schema = {
-	ID: Number,
-	AGE: Number,
-	SALARY: Number,
-	FIRSTNAME: Number
+        ret [100]
+    } else {
+        ret ["hmm"]
+    }
 }
 
-var dicts = res.toDicts(schema)
-
-print(dicts)
+println(func)

@@ -80,9 +80,9 @@ void Parser::parse_un_op_amb(std::vector<std::string> operators, std::string end
             erase_next();
 
             if (current_node->_Node.Op().value == "&") {
-                if (right->type != NodeType::ID) {
-                    error_and_exit("Cannot capture a reference of a literal - '&' must be followed by a variable name");
-                }
+                // if (right->type != NodeType::ID) {
+                //     error_and_exit("Cannot capture a reference of a literal - '&' must be followed by a variable name");
+                // }
                 current_node->type = NodeType::REF;
                 current_node->_Node = RefNode();
                 current_node->_Node.Ref().value = right;
@@ -913,8 +913,8 @@ void Parser::parse_try_catch(std::string end) {
                 error_and_exit("Malformed try-catch expression - missing 'try' block");
             }
             node_ptr catch_keyword = peek(2);
-            if (catch_keyword->type != NodeType::FUNC_CALL && catch_keyword->_Node.FunctionCall().name != "catch") {
-                error_and_exit("Malformed try-catch expression - missing 'catch' keyword");
+            if (catch_keyword->type != NodeType::FUNC_CALL || catch_keyword->_Node.FunctionCall().name != "catch") {
+                error_and_exit("Malformed try-catch expression - missing 'catch' block");
             }
             if (catch_keyword->_Node.FunctionCall().args.size() != 1) {
                 error_and_exit("Malformed try-catch expression - 'catch' expects one argument");

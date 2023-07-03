@@ -12,6 +12,7 @@ node_ptr Interpreter::eval_const_decl(node_ptr& node) {
 
     node_ptr copy = std::make_shared<Node>(*node->_Node.ConstantDeclatation().value);
     node_ptr value = eval_node(copy);
+    value = copy_node(value);
 
     bool is_ref = value->type == NodeType::REF;
 
@@ -57,6 +58,7 @@ node_ptr Interpreter::eval_var_decl(node_ptr& node) {
     }
     node_ptr copy = std::make_shared<Node>(*node->_Node.VariableDeclaration().value);
     node_ptr value = eval_node(copy);
+    value = copy_node(value);
 
     bool is_ref = value->type == NodeType::REF;
 
