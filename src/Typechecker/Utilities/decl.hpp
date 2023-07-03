@@ -121,6 +121,8 @@ node_ptr Typechecker::tc_var_decl(node_ptr& node) {
         return value;
     }
 
+    value->Meta.is_const = false;
+
     add_symbol(var_name, value, current_scope);
     return value;
 }

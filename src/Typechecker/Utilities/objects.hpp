@@ -53,7 +53,7 @@ node_ptr Typechecker::tc_object(node_ptr& node) {
             prop_name = left->_Node.ID().value;
         }
 
-        object->_Node.Object().properties[prop_name] = right;
+        object->_Node.Object().properties[prop_name] = copy_node(right);
 
         if (object->_Node.Object().properties[prop_name]->type == NodeType::FUNC) {
             object->_Node.Object().properties[prop_name]->_Node.Function().closure["this"] = object;

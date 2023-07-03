@@ -121,7 +121,7 @@ node_ptr Interpreter::eval_dot_string(node_ptr& left, node_ptr& right) {
                 return throw_error("String function '" + right->_Node.FunctionCall().name + "' expects argument 'from' to be a string");
             }
 
-             if (from_node->type != NodeType::STRING) {
+            if (to_node->type != NodeType::STRING) {
                 return throw_error("String function '" + right->_Node.FunctionCall().name + "' expects argument 'to' to be a string");
             }
 

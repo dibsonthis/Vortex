@@ -88,6 +88,8 @@ node_ptr Interpreter::eval_var_decl(node_ptr& node) {
         value = value->TypeInfo.type;
     }
 
+    value->Meta.is_const = false;
+
     add_symbol(var_name, value, current_scope);
     return value;
 }

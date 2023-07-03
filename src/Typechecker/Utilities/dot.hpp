@@ -157,11 +157,15 @@ node_ptr Typechecker::tc_dot_string(node_ptr& left, node_ptr& right) {
             node_ptr from_node = tc_node(right->_Node.FunctionCall().args[0]);
             node_ptr to_node = tc_node(right->_Node.FunctionCall().args[1]);
 
+            // if (from_node->type == NodeType::ANY || to_node->type == NodeType::ANY) {
+            //     return new_node(NodeType::STRING);
+            // }
+
             if (from_node->type != NodeType::STRING) {
                 return throw_error("String function '" + right->_Node.FunctionCall().name + "' expects argument 'from' to be a string");
             }
 
-             if (from_node->type != NodeType::STRING) {
+            if (to_node->type != NodeType::STRING) {
                 return throw_error("String function '" + right->_Node.FunctionCall().name + "' expects argument 'to' to be a string");
             }
 
