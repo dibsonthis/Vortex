@@ -592,7 +592,7 @@ VortexObj set_post(std::string name, std::vector<VortexObj> args) {
 
             if (req.params.size() > 0) {   
                 for (auto& param : req.params) {
-                    req_object->_Node.Object().properties["data"] = new_string_node(param.first);
+                    req_object->_Node.Object().properties["data"]->_Node.Object().properties[param.first] = new_string_node(param.second);
                 }
             } else if (req.files.size() > 0) {
                 req_object->_Node.Object().properties["data"] = new_string_node(req.get_file_value("data").content);
@@ -654,7 +654,7 @@ VortexObj set_post(std::string name, std::vector<VortexObj> args) {
 
         if (req.params.size() > 0) {
             for (auto& param : req.params) {
-                req_object->_Node.Object().properties["data"] = new_string_node(param.first);
+                req_object->_Node.Object().properties["data"]->_Node.Object().properties[param.first] = new_string_node(param.second);
             }
         } else if (req.files.size() > 0) {
             req_object->_Node.Object().properties["data"] = new_string_node(req.get_file_value("data").content);
