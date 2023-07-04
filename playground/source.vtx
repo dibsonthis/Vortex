@@ -1,21 +1,4 @@
-const func = () => {
-    if (true) {
-        if (true) {
-            ret "hi"
-        }
+println("here")
 
-        if (false) {
-            ret 12
-        }
-
-        if (true) {
-            ret 100
-        }
-
-        ret [100]
-    } else {
-        ret ["hmm"]
-    }
-}
-
-println(func)
+type Blah = [String, Number] as Literal
+const x: [Blah] = [["h", 9], ["", 10]]

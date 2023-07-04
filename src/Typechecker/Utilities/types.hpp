@@ -7,10 +7,6 @@ node_ptr Typechecker::get_type(node_ptr& node, std::vector<node_ptr> bases = {})
         return new_node(NodeType::ANY);
     }
 
-    // if (node->type != NodeType::OBJECT && node->type != NodeType::LIST && node->TypeInfo.type) {
-    //     return node->TypeInfo.type;
-    // }
-
     if (node->TypeInfo.type) {
         return node->TypeInfo.type;
     }
@@ -111,6 +107,7 @@ node_ptr Typechecker::get_type(node_ptr& node, std::vector<node_ptr> bases = {})
 
     list->TypeInfo = node->TypeInfo;
     list->Meta = node->Meta;
+    list->_Node.List().has_tuples = node->_Node.List().has_tuples;
 
     if (list->_Node.List().elements.size() == 0) {
         list->_Node.List().elements.push_back(new_node(NodeType::ANY));
@@ -180,6 +177,10 @@ bool Typechecker::match_types(node_ptr& _type, node_ptr& _value) {
         node_ptr param_type = type->_Node.Function().param_types[param->_Node.ID().value];
         if (param_type && !match_types(param_type, value)) {
             return false;
+        }
+
+        if (value->TypeInfo.is_type) {
+            return true;
         }
 
         func_call->_Node.FunctionCall().name = type->_Node.Function().name;
@@ -324,6 +325,16 @@ bool Typechecker::match_types(node_ptr& _type, node_ptr& _value) {
 
         // If [] or List
         if (type->_Node.List().elements.size() == 0 && type->TypeInfo.is_type) {
+            return true;
+        }
+
+        if (type->_Node.List().has_tuples) {
+            for (int i = 0; i < _value->_Node.List().elements.size(); i++) {
+                if (!match_types(_type->_Node.List().elements[0], _value->_Node.List().elements[i])) {
+                    return false;
+                }
+            }
+
             return true;
         }
 

@@ -724,7 +724,7 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
             node_ptr param = function->_Node.Function().params[i];
             node_ptr param_type = interp.eval_node(function->_Node.Function().param_types[param->_Node.ID().value]);
             if (param_type) {
-                if (!match_types(param_type, args[i])) {
+                if (!interp.match_types(param_type, args[i])) {
                     return throw_error("Type function '" + function->_Node.Function().name + "' expects argument '" + param->_Node.ID().value + "' to be of type '" + printable(param_type) + "'", node);
                 }
             }

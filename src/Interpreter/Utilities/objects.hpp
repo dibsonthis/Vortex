@@ -86,7 +86,11 @@ node_ptr Interpreter::eval_list(node_ptr& node) {
     }
 
     for (node_ptr& elem : elem_list->_Node.List().elements) {
-        list->_Node.List().elements.push_back(eval_node(elem));
+        node_ptr e = eval_node(elem);
+        if (e->TypeInfo.is_tuple) {
+            list->_Node.List().has_tuples = true;
+        }
+        list->_Node.List().elements.push_back(e);
     }
 
     list->TypeInfo.type = get_type(list);

@@ -76,6 +76,7 @@ struct OpNode {
 
 struct ListNode {
 	std::vector<node_ptr> elements;
+	bool has_tuples = false;
 };
 
 struct ObjectNode {

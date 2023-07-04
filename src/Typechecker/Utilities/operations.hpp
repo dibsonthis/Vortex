@@ -615,6 +615,7 @@ node_ptr Typechecker::tc_as(node_ptr& node) {
         copy->TypeInfo.is_type = true;
         if (copy->type == NodeType::LIST) {
             copy->TypeInfo.is_tuple = true;
+            copy->TypeInfo.type = copy;
         } else {
             copy->TypeInfo.is_literal_type = true;
         }
