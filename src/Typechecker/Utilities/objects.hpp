@@ -92,6 +92,8 @@ node_ptr Typechecker::tc_list(node_ptr& node) {
         node_ptr e = tc_node(elem);
         if (e->TypeInfo.is_tuple) {
             list->_Node.List().has_tuples = true;
+        } else if (e->type == NodeType::LIST && e->_Node.List().has_tuples) {
+            list->_Node.List().has_tuples = true;
         }
         list->_Node.List().elements.push_back(e);
     }

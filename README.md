@@ -10,6 +10,8 @@ Vortex's main focus is on what we call "hooks". Hooks allow the user to bind var
 
 For example, if we wanted automatically increment variable y whenever variable x changes, we could use the onChange hook to do so:
 
+## Notice: Since the release ov Vortex v2, a lot of the documentation below is outdated and will be revamped soon.
+
 ```go
 var x = 0
 var y = 0
