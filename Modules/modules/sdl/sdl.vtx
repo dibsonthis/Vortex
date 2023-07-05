@@ -71,6 +71,9 @@ var destroyRenderer = (renderer: Pointer): None
 var getKeyName = (keyCode: Number): String 
 	=> lib.call("get_key_name", [keyCode])
 
+var getScanCode = (keyName: String): Number 
+	=> lib.call("get_scancode", [keyName])
+
 var drawPoint = (renderer: Pointer, xPos: Number, yPos: Number): None 
 	=> lib.call("draw_point", [renderer, xPos, yPos])
 
@@ -88,6 +91,15 @@ var pollEvent = (evt: Any) => {
 
 var quitSDL = (): None
 	=> lib.call("sdl_quit", [])
+
+var getPerformanceCounter = (): Number
+	=> lib.call("sdl_get_performance_counter", [])
+
+var getPerformanceFrequency = (): Number
+	=> lib.call("sdl_get_performance_frequency", [])
+
+var getKeyboardState = (): [Boolean]
+	=> lib.call("sdl_get_keyboard_state", [])
 
 // Helper Functions
 

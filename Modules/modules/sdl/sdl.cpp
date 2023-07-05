@@ -109,7 +109,7 @@ VortexObj create_renderer(std::string name, std::vector<VortexObj> args) {
 
     SDL_Window* windowPtr = (SDL_Window*)window->_Node.Pointer().value;
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(windowPtr, (int)index->_Node.Number().value, SDL_RENDERER_ACCELERATED);
+    SDL_Renderer* renderer = SDL_CreateRenderer(windowPtr, (int)index->_Node.Number().value, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
     VortexObj rendererNode = new_vortex_obj(NodeType::POINTER);
     rendererNode->_Node.Pointer().value = renderer;
@@ -300,6 +300,22 @@ VortexObj get_key_name(std::string name, std::vector<VortexObj> args) {
     return name_node;
 }
 
+VortexObj get_scancode(std::string name, std::vector<VortexObj> args) {
+    if (args.size() != 1) {
+        error_and_exit("Function '" + name + "' expects 1 argument");
+    }
+
+    VortexObj key_name = args[0];
+
+    if (key_name->type != NodeType::STRING) {
+        error_and_exit("Function '" + name + "' expects 1 string argument");
+    }
+
+    int scancode = SDL_GetScancodeFromName(key_name->_Node.String().value.c_str());
+    VortexObj scancode_node = new_number_node(scancode);
+    return scancode_node;
+}
+
 VortexObj poll_event(std::string name, std::vector<VortexObj> args) {
 
     if (args.size() != 0) {
@@ -374,6 +390,45 @@ VortexObj sdl_quit(std::string name, std::vector<VortexObj> args) {
     return new_vortex_obj(NodeType::NONE);
 }
 
+VortexObj sdl_get_performance_counter(std::string name, std::vector<VortexObj> args) {
+
+    if (args.size() != 0) {
+        error_and_exit("Function '" + name + "' expects 0 arguments");
+    }
+
+    node_ptr counter = new_number_node(SDL_GetPerformanceCounter());
+
+    return counter;
+}
+
+VortexObj sdl_get_performance_frequency(std::string name, std::vector<VortexObj> args) {
+
+    if (args.size() != 0) {
+        error_and_exit("Function '" + name + "' expects 0 arguments");
+    }
+
+    node_ptr frequency = new_number_node(SDL_GetPerformanceFrequency());
+
+    return frequency;
+}
+
+VortexObj sdl_get_keyboard_state(std::string name, std::vector<VortexObj> args) {
+
+    if (args.size() != 0) {
+        error_and_exit("Function '" + name + "' expects 0 arguments");
+    }
+
+    int len;
+    const Uint8* keyboard_state = SDL_GetKeyboardState(&len);
+
+    node_ptr keyboard_state_list = new_vortex_obj(NodeType::LIST);
+    for (int i = 0; i < len; i++) {
+        keyboard_state_list->_Node.List().elements.push_back(new_boolean_node(keyboard_state[i]));
+    }
+
+    return keyboard_state_list;
+}
+
 /* Implement call_function */
 
 extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args) {
@@ -407,6 +462,9 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     if (name == "get_key_name") {
         return get_key_name(name, args);
     }
+    if (name == "get_scancode") {
+        return get_scancode(name, args);
+    }
     if (name == "sdl_quit") {
         return sdl_quit(name, args);
     }
@@ -418,6 +476,15 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     }
     if (name == "sdl_delay") {
         return sdl_delay(name, args);
+    }
+    if (name == "sdl_get_performance_counter") {
+        return sdl_get_performance_counter(name, args);
+    }
+    if (name == "sdl_get_performance_frequency") {
+        return sdl_get_performance_frequency(name, args);
+    }
+    if (name == "sdl_get_keyboard_state") {
+        return sdl_get_keyboard_state(name, args);
     }
 
     error_and_exit("Function '" + name + "' is undefined");
