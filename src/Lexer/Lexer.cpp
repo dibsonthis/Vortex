@@ -1,4 +1,3 @@
-#pragma once
 #include "Lexer.hpp"
 
 void Lexer::load_source(std::string filename)
@@ -68,6 +67,31 @@ void Lexer::build_identifier()
 		node->type = NodeType::BOOLEAN;
 		node->_Node = BooleanNode();
 		node->_Node.Boolean().value = false;
+	}
+	else if (name == "as") {
+		node->type = NodeType::OP;
+		node->_Node = OpNode();
+		node->_Node.Op().value = name;
+	}
+	else if (name == "is") {
+		node->type = NodeType::OP;
+		node->_Node = OpNode();
+		node->_Node.Op().value = name;
+	}
+	else if (name == "in") {
+		node->type = NodeType::OP;
+		node->_Node = OpNode();
+		node->_Node.Op().value = name;
+	}
+	else if (name == "or") {
+		node->type = NodeType::OP;
+		node->_Node = OpNode();
+		node->_Node.Op().value = name;
+	}
+		else if (name == "and") {
+		node->type = NodeType::OP;
+		node->_Node = OpNode();
+		node->_Node.Op().value = name;
 	}
 	else if (name == "None")
 	{
@@ -783,6 +807,13 @@ void Lexer::tokenize()
 			advance(); // consume symbol
 		}
 		else if (current_char == '&')
+		{
+			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
+			node->_Node.Op().value = current_char;
+			nodes.push_back(node);
+			advance(); // consume symbol
+		}
+		else if (current_char == '@')
 		{
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
 			node->_Node.Op().value = current_char;

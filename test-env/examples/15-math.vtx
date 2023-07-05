@@ -1,4 +1,0 @@
-import [] : math
-
-const res = (5).pow().pow().sqrt().sqrt()
-print(res)

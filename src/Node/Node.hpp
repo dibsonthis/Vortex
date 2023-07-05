@@ -19,6 +19,7 @@ enum class NodeType {
 	OBJECT,
 	OBJECT_DECONSTRUCT,
 	COMMA_LIST,
+	PIPE_LIST,
 	PAREN,
 	FUNC_CALL,
 	FUNC,
@@ -47,7 +48,8 @@ enum class NodeType {
 	UNION,
 	TRY_CATCH,
 	ERROR,
-	REF
+	REF,
+	NOVALUE
 };
 
 struct IdNode {
@@ -74,7 +76,7 @@ struct OpNode {
 
 struct ListNode {
 	std::vector<node_ptr> elements;
-	bool is_union = false;
+	bool has_tuples = false;
 };
 
 struct ObjectNode {
@@ -83,7 +85,6 @@ struct ObjectNode {
 	std::unordered_map<std::string, node_ptr> defaults;
 	std::vector<std::string> keys;
 	std::vector<node_ptr> values;
-	bool is_enum = false;
 };
 
 struct RefNode {
@@ -110,13 +111,15 @@ struct FuncNode {
 	std::string name;
 	std::vector<node_ptr> args;
 	std::vector<node_ptr> params;
+	std::unordered_map<std::string, node_ptr> param_types;
+	std::unordered_map<std::string, node_ptr> default_values;
 	node_ptr body;
-	bool is_hook = false;
+	node_ptr return_type;
 	std::unordered_map<std::string, node_ptr> closure;
 	std::string decl_filename;
-	std::unordered_map<std::string, node_ptr> param_types;
-	node_ptr return_type;
 	std::vector<node_ptr> dispatch_functions;
+	bool is_hook = false;
+	bool type_function = false;
 };
 
 struct AccessorNode {
@@ -127,6 +130,9 @@ struct TypeNode {
 	std::string name;
 	node_ptr body;
 	node_ptr expr;
+	bool parametric_type;
+	std::vector<node_ptr> params;
+	std::unordered_map<std::string, node_ptr> param_types;
 };
 
 struct TypeExtNode {
@@ -159,11 +165,13 @@ struct HookNode {
 struct VariableDeclatationNode {
 	std::string name;
 	node_ptr value;
+	node_ptr type;
 };
 
 struct ConstantDeclatationNode {
 	std::string name;
 	node_ptr value;
+	node_ptr type;
 };
 
 struct ForLoopNode {
@@ -210,7 +218,14 @@ struct MetaInformation {
 	bool is_const = false;
 	bool is_untyped_property = false;
 	bool evaluated = false;
-	int ref_count = 1;
+	bool typechecked = false;
+	bool literal_construct = false;
+	// Hooks
+	node_ptr onChangeFunction;
+	node_ptr onCallFunction;
+	node_ptr onInitFunction;
+	// Tags
+	std::vector<std::string> tags;
 };
 
 struct Hooks {
@@ -236,8 +251,9 @@ struct TypeInfoNode {
 	bool is_literal_type = false;
 	bool is_general_type = false;
 	bool is_decl = false;
-
-	node_ptr base_type;
+	bool is_enum = false;
+	bool is_union = false;
+	bool is_tuple = false;
 };
 
 struct ErrorNode {
@@ -374,9 +390,6 @@ struct V : public _NodeType {
 	};
 
 struct Node {
-	~Node() {
-		Meta.ref_count--;
-	}
 	Node() = default;
     Node(NodeType type) : type(type) {
 		switch(type) {

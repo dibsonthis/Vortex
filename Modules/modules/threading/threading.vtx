@@ -1,7 +1,25 @@
 const lib = load_lib("./bin/threading")
 
-type Future {
+type Future = {
 	_ref: Number
+}
+
+const _Promise = {
+	_ref: Number,
+	_type: Any
+}
+
+type Promise[T] = {
+	{
+		_ref: Number,
+		_type: T
+	}
+}
+
+type _thread = (F: () => Any, args: List = []) => {
+	const ref: Number = lib.call("thread", [F, args]);
+	const promise = {_ref: ref, _type: F.return}
+	promise
 }
 
 const thread = (fn: Function, args: List): Future => {
@@ -17,11 +35,23 @@ const thread = (fn: Function): Future => {
 const get = (future: Number) 
 	=> lib.call("get", [future])
 
-const ready = (future: Number) 
+const ready = (future: Number): Boolean
 	=> lib.call("ready", [future])
 
-const ready = (future: Future)
+const ready = (future: Future): Boolean
 	=> ready(future._ref)
 
 const get = (future: Future)
 	=> get(future._ref)
+
+// Generics
+
+type _get = (T: _Promise) => {
+	const res: T._type = get(T._ref)
+}
+
+const get = (promise: _Promise)
+	=> get(promise._ref)
+
+const ready = (promise: _Promise): Boolean
+	=> ready(promise._ref)

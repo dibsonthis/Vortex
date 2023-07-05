@@ -1,3 +1,4 @@
+@pure
 const lib = load_lib("./bin/string")
 
 const split = (str: String, delim: String): [String] 
@@ -19,4 +20,4 @@ const first = (str: String)
 	=> str[0]
 
 const last = (str: String) 
-	=> str[str.length-1]
+	=> str[str.length()-1]

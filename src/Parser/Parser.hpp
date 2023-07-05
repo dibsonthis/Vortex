@@ -46,6 +46,7 @@ public:
     void parse_if_block(std::string end);
     void parse_try_catch(std::string end);
     void parse_import(std::string end);
+    void parse_tag(std::string end);
     void parse_return(std::string end);
     void parse_keywords(std::string end);
     void parse_object_desconstruct(std::string end);

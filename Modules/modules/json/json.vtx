@@ -1,5 +1,6 @@
 const lib = load_lib("./bin/json")
 
+@pure
 const parse = (jsonStr: String) => lib.call("parse", [jsonStr])
 const serialize = (obj: Object) => lib.call("serialize", [obj])
 const serialize = (ls: List) => lib.call("serialize", [ls])

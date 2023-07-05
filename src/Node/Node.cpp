@@ -1,4 +1,3 @@
-#pragma once
 #include "Node.hpp"
 
 std::string node_repr(node_ptr node) {
@@ -16,7 +15,7 @@ std::string node_repr(node_ptr node) {
             return "Boolean";
         }
         case NodeType::LIST: {
-            if (node->_Node.List().is_union) {
+            if (node->TypeInfo.is_union && node->TypeInfo.type_name != "") {
                 return node->TypeInfo.type_name;
             }
             if (node->_Node.List().elements.size() == 0) {
@@ -44,6 +43,33 @@ std::string node_repr(node_ptr node) {
             res += "]";
             return res;
         }
+        case NodeType::PIPE_LIST: {
+            if (node->TypeInfo.is_union && node->TypeInfo.type_name != "") {
+                return node->TypeInfo.type_name;
+            }
+            if (node->_Node.List().elements.size() == 1) {
+                return node_repr(node->_Node.List().elements[0]);
+            } else if (node->_Node.List().elements.size() > 10) {
+                std::string res = "";
+                for (int i = 0; i < 10; i++) {
+                    res += node_repr(node->_Node.List().elements[i]);
+                    if (i != 9) {
+                        res += " | ";
+                    }
+                }
+                res += " ...";
+                return res;
+            }
+            std::string res = "";
+            for (int i = 0; i < node->_Node.List().elements.size(); i++) {
+                res += node_repr(node->_Node.List().elements[i]);
+                if (i < node->_Node.List().elements.size()-1) {
+                    res += " | ";
+                }
+            }
+            res += "";
+            return res;
+        }
         case NodeType::OBJECT: {
             if (node->TypeInfo.type && node->TypeInfo.type_name != "") {
                 return node->TypeInfo.type_name;
@@ -51,7 +77,7 @@ std::string node_repr(node_ptr node) {
             if (node->TypeInfo.is_type && node->TypeInfo.type_name != "") {
                 return node->TypeInfo.type_name;
             }
-            if (node->_Node.Object().is_enum && node->TypeInfo.type_name != "") {
+            if (node->TypeInfo.is_enum && node->TypeInfo.type_name != "") {
                 return node->TypeInfo.type_name;
             }
             if (node->TypeInfo.type_name != "") {
