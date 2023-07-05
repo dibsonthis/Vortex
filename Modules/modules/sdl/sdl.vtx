@@ -80,6 +80,9 @@ var drawPoint = (renderer: Pointer, xPos: Number, yPos: Number): None
 var drawLine = (renderer: Pointer, x1: Number, y1: Number, x2: Number, y2: Number): None 
 	=> lib.call("draw_line", [renderer, x1, y1, x2, y2])
 
+var drawRect = (renderer: Pointer, x: Number, y: Number, w: Number, h: Number): None 
+	=> lib.call("draw_rect", [renderer, x, y, w, h])
+
 var delay = (ms: Number): None 
 	=> lib.call("sdl_delay", [ms])
 

@@ -284,6 +284,47 @@ VortexObj draw_line(std::string name, std::vector<VortexObj> args) {
     return new_vortex_obj(NodeType::NONE);
 }
 
+VortexObj draw_rect(std::string name, std::vector<VortexObj> args) {
+    if (args.size() != 5) {
+        error_and_exit("Function '" + name + "' expects 5 arguments");
+    }
+
+    VortexObj renderer = args[0];
+    VortexObj x = args[1];
+    VortexObj y = args[2];
+    VortexObj w = args[3];
+    VortexObj h = args[4];
+
+    if (renderer->type != NodeType::POINTER) {
+        error_and_exit("Function '" + name + "' expects first argument to be a pointer");
+    }
+
+    if (x->type != NodeType::NUMBER || y->type != NodeType::NUMBER || w->type != NodeType::NUMBER || h->type != NodeType::NUMBER) {
+        error_and_exit("Function '" + name + "' expects 4 number arguments");
+    }
+
+    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->_Node.Pointer().value;
+
+    SDL_FRect rect;
+    rect.x = x->_Node.Number().value;
+    rect.y = y->_Node.Number().value;
+    rect.w = w->_Node.Number().value;
+    rect.h = h->_Node.Number().value;
+
+    int draw = SDL_RenderDrawRectF(rendererPtr, &rect);
+    int fill = SDL_RenderFillRectF(rendererPtr, &rect);
+
+    if (draw != 0) {
+        error_and_exit("Function '" + name + "' failed");
+    }
+
+    if (fill != 0) {
+        error_and_exit("Function '" + name + "' failed");
+    }
+
+    return new_vortex_obj(NodeType::NONE);
+}
+
 VortexObj get_key_name(std::string name, std::vector<VortexObj> args) {
     if (args.size() != 1) {
         error_and_exit("Function '" + name + "' expects 1 argument");
@@ -473,6 +514,9 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     }
     if (name == "draw_line") {
         return draw_line(name, args);
+    }
+    if (name == "draw_rect") {
+        return draw_rect(name, args);
     }
     if (name == "sdl_delay") {
         return sdl_delay(name, args);
