@@ -473,10 +473,12 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func = nullptr) {
 
         // Inject any defaults
 
+        int params_size = function->_Node.Function().params.size();
         if (args.size() < function->_Node.Function().params.size()) {
+            int difference = params_size - args.size();
             auto& defaults = function->_Node.Function().default_values_ordered;
-            for (int i = args.size()-1; i <= defaults.size(); i++) {
-                args.push_back(defaults[defaults.size() - i]);
+            for (int i = (defaults.size() - difference); i < defaults.size(); i++) {
+                args.push_back(defaults[i]);
             }
         }
 
@@ -531,10 +533,12 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func = nullptr) {
 
         // Inject defaults if args length < params length
 
+        int params_size = fx->_Node.Function().params.size();
         if (args.size() < fx->_Node.Function().params.size()) {
+            int difference = params_size - args.size();
             auto& defaults = fx->_Node.Function().default_values_ordered;
-            for (int i = args.size()-1; i <= defaults.size(); i++) {
-                args.push_back(defaults[defaults.size() - i]);
+            for (int i = (defaults.size() - difference); i < defaults.size(); i++) {
+                args.push_back(defaults[i]);
             }
         }
 

@@ -1,5 +1,7 @@
-const func = (x: String, y: String, xx: Number = -1, yy: Number = -1, zz: Number = -1) => {
+print("here")
+
+const func = (x: String, zz: Number = -1, yy: Number = -9) => {
     print("hmm")
 }
 
-func("hi", "bye")
+func("hi", 10)

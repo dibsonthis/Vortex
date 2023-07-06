@@ -701,11 +701,12 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
         node_ptr func_call = new_node(NodeType::FUNC_CALL);
 
         // Inject any defaults
-
+        int params_size = function->_Node.Function().params.size();
         if (args.size() < function->_Node.Function().params.size()) {
+            int difference = params_size - args.size();
             auto& defaults = function->_Node.Function().default_values_ordered;
-            for (int i = args.size()-1; i <= defaults.size(); i++) {
-                args.push_back(tc_node(defaults[defaults.size() - i]));
+            for (int i = (defaults.size() - difference); i < defaults.size(); i++) {
+                args.push_back(tc_node(defaults[i]));
             }
         }
 
@@ -780,11 +781,12 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
     for (node_ptr& fx: functions) {
 
         // Inject defaults if args length < params length
-
-        if (args.size() < fx->_Node.Function().params.size()) {
+        int params_size = fx->_Node.Function().params.size();
+        if (args.size() < params_size) {
+            int difference = params_size - args.size();
             auto& defaults = fx->_Node.Function().default_values_ordered;
-            for (int i = args.size()-1; i <= defaults.size(); i++) {
-                args.push_back(tc_node(defaults[defaults.size() - i]));
+            for (int i = (defaults.size() - difference); i < defaults.size(); i++) {
+                args.push_back(tc_node(defaults[i]));
             }
         }
 

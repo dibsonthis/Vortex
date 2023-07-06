@@ -348,7 +348,7 @@ VortexObj load_texture(std::string name, std::vector<VortexObj> args) {
     SDL_Texture* texture = IMG_LoadTexture(rendererPtr, file_path->_Node.String().value.c_str());
 
     if (!texture) {
-        error_and_exit("Problem loading texture");
+        error_and_exit("Problem loading texture: " + std::string(SDL_GetError()));
     }
 
     VortexObj textureNode = new_vortex_obj(NodeType::POINTER);
@@ -411,6 +411,93 @@ VortexObj render_copy(std::string name, std::vector<VortexObj> args) {
 
     SDL_Texture* texturePtr = (SDL_Texture*)texture->_Node.Pointer().value;
     SDL_RenderCopy(rendererPtr, texturePtr, src_rect_null ? NULL : &src_rect, dest_rect_null ? NULL : &dest_rect);
+
+    return new_vortex_obj(NodeType::NONE);
+}
+
+VortexObj render_copy_ex(std::string name, std::vector<VortexObj> args) {
+    if (args.size() != 14) {
+        error_and_exit("Function '" + name + "' expects 14 arguments");
+    }
+
+    VortexObj renderer = args[0];
+    VortexObj texture = args[1];
+
+    VortexObj src_x = args[2];
+    VortexObj src_y = args[3];
+    VortexObj src_w = args[4];
+    VortexObj src_h = args[5];
+
+    VortexObj dest_x = args[6];
+    VortexObj dest_y = args[7];
+    VortexObj dest_w = args[8];
+    VortexObj dest_h = args[9];
+
+    VortexObj angle = args[10];
+
+    VortexObj rot_x = args[11];
+    VortexObj rot_y = args[12];
+
+    VortexObj flip = args[13];
+
+    if (renderer->type != NodeType::POINTER) {
+        error_and_exit("Function '" + name + "' expects first argument to be a pointer");
+    }
+
+    if (texture->type != NodeType::POINTER) {
+        error_and_exit("Function '" + name + "' expects second argument to be a pointer");
+    }
+
+    if (src_x->type != NodeType::NUMBER || src_y->type != NodeType::NUMBER || src_w->type != NodeType::NUMBER || src_h->type != NodeType::NUMBER) {
+        error_and_exit("Function '" + name + "' expects 4 number arguments");
+    }
+
+    if (dest_x->type != NodeType::NUMBER || dest_y->type != NodeType::NUMBER || dest_w->type != NodeType::NUMBER || dest_h->type != NodeType::NUMBER) {
+        error_and_exit("Function '" + name + "' expects 4 number arguments");
+    }
+
+    if (angle->type != NodeType::NUMBER || rot_x->type != NodeType::NUMBER || rot_y->type != NodeType::NUMBER || flip->type != NodeType::NUMBER) {
+        error_and_exit("Function '" + name + "' expects 4 number arguments");
+    }
+
+    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->_Node.Pointer().value;
+
+    SDL_Rect src_rect;
+    src_rect.x = src_x->_Node.Number().value;
+    src_rect.y = src_y->_Node.Number().value;
+    src_rect.w = src_w->_Node.Number().value;
+    src_rect.h = src_h->_Node.Number().value;
+
+    bool src_rect_null = src_rect.x == -1 && src_rect.y == -1 && src_rect.w == -1 && src_rect.h == -1;
+
+    SDL_Rect dest_rect;
+    dest_rect.x = dest_x->_Node.Number().value;
+    dest_rect.y = dest_y->_Node.Number().value;
+    dest_rect.w = dest_w->_Node.Number().value;
+    dest_rect.h = dest_h->_Node.Number().value;
+
+    bool dest_rect_null = dest_rect.x == -1 && dest_rect.y == -1 && dest_rect.w == -1 && dest_rect.h == -1;
+
+    SDL_Point center;
+    int rotX = rot_x->_Node.Number().value;
+    int rotY = rot_y->_Node.Number().value;
+    
+    if (rotX == -1) {
+        center.x = dest_rect.w / 2;
+    } else {
+        center.x = rotX;
+    }
+
+    if (rotY == -1) {
+        center.y = dest_rect.h / 2;
+    } else {
+        center.y = rotY;
+    }
+
+    SDL_RendererFlip renderFlip = (SDL_RendererFlip)flip->_Node.Number().value;
+
+    SDL_Texture* texturePtr = (SDL_Texture*)texture->_Node.Pointer().value;
+    SDL_RenderCopyEx(rendererPtr, texturePtr, src_rect_null ? NULL : &src_rect, dest_rect_null ? NULL : &dest_rect, angle->_Node.Number().value, &center, renderFlip);
 
     return new_vortex_obj(NodeType::NONE);
 }
@@ -625,6 +712,9 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     }
     if (name == "render_copy") {
         return render_copy(name, args);
+    }
+    if (name == "render_copy_ex") {
+        return render_copy_ex(name, args);
     }
 
     error_and_exit("Function '" + name + "' is undefined");

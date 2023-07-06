@@ -1,0 +1,8 @@
+import [] : "../Common/Types"
+
+type Entity = {
+    texture: Pointer,
+    srcRect: Rect = Rect {},
+    destRect: Rect = Rect {},
+    center: Point = Point {}
+}

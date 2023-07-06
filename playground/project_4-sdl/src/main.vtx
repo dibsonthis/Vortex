@@ -1,0 +1,126 @@
+import sdl : "@modules/sdl"
+import [WindowConfig, Color, Window] : "@modules/sdl"
+import random
+import math
+import [] : "RenderWindow/RenderWindow"
+
+/* Init */
+
+var init: Number = sdl.initSDL()
+
+if (init != 0) {
+	println("Error initializing SDL")
+	exit(1)
+} else {
+	println("Initialized SDL")
+}
+
+var windowConfig = WindowConfig { color: sdl.Colors.Black }
+const window: Pointer = sdl.createWindow(windowConfig)
+
+const renderWindow = RenderWindow {
+    window: window, 
+    renderer: sdl.createRenderer(window, -1)
+}
+
+/* --- */
+
+/* Globals */
+
+// System
+var running = true
+var now = sdl.getPerformanceCounter();
+var last = 0;
+var deltaTime = 0;
+
+// Game
+var xPos = 0
+var yPos = 0
+
+var terrain = Entity {texture: renderWindow.loadTexture("../resources/sprites/terrain1.jpg")}
+
+/* --- */
+
+/* Event Handlers */
+
+const onQuit = () => {
+    sdl.destroyWindow(window)
+	sdl.quitSDL()
+	println("Done")
+	running = false
+}
+
+const onMouseDown = (event) => {
+}
+
+const onMouseUp = (event) => {
+}
+
+const onKeyDown = (event) => {
+    const keyboardState = sdl.getKeyboardState();
+	const keyStr = sdl.getKeyName(event.key.keysm.sym)
+
+	if (keyStr == "Escape") {
+		onQuit()
+	}
+}
+
+const onKeyUp = (event) => {
+}
+
+const onMouseMotion = (event) => {
+	xPos = event.motion.x
+	yPos = event.motion.y
+}
+
+/* --- */
+
+while (running) {
+	var event: Any = {};
+	while (sdl.pollEvent(event) != 0) {
+		if (event.type == sdl.EventType.SDL_QUIT) {
+			onQuit()
+		}
+		if (event.type == sdl.EventType.SDL_MOUSEBUTTONDOWN) {
+			onMouseDown(event)
+		}
+		if (event.type == sdl.EventType.SDL_MOUSEBUTTONUP) {
+			onMouseUp(event)
+		}
+		if (event.type == sdl.EventType.SDL_MOUSEMOTION) {
+			onMouseMotion(event)
+		}
+		if (event.type == sdl.EventType.SDL_KEYDOWN) {
+			onKeyDown(event)
+		}
+		if (event.type == sdl.EventType.SDL_KEYUP) {
+			onKeyUp(event)
+		}
+	}
+
+    last = now;
+    now = sdl.getPerformanceCounter();
+
+    var elapsed_ms = (now - last) * 1000 / sdl.getPerformanceFrequency()
+    deltaTime = elapsed_ms * 0.001
+
+    renderWindow.clear()
+
+    /* Render here */
+
+    renderWindow.render(terrain)
+
+    /* -------- */
+
+    renderWindow.setColor(windowConfig.color)
+
+    renderWindow.display()
+
+	sdl.delay(20)
+}
+
+/* Cleanup */
+
+renderWindow.cleanUp()
+
+/* --- */
