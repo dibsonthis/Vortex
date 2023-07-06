@@ -113,6 +113,7 @@ struct FuncNode {
 	std::vector<node_ptr> params;
 	std::unordered_map<std::string, node_ptr> param_types;
 	std::unordered_map<std::string, node_ptr> default_values;
+	std::vector<node_ptr> default_values_ordered;
 	node_ptr body;
 	node_ptr return_type;
 	std::unordered_map<std::string, node_ptr> closure;

@@ -1,5 +1,7 @@
 #include "../../Vortex.hpp"
 #include "include/SDL2/SDL.h"
+#include "include/SDL2/SDL_Image.h"
+#include "include/SDL2/SDL_ttf.h"
 
 /* Define Vars */
 
@@ -325,6 +327,94 @@ VortexObj draw_rect(std::string name, std::vector<VortexObj> args) {
     return new_vortex_obj(NodeType::NONE);
 }
 
+VortexObj load_texture(std::string name, std::vector<VortexObj> args) {
+    if (args.size() != 2) {
+        error_and_exit("Function '" + name + "' expects 5 arguments");
+    }
+
+    VortexObj renderer = args[0];
+    VortexObj file_path = args[1];
+
+    if (renderer->type != NodeType::POINTER) {
+        error_and_exit("Function '" + name + "' expects argument 1 to be a pointer");
+    }
+
+    if (file_path->type != NodeType::STRING) {
+        error_and_exit("Function '" + name + "' expects argument 2 to be a string");
+    }
+
+    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->_Node.Pointer().value;
+
+    SDL_Texture* texture = IMG_LoadTexture(rendererPtr, file_path->_Node.String().value.c_str());
+
+    if (!texture) {
+        error_and_exit("Problem loading texture");
+    }
+
+    VortexObj textureNode = new_vortex_obj(NodeType::POINTER);
+    textureNode->_Node.Pointer().value = texture;
+
+    return textureNode;
+}
+
+VortexObj render_copy(std::string name, std::vector<VortexObj> args) {
+    if (args.size() != 10) {
+        error_and_exit("Function '" + name + "' expects 9 arguments");
+    }
+
+    VortexObj renderer = args[0];
+    VortexObj texture = args[1];
+
+    VortexObj src_x = args[2];
+    VortexObj src_y = args[3];
+    VortexObj src_w = args[4];
+    VortexObj src_h = args[5];
+
+    VortexObj dest_x = args[6];
+    VortexObj dest_y = args[7];
+    VortexObj dest_w = args[8];
+    VortexObj dest_h = args[9];
+
+    if (renderer->type != NodeType::POINTER) {
+        error_and_exit("Function '" + name + "' expects first argument to be a pointer");
+    }
+
+    if (texture->type != NodeType::POINTER) {
+        error_and_exit("Function '" + name + "' expects second argument to be a pointer");
+    }
+
+    if (src_x->type != NodeType::NUMBER || src_y->type != NodeType::NUMBER || src_w->type != NodeType::NUMBER || src_h->type != NodeType::NUMBER) {
+        error_and_exit("Function '" + name + "' expects 4 number arguments");
+    }
+
+    if (dest_x->type != NodeType::NUMBER || dest_y->type != NodeType::NUMBER || dest_w->type != NodeType::NUMBER || dest_h->type != NodeType::NUMBER) {
+        error_and_exit("Function '" + name + "' expects 4 number arguments");
+    }
+
+    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->_Node.Pointer().value;
+
+    SDL_Rect src_rect;
+    src_rect.x = src_x->_Node.Number().value;
+    src_rect.y = src_y->_Node.Number().value;
+    src_rect.w = src_w->_Node.Number().value;
+    src_rect.h = src_h->_Node.Number().value;
+
+    bool src_rect_null = src_rect.x == -1 && src_rect.y == -1 && src_rect.w == -1 && src_rect.h == -1;
+
+    SDL_Rect dest_rect;
+    dest_rect.x = dest_x->_Node.Number().value;
+    dest_rect.y = dest_y->_Node.Number().value;
+    dest_rect.w = dest_w->_Node.Number().value;
+    dest_rect.h = dest_h->_Node.Number().value;
+
+    bool dest_rect_null = dest_rect.x == -1 && dest_rect.y == -1 && dest_rect.w == -1 && dest_rect.h == -1;
+
+    SDL_Texture* texturePtr = (SDL_Texture*)texture->_Node.Pointer().value;
+    SDL_RenderCopy(rendererPtr, texturePtr, src_rect_null ? NULL : &src_rect, dest_rect_null ? NULL : &dest_rect);
+
+    return new_vortex_obj(NodeType::NONE);
+}
+
 VortexObj get_key_name(std::string name, std::vector<VortexObj> args) {
     if (args.size() != 1) {
         error_and_exit("Function '" + name + "' expects 1 argument");
@@ -529,6 +619,12 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     }
     if (name == "sdl_get_keyboard_state") {
         return sdl_get_keyboard_state(name, args);
+    }
+    if (name == "load_texture") {
+        return load_texture(name, args);
+    }
+    if (name == "render_copy") {
+        return render_copy(name, args);
     }
 
     error_and_exit("Function '" + name + "' is undefined");

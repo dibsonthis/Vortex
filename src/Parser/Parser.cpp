@@ -417,15 +417,15 @@ void Parser::parse_func_def(std::string end) {
 
                 for (node_ptr& elem : params->_Node.Paren().elements[0]->_Node.List().elements) {
                     // x: String
-                    
-                    // Check if we already have defaults, if we do, we raise an error
-                    // Because we can't have non-default params after default params
-
-                    if (current_node->_Node.Function().default_values.size() > 0) {
-                        error_and_exit("Cannot define non-default parameters after default parameters");
-                    }
 
                     if (elem->type == NodeType::OP && elem->_Node.Op().value == ":") {
+
+                        // Check if we already have defaults, if we do, we raise an error
+                        // Because we can't have non-default params after default params
+
+                        if (current_node->_Node.Function().default_values.size() > 0) {
+                            error_and_exit("Cannot define non-default parameters after default parameters");
+                        }
 
                         node_ptr param_name = elem->_Node.Op().left;
                         node_ptr param_type = elem->_Node.Op().right;
@@ -465,6 +465,7 @@ void Parser::parse_func_def(std::string end) {
                         }
 
                         current_node->_Node.Function().default_values[param_name->_Node.ID().value] = default_value;
+                        current_node->_Node.Function().default_values_ordered.push_back(default_value);
                     } else if (elem->type == NodeType::ID) {
 
                         // Check if we already have defaults, if we do, we raise an error

@@ -83,6 +83,12 @@ var drawLine = (renderer: Pointer, x1: Number, y1: Number, x2: Number, y2: Numbe
 var drawRect = (renderer: Pointer, x: Number, y: Number, w: Number, h: Number): None 
 	=> lib.call("draw_rect", [renderer, x, y, w, h])
 
+var loadTexture = (renderer: Pointer, filePath: String): Pointer 
+	=> lib.call("load_texture", [renderer, filePath])
+
+var renderCopy = (renderer: Pointer, texture: Pointer, src_x: Number = -1, src_y: Number = -1, src_w: Number = -1, src_h: Number = -1, dest_x: Number = -1, dest_y: Number = -1, dest_w: Number = -1, dest_h: Number = -1): None 
+	=> lib.call("render_copy", [renderer, texture, src_x, src_y, src_w, src_h, src_x, src_y, src_w, src_h])
+
 var delay = (ms: Number): None 
 	=> lib.call("sdl_delay", [ms])
 

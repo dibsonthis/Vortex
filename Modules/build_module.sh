@@ -12,6 +12,9 @@ CONFIG=""
 
 if [ "$1" = "sdl" ]; then
     sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2-2.0.0.dylib" "modules/$1/lib/libSDL2-2.0.0.dylib"
+    sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2_image-2.0.0.dylib" "modules/$1/lib/libSDL2_image-2.0.0.dylib"
+    sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2_ttf-2.0.0.dylib" "modules/$1/lib/libSDL2_ttf-2.0.0.dylib"
+    sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2_mixer-2.0.0.dylib" "modules/$1/lib/libSDL2_mixer-2.0.0.dylib"
     CONFIG="-L/usr/local/share/vortex/modules/sdl/lib -I/usr/local/share/vortex/modules/sdl/include -D_THREAD_SAFE"
 elif [ "$1" = "requests" ]; then
     sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libcrypto.3.dylib" "modules/$1/lib/libcrypto.3.dylib"

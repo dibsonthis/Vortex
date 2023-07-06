@@ -100,6 +100,10 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
         def.second = tc_node(def.second);
     }
 
+    for (auto& def : function->_Node.Function().default_values_ordered) {
+        def = tc_node(def);
+    }
+
     node_ptr res = new_node(NodeType::NONE);
 
     if (function->_Node.Function().body->type != NodeType::OBJECT) {
@@ -699,8 +703,9 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
         // Inject any defaults
 
         if (args.size() < function->_Node.Function().params.size()) {
-            for (auto& def : function->_Node.Function().default_values) {
-                args.push_back(tc_node(def.second));
+            auto& defaults = function->_Node.Function().default_values_ordered;
+            for (int i = args.size()-1; i <= defaults.size(); i++) {
+                args.push_back(tc_node(defaults[defaults.size() - i]));
             }
         }
 
@@ -777,8 +782,9 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
         // Inject defaults if args length < params length
 
         if (args.size() < fx->_Node.Function().params.size()) {
-            for (auto& def : fx->_Node.Function().default_values) {
-                args.push_back(tc_node(def.second));
+            auto& defaults = fx->_Node.Function().default_values_ordered;
+            for (int i = args.size()-1; i <= defaults.size(); i++) {
+                args.push_back(tc_node(defaults[defaults.size() - i]));
             }
         }
 
@@ -937,6 +943,7 @@ node_ptr Typechecker::copy_function(node_ptr& func) {
     function->_Node.Function().args = std::vector<node_ptr>(func->_Node.Function().args);
     function->_Node.Function().params = std::vector<node_ptr>(func->_Node.Function().params);
     function->_Node.Function().default_values = func->_Node.Function().default_values;
+    function->_Node.Function().default_values_ordered = func->_Node.Function().default_values_ordered;
     function->_Node.Function().body = copy_node(func->_Node.Function().body);
     function->_Node.Function().closure = func->_Node.Function().closure;
     function->_Node.Function().is_hook = func->_Node.Function().is_hook;

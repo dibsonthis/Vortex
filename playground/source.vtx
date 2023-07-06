@@ -1,4 +1,5 @@
-println("here")
+const func = (x: String, y: String, xx: Number = -1, yy: Number = -1, zz: Number = -1) => {
+    print("hmm")
+}
 
-type Blah = [String, Number] as Literal
-const x: [Blah] = [["h", 9], ["", 10]]
+func("hi", "bye")

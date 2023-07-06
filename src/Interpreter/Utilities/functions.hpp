@@ -39,6 +39,10 @@ node_ptr Interpreter::eval_function(node_ptr& node) {
         def.second = eval_node(def.second);
     }
 
+    for (auto& def : func->_Node.Function().default_values_ordered) {
+        def = eval_node(def);
+    }
+
     // Check if it's a type:
     //  - if body is an ID
     //  - if body is a type
@@ -470,8 +474,9 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func = nullptr) {
         // Inject any defaults
 
         if (args.size() < function->_Node.Function().params.size()) {
-            for (auto& def : function->_Node.Function().default_values) {
-                args.push_back(def.second);
+            auto& defaults = function->_Node.Function().default_values_ordered;
+            for (int i = args.size()-1; i <= defaults.size(); i++) {
+                args.push_back(defaults[defaults.size() - i]);
             }
         }
 
@@ -527,8 +532,9 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func = nullptr) {
         // Inject defaults if args length < params length
 
         if (args.size() < fx->_Node.Function().params.size()) {
-            for (auto& def : fx->_Node.Function().default_values) {
-                args.push_back(def.second);
+            auto& defaults = fx->_Node.Function().default_values_ordered;
+            for (int i = args.size()-1; i <= defaults.size(); i++) {
+                args.push_back(defaults[defaults.size() - i]);
             }
         }
 
@@ -723,6 +729,7 @@ node_ptr Interpreter::copy_function(node_ptr& func) {
     function->_Node.Function().args = std::vector<node_ptr>(func->_Node.Function().args);
     function->_Node.Function().params = std::vector<node_ptr>(func->_Node.Function().params);
     function->_Node.Function().default_values = func->_Node.Function().default_values;
+    function->_Node.Function().default_values_ordered = func->_Node.Function().default_values_ordered;
     function->_Node.Function().body = copy_node(func->_Node.Function().body);
     function->_Node.Function().closure = func->_Node.Function().closure;
     function->_Node.Function().is_hook = func->_Node.Function().is_hook;
