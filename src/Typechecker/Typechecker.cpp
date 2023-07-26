@@ -177,6 +177,12 @@ node_ptr Typechecker::tc_node(node_ptr& node) {
     }
 
     switch (node->type) {
+        case NodeType::RETURN: {
+            if (!ret_allowed) {
+                return throw_error("Return statement not allowed here");
+            }
+            return node;
+        }
         case NodeType::NUMBER: {
             return node;
         }

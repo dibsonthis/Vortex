@@ -1,7 +1,12 @@
-print("here")
-
-const func = (x: String, zz: Number = -1, yy: Number = -9) => {
-    print("hmm")
+const obj = {
+    name: "Jason",
+    evt: {
+        id: 1
+    }
 }
 
-func("hi", 10)
+var x: Any = {}
+
+x = &obj.evt
+
+println(x)

@@ -77,6 +77,10 @@ struct OpNode {
 struct ListNode {
 	std::vector<node_ptr> elements;
 	bool has_tuples = false;
+
+	~ListNode() {
+		elements.clear();
+	}
 };
 
 struct ObjectNode {
@@ -85,6 +89,14 @@ struct ObjectNode {
 	std::unordered_map<std::string, node_ptr> defaults;
 	std::vector<std::string> keys;
 	std::vector<node_ptr> values;
+
+	~ObjectNode() {
+		elements.clear();
+		properties.clear();
+		defaults.clear();
+		keys.clear();
+		values.clear();
+	}
 };
 
 struct RefNode {

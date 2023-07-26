@@ -14,6 +14,8 @@
 #include "Utilities/hooks.hpp"
 #include "Utilities/print.hpp"
 
+node_ptr null_object = nullptr;
+
 void Interpreter::advance(int n) {
     index += n;
     if (index < nodes.size()) {
@@ -48,7 +50,7 @@ node_ptr Interpreter::get_symbol_local(std::string name, symt_ptr scope) {
     return scope->symbols[name];
 }
 
-node_ptr Interpreter::get_symbol(std::string name, symt_ptr scope) {
+node_ptr& Interpreter::get_symbol(std::string name, symt_ptr scope) {
     symt_ptr current_symtable = scope;
     while (current_symtable) {
         if (current_symtable->symbols.count(name)) {
@@ -58,7 +60,7 @@ node_ptr Interpreter::get_symbol(std::string name, symt_ptr scope) {
         current_symtable = current_symtable->parent;
     }
 
-    return nullptr;
+    return null_object;
 }
 
 void Interpreter::error_and_exit(std::string message, node_ptr node)
@@ -204,7 +206,7 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
             return node;
         }
         case NodeType::ID: {
-            node_ptr value = get_symbol(node->_Node.ID().value, current_scope);
+            node_ptr& value = get_symbol(node->_Node.ID().value, current_scope);
             if (value == nullptr) {
                 return throw_error("Variable '" + node->_Node.ID().value + "' is undefined");
             }

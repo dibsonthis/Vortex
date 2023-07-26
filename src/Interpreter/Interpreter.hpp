@@ -77,7 +77,7 @@ public:
     void add_symbol(std::string name, node_ptr value, symt_ptr scope);
     void del_symbol(std::string name, symt_ptr scope);
     node_ptr get_symbol_local(std::string name, symt_ptr scope);
-    node_ptr get_symbol(std::string name, symt_ptr scope);
+    node_ptr& get_symbol(std::string name, symt_ptr scope);
 
     void evaluate();
     node_ptr eval_node(node_ptr& node);
@@ -181,6 +181,7 @@ public:
 
     node_ptr copy_function(node_ptr& func);
     node_ptr copy_node(node_ptr& node, std::vector<node_ptr> bases = {});
+    node_ptr delete_node(node_ptr& node);
 
     std::string printable(node_ptr& node, std::vector<node_ptr> bases = {});
 

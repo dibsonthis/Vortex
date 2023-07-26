@@ -43,6 +43,7 @@ public:
     int try_catch = 0;
     std::string error = "";
     bool store_func_type = true;
+    bool ret_allowed = false;
 
     // Threading API
     std::unordered_map<uint32_t, std::shared_future<node_ptr>> _futures;
@@ -169,6 +170,7 @@ public:
 
     node_ptr copy_function(node_ptr& func);
     node_ptr copy_node(node_ptr& node, std::vector<node_ptr> bases = {});
+    node_ptr delete_node(node_ptr& node);
 
     std::string printable(node_ptr& node, std::vector<node_ptr> bases = {});
 

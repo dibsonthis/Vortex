@@ -495,3 +495,13 @@ node_ptr Interpreter::copy_node(node_ptr& node, std::vector<node_ptr> bases) {
 
     return std::make_shared<Node>(*node);
 }
+
+node_ptr Interpreter::delete_node(node_ptr& node) {
+    node_ptr symbol = get_symbol_local(node->_Node.ID().value, current_scope);
+    if (!symbol) {
+        return throw_error("Cannot delete an object outside of local scope");
+    }
+
+    current_scope->symbols.erase(node->_Node.ID().value);
+    return new_node(NodeType::NONE);
+}

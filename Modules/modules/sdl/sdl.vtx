@@ -25,23 +25,64 @@ const Colors = {
 }
 
 const EventType = {
-	SDL_QUIT: 256,
-	SDL_KEYDOWN: 768,
-	SDL_KEYUP: 769,
-	SDL_MOUSEMOTION: 1024,
-	SDL_MOUSEBUTTONDOWN: 1025,
-	SDL_MOUSEBUTTONUP: 1026
+	QUIT: 256,
+	WINDOW: 512,
+	KEYDOWN: 768,
+	KEYUP: 769,
+	MOUSEMOTION: 1024,
+	MOUSEBUTTONDOWN: 1025,
+	MOUSEBUTTONUP: 1026
 }
 
-const ButtonTypeEnum = {
-	SDL_BUTTON_LEFT: 1,
-	SDL_BUTTON_MIDDLE: 2,
-	SDL_BUTTON_RIGHT: 3
+const ButtonEventType = {
+	BUTTON_LEFT: 1,
+	BUTTON_MIDDLE: 2,
+	BUTTON_RIGHT: 3
 }
 
-const StateTypeEnum = {
-	SDL_RELEASED: 0,
-	SDL_PRESSED: 1,
+const StateEventType = {
+	RELEASED: 0,
+	PRESSED: 1,
+}
+
+const WindowEventType = {
+	MOVED: 4,
+	RESIZED: 5
+}
+
+const CursorToggleType = {
+	QUERY: -1,
+	DISABLE: 0,
+	ENABLE: 1
+}
+
+const Event = { 
+	type: Number,
+	button: { 
+		clicks: Number, 
+		x: Number, 
+		y: Number, 
+		button: Number 
+	},
+	motion: { 
+		x: Number, 
+		y: Number 
+	},
+	key: { 
+		keysm: { 
+			sym: Number, 
+			scancode: Number, 
+			mod: Number
+		},
+		state: Number,
+		repeat: Number,
+		type: Number 
+	},
+	window: {
+		event: Number,
+		data1: Number,
+		data2: Number
+	}
 }
 
 var initSDL = (): Number 
@@ -85,6 +126,12 @@ var drawRect = (renderer: Pointer, x: Number, y: Number, w: Number, h: Number): 
 
 var loadTexture = (renderer: Pointer, filePath: String): Pointer 
 	=> lib.call("load_texture", [renderer, filePath])
+
+var loadText = (renderer: Pointer, text: String, fontPath: String, fontSize: Number = 12, color: Color = Colors.White ): Pointer 
+	=> lib.call("load_text", [renderer, fontPath, fontSize, color.r, color.g, color.b, text])
+
+var destroyTexture = (texture: Pointer): None 
+	=> lib.call("destroy_texture", [texture])
 
 var renderCopy = (
 	renderer: Pointer, 
@@ -137,6 +184,12 @@ var getPerformanceFrequency = (): Number
 
 var getKeyboardState = (): [Boolean]
 	=> lib.call("sdl_get_keyboard_state", [])
+
+var getWindowSize = (window: Pointer): {w: Number, h: Number}
+	=> lib.call("sdl_get_window_size", [window])
+
+var showCursor = (toggle: Number): Number
+	=> lib.call("sdl_show_cursor", [toggle])
 
 // Helper Functions
 

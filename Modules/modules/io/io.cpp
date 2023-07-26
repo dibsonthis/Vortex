@@ -17,7 +17,7 @@ VortexObj open(std::string name, std::vector<VortexObj> args) {
 
     std::fstream* handle = new std::fstream(args[0]->_Node.String().value, (uint)args[1]->_Node.Number().value);
     VortexObj handle_ptr = new_vortex_obj(NodeType::POINTER);
-    handle_ptr->_Node.Pointer().value = handle;
+    handle_ptr->_Node.Pointer().value = std::move(handle);
     return handle_ptr;
 }
 
@@ -57,6 +57,7 @@ VortexObj close(std::string name, std::vector<VortexObj> args) {
     }
 
     std::fstream* handle = (std::fstream*)args[0]->_Node.Pointer().value;
+    handle->flush();
     handle->close();
     delete handle;
     return new_vortex_obj(NodeType::NONE);

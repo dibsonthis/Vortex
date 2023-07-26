@@ -246,6 +246,25 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func = nullptr) {
         return new_node(NodeType::NONE);
     }
 
+    if (node->_Node.FunctionCall().name == "del") {
+
+        int num_args = 1;
+
+        if (node->_Node.FunctionCall().args.size() != num_args) {
+            return throw_error("Function '" + node->_Node.FunctionCall().name + "' expects " + std::to_string(num_args) + " argument(s)");
+        }
+
+        node_ptr& arg = node->_Node.FunctionCall().args[0];
+
+        if (arg->type != NodeType::ID) {
+            return throw_error("Function '" + node->_Node.FunctionCall().name + "' expects argument to be an identifier");
+        }
+
+        delete_node(arg);
+
+        return new_node(NodeType::NONE);
+    }
+
     if (node->_Node.FunctionCall().name == "refcount") {
 
         int num_args = 1;

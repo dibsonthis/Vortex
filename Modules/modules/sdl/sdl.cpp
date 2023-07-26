@@ -14,6 +14,10 @@ VortexObj sdl_init(std::string name, std::vector<VortexObj> args) {
     if (args.size() != 0) {
         error_and_exit("Function '" + name + "' expects 0 arguments");
     }
+
+    TTF_Init();
+    IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
+
     int init = SDL_Init(SDL_INIT_EVERYTHING);
     return new_number_node(init);
 }
@@ -329,7 +333,7 @@ VortexObj draw_rect(std::string name, std::vector<VortexObj> args) {
 
 VortexObj load_texture(std::string name, std::vector<VortexObj> args) {
     if (args.size() != 2) {
-        error_and_exit("Function '" + name + "' expects 5 arguments");
+        error_and_exit("Function '" + name + "' expects 2 arguments");
     }
 
     VortexObj renderer = args[0];
@@ -346,15 +350,112 @@ VortexObj load_texture(std::string name, std::vector<VortexObj> args) {
     SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->_Node.Pointer().value;
 
     SDL_Texture* texture = IMG_LoadTexture(rendererPtr, file_path->_Node.String().value.c_str());
-
+    
     if (!texture) {
-        error_and_exit("Problem loading texture: " + std::string(SDL_GetError()));
+        //error_and_exit("Problem loading texture: " + std::string(SDL_GetError()));
+        std::cout << "SDL Error (" << name << "): " << SDL_GetError() << "\n";
+        //return new_vortex_obj(NodeType::NONE);
     }
 
     VortexObj textureNode = new_vortex_obj(NodeType::POINTER);
     textureNode->_Node.Pointer().value = texture;
 
     return textureNode;
+}
+
+VortexObj load_text(std::string name, std::vector<VortexObj> args) {
+    // loadText(renderer, font, size, r, g, b, text)
+
+    if (args.size() != 7) {
+        error_and_exit("Function '" + name + "' expects 7 arguments");
+    }
+
+    VortexObj renderer = args[0];
+    VortexObj font_path = args[1];
+    VortexObj font_size = args[2];
+    VortexObj color_r = args[3];
+    VortexObj color_g = args[4];
+    VortexObj color_b = args[5];
+    VortexObj text = args[6];
+
+    if (renderer->type != NodeType::POINTER) {
+        error_and_exit("Function '" + name + "' expects argument 1 to be a pointer");
+    }
+
+    if (font_path->type != NodeType::STRING) {
+        error_and_exit("Function '" + name + "' expects argument 2 to be a string");
+    }
+
+    if (font_size->type != NodeType::NUMBER) {
+        error_and_exit("Function '" + name + "' expects argument 3 to be a number");
+    }
+
+    if (color_r->type != NodeType::NUMBER || color_g->type != NodeType::NUMBER || color_b->type != NodeType::NUMBER) {
+        error_and_exit("Function '" + name + "' expects arguments 4-6 to be a number");
+    }
+
+    if (text->type != NodeType::STRING) {
+        error_and_exit("Function '" + name + "' expects argument 7 to be a string");
+    }
+
+    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->_Node.Pointer().value;
+
+    SDL_Color color = {
+        color_r->_Node.Number().value,
+        color_g->_Node.Number().value,
+        color_b->_Node.Number().value 
+    };
+    
+    TTF_Font* font = TTF_OpenFont(font_path->_Node.String().value.c_str(), font_size->_Node.Number().value);
+
+    if (!font) {
+        //error_and_exit("Problem loading texture: " + std::string(SDL_GetError()));
+        std::cout << "SDL Error (" << name << "): " << SDL_GetError() << "\n";
+        //return new_vortex_obj(NodeType::NONE);
+    }
+
+    SDL_Surface* surfaceMessage =
+    TTF_RenderText_Solid(font, text->_Node.String().value.c_str(), color); 
+
+    if (!surfaceMessage) {
+        //error_and_exit("Problem loading texture: " + std::string(SDL_GetError()));
+        std::cout << "SDL Error (" << name << "): " << SDL_GetError() << "\n";
+        //return new_vortex_obj(NodeType::NONE);
+    }
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(rendererPtr, surfaceMessage);
+
+    if (!texture) {
+        //error_and_exit("Problem loading texture: " + std::string(SDL_GetError()));
+        std::cout << "SDL Error (" << name << "): " << SDL_GetError() << "\n";
+        //return new_vortex_obj(NodeType::NONE);
+    }
+
+    VortexObj textureNode = new_vortex_obj(NodeType::POINTER);
+    textureNode->_Node.Pointer().value = texture;
+
+    SDL_FreeSurface(surfaceMessage);
+    TTF_CloseFont(font);
+
+    return textureNode;
+}
+
+VortexObj destroy_texture(std::string name, std::vector<VortexObj> args) {
+    if (args.size() != 1) {
+        error_and_exit("Function '" + name + "' expects 1 argument");
+    }
+
+    VortexObj texturePtr = args[0];
+
+    if (texturePtr->type != NodeType::POINTER) {
+        error_and_exit("Function '" + name + "' expects 1 pointer argument");
+    }
+
+    SDL_Texture* texture = (SDL_Texture*)texturePtr->_Node.Pointer().value;
+
+    SDL_DestroyTexture(texture);
+
+    return new_vortex_obj(NodeType::NONE);
 }
 
 VortexObj render_copy(std::string name, std::vector<VortexObj> args) {
@@ -564,12 +665,17 @@ VortexObj poll_event(std::string name, std::vector<VortexObj> args) {
     event->_Node.Object().properties["key"]->_Node.Object().properties["keysm"]->_Node.Object().properties["mod"] = new_number_node(e.key.keysym.mod);
     event->_Node.Object().properties["key"]->_Node.Object().properties["keysm"]->_Node.Object().properties["scancode"] = new_number_node(e.key.keysym.scancode);
     event->_Node.Object().properties["key"]->_Node.Object().properties["keysm"]->_Node.Object().properties["sym"] = new_number_node(e.key.keysym.sym);
+    // Window
+    event->_Node.Object().properties["window"] = new_vortex_obj(NodeType::OBJECT);
+    event->_Node.Object().properties["window"]->_Node.Object().properties["event"] = new_number_node(e.window.event);
+    event->_Node.Object().properties["window"]->_Node.Object().properties["data1"] = new_number_node(e.window.data1);
+    event->_Node.Object().properties["window"]->_Node.Object().properties["data2"] = new_number_node(e.window.data2);
 
     VortexObj eventStruct = new_vortex_obj(NodeType::OBJECT);
     eventStruct->_Node.Object().properties["status"] = new_number_node(status);
-    eventStruct->_Node.Object().properties["event"] = event;
+    eventStruct->_Node.Object().properties["event"] = std::move(event);
 
-    return eventStruct;
+    return std::move(eventStruct);
 }
 
 VortexObj sdl_delay(std::string name, std::vector<VortexObj> args) {
@@ -647,6 +753,45 @@ VortexObj sdl_get_keyboard_state(std::string name, std::vector<VortexObj> args) 
     return keyboard_state_list;
 }
 
+VortexObj sdl_get_window_size(std::string name, std::vector<VortexObj> args) {
+
+    if (args.size() != 1) {
+        error_and_exit("Function '" + name + "' expects 1 argument");
+    }
+
+    node_ptr windowPointer = args[0];
+
+    if (windowPointer->type != NodeType::POINTER) {
+        error_and_exit("Function '" + name + "' expects 1 pointer argument");
+    }
+
+    SDL_Window* window = (SDL_Window*)windowPointer->_Node.Pointer().value;
+
+    int w, h;
+
+    SDL_GetWindowSize(window, &w, &h);
+
+    node_ptr sizeObj = new_vortex_obj(NodeType::OBJECT);
+    sizeObj->_Node.Object().properties["w"] = new_number_node(w);
+    sizeObj->_Node.Object().properties["h"] = new_number_node(h);
+
+    return sizeObj;
+}
+
+VortexObj sdl_show_cursor(std::string name, std::vector<VortexObj> args) {
+
+    if (args.size() != 1) {
+        error_and_exit("Function '" + name + "' expects 1 argument");
+    }
+
+    if (args[0]->type != NodeType::NUMBER) {
+        error_and_exit("Function '" + name + "' expects 1 number argument");
+    }
+
+    int state = SDL_ShowCursor((int)args[0]->_Node.Number().value);
+    return new_number_node(state);
+}
+
 /* Implement call_function */
 
 extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args) {
@@ -710,11 +855,23 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     if (name == "load_texture") {
         return load_texture(name, args);
     }
+    if (name == "load_text") {
+        return load_text(name, args);
+    }
+    if (name == "destroy_texture") {
+        return destroy_texture(name, args);
+    }
     if (name == "render_copy") {
         return render_copy(name, args);
     }
     if (name == "render_copy_ex") {
         return render_copy_ex(name, args);
+    }
+    if (name == "sdl_get_window_size") {
+        return sdl_get_window_size(name, args);
+    }
+    if (name == "sdl_show_cursor") {
+        return sdl_show_cursor(name, args);
     }
 
     error_and_exit("Function '" + name + "' is undefined");
