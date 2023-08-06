@@ -13,7 +13,8 @@ type WindowConfig = {
 	title: String = "Test Window",
 	xPos: Number = 300,
 	yPos: Number = 100,
-	color: Color = Color {}
+	color: Color = Color {},
+	flags: Number = 4
 }
 
 const Colors = {
@@ -85,11 +86,22 @@ const Event = {
 	}
 }
 
+type Vec3 = {
+	x: Number = 0,
+	y: Number = 0,
+	z: Number = 0
+}
+
+type Vertex = {
+	color: Color,
+	position: Vec3
+}
+
 var initSDL = (): Number 
 	=> lib.call("sdl_init", [])
 
 var createWindow = (windowConfig: WindowConfig): Pointer
-	=> lib.call("create_window", [windowConfig.title, windowConfig.xPos, windowConfig.yPos, windowConfig.width, windowConfig.height])
+	=> lib.call("create_window", [windowConfig.title, windowConfig.xPos, windowConfig.yPos, windowConfig.width, windowConfig.height, windowConfig.flags])
 
 var destroyWindow = (window: Pointer): None
 	=> lib.call("destroy_window", [window])
@@ -123,6 +135,9 @@ var drawLine = (renderer: Pointer, x1: Number, y1: Number, x2: Number, y2: Numbe
 
 var drawRect = (renderer: Pointer, x: Number, y: Number, w: Number, h: Number): None 
 	=> lib.call("draw_rect", [renderer, x, y, w, h])
+
+var drawGeometry = (renderer: Pointer, vertices: [Vertex], texture: Pointer | None = None): None 
+	=> lib.call("draw_geometry", [renderer, vertices, texture])
 
 var loadTexture = (renderer: Pointer, filePath: String): Pointer 
 	=> lib.call("load_texture", [renderer, filePath])
@@ -190,6 +205,26 @@ var getWindowSize = (window: Pointer): {w: Number, h: Number}
 
 var showCursor = (toggle: Number): Number
 	=> lib.call("sdl_show_cursor", [toggle])
+
+// GL Functions
+
+var glEnable = (glEnum: Number): None
+	=> lib.call("gl_enable", [glEnum])
+
+var glClear = (glBitField: Number): None
+	=> lib.call("gl_clear", [glBitField])
+
+var glClearColor = (color: Color): None
+	=> lib.call("gl_clear_color", [color.r, color.g, color.b, color.a])
+	
+var glViewport = (x: Number, y: Number, w: Number, h: Number): None
+	=> lib.call("gl_viewport", [x, y, w, h])
+
+var glCreateContext = (window: Pointer): Pointer
+	=> lib.call("gl_create_context", [window])
+
+var glSwapWindow = (window: Pointer): None
+	=> lib.call("gl_swap_window", [window])
 
 // Helper Functions
 

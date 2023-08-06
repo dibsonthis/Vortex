@@ -156,6 +156,7 @@ public:
     node_ptr list_method_map(node_ptr& list, node_ptr& function);
     node_ptr list_method_filter(node_ptr& list, node_ptr& function);
     node_ptr list_method_reduce(node_ptr& list, node_ptr& function);
+    node_ptr list_method_sort(node_ptr& list, node_ptr& function);
 
     node_ptr tc_load_lib(node_ptr& node);
     node_ptr tc_call_lib_function(node_ptr& lib, node_ptr& node);

@@ -1,4 +1,7 @@
 #include "../../Vortex.hpp"
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+#include <GLUT/glut.h>
 #include "include/SDL2/SDL.h"
 #include "include/SDL2/SDL_Image.h"
 #include "include/SDL2/SDL_ttf.h"
@@ -19,13 +22,14 @@ VortexObj sdl_init(std::string name, std::vector<VortexObj> args) {
     IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
 
     int init = SDL_Init(SDL_INIT_EVERYTHING);
+
     return new_number_node(init);
 }
 
 VortexObj create_window(std::string name, std::vector<VortexObj> args) {
 
-    if (args.size() != 5) {
-        error_and_exit("Function '" + name + "' expects 5 arguments");
+    if (args.size() != 6) {
+        error_and_exit("Function '" + name + "' expects 6 arguments");
     }
 
     VortexObj windowName = args[0];
@@ -33,6 +37,7 @@ VortexObj create_window(std::string name, std::vector<VortexObj> args) {
     VortexObj yPos = args[2];
     VortexObj width = args[3];
     VortexObj height = args[4];
+    VortexObj flags = args[5];
 
     if (windowName->type != NodeType::STRING) {
         error_and_exit("Function '" + name + "' expects arg 1 to be a string");
@@ -54,12 +59,16 @@ VortexObj create_window(std::string name, std::vector<VortexObj> args) {
         error_and_exit("Function '" + name + "' expects arg 5 to be a number");
     }
 
+    if (flags->type != NodeType::NUMBER) {
+        error_and_exit("Function '" + name + "' expects arg 6 to be a number");
+    }
+
     SDL_Window* window = SDL_CreateWindow(windowName->_Node.String().value.c_str(), 
                                       (int)xPos->_Node.Number().value, 
                                       (int)yPos->_Node.Number().value, 
                                       (int)width->_Node.Number().value,
                                       (int)height->_Node.Number().value, 
-                                      SDL_WINDOW_SHOWN);
+                                      SDL_WINDOW_SHOWN | (int)flags->_Node.Number().value);
 
     SDL_SetWindowResizable(window, SDL_TRUE);
 
@@ -326,6 +335,58 @@ VortexObj draw_rect(std::string name, std::vector<VortexObj> args) {
 
     if (fill != 0) {
         error_and_exit("Function '" + name + "' failed");
+    }
+
+    return new_vortex_obj(NodeType::NONE);
+}
+
+VortexObj draw_geometry(std::string name, std::vector<VortexObj> args) {
+    int args_count = 3;
+
+    if (args.size() != args_count) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(args_count) + " argument(s)");
+    }
+
+    VortexObj renderer = args[0];
+    VortexObj vertices = args[1];
+    VortexObj texture = args[2];
+
+    if (renderer->type != NodeType::POINTER) {
+        error_and_exit("Function '" + name + "' expects 'renderer' argument to be a pointer");
+    }
+
+    if (texture->type != NodeType::POINTER && texture->type != NodeType::NONE) {
+        error_and_exit("Function '" + name + "' expects 'texture' argument to be a pointer or None");
+    }
+
+    if (vertices->type != NodeType::LIST) {
+        error_and_exit("Function '" + name + "' expects 'vertices' argument to be a List");
+    }
+
+    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer->_Node.Pointer().value;
+    SDL_Texture* texturePtr = NULL;
+    if (texture->type == NodeType::POINTER) {
+        texturePtr = (SDL_Texture*)texture->_Node.Pointer().value;
+    }
+    std::vector<SDL_Vertex> sdl_vertices;
+
+    for (VortexObj vertex : vertices->_Node.List().elements) {
+        SDL_Vertex v;
+        v.color.r = vertex->_Node.Object().properties["color"]->_Node.Object().properties["r"]->_Node.Number().value;
+        v.color.g = vertex->_Node.Object().properties["color"]->_Node.Object().properties["g"]->_Node.Number().value;
+        v.color.b = vertex->_Node.Object().properties["color"]->_Node.Object().properties["b"]->_Node.Number().value;
+        v.color.a = vertex->_Node.Object().properties["color"]->_Node.Object().properties["a"]->_Node.Number().value;
+
+        v.position.x = vertex->_Node.Object().properties["position"]->_Node.Object().properties["x"]->_Node.Number().value;
+        v.position.y = vertex->_Node.Object().properties["position"]->_Node.Object().properties["y"]->_Node.Number().value;
+
+        sdl_vertices.push_back(v);
+    }
+
+    int render = SDL_RenderGeometry(rendererPtr, texturePtr, sdl_vertices.data(), sdl_vertices.size(), NULL, 0);
+
+    if (render != 0) {
+        std::cout << "SDL Error (" << name << "): " << SDL_GetError() << "\n";
     }
 
     return new_vortex_obj(NodeType::NONE);
@@ -792,6 +853,143 @@ VortexObj sdl_show_cursor(std::string name, std::vector<VortexObj> args) {
     return new_number_node(state);
 }
 
+// GL Functions
+
+VortexObj gl_enable(std::string name, std::vector<VortexObj> args) {
+
+    int args_count = 1;
+
+    if (args.size() != args_count) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(args_count) + " argument(s)");
+    }
+
+    if (args[0]->type != NodeType::NUMBER) {
+        error_and_exit("Argument 'glEnum' should be a number"); 
+    }
+
+    GLenum gl_enum = args[0]->_Node.Number().value;
+
+    glEnable(gl_enum);
+
+    return new_vortex_obj(NodeType::NONE);
+}
+
+VortexObj gl_clear(std::string name, std::vector<VortexObj> args) {
+
+    int args_count = 1;
+
+    if (args.size() != args_count) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(args_count) + " argument(s)");
+    }
+
+    if (args[0]->type != NodeType::NUMBER) {
+        error_and_exit("Argument 'GLbitfield' should be a number"); 
+    }
+
+    GLenum gl_bit_field = args[0]->_Node.Number().value;
+
+    glClear(gl_bit_field);
+
+    return new_vortex_obj(NodeType::NONE);
+}
+
+VortexObj gl_viewport(std::string name, std::vector<VortexObj> args) {
+
+    int args_count = 4;
+
+    if (args.size() != args_count) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(args_count) + " argument(s)");
+    }
+
+    if (args[0]->type != NodeType::NUMBER || args[1]->type != NodeType::NUMBER || args[2]->type != NodeType::NUMBER || args[3]->type != NodeType::NUMBER) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(args_count) + " number argument(s)");
+    }
+
+    int x = args[0]->_Node.Number().value;
+    int y = args[1]->_Node.Number().value;
+    int w = args[2]->_Node.Number().value;
+    int h = args[3]->_Node.Number().value;
+
+    glViewport(x, y, w, h);
+
+    return new_vortex_obj(NodeType::NONE);
+}
+
+VortexObj gl_create_context(std::string name, std::vector<VortexObj> args) {
+
+    int args_count = 1;
+
+    if (args.size() != args_count) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(args_count) + " argument(s)");
+    }
+
+    if (args[0]->type != NodeType::POINTER) {
+        error_and_exit("Argument 'window' should be a pointer"); 
+    }
+
+    SDL_Window* window = (SDL_Window*)args[0]->_Node.Pointer().value;
+
+    SDL_GLContext context = SDL_GL_CreateContext(window);
+
+    VortexObj context_ptr = new_vortex_obj(NodeType::POINTER);
+    context_ptr->_Node.Pointer().value = context;
+
+    return context_ptr;
+}
+
+VortexObj gl_swap_window(std::string name, std::vector<VortexObj> args) {
+
+    int args_count = 1;
+
+    if (args.size() != args_count) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(args_count) + " argument(s)");
+    }
+
+    if (args[0]->type != NodeType::POINTER) {
+        error_and_exit("Argument 'GLbitfield' should be a pointer"); 
+    }
+
+    SDL_Window* window = (SDL_Window*)args[0]->_Node.Pointer().value;
+
+    SDL_GL_SwapWindow(window);
+
+    return new_vortex_obj(NodeType::NONE);
+}
+
+VortexObj gl_clear_color(std::string name, std::vector<VortexObj> args) {
+
+    int args_count = 4;
+
+    if (args.size() != args_count) {
+        error_and_exit("Function '" + name + "' expects " + std::to_string(args_count) + " argument(s)");
+    }
+
+    VortexObj r = args[0];
+    VortexObj g = args[1];
+    VortexObj b = args[2];
+    VortexObj a = args[3];
+
+    if (r->type != NodeType::NUMBER) {
+        error_and_exit("Function '" + name + "' expects arg 1 to be a number");
+    }
+
+    if (g->type != NodeType::NUMBER) {
+        error_and_exit("Function '" + name + "' expects arg 2 to be a number");
+    }
+
+    if (b->type != NodeType::NUMBER) {
+        error_and_exit("Function '" + name + "' expects arg 3 to be a number");
+    }
+
+    if (a->type != NodeType::NUMBER) {
+        error_and_exit("Function '" + name + "' expects arg 4 to be a number");
+    }
+
+    glClearColor(r->_Node.Number().value, g->_Node.Number().value, b->_Node.Number().value, a->_Node.Number().value);
+
+    return new_vortex_obj(NodeType::NONE);
+}
+
 /* Implement call_function */
 
 extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args) {
@@ -840,6 +1038,9 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     if (name == "draw_rect") {
         return draw_rect(name, args);
     }
+    if (name == "draw_geometry") {
+        return draw_geometry(name, args);
+    }
     if (name == "sdl_delay") {
         return sdl_delay(name, args);
     }
@@ -872,6 +1073,25 @@ extern "C" VortexObj call_function(std::string name, std::vector<VortexObj> args
     }
     if (name == "sdl_show_cursor") {
         return sdl_show_cursor(name, args);
+    }
+    // GL Functuons
+    if (name == "gl_enable") {
+        return gl_enable(name, args);
+    }
+    if (name == "gl_clear") {
+        return gl_clear(name, args);
+    }
+    if (name == "gl_viewport") {
+        return gl_viewport(name, args);
+    }
+    if (name == "gl_create_context") {
+        return gl_create_context(name, args);
+    }
+    if (name == "gl_swap_window") {
+        return gl_swap_window(name, args);
+    }
+    if (name == "gl_clear_color") {
+        return gl_clear_color(name, args);
     }
 
     error_and_exit("Function '" + name + "' is undefined");

@@ -472,6 +472,23 @@ node_ptr Interpreter::eval_dot_list(node_ptr& left, node_ptr& right) {
             return list_method_foreach(left, function);
         }
 
+        if (prop == "sort") {
+
+            int num_args = 1;
+
+            if (right->_Node.FunctionCall().args.size() != num_args) {
+                return throw_error("List function '" + right->_Node.FunctionCall().name + "' expects " + std::to_string(num_args) + " argument(s)");
+            }
+
+            node_ptr function = eval_node(right->_Node.FunctionCall().args[0]);
+
+            if (function->type != NodeType::FUNC) {
+                return throw_error("List function '" + right->_Node.FunctionCall().name + "' expects a function argument");
+            }
+
+            return list_method_sort(left, function);
+        }
+
         if (prop == "map") {
 
             int num_args = 1;
@@ -996,6 +1013,69 @@ node_ptr Interpreter::list_method_reduce(node_ptr& list, node_ptr& function) {
     }
 
     return new_list->_Node.List().elements[0];
+}
+
+node_ptr Interpreter::list_method_sort(node_ptr& list, node_ptr& function) {
+
+    if (list->_Node.List().elements.size() < 2) {
+        return list;
+    }
+
+    node_ptr list_type = get_type(list);
+    node_ptr elem_type = list_type->_Node.List().elements[0]; // Expect Any if empty
+
+    if (function->_Node.Function().params.size() != 2) {
+        return throw_error("Sort function must have 2 parameters");
+    }
+
+    // Get first param and it's type
+    std::string elem_a_param_name = function->_Node.Function().params[0]->_Node.ID().value;
+    node_ptr elem_a_param_type = eval_node(function->_Node.Function().param_types[elem_a_param_name]);
+
+    // If type exists, we typecheck against the inferred elem_type
+    if (elem_a_param_type) {
+        if (elem_a_param_type->type == NodeType::ANY) {
+            function->_Node.Function().param_types[elem_a_param_name] = elem_type;
+        } else if (!match_inferred_types(elem_a_param_type, elem_type)) {
+            return throw_error("Reduce function expects a parameter of type '" + printable(elem_type) + "' but parameter was typed as '" + printable(elem_a_param_type) + "'");
+        }
+    } else {
+        function->_Node.Function().param_types[elem_a_param_name] = elem_type;
+    }
+
+    // Get second param and it's type
+    std::string elem_b_param_name = function->_Node.Function().params[1]->_Node.ID().value;
+    node_ptr elem_b_param_type = eval_node(function->_Node.Function().param_types[elem_b_param_name]);
+
+    // If type exists, we typecheck against the inferred elem_type
+    if (elem_b_param_type) {
+        if (elem_b_param_type->type == NodeType::ANY) {
+            function->_Node.Function().param_types[elem_b_param_name] = elem_type;
+        } else if (!match_inferred_types(elem_b_param_type, elem_type)) {
+            return throw_error("Reduce function expects a parameter of type '" + printable(elem_type) + "' but parameter was typed as '" + printable(elem_b_param_type) + "'");
+        }
+    } else {
+        function->_Node.Function().param_types[elem_b_param_name] = elem_type;
+    }
+
+    node_ptr new_list = copy_node(list);
+
+    std::sort(new_list->_Node.List().elements.begin(), new_list->_Node.List().elements.end(), 
+    [this, function](const node_ptr &lhs, const node_ptr &rhs) {
+        node_ptr func_call = new_node(NodeType::FUNC_CALL);
+
+        func_call->_Node.FunctionCall().args.push_back(lhs);
+        func_call->_Node.FunctionCall().args.push_back(rhs);
+        node_ptr res = eval_func_call(func_call, function);
+
+        if (res->type != NodeType::BOOLEAN) {
+            return false;
+        }
+
+        return res->_Node.Boolean().value;
+    });
+
+    return new_list;
 }
 
 bool Interpreter::match_inferred_types(node_ptr& nodeA, node_ptr& nodeB) {
