@@ -5,6 +5,8 @@
 #include "src/Parser/Parser.hpp"
 #include "src/Interpreter/Interpreter.hpp"
 #include "src/Typechecker/Typechecker.hpp"
+#include "src/Bytecode/Bytecode.hpp"
+#include "src/VirtualMachine/VirtualMachine.hpp"
 
 enum Type
 {
@@ -12,14 +14,27 @@ enum Type
     INTERP,
 };
 
-Type type = Type::INTERP;
+Type type = Type::DEV;
 
 int main(int argc, char** argv)
 {
     if (type == Type::DEV)
     {
-        // std::filesystem::current_path("../../../playground/project_4-sdl/src");
-        // Lexer lexer("main.vtx");
+        VM vm;
+        Chunk chunk;
+
+        add_constant_code(chunk, number_val(42));
+        add_code(chunk, OP_NEGATE);
+        add_constant_code(chunk, number_val(45));
+        add_code(chunk, OP_ADD);
+        add_constant_code(chunk, number_val(7));
+        add_code(chunk, OP_ADD);
+        add_constant_code(chunk, number_val(5));
+        add_code(chunk, OP_SUBTRACT);
+        add_code(chunk, OP_RETURN);
+
+        evaluate(vm, chunk);
+
         std::filesystem::current_path("../../../playground");
         Lexer lexer("source.vtx");
 

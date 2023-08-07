@@ -14,6 +14,8 @@ macBuild()
     "$PWD"/src/Parser/Parser.cpp \
     "$PWD"/src/Interpreter/Interpreter.cpp \
     "$PWD"/src/Typechecker/Typechecker.cpp \
+    "$PWD"/src/Bytecode/Bytecode.cpp \
+    "$PWD"/src/VirtualMachine/VirtualMachine.cpp \
     "$PWD"/src/utils/utils.cpp \
     "$PWD"/main.cpp \
     -o "$PWD"/bin/build/interp/mac/vortex  || { echo 'Compilation failed' ; exit 1; }
@@ -46,6 +48,8 @@ linBuild()
     "$PWD"/src/Parser/Parser.cpp \
     "$PWD"/src/Interpreter/Interpreter.cpp \
     "$PWD"/src/Typechecker/Typechecker.cpp \
+    "$PWD"/src/Bytecode/Bytecode.cpp \
+    "$PWD"/src/VirtualMachine/VirtualMachine.cpp \
     "$PWD"/src/utils/utils.cpp \
     "$PWD"/main.cpp \
     -o "$PWD"/bin/build/interp/linux/vortex || { echo 'compilation failed' ; exit 1; }
