@@ -15,6 +15,7 @@ macBuild()
     "$PWD"/src/Interpreter/Interpreter.cpp \
     "$PWD"/src/Typechecker/Typechecker.cpp \
     "$PWD"/src/Bytecode/Bytecode.cpp \
+    "$PWD"/src/Bytecode/Generator.cpp \
     "$PWD"/src/VirtualMachine/VirtualMachine.cpp \
     "$PWD"/src/utils/utils.cpp \
     "$PWD"/main.cpp \
@@ -49,6 +50,7 @@ linBuild()
     "$PWD"/src/Interpreter/Interpreter.cpp \
     "$PWD"/src/Typechecker/Typechecker.cpp \
     "$PWD"/src/Bytecode/Bytecode.cpp \
+    "$PWD"/src/Bytecode/Generator.cpp \
     "$PWD"/src/VirtualMachine/VirtualMachine.cpp \
     "$PWD"/src/utils/utils.cpp \
     "$PWD"/main.cpp \

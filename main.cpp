@@ -6,6 +6,7 @@
 #include "src/Interpreter/Interpreter.hpp"
 #include "src/Typechecker/Typechecker.hpp"
 #include "src/Bytecode/Bytecode.hpp"
+#include "src/Bytecode/Generator.hpp"
 #include "src/VirtualMachine/VirtualMachine.hpp"
 
 enum Type
@@ -20,21 +21,6 @@ int main(int argc, char** argv)
 {
     if (type == Type::DEV)
     {
-        VM vm;
-        Chunk chunk;
-
-        add_constant_code(chunk, number_val(42));
-        add_code(chunk, OP_NEGATE);
-        add_constant_code(chunk, number_val(45));
-        add_code(chunk, OP_ADD);
-        add_constant_code(chunk, number_val(7));
-        add_code(chunk, OP_ADD);
-        add_constant_code(chunk, number_val(5));
-        add_code(chunk, OP_SUBTRACT);
-        add_code(chunk, OP_RETURN);
-
-        evaluate(vm, chunk);
-
         std::filesystem::current_path("../../../playground");
         Lexer lexer("source.vtx");
 
@@ -48,8 +34,15 @@ int main(int argc, char** argv)
         Typechecker typechecker(parser.nodes, parser.file_name);
         typechecker.typecheck();
 
-        Interpreter interpreter(typechecker.nodes, parser.file_name);
-        interpreter.evaluate();
+        VM vm;
+        Chunk chunk;
+
+        generate_bytecode(typechecker.nodes, chunk);
+        disassemble_chunk(chunk, "Test");
+        evaluate(vm, chunk);
+
+        // Interpreter interpreter(typechecker.nodes, parser.file_name);
+        // interpreter.evaluate();
 
         std::cin.get();
         exit(0);
