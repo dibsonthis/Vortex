@@ -8,19 +8,28 @@ int bytes_to_int(uint8_t a, uint8_t b, uint8_t c, uint8_t d);
 
 enum OpCode {
     OP_RETURN,
-    OP_CONSTANT,
+    OP_LOAD_CONST,
     OP_NEGATE,
     OP_ADD,
     OP_SUBTRACT,
     OP_MULTIPLY,
     OP_DIVIDE,
-    OP_NOT
+    OP_NOT,
+    OP_EQ_EQ,
+    OP_NOT_EQ,
+    OP_LT_EQ,
+    OP_GT_EQ,
+    OP_LT,
+    OP_GT,
+    OP_STORE_VAR,
+    OP_LOAD
 };
 
 enum ValueType {
     Number,
     String,
-    Boolean
+    Boolean,
+    None
 };
 
 struct Value {
@@ -37,6 +46,8 @@ struct Value {
                 break;
             case Boolean:
                 value = false;
+                break;
+            default:    
                 break;
         }
     }
@@ -59,13 +70,15 @@ struct Value {
     bool is_boolean() {
         return type == Boolean;
     }
+    bool is_none() {
+        return type == None;
+    }
 };
 
 Value number_val(float value);
-
 Value string_val(std::string value);
-
 Value boolean_val(bool value);
+Value none_val();
 
 struct Chunk {
     std::vector<uint8_t> code;
@@ -80,6 +93,8 @@ void add_code(Chunk& chunk, uint8_t code, uint8_t line = 0);
 int add_constant(Chunk& chunk, Value value);
 
 void add_constant_code(Chunk& chunk, Value value, uint8_t line = 0);
+
+void add_bytes(Chunk& chunk, Value value, uint8_t op, uint8_t line = 0);
 
 static int simple_instruction(std::string name, int offset);
 

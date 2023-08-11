@@ -27,6 +27,7 @@ static void runtimeError(VM& vm, std::string message, ...) {
 static EvaluateResult run(VM& vm) {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk.constants[bytes_to_int(READ_BYTE(), READ_BYTE(), READ_BYTE(), READ_BYTE())])
+#define READ_LOCAL() (vm.locals[bytes_to_int(READ_BYTE(), READ_BYTE(), READ_BYTE(), READ_BYTE())])
 
     for (;;) {
         #ifdef DEBUG_TRACE_EXECUTION
@@ -47,9 +48,21 @@ static EvaluateResult run(VM& vm) {
                 printf("\n");
                 return EVALUATE_OK;
             }
-            case OP_CONSTANT: {
+            case OP_LOAD_CONST: {
                 Value constant = READ_CONSTANT();
                 push(vm, constant);
+                break;
+            }
+            case OP_STORE_VAR: {
+                READ_CONSTANT();
+                Value value = pop(vm);
+                vm.locals.push_back(value);
+                break;
+            }
+            case OP_LOAD: {
+                int index = READ_CONSTANT().get_number();
+                Value variable = vm.locals[index];
+                push(vm, variable);
                 break;
             }
             case OP_NEGATE: {
@@ -64,6 +77,11 @@ static EvaluateResult run(VM& vm) {
             }
             case OP_NOT: {
                 Value constant = pop(vm);
+                if (constant.is_none()) {
+                    Value value = boolean_val(true);
+                    push(vm, value);
+                    break;
+                }
                 if (!constant.is_boolean()) {
                     runtimeError(vm, "Operand must be a boolean");
                     return EVALUATE_RUNTIME_ERROR;
@@ -75,6 +93,12 @@ static EvaluateResult run(VM& vm) {
             case OP_ADD: {
                 Value v2 = pop(vm);
                 Value v1 = pop(vm);
+                if (v1.is_string() && v2.is_string()) {
+                    Value value = string_val(v1.get_string() + v2.get_string());
+                    vm.objects.push_back(&value);
+                    push(vm, value);
+                    break;
+                }
                 if (!v1.is_number() || !v2.is_number() ) {
                     runtimeError(vm, "Operands must be numbers");
                     return EVALUATE_RUNTIME_ERROR;
@@ -116,15 +140,96 @@ static EvaluateResult run(VM& vm) {
                 push(vm, value);
                 break;
             }
+            case OP_EQ_EQ: {
+                Value v2 = pop(vm);
+                Value v1 = pop(vm);
+                Value value = boolean_val(is_equal(v1, v2));
+                push(vm, value);
+                break;
+            }
+            case OP_NOT_EQ: {
+                Value v2 = pop(vm);
+                Value v1 = pop(vm);
+                Value value = boolean_val(!is_equal(v1, v2));
+                push(vm, value);
+                break;
+            }
+            case OP_LT_EQ: {
+                Value v2 = pop(vm);
+                Value v1 = pop(vm);
+                if (!v1.is_number() || !v2.is_number() ) {
+                    runtimeError(vm, "Operands must be numbers");
+                    return EVALUATE_RUNTIME_ERROR;
+                }
+                Value value = boolean_val(v1.get_number() <= v2.get_number());
+                push(vm, value);
+                break;
+            }
+            case OP_GT_EQ: {
+                Value v2 = pop(vm);
+                Value v1 = pop(vm);
+                if (!v1.is_number() || !v2.is_number() ) {
+                    runtimeError(vm, "Operands must be numbers");
+                    return EVALUATE_RUNTIME_ERROR;
+                }
+                Value value = boolean_val(v1.get_number() >= v2.get_number());
+                push(vm, value);
+                break;
+            }
+            case OP_LT: {
+                Value v2 = pop(vm);
+                Value v1 = pop(vm);
+                if (!v1.is_number() || !v2.is_number() ) {
+                    runtimeError(vm, "Operands must be numbers");
+                    return EVALUATE_RUNTIME_ERROR;
+                }
+                Value value = boolean_val(v1.get_number() < v2.get_number());
+                push(vm, value);
+                break;
+            }
+            case OP_GT: {
+                Value v2 = pop(vm);
+                Value v1 = pop(vm);
+                if (!v1.is_number() || !v2.is_number() ) {
+                    runtimeError(vm, "Operands must be numbers");
+                    return EVALUATE_RUNTIME_ERROR;
+                }
+                Value value = boolean_val(v1.get_number() > v2.get_number());
+                push(vm, value);
+                break;
+            }
         }
     }
 
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef READ_LOCAL
 }
 
 EvaluateResult evaluate(VM& vm, Chunk& chunk) {
     vm.chunk = chunk;
     vm.ip = &vm.chunk.code[0];
     return run(vm);
+}
+
+bool is_equal(Value& v1, Value& v2) {
+    if (v1.type != v2.type) {
+        return false;
+    }
+
+    if (v1.is_number()) {
+        return v1.get_number() == v2.get_number();
+    }
+    if (v1.is_string()) {
+        return v1.get_string() == v2.get_string();
+    }
+    if (v1.is_boolean()) {
+        return v1.get_boolean() == v2.get_boolean();
+    }
+
+    return false;
+}
+
+void freeVM(VM& vm) {
+    //
 }

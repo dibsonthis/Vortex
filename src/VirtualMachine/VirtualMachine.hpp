@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Bytecode/Bytecode.hpp"
+#include "../Bytecode/Generator.hpp"
 
 // #define DEBUG_TRACE_EXECUTION
 
@@ -9,6 +10,8 @@ struct VM {
     uint8_t* ip;
     std::vector<Value> stack;
     Value* sp;
+    std::vector<Value*> objects;
+    std::vector<Value> locals;
 };
 
 enum EvaluateResult {
@@ -23,3 +26,7 @@ Value pop(VM& vm);
 static void runtimeError(VM& vm, std::string message, ...);
 static EvaluateResult run(VM& vm);
 EvaluateResult evaluate(VM& vm, Chunk& chunk);
+
+void freeVM(VM& vm);
+
+bool is_equal(Value& v1, Value& v2);
