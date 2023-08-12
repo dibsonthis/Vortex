@@ -2,19 +2,16 @@
 #include "Bytecode.hpp"
 #include "../Node/Node.hpp"
 
-struct StackFrame {
-    std::string name;
-    std::vector<std::string> local_var_names;
-};
-
-struct Local {
+struct Variable {
     std::string name;
     int depth;
+    bool is_const;
 };
 
-struct Environment {
-    std::vector<Local> locals;
-    int depth;
+struct Compiler {
+    std::vector<Variable> variables;
+    int variableCount;
+    int scopeDepth;
 };
 
 void gen_literal(Chunk& chunk, node_ptr node);
@@ -30,14 +27,23 @@ void gen_lt_eq(Chunk& chunk, node_ptr node);
 void gen_gt_eq(Chunk& chunk, node_ptr node);
 void gen_lt(Chunk& chunk, node_ptr node);
 void gen_gt(Chunk& chunk, node_ptr node);
+void gen_eq(Chunk& chunk, node_ptr node);
 
 void gen_paren(Chunk& chunk, node_ptr node);
 void gen_var(Chunk& chunk, node_ptr node);
+void gen_const(Chunk& chunk, node_ptr node);
 void gen_id(Chunk& chunk, node_ptr node);
 
 void generate(node_ptr node, Chunk& chunk);
 void generate_bytecode(std::vector<node_ptr>& nodes, Chunk& chunk);
 
-static void add_local(std::string name);
-static int resolve_local(Environment& env, std::string name);
+static void begin_scope();
+static void end_scope(Chunk& chunk);
 
+static void addVariable(std::string name, bool is_const);
+
+static void declareVariable(std::string name, bool is_const = false);
+
+static int resolve_variable(std::string name);
+
+void error(std::string message);

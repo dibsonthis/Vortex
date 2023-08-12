@@ -31,13 +31,13 @@ int main(int argc, char** argv)
         parser.remove_op_node(";");
         auto ast = parser.nodes;
 
-        Typechecker typechecker(parser.nodes, parser.file_name);
-        typechecker.typecheck();
+        // Typechecker typechecker(parser.nodes, parser.file_name);
+        // typechecker.typecheck();
 
         VM vm;
         Chunk chunk;
 
-        generate_bytecode(typechecker.nodes, chunk);
+        generate_bytecode(parser.nodes, chunk);
         disassemble_chunk(chunk, "Test");
         evaluate(vm, chunk);
 

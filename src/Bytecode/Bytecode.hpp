@@ -22,7 +22,9 @@ enum OpCode {
     OP_LT,
     OP_GT,
     OP_STORE_VAR,
-    OP_LOAD
+    OP_LOAD,
+    OP_SET,
+    OP_POP
 };
 
 enum ValueType {

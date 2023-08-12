@@ -53,16 +53,20 @@ static EvaluateResult run(VM& vm) {
                 push(vm, constant);
                 break;
             }
-            case OP_STORE_VAR: {
-                READ_CONSTANT();
-                Value value = pop(vm);
-                vm.locals.push_back(value);
-                break;
-            }
+            // case OP_STORE_VAR: {
+            //     READ_CONSTANT();
+            //     Value value = pop(vm);
+            //     vm.locals.push_back(value);
+            //     break;
+            // }
             case OP_LOAD: {
                 int index = READ_CONSTANT().get_number();
-                Value variable = vm.locals[index];
-                push(vm, variable);
+                push(vm, vm.stack[index]);
+                break;
+            }
+            case OP_SET: {
+                int index = READ_CONSTANT().get_number();
+                vm.stack[index] = vm.stack.back();
                 break;
             }
             case OP_NEGATE: {

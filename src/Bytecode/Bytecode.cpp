@@ -109,6 +109,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
 
     uint8_t instruction = chunk.code[offset];
     switch (instruction) {
+    case OP_POP:
+        return simple_instruction("OP_POP", offset);
     case OP_RETURN:
         return simple_instruction("OP_RETURN", offset);
     case OP_LOAD_CONST:
@@ -117,6 +119,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return constant_instruction("OP_STORE_VAR", chunk, offset);
     case OP_LOAD:
         return constant_instruction("OP_LOAD", chunk, offset);
+    case OP_SET:
+        return constant_instruction("OP_SET", chunk, offset);
     case OP_NEGATE:
         return simple_instruction("OP_NEGATE", offset);
     case OP_ADD:

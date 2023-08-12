@@ -2,7 +2,7 @@
 #include "Bytecode.hpp"
 #include "../Node/Node.hpp"
 
-Environment env;
+Compiler current;
 
 void gen_literal(Chunk& chunk, node_ptr node) {
     switch (node->type) {
@@ -101,14 +101,35 @@ void gen_gt(Chunk& chunk, node_ptr node) {
     add_code(chunk, OP_GT, node->line);
 }
 
+void gen_eq(Chunk& chunk, node_ptr node) {
+    node_ptr left = node->_Node.Op().left;
+    if (left->type == NodeType::ID) {
+        int index = resolve_variable(left->_Node.ID().value);
+        Variable variable = current.variables[index];
+        if (variable.is_const) {
+            error("Cannot modify constant '" + left->_Node.ID().value + "'");
+        }
+        generate(node->_Node.Op().right, chunk);
+        add_bytes(chunk, number_val(index), OP_SET, node->line);
+    }
+}
+
 void gen_var(Chunk& chunk, node_ptr node) {
     generate(node->_Node.VariableDeclaration().value, chunk);
-    add_bytes(chunk, string_val(node->_Node.VariableDeclaration().name), OP_STORE_VAR, node->line);
-    add_local(chunk.constants.back().get_string());
+    declareVariable(node->_Node.VariableDeclaration().name);
+}
+
+void gen_const(Chunk& chunk, node_ptr node) {
+    generate(node->_Node.ConstantDeclatation().value, chunk);
+    declareVariable(node->_Node.ConstantDeclatation().name, true);
 }
 
 void gen_id(Chunk& chunk, node_ptr node) {
-    add_bytes(chunk, number_val(resolve_local(env, node->_Node.ID().value)), OP_LOAD, node->line);
+    int index = resolve_variable(node->_Node.ID().value);
+    if (index == -1) {
+        error("Variable '" + node->_Node.ID().value + "' is undefined");
+    }
+    add_bytes(chunk, number_val(index), OP_LOAD, node->line);
 }
 
 void generate(node_ptr node, Chunk& chunk) {
@@ -130,6 +151,10 @@ void generate(node_ptr node, Chunk& chunk) {
         }
         case NodeType::VARIABLE_DECLARATION: {
             gen_var(chunk, node);
+            break;
+        }
+        case NodeType::CONSTANT_DECLARATION: {
+            gen_const(chunk, node);
             break;
         }
     }
@@ -183,29 +208,78 @@ void generate(node_ptr node, Chunk& chunk) {
             gen_gt(chunk, node);
             return;
         }
+        if (node->_Node.Op().value == "=") {
+            gen_eq(chunk, node);
+            return;
+        }
     }
 }
 
 void generate_bytecode(std::vector<node_ptr>& nodes, Chunk& chunk) {
     for (node_ptr& node : nodes) {
+        if ((node->type == NodeType::OP && node->_Node.Op().value != "=") ||
+            node->type == NodeType::STRING ||
+            node->type == NodeType::NUMBER ||
+            node->type == NodeType::BOOLEAN ||
+            node->type == NodeType::LIST ||
+            node->type == NodeType::OBJECT) {
+            continue;
+        }
         generate(node, chunk);
     }
 }
 
-static void add_local(std::string name) {
-    Local local;
-    local.name = name;
-    local.depth = env.depth;
-    env.locals.push_back(local);
+static void begin_scope() {
+    current.scopeDepth++;
 }
 
-static int resolve_local(Environment& env, std::string name) {
-    for (int i = env.locals.size()-1; i >= 0; i--) {
-        Local local = env.locals[i];
-        if (name == local.name) {
+static void end_scope(Chunk& chunk) {
+    current.scopeDepth--;
+
+    while (current.variableCount > 0 
+    && current.variables[current.variableCount - 1].depth > current.scopeDepth) {
+        add_code(chunk, OP_POP);
+        current.variableCount--;
+  }
+}
+
+static void addVariable(std::string name, bool is_const) {
+    current.variableCount++;
+    Variable variable;
+    variable.name = name;
+    variable.depth = current.scopeDepth;
+    variable.is_const = is_const;
+    current.variables.push_back(variable);
+}
+
+static void declareVariable(std::string name, bool is_const) {
+
+    for (int i = current.variableCount - 1; i >= 0; i--) {
+        Variable variable = current.variables[i];
+        if (variable.depth != -1 && variable.depth < current.scopeDepth) {
+            break; 
+        }
+
+        if (name == variable.name) {
+            error("Variable '" + name + "' already defined");
+        }
+    }
+
+    addVariable(name, is_const);
+}
+
+static int resolve_variable(std::string name) {
+    for (int i = current.variableCount - 1; i >= 0; i--) {
+        Variable variable = current.variables[i];
+        if (name == variable.name) {
             return i;
         }
     }
 
     return -1;
+}
+
+void error(std::string message) {
+    std::cout << message << "\n";
+    exit(1);
 }

@@ -1,15 +1,3 @@
-var x = 10
-var y = 100
-
-var z = (x + y) / 4.5
-
-z
-
-/*
-OP_LOAD_CONST 0 10
-OP_STORE_VAR      1 'x'
-
-{
-    x: 10
-}
-*/
+var x: String = "hello"
+var y = x
+y
