@@ -24,7 +24,15 @@ enum OpCode {
     OP_STORE_VAR,
     OP_LOAD,
     OP_SET,
-    OP_POP
+    OP_POP,
+    OP_JUMP_IF_FALSE,
+    OP_JUMP_IF_TRUE,
+    OP_POP_JUMP_IF_FALSE,
+    OP_JUMP,
+    OP_JUMP_BACK,
+    OP_EXIT,
+    OP_BREAK,
+    OP_CONTINUE
 };
 
 enum ValueType {
@@ -92,15 +100,20 @@ void printValue(Value value);
 
 void add_code(Chunk& chunk, uint8_t code, uint8_t line = 0);
 
+void add_opcode(Chunk& chunk, uint8_t op, int operand, uint8_t line = 0);
+
 int add_constant(Chunk& chunk, Value value);
 
 void add_constant_code(Chunk& chunk, Value value, uint8_t line = 0);
 
 void add_bytes(Chunk& chunk, Value value, uint8_t op, uint8_t line = 0);
 
+void patch_bytes(Chunk& chunk, int offset, uint8_t* bytes);
+
 static int simple_instruction(std::string name, int offset);
 
 static int constant_instruction(std::string name, Chunk& chunk, int offset);
+static int op_code_instruction(std::string name, Chunk& chunk, int offset);
 
 int disassemble_instruction(Chunk& chunk, int offset);
 

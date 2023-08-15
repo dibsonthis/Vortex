@@ -85,6 +85,21 @@ void add_bytes(Chunk& chunk, Value value, uint8_t op, uint8_t line) {
     }
 }
 
+void patch_bytes(Chunk& chunk, int offset, uint8_t* bytes) {
+    for (int i = 0; i < 4; i++) {
+        chunk.code[offset + i] = bytes[i];
+    }
+}
+
+void add_opcode(Chunk& chunk, uint8_t op, int operand, uint8_t line) {
+    auto bytes = int_to_bytes(operand);
+
+    add_code(chunk, op, line);
+    for (int i = 0; i < 4; i++) {
+        add_code(chunk, bytes[i], line);
+    }
+}
+
 static int simple_instruction(std::string name, int offset) {
     printf("%s\n", name.c_str());
     return offset + 1;
@@ -95,6 +110,13 @@ static int constant_instruction(std::string name, Chunk& chunk, int offset) {
     printf("%-16s %4d '", name.c_str(), constant);
     printValue(chunk.constants[constant]);
     printf("'\n");
+    return offset + 5;
+}
+
+static int op_code_instruction(std::string name, Chunk& chunk, int offset) {
+    int operand = bytes_to_int(chunk.code[offset + 1], chunk.code[offset + 2], chunk.code[offset + 3], chunk.code[offset + 4]);
+    printf("%-16s %4d", name.c_str(), operand);
+    printf("\n");
     return offset + 5;
 }
 
@@ -109,6 +131,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
 
     uint8_t instruction = chunk.code[offset];
     switch (instruction) {
+    case OP_EXIT:
+        return simple_instruction("OP_EXIT", offset);
     case OP_POP:
         return simple_instruction("OP_POP", offset);
     case OP_RETURN:
@@ -118,9 +142,23 @@ int disassemble_instruction(Chunk& chunk, int offset) {
     case OP_STORE_VAR:
         return constant_instruction("OP_STORE_VAR", chunk, offset);
     case OP_LOAD:
-        return constant_instruction("OP_LOAD", chunk, offset);
+        return op_code_instruction("OP_LOAD", chunk, offset);
     case OP_SET:
-        return constant_instruction("OP_SET", chunk, offset);
+        return op_code_instruction("OP_SET", chunk, offset);
+    case OP_JUMP_IF_FALSE:
+        return op_code_instruction("OP_JUMP_IF_FALSE", chunk, offset);
+    case OP_JUMP_IF_TRUE:
+        return op_code_instruction("OP_JUMP_IF_TRUE", chunk, offset);
+    case OP_POP_JUMP_IF_FALSE:
+        return op_code_instruction("OP_POP_JUMP_IF_FALSE", chunk, offset);
+    case OP_JUMP:
+        return op_code_instruction("OP_JUMP", chunk, offset);
+    case OP_JUMP_BACK:
+        return op_code_instruction("OP_JUMP_BACK", chunk, offset);
+    case OP_BREAK:
+        return simple_instruction("OP_BREAK", offset);
+    case OP_CONTINUE:
+        return simple_instruction("OP_CONTINUE", offset);
     case OP_NEGATE:
         return simple_instruction("OP_NEGATE", offset);
     case OP_ADD:

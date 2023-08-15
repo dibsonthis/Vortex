@@ -12,6 +12,7 @@ struct Compiler {
     std::vector<Variable> variables;
     int variableCount;
     int scopeDepth;
+    bool in_loop;
 };
 
 void gen_literal(Chunk& chunk, node_ptr node);
@@ -33,6 +34,13 @@ void gen_paren(Chunk& chunk, node_ptr node);
 void gen_var(Chunk& chunk, node_ptr node);
 void gen_const(Chunk& chunk, node_ptr node);
 void gen_id(Chunk& chunk, node_ptr node);
+void gen_if(Chunk& chunk, node_ptr node);
+void gen_if_block(Chunk& chunk, node_ptr node);
+void gen_while_loop(Chunk& chunk, node_ptr node);
+void gen_and(Chunk& chunk, node_ptr node);
+void gen_or(Chunk& chunk, node_ptr node);
+void gen_break(Chunk& chunk, node_ptr node);
+void gen_continue(Chunk& chunk, node_ptr node);
 
 void generate(node_ptr node, Chunk& chunk);
 void generate_bytecode(std::vector<node_ptr>& nodes, Chunk& chunk);

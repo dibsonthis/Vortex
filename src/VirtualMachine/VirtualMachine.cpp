@@ -26,8 +26,8 @@ static void runtimeError(VM& vm, std::string message, ...) {
 
 static EvaluateResult run(VM& vm) {
 #define READ_BYTE() (*vm.ip++)
-#define READ_CONSTANT() (vm.chunk.constants[bytes_to_int(READ_BYTE(), READ_BYTE(), READ_BYTE(), READ_BYTE())])
-#define READ_LOCAL() (vm.locals[bytes_to_int(READ_BYTE(), READ_BYTE(), READ_BYTE(), READ_BYTE())])
+#define READ_INT() (bytes_to_int(READ_BYTE(), READ_BYTE(), READ_BYTE(), READ_BYTE()))
+#define READ_CONSTANT() (vm.chunk.constants[READ_INT()])
 
     for (;;) {
         #ifdef DEBUG_TRACE_EXECUTION
@@ -43,6 +43,11 @@ static EvaluateResult run(VM& vm) {
         #endif
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
+            case OP_EXIT: {
+                printValue(pop(vm));
+                printf("\n");
+                return EVALUATE_OK;
+            }
             case OP_RETURN: {
                 printValue(pop(vm));
                 printf("\n");
@@ -53,20 +58,65 @@ static EvaluateResult run(VM& vm) {
                 push(vm, constant);
                 break;
             }
-            // case OP_STORE_VAR: {
-            //     READ_CONSTANT();
-            //     Value value = pop(vm);
-            //     vm.locals.push_back(value);
-            //     break;
-            // }
             case OP_LOAD: {
-                int index = READ_CONSTANT().get_number();
+                int index = READ_INT();
                 push(vm, vm.stack[index]);
                 break;
             }
             case OP_SET: {
-                int index = READ_CONSTANT().get_number();
+                int index = READ_INT();
                 vm.stack[index] = vm.stack.back();
+                pop(vm);
+                break;
+            }
+            case OP_JUMP_IF_FALSE: {
+                int offset = READ_INT();
+                if (is_falsey(vm.stack.back())) {
+                    vm.ip += offset;
+                }
+                break;
+            }
+            case OP_JUMP_IF_TRUE: {
+                int offset = READ_INT();
+                if (!is_falsey(vm.stack.back())) {
+                    vm.ip += offset;
+                }
+                break;
+            }
+            case OP_POP_JUMP_IF_FALSE: {
+                int offset = READ_INT();
+                if (is_falsey(vm.stack.back())) {
+                    vm.ip += offset;
+                }
+                pop(vm);
+                break;
+            }
+            case OP_JUMP: {
+                int offset = READ_INT();
+                vm.ip += offset;
+                break;
+            }
+            case OP_JUMP_BACK: {
+                int offset = READ_INT();
+                vm.ip -= offset;
+                break;
+            }
+            case OP_POP: {
+                pop(vm);
+                break;
+            }
+            case OP_BREAK: {
+                while (*vm.ip != OP_JUMP_BACK) {
+                    vm.ip++;
+                }
+                READ_BYTE();
+                READ_INT();
+                break;
+            }
+            case OP_CONTINUE: {
+                while (*vm.ip != OP_JUMP_BACK) {
+                    vm.ip++;
+                }
                 break;
             }
             case OP_NEGATE: {
@@ -206,8 +256,8 @@ static EvaluateResult run(VM& vm) {
     }
 
 #undef READ_BYTE
+#undef READ_INT
 #undef READ_CONSTANT
-#undef READ_LOCAL
 }
 
 EvaluateResult evaluate(VM& vm, Chunk& chunk) {
@@ -229,6 +279,14 @@ bool is_equal(Value& v1, Value& v2) {
     }
     if (v1.is_boolean()) {
         return v1.get_boolean() == v2.get_boolean();
+    }
+
+    return false;
+}
+
+bool is_falsey(Value& value) {
+    if (value.is_none() || value.is_boolean() && !value.get_boolean()) {
+        return true;
     }
 
     return false;

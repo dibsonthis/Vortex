@@ -38,6 +38,7 @@ int main(int argc, char** argv)
         Chunk chunk;
 
         generate_bytecode(parser.nodes, chunk);
+        add_code(chunk, OP_EXIT);
         disassemble_chunk(chunk, "Test");
         evaluate(vm, chunk);
 

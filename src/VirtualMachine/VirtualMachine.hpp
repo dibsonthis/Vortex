@@ -30,3 +30,4 @@ EvaluateResult evaluate(VM& vm, Chunk& chunk);
 void freeVM(VM& vm);
 
 bool is_equal(Value& v1, Value& v2);
+bool is_falsey(Value& value);
