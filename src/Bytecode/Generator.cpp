@@ -31,6 +31,17 @@ void gen_paren(Chunk& chunk, node_ptr node) {
     }
 }
 
+void gen_list(Chunk& chunk, node_ptr node) {
+    if (node->_Node.List().elements.size() == 1 && node->_Node.List().elements[0]->type == NodeType::COMMA_LIST) {
+        node = node->_Node.List().elements[0];
+    }
+
+    for (node_ptr& elem : node->_Node.List().elements) {
+        generate(elem, chunk);
+    }
+    add_opcode(chunk, OP_BUILD_LIST, node->_Node.List().elements.size(), node->line);
+}
+
 void gen_neg(Chunk& chunk, node_ptr node) {
     generate(node->_Node.Op().right, chunk);
     add_code(chunk, OP_NEGATE, node->line);
@@ -172,6 +183,18 @@ void gen_while_loop(Chunk& chunk, node_ptr node) {
     patch_bytes(chunk, jump_instruction, bytes);
 }
 
+void gen_for_loop(Chunk& chunk, node_ptr node) {
+    int index = 0;
+    node_ptr index_eq_node = std::make_shared<Node>(NodeType::VARIABLE_DECLARATION);
+    index_eq_node->_Node.VariableDeclaration().name = node->_Node.ForLoop().index_name->_Node.ID().value;
+    index_eq_node->_Node.VariableDeclaration().value = std::make_shared<Node>(NodeType::NUMBER);
+    index_eq_node->_Node.VariableDeclaration().value->_Node.Number().value = index;
+    begin_scope();
+    generate(node->_Node.ForLoop().iterator, chunk);
+    generate(index_eq_node, chunk);
+    end_scope(chunk);
+}
+
 void gen_break(Chunk& chunk, node_ptr node) {
     if (!current.in_loop) {
         error("Cannot use 'break' outside of a loop");
@@ -227,6 +250,10 @@ void generate(node_ptr node, Chunk& chunk) {
             gen_paren(chunk, node);
             break;
         }
+        case NodeType::LIST: {
+            gen_list(chunk, node);
+            break;
+        }
         case NodeType::VARIABLE_DECLARATION: {
             gen_var(chunk, node);
             break;
@@ -245,6 +272,10 @@ void generate(node_ptr node, Chunk& chunk) {
         }
         case NodeType::WHILE_LOOP: {
             gen_while_loop(chunk, node);
+            break;
+        }
+        case NodeType::FOR_LOOP: {
+            gen_for_loop(chunk, node);
             break;
         }
         case NodeType::BREAK: {

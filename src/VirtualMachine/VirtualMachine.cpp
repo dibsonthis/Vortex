@@ -119,6 +119,16 @@ static EvaluateResult run(VM& vm) {
                 }
                 break;
             }
+            case OP_BUILD_LIST: {
+                Value list = list_val();
+                int size = READ_INT();
+                auto& list_val = list.get_list();
+                for (int i = 0; i < size; i++) {
+                    list_val.insert(list_val.begin(), pop(vm));
+                }
+                push(vm, list);
+                break;
+            }
             case OP_NEGATE: {
                 Value constant = pop(vm);
                 if (!constant.is_number()) {

@@ -1,5 +1,6 @@
 #pragma once
 #include <variant>
+#include <iomanip>
 #include "../Node/Node.hpp"
 
 uint8_t* int_to_bytes(int& integer);
@@ -32,19 +33,21 @@ enum OpCode {
     OP_JUMP_BACK,
     OP_EXIT,
     OP_BREAK,
-    OP_CONTINUE
+    OP_CONTINUE,
+    OP_BUILD_LIST
 };
 
 enum ValueType {
     Number,
     String,
     Boolean,
+    List,
     None
 };
 
 struct Value {
     ValueType type;
-    std::variant<float, std::string, bool> value;
+    std::variant<double, std::string, bool, std::vector<Value>> value;
     Value(ValueType type) : type(type) {
         switch (type)
         {
@@ -57,18 +60,25 @@ struct Value {
             case Boolean:
                 value = false;
                 break;
+            case List:
+                value = std::vector<Value>();
+                break;
             default:    
                 break;
         }
     }
-    float get_number() {
-        return std::get<float>(this->value);
+    double get_number() {
+        return std::get<double>(this->value);
     }
     std::string get_string() {
         return std::get<std::string>(this->value);
     }
     bool get_boolean() {
         return std::get<bool>(this->value);
+    }
+
+    std::vector<Value>& get_list() {
+        return std::get<std::vector<Value>>(this->value);
     }
 
     bool is_number() {
@@ -80,14 +90,18 @@ struct Value {
     bool is_boolean() {
         return type == Boolean;
     }
+    bool is_list() {
+        return type == List;
+    }
     bool is_none() {
         return type == None;
     }
 };
 
-Value number_val(float value);
+Value number_val(double value);
 Value string_val(std::string value);
 Value boolean_val(bool value);
+Value list_val();
 Value none_val();
 
 struct Chunk {

@@ -1,5 +1,15 @@
-var x = 0
+var i = 1
+var j = 1
+var l = 0
+var x = 10000
 
-while (x < 1000) {
-    x += 1
+while (i < x) {
+    i += 1
+    while (j < x) {
+        j += 1
+        l += i + j
+    }
+    j = 1
 }
+
+l

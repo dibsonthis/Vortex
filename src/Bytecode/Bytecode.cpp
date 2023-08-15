@@ -8,7 +8,7 @@ int bytes_to_int(uint8_t a, uint8_t b, uint8_t c, uint8_t d) {
     return int(a | b << 8 | c << 16 | d << 24);
 }
 
-Value number_val(float value) {
+Value number_val(double value) {
     Value val(Number);
     val.value = value;
     return val;
@@ -26,6 +26,11 @@ Value boolean_val(bool value) {
     return val;
 }
 
+Value list_val() {
+    Value val(List);
+    return val;
+}
+
 Value none_val() {
     Value val(None);
     return val;
@@ -34,7 +39,7 @@ Value none_val() {
 void printValue(Value value) {
     switch(value.type) {
         case Number: {
-            std::cout << value.get_number();
+            std::cout << std::fixed << value.get_number();
             break;
         }
         case String: {
@@ -43,6 +48,15 @@ void printValue(Value value) {
         }
         case Boolean: {
             std::cout << (value.get_boolean() ? "true" : "false");
+            break;
+        }
+        case List: {
+            std::cout << "[ ";
+            for (Value& v : value.get_list()) {
+                printValue(v);
+                std::cout << " ";
+            }
+            std::cout << "]";
             break;
         }
         case None: {
@@ -159,6 +173,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return simple_instruction("OP_BREAK", offset);
     case OP_CONTINUE:
         return simple_instruction("OP_CONTINUE", offset);
+    case OP_BUILD_LIST:
+        return op_code_instruction("OP_BUILD_LIST", chunk, offset);
     case OP_NEGATE:
         return simple_instruction("OP_NEGATE", offset);
     case OP_ADD:
