@@ -29,6 +29,7 @@ void gen_gt_eq(Chunk& chunk, node_ptr node);
 void gen_lt(Chunk& chunk, node_ptr node);
 void gen_gt(Chunk& chunk, node_ptr node);
 void gen_eq(Chunk& chunk, node_ptr node);
+void gen_range(Chunk& chunk, node_ptr node);
 
 void gen_paren(Chunk& chunk, node_ptr node);
 void gen_var(Chunk& chunk, node_ptr node);

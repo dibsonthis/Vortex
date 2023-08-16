@@ -8,26 +8,31 @@ int bytes_to_int(uint8_t a, uint8_t b, uint8_t c, uint8_t d) {
     return int(a | b << 8 | c << 16 | d << 24);
 }
 
+Value new_val() {
+    return Value(None);
+}
+
 Value number_val(double value) {
     Value val(Number);
-    val.value = value;
+    val.number = value;
     return val;
 }
 
 Value string_val(std::string value) {
     Value val(String);
-    val.value = value;
+    val.string = value;
     return val;
 }
 
 Value boolean_val(bool value) {
     Value val(Boolean);
-    val.value = value;
+    val.boolean = value;
     return val;
 }
 
 Value list_val() {
     Value val(List);
+    val.list = std::make_shared<std::vector<value_ptr>>();
     return val;
 }
 
@@ -36,10 +41,42 @@ Value none_val() {
     return val;
 }
 
+// Value new_val() {
+//     return Value(None);
+// }
+
+// Value number_val(double value) {
+//     Value val(Number);
+//     val.value = value;
+//     return val;
+// }
+
+// Value string_val(std::string value) {
+//     Value val(String);
+//     val.value = value;
+//     return val;
+// }
+
+// Value boolean_val(bool value) {
+//     Value val(Boolean);
+//     val.value = value;
+//     return val;
+// }
+
+// Value list_val() {
+//     Value val(List);
+//     return val;
+// }
+
+// Value none_val() {
+//     Value val(None);
+//     return val;
+// }
+
 void printValue(Value value) {
     switch(value.type) {
         case Number: {
-            std::cout << std::fixed << value.get_number();
+            std::cout << std::fixed << value.get_number() << std::defaultfloat;
             break;
         }
         case String: {
@@ -52,8 +89,8 @@ void printValue(Value value) {
         }
         case List: {
             std::cout << "[ ";
-            for (Value& v : value.get_list()) {
-                printValue(v);
+            for (value_ptr& v : *value.get_list()) {
+                printValue(*v);
                 std::cout << " ";
             }
             std::cout << "]";
@@ -165,6 +202,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return op_code_instruction("OP_JUMP_IF_TRUE", chunk, offset);
     case OP_POP_JUMP_IF_FALSE:
         return op_code_instruction("OP_POP_JUMP_IF_FALSE", chunk, offset);
+    case OP_POP_JUMP_IF_TRUE:
+        return op_code_instruction("OP_POP_JUMP_IF_TRUE", chunk, offset);
     case OP_JUMP:
         return op_code_instruction("OP_JUMP", chunk, offset);
     case OP_JUMP_BACK:
@@ -199,6 +238,12 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return simple_instruction("OP_LT", offset);
     case OP_GT:
         return simple_instruction("OP_GT", offset);
+    case OP_RANGE:
+        return simple_instruction("OP_RANGE", offset);
+    case OP_ACCESSOR:
+        return simple_instruction("OP_ACCESSOR", offset);
+    case OP_LEN:
+        return simple_instruction("OP_LEN", offset);
     default:
         printf("Unknown opcode %d\n", instruction);
         return offset + 1;

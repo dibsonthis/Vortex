@@ -1,15 +1,11 @@
-var i = 1
-var j = 1
 var l = 0
 var x = 10000
+var ls = 0..x
 
-while (i < x) {
-    i += 1
-    while (j < x) {
-        j += 1
-        l += i + j
+for (ls, i, v1) {
+    for (ls, j, v2) {
+        l += v1 + v2
     }
-    j = 1
 }
 
 l

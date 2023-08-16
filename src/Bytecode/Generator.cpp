@@ -116,6 +116,9 @@ void gen_eq(Chunk& chunk, node_ptr node) {
     node_ptr left = node->_Node.Op().left;
     if (left->type == NodeType::ID) {
         int index = resolve_variable(left->_Node.ID().value);
+        if (index == -1) {
+            error("Variable '" + left->_Node.ID().value + "' is undefined");
+        }
         Variable variable = current.variables[index];
         if (variable.is_const) {
             error("Cannot modify constant '" + left->_Node.ID().value + "'");
@@ -123,6 +126,12 @@ void gen_eq(Chunk& chunk, node_ptr node) {
         generate(node->_Node.Op().right, chunk);
         add_opcode(chunk, OP_SET, index, node->line);
     }
+}
+
+void gen_range(Chunk& chunk, node_ptr node) {
+    generate(node->_Node.Op().left, chunk);
+    generate(node->_Node.Op().right, chunk);
+    add_code(chunk, OP_RANGE, node->line);
 }
 
 void gen_var(Chunk& chunk, node_ptr node) {
@@ -184,15 +193,107 @@ void gen_while_loop(Chunk& chunk, node_ptr node) {
 }
 
 void gen_for_loop(Chunk& chunk, node_ptr node) {
-    int index = 0;
-    node_ptr index_eq_node = std::make_shared<Node>(NodeType::VARIABLE_DECLARATION);
-    index_eq_node->_Node.VariableDeclaration().name = node->_Node.ForLoop().index_name->_Node.ID().value;
-    index_eq_node->_Node.VariableDeclaration().value = std::make_shared<Node>(NodeType::NUMBER);
-    index_eq_node->_Node.VariableDeclaration().value->_Node.Number().value = index;
-    begin_scope();
-    generate(node->_Node.ForLoop().iterator, chunk);
-    generate(index_eq_node, chunk);
-    end_scope(chunk);
+    if (!node->_Node.ForLoop().iterator) {
+        if (!node->_Node.ForLoop().index_name) {
+            node->_Node.ForLoop().index_name = std::make_shared<Node>(NodeType::ID);
+            node->_Node.ForLoop().index_name->_Node.ID().value = "___index___";
+        }
+
+        begin_scope();
+
+        add_constant_code(chunk, number_val(0));
+        declareVariable(node->_Node.ForLoop().index_name->_Node.ID().value);
+
+        if (node->_Node.ForLoop().value_name) {
+            generate(node->_Node.ForLoop().start, chunk);
+            declareVariable(node->_Node.ForLoop().value_name->_Node.ID().value);
+        }
+
+        generate(node->_Node.ForLoop().end, chunk);
+        generate(node->_Node.ForLoop().start, chunk);
+        add_code(chunk, OP_SUBTRACT, node->line);
+        declareVariable("___size___");
+
+        int loop_start = chunk.code.size() - 1;
+
+        generate_bytecode(node->_Node.ForLoop().body->_Node.Object().elements, chunk);
+
+        add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
+        add_constant_code(chunk, number_val(1), node->line);
+        add_code(chunk, OP_ADD, node->line);
+        add_opcode(chunk, OP_SET, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
+
+        if (node->_Node.ForLoop().value_name) {
+            add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().value_name->_Node.ID().value), node->line);
+            add_constant_code(chunk, number_val(1), node->line);
+            add_code(chunk, OP_ADD, node->line);
+            add_opcode(chunk, OP_SET, resolve_variable(node->_Node.ForLoop().value_name->_Node.ID().value), node->line);
+        }
+
+        add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
+        add_opcode(chunk, OP_LOAD, resolve_variable("___size___"));
+        add_code(chunk, OP_GT_EQ, node->line);
+        add_opcode(chunk, OP_POP_JUMP_IF_TRUE, 5, node->line);
+
+        add_opcode(chunk, OP_JUMP_BACK, chunk.code.size() - loop_start + 4, node->line);
+
+        end_scope(chunk);
+    } else {
+        if (!node->_Node.ForLoop().index_name) {
+            node->_Node.ForLoop().index_name = std::make_shared<Node>(NodeType::ID);
+            node->_Node.ForLoop().index_name->_Node.ID().value = "___index___";
+        }
+
+        begin_scope();
+
+        add_constant_code(chunk, number_val(0));
+        declareVariable(node->_Node.ForLoop().index_name->_Node.ID().value);
+
+        generate(node->_Node.ForLoop().iterator, chunk);
+        declareVariable("___iter___");
+
+        if (node->_Node.ForLoop().value_name) {
+            add_opcode(chunk, OP_LOAD, resolve_variable("___iter___"), node->line);
+            add_constant_code(chunk, number_val(0));
+            add_code(chunk, OP_ACCESSOR, node->line);
+            declareVariable(node->_Node.ForLoop().value_name->_Node.ID().value);
+        }
+
+        add_opcode(chunk, OP_LOAD, resolve_variable("___iter___"), node->line);
+        add_code(chunk, OP_LEN, node->line);
+        declareVariable("___size___");
+
+        int loop_start = chunk.code.size() - 1;
+
+        generate_bytecode(node->_Node.ForLoop().body->_Node.Object().elements, chunk);
+
+        add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
+        add_constant_code(chunk, number_val(1), node->line);
+        add_code(chunk, OP_ADD, node->line);
+        add_opcode(chunk, OP_SET, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
+
+        if (node->_Node.ForLoop().value_name) {
+            add_opcode(chunk, OP_LOAD, resolve_variable("___iter___"), node->line);
+            add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
+            add_code(chunk, OP_ACCESSOR, node->line);
+            add_opcode(chunk, OP_SET, resolve_variable(node->_Node.ForLoop().value_name->_Node.ID().value), node->line);
+        }
+
+        add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
+        add_opcode(chunk, OP_LOAD, resolve_variable("___size___"));
+        add_code(chunk, OP_GT_EQ, node->line);
+        add_opcode(chunk, OP_POP_JUMP_IF_TRUE, 5, node->line);
+
+        add_opcode(chunk, OP_JUMP_BACK, chunk.code.size() - loop_start + 4, node->line);
+
+        end_scope(chunk);
+    }
+}
+
+void gen_accessor(Chunk& chunk, node_ptr node) {
+    generate(node->_Node.Accessor().container, chunk);
+    generate(node->_Node.Accessor().accessor->_Node.List().elements[0], chunk);
+    add_code(chunk, OP_ACCESSOR, node->line);
 }
 
 void gen_break(Chunk& chunk, node_ptr node) {
@@ -286,6 +387,10 @@ void generate(node_ptr node, Chunk& chunk) {
             gen_continue(chunk, node);
             break;
         }
+        case NodeType::ACCESSOR: {
+            gen_accessor(chunk, node);
+            break;
+        }
     }
 
     if (node->type == NodeType::OP) {
@@ -375,6 +480,10 @@ void generate(node_ptr node, Chunk& chunk) {
         }
         if (node->_Node.Op().value == "or") {
             gen_or(chunk, node);
+            return;
+        }
+        if (node->_Node.Op().value == "..") {
+            gen_range(chunk, node);
             return;
         }
     }

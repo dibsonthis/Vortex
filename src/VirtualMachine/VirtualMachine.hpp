@@ -9,9 +9,8 @@ struct VM {
     Chunk chunk;
     uint8_t* ip;
     std::vector<Value> stack;
-    Value* sp;
     std::vector<Value*> objects;
-    std::vector<Value> locals;
+    Value* sp;
 };
 
 enum EvaluateResult {

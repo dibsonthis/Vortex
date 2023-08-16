@@ -6,7 +6,7 @@ void push(VM& vm, Value& value) {
 }
 
 Value pop(VM& vm) {
-    Value value = vm.stack.back();
+    Value value = std::move(vm.stack.back());
     vm.stack.pop_back();
     vm.sp--;
     return value;
@@ -65,8 +65,7 @@ static EvaluateResult run(VM& vm) {
             }
             case OP_SET: {
                 int index = READ_INT();
-                vm.stack[index] = vm.stack.back();
-                pop(vm);
+                vm.stack[index] = pop(vm);
                 break;
             }
             case OP_JUMP_IF_FALSE: {
@@ -86,6 +85,14 @@ static EvaluateResult run(VM& vm) {
             case OP_POP_JUMP_IF_FALSE: {
                 int offset = READ_INT();
                 if (is_falsey(vm.stack.back())) {
+                    vm.ip += offset;
+                }
+                pop(vm);
+                break;
+            }
+            case OP_POP_JUMP_IF_TRUE: {
+                int offset = READ_INT();
+                if (!is_falsey(vm.stack.back())) {
                     vm.ip += offset;
                 }
                 pop(vm);
@@ -124,9 +131,39 @@ static EvaluateResult run(VM& vm) {
                 int size = READ_INT();
                 auto& list_val = list.get_list();
                 for (int i = 0; i < size; i++) {
-                    list_val.insert(list_val.begin(), pop(vm));
+                    list_val->insert(list_val->begin(), std::make_shared<Value>(pop(vm)));
                 }
                 push(vm, list);
+                break;
+            }
+            case OP_ACCESSOR: {
+                Value _index = pop(vm);
+                Value _list = pop(vm);
+
+                if (!_list.is_list()) {
+                    runtimeError(vm, "Object is not accessable");
+                }
+                if (!_index.is_number()) {
+                    runtimeError(vm, "Accessor must be a number");
+                }
+                int index = _index.get_number();
+                auto& list = _list.get_list();
+                if (index >= list->size() || index < 0) {
+                    Value none = none_val();
+                    push(vm, none);
+                } else {
+                    push(vm, *((*list)[index]));
+                }
+                break;
+            }
+            case OP_LEN: {
+                Value list = pop(vm);
+                if (!list.is_list()) {
+                    runtimeError(vm, "Operand must be a list");
+                    return EVALUATE_RUNTIME_ERROR;
+                }
+                Value value = number_val(list.get_list()->size());
+                push(vm, value);
                 break;
             }
             case OP_NEGATE: {
@@ -259,6 +296,21 @@ static EvaluateResult run(VM& vm) {
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 Value value = boolean_val(v1.get_number() > v2.get_number());
+                push(vm, value);
+                break;
+            }
+            case OP_RANGE: {
+                Value v2 = pop(vm);
+                Value v1 = pop(vm);
+                if (!v1.is_number() || !v2.is_number() ) {
+                    runtimeError(vm, "Operands must be numbers");
+                    return EVALUATE_RUNTIME_ERROR;
+                }
+                Value value = list_val();
+                auto& list_value = value.get_list();
+                for (int i = v1.get_number(); i < v2.get_number(); i++) {
+                    list_value->push_back(std::make_shared<Value>(number_val(i)));
+                }
                 push(vm, value);
                 break;
             }

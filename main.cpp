@@ -70,22 +70,44 @@ int main(int argc, char** argv)
         Lexer lexer(path);
         lexer.tokenize();
 
+        // Parser parser(lexer.nodes, lexer.file_name);
+        // parser.parse(0, "_");
+        // parser.remove_op_node(";");
+        // auto ast = parser.nodes;
+
+        // auto parent_path = std::filesystem::path(path).parent_path();
+        // if (parent_path != "") {
+        //     std::filesystem::current_path(parent_path);
+        // }
+
+        // Typechecker typechecker(parser.nodes, parser.file_name);
+        // typechecker.typecheck();
+
+        // Interpreter interpreter(typechecker.nodes, parser.file_name);
+        // interpreter.evaluate();
+        
+        // exit(0);
+
         Parser parser(lexer.nodes, lexer.file_name);
         parser.parse(0, "_");
         parser.remove_op_node(";");
         auto ast = parser.nodes;
 
-        auto parent_path = std::filesystem::path(path).parent_path();
-        if (parent_path != "") {
-            std::filesystem::current_path(parent_path);
-        }
+        // Typechecker typechecker(parser.nodes, parser.file_name);
+        // typechecker.typecheck();
 
-        Typechecker typechecker(parser.nodes, parser.file_name);
-        typechecker.typecheck();
+        VM vm;
+        Chunk chunk;
 
-        Interpreter interpreter(typechecker.nodes, parser.file_name);
-        interpreter.evaluate();
-        
+        generate_bytecode(parser.nodes, chunk);
+        add_code(chunk, OP_EXIT);
+        disassemble_chunk(chunk, "Test");
+        evaluate(vm, chunk);
+
+        // Interpreter interpreter(typechecker.nodes, parser.file_name);
+        // interpreter.evaluate();
+
+        //std::cin.get();
         exit(0);
     }
 }
