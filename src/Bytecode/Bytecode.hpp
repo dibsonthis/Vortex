@@ -56,7 +56,7 @@ struct Value {
     double number;
     std::string string;
     bool boolean;
-    std::shared_ptr<std::vector<value_ptr>> list;
+    std::shared_ptr<std::vector<Value>> list;
 
     Value(ValueType type) : type(type) {}
 
@@ -70,7 +70,7 @@ struct Value {
         return this->boolean;
     }
 
-    std::shared_ptr<std::vector<value_ptr>>& get_list() {
+    std::shared_ptr<std::vector<Value>>& get_list() {
         return this->list;
     }
 

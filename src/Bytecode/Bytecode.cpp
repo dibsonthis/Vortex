@@ -32,7 +32,7 @@ Value boolean_val(bool value) {
 
 Value list_val() {
     Value val(List);
-    val.list = std::make_shared<std::vector<value_ptr>>();
+    val.list = std::make_shared<std::vector<Value>>();
     return val;
 }
 
@@ -89,8 +89,8 @@ void printValue(Value value) {
         }
         case List: {
             std::cout << "[ ";
-            for (value_ptr& v : *value.get_list()) {
-                printValue(*v);
+            for (Value& v : *value.get_list()) {
+                printValue(v);
                 std::cout << " ";
             }
             std::cout << "]";

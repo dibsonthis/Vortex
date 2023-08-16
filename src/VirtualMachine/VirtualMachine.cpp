@@ -131,7 +131,7 @@ static EvaluateResult run(VM& vm) {
                 int size = READ_INT();
                 auto& list_val = list.get_list();
                 for (int i = 0; i < size; i++) {
-                    list_val->insert(list_val->begin(), std::make_shared<Value>(pop(vm)));
+                    list_val->insert(list_val->begin(), pop(vm));
                 }
                 push(vm, list);
                 break;
@@ -152,7 +152,7 @@ static EvaluateResult run(VM& vm) {
                     Value none = none_val();
                     push(vm, none);
                 } else {
-                    push(vm, *((*list)[index]));
+                    push(vm, (*list)[index]);
                 }
                 break;
             }
@@ -309,7 +309,7 @@ static EvaluateResult run(VM& vm) {
                 Value value = list_val();
                 auto& list_value = value.get_list();
                 for (int i = v1.get_number(); i < v2.get_number(); i++) {
-                    list_value->push_back(std::make_shared<Value>(number_val(i)));
+                    list_value->push_back(number_val(i));
                 }
                 push(vm, value);
                 break;
