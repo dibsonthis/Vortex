@@ -53,25 +53,39 @@ enum ValueType {
 
 struct Value {
     ValueType type;
-    double number;
-    std::string string;
-    bool boolean;
-    std::shared_ptr<std::vector<Value>> list;
-
-    Value(ValueType type) : type(type) {}
+    std::variant<double, std::string, bool, std::shared_ptr<std::vector<Value>>> value;
+    Value(ValueType type) : type(type) {
+        switch (type)
+        {
+            case Number:
+                value = 0.0f;
+                break;
+            case String:
+                value = "";
+                break;
+            case Boolean:
+                value = false;
+                break;
+            case List:
+                value = std::make_shared<std::vector<Value>>();
+                break;
+            default:    
+                break;
+        }
+    }
 
     double& get_number() {
-        return this->number;
+        return std::get<double>(this->value);
     }
     std::string& get_string() {
-        return this->string;
+        return std::get<std::string>(this->value);
     }
     bool& get_boolean() {
-        return this->boolean;
+        return std::get<bool>(this->value);
     }
 
     std::shared_ptr<std::vector<Value>>& get_list() {
-        return this->list;
+        return std::get<std::shared_ptr<std::vector<Value>>>(this->value);
     }
 
     bool is_number() {
@@ -97,68 +111,6 @@ Value string_val(std::string value);
 Value boolean_val(bool value);
 Value list_val();
 Value none_val();
-
-
-// struct Value {
-//     ValueType type;
-//     std::variant<double, std::string, bool, std::vector<value_ptr>> value;
-//     Value(ValueType type) : type(type) {
-//         switch (type)
-//         {
-//             case Number:
-//                 value = 0.0f;
-//                 break;
-//             case String:
-//                 value = "";
-//                 break;
-//             case Boolean:
-//                 value = false;
-//                 break;
-//             case List:
-//                 value = std::vector<value_ptr>();
-//                 break;
-//             default:    
-//                 break;
-//         }
-//     }
-
-//     double& get_number() {
-//         return std::get<double>(this->value);
-//     }
-//     std::string& get_string() {
-//         return std::get<std::string>(this->value);
-//     }
-//     bool& get_boolean() {
-//         return std::get<bool>(this->value);
-//     }
-
-//     std::vector<value_ptr>& get_list() {
-//         return std::get<std::vector<value_ptr>>(this->value);
-//     }
-
-//     bool is_number() {
-//         return type == Number;
-//     }
-//     bool is_string() {
-//         return type == String;
-//     }
-//     bool is_boolean() {
-//         return type == Boolean;
-//     }
-//     bool is_list() {
-//         return type == List;
-//     }
-//     bool is_none() {
-//         return type == None;
-//     }
-// };
-
-// Value new_val();
-// Value number_val(double value);
-// Value string_val(std::string value);
-// Value boolean_val(bool value);
-// Value list_val();
-// Value none_val();
 
 struct Chunk {
     std::vector<uint8_t> code;

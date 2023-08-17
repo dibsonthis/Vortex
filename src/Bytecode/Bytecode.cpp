@@ -14,25 +14,24 @@ Value new_val() {
 
 Value number_val(double value) {
     Value val(Number);
-    val.number = value;
+    val.value = value;
     return val;
 }
 
 Value string_val(std::string value) {
     Value val(String);
-    val.string = value;
+    val.value = value;
     return val;
 }
 
 Value boolean_val(bool value) {
     Value val(Boolean);
-    val.boolean = value;
+    val.value = value;
     return val;
 }
 
 Value list_val() {
     Value val(List);
-    val.list = std::make_shared<std::vector<Value>>();
     return val;
 }
 
@@ -40,38 +39,6 @@ Value none_val() {
     Value val(None);
     return val;
 }
-
-// Value new_val() {
-//     return Value(None);
-// }
-
-// Value number_val(double value) {
-//     Value val(Number);
-//     val.value = value;
-//     return val;
-// }
-
-// Value string_val(std::string value) {
-//     Value val(String);
-//     val.value = value;
-//     return val;
-// }
-
-// Value boolean_val(bool value) {
-//     Value val(Boolean);
-//     val.value = value;
-//     return val;
-// }
-
-// Value list_val() {
-//     Value val(List);
-//     return val;
-// }
-
-// Value none_val() {
-//     Value val(None);
-//     return val;
-// }
 
 void printValue(Value value) {
     switch(value.type) {
