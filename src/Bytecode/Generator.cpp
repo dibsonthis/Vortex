@@ -2,7 +2,7 @@
 #include "Bytecode.hpp"
 #include "../Node/Node.hpp"
 
-Compiler current;
+std::shared_ptr<Compiler> current = std::make_shared<Compiler>();
 
 void gen_literal(Chunk& chunk, node_ptr node) {
     switch (node->type) {
@@ -119,7 +119,7 @@ void gen_eq(Chunk& chunk, node_ptr node) {
         if (index == -1) {
             error("Variable '" + left->_Node.ID().value + "' is undefined");
         }
-        Variable variable = current.variables[index];
+        Variable variable = current->variables[index];
         if (variable.is_const) {
             error("Cannot modify constant '" + left->_Node.ID().value + "'");
         }
@@ -182,10 +182,10 @@ void gen_while_loop(Chunk& chunk, node_ptr node) {
     int jump_instruction = chunk.code.size() + 1;
     add_opcode(chunk, OP_POP_JUMP_IF_FALSE, 0, node->line);
     begin_scope();
-    current.in_loop = true;
+    current->in_loop = true;
     generate_bytecode(node->_Node.WhileLoop().body->_Node.Object().elements, chunk);
     end_scope(chunk);
-    current.in_loop = false;
+    current->in_loop = false;
     add_opcode(chunk, OP_JUMP_BACK, chunk.code.size() - start_index + 4, node->_Node.WhileLoop().body->_Node.Object().elements.back()->line);
     int offset = chunk.code.size() - jump_instruction - 4;
     uint8_t* bytes = int_to_bytes(offset);
@@ -297,7 +297,7 @@ void gen_accessor(Chunk& chunk, node_ptr node) {
 }
 
 void gen_break(Chunk& chunk, node_ptr node) {
-    if (!current.in_loop) {
+    if (!current->in_loop) {
         error("Cannot use 'break' outside of a loop");
     }
 
@@ -305,11 +305,70 @@ void gen_break(Chunk& chunk, node_ptr node) {
 }
 
 void gen_continue(Chunk& chunk, node_ptr node) {
-    if (!current.in_loop) {
+    if (!current->in_loop) {
         error("Cannot use 'continue' outside of a loop");
     }
 
     add_code(chunk, OP_CONTINUE, node->line);
+}
+
+void gen_return(Chunk& chunk, node_ptr node) {
+    if (!current->in_function) {
+        error("Cannot use 'return' at the top level");
+    }
+
+    if (node->_Node.Return().value) {
+        generate(node->_Node.Return().value, chunk);
+    } else {
+        add_constant_code(chunk, none_val(), node->line);
+    }
+    add_code(chunk, OP_RETURN, node->line);
+}
+
+void gen_function(Chunk& chunk, node_ptr node) {
+
+    auto prev_compiler = current;
+    current = std::make_shared<Compiler>();
+
+    current->in_function = true;
+
+    std::shared_ptr<FunctionObj> function = std::make_shared<FunctionObj>();
+    function->name = node->_Node.Function().name;
+    function->arity = node->_Node.Function().params.size();
+    function->chunk = Chunk();
+
+    Value function_value = function_val();
+    function_value.value = function;
+
+    for (auto& param : node->_Node.Function().params) {
+        std::string param_name = param->_Node.ID().value;
+        if (node->_Node.Function().default_values.count(param_name)) {
+            generate(node->_Node.Function().default_values[param_name], function->chunk);
+        } else {
+            add_constant_code(function->chunk, none_val(), param->line);
+        }
+
+        declareVariable(param->_Node.ID().value);
+    }
+
+    generate_bytecode(node->_Node.Function().body->_Node.Object().elements, function->chunk);
+
+    add_constant_code(function->chunk, none_val(), node->line);
+    add_code(function->chunk, OP_RETURN, node->line);
+    disassemble_chunk(function->chunk, function->name);
+
+    current->in_function = false;
+
+    current = prev_compiler;
+    add_constant_code(chunk, function_value, node->line);
+}
+
+void gen_function_call(Chunk& chunk, node_ptr node) {
+    for (int i = node->_Node.FunctionCall().args.size() - 1; i >= 0; i--) {
+        generate(node->_Node.FunctionCall().args[i], chunk);
+    }
+    add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.FunctionCall().name), node->line);
+    add_opcode(chunk, OP_CALL, node->_Node.FunctionCall().args.size(), node->line);
 }
 
 void gen_and(Chunk& chunk, node_ptr node) {
@@ -387,8 +446,20 @@ void generate(node_ptr node, Chunk& chunk) {
             gen_continue(chunk, node);
             break;
         }
+        case NodeType::RETURN: {
+            gen_return(chunk, node);
+            break;
+        }
         case NodeType::ACCESSOR: {
             gen_accessor(chunk, node);
+            break;
+        }
+        case NodeType::FUNC: {
+            gen_function(chunk, node);
+            break;
+        }
+        case NodeType::FUNC_CALL: {
+            gen_function_call(chunk, node);
             break;
         }
     }
@@ -504,33 +575,34 @@ void generate_bytecode(std::vector<node_ptr>& nodes, Chunk& chunk) {
 }
 
 static void begin_scope() {
-    current.scopeDepth++;
+    current->scopeDepth++;
 }
 
 static void end_scope(Chunk& chunk) {
-    current.scopeDepth--;
+    current->scopeDepth--;
 
-    while (current.variableCount > 0 
-    && current.variables[current.variableCount - 1].depth > current.scopeDepth) {
+    while (current->variableCount > 0 
+    && current->variables[current->variableCount - 1].depth > current->scopeDepth) {
         add_code(chunk, OP_POP);
-        current.variableCount--;
+        current->variables.erase(current->variables.begin() + current->variableCount - 1);
+        current->variableCount--;
   }
 }
 
 static void addVariable(std::string name, bool is_const) {
-    current.variableCount++;
+    current->variableCount++;
     Variable variable;
     variable.name = name;
-    variable.depth = current.scopeDepth;
+    variable.depth = current->scopeDepth;
     variable.is_const = is_const;
-    current.variables.push_back(variable);
+    current->variables.push_back(variable);
 }
 
 static void declareVariable(std::string name, bool is_const) {
 
-    for (int i = current.variableCount - 1; i >= 0; i--) {
-        Variable variable = current.variables[i];
-        if (variable.depth != -1 && variable.depth < current.scopeDepth) {
+    for (int i = current->variableCount - 1; i >= 0; i--) {
+        Variable variable = current->variables[i];
+        if (variable.depth != -1 && variable.depth < current->scopeDepth) {
             break; 
         }
 
@@ -543,8 +615,8 @@ static void declareVariable(std::string name, bool is_const) {
 }
 
 static int resolve_variable(std::string name) {
-    for (int i = current.variableCount - 1; i >= 0; i--) {
-        Variable variable = current.variables[i];
+    for (int i = current->variableCount - 1; i >= 0; i--) {
+        Variable variable = current->variables[i];
         if (name == variable.name) {
             return i;
         }

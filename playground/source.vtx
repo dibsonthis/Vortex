@@ -1,11 +1,23 @@
+var func = (a, b) => {
+    ret (a + b)
+}
+
 var l = 0
 var x = 10000
 var ls = 0..x
 
 for (ls, i, v1) {
     for (ls, j, v2) {
-        l += v1 + v2
+        l += func(v2, v2)
     }
 }
 
 l
+
+// for (ls, i) {
+//     for (ls, j) {
+//         l += func(i, j)
+//     }
+// }
+
+// l

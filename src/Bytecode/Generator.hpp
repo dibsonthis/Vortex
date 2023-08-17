@@ -13,6 +13,7 @@ struct Compiler {
     int variableCount;
     int scopeDepth;
     bool in_loop;
+    bool in_function;
 };
 
 void gen_literal(Chunk& chunk, node_ptr node);
@@ -43,6 +44,8 @@ void gen_and(Chunk& chunk, node_ptr node);
 void gen_or(Chunk& chunk, node_ptr node);
 void gen_break(Chunk& chunk, node_ptr node);
 void gen_continue(Chunk& chunk, node_ptr node);
+void gen_function(Chunk& chunk, node_ptr node);
+void gen_function_call(Chunk& chunk, node_ptr node);
 
 void gen_list(Chunk& chunk, node_ptr node);
 

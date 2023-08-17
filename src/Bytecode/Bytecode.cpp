@@ -35,6 +35,11 @@ Value list_val() {
     return val;
 }
 
+Value function_val() {
+    Value val(Function);
+    return val;
+}
+
 Value none_val() {
     Value val(None);
     return val;
@@ -61,6 +66,10 @@ void printValue(Value value) {
                 std::cout << " ";
             }
             std::cout << "]";
+            break;
+        }
+        case Function: {
+            std::cout << "Function: " << value.get_function()->name;
             break;
         }
         case None: {
@@ -181,6 +190,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return simple_instruction("OP_CONTINUE", offset);
     case OP_BUILD_LIST:
         return op_code_instruction("OP_BUILD_LIST", chunk, offset);
+    case OP_CALL:
+        return op_code_instruction("OP_CALL", chunk, offset);
     case OP_NEGATE:
         return simple_instruction("OP_NEGATE", offset);
     case OP_ADD:

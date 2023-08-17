@@ -5,12 +5,18 @@
 
 // #define DEBUG_TRACE_EXECUTION
 
+struct CallFrame {
+  std::shared_ptr<FunctionObj> function;
+  uint8_t* ip;
+  int frame_start;
+  int sp;
+};
 struct VM {
-    Chunk chunk;
-    uint8_t* ip;
     std::vector<Value> stack;
-    std::vector<Value*> objects;
     Value* sp;
+    /* Possibly change to array with specified MAX_DEPTH */
+    std::vector<CallFrame> frames;
+    std::vector<Value*> objects;
 };
 
 enum EvaluateResult {
@@ -24,7 +30,7 @@ Value pop(VM& vm);
 
 static void runtimeError(VM& vm, std::string message, ...);
 static EvaluateResult run(VM& vm);
-EvaluateResult evaluate(VM& vm, Chunk& chunk);
+EvaluateResult evaluate(VM& vm);
 
 void freeVM(VM& vm);
 

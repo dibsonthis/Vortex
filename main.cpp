@@ -35,12 +35,18 @@ int main(int argc, char** argv)
         // typechecker.typecheck();
 
         VM vm;
-        Chunk chunk;
+        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+        main->name = "";
+        main->arity = 0;
+        main->chunk = Chunk();
+        CallFrame main_frame;
+        main_frame.function = main;
+        vm.frames.push_back(main_frame);
 
-        generate_bytecode(parser.nodes, chunk);
-        add_code(chunk, OP_EXIT);
-        disassemble_chunk(chunk, "Test");
-        evaluate(vm, chunk);
+        generate_bytecode(parser.nodes, main_frame.function->chunk);
+        add_code(main_frame.function->chunk, OP_EXIT);
+        disassemble_chunk(main_frame.function->chunk, "Test");
+        evaluate(vm);
 
         // Interpreter interpreter(typechecker.nodes, parser.file_name);
         // interpreter.evaluate();
@@ -102,7 +108,7 @@ int main(int argc, char** argv)
         generate_bytecode(parser.nodes, chunk);
         add_code(chunk, OP_EXIT);
         disassemble_chunk(chunk, "Test");
-        evaluate(vm, chunk);
+        //evaluate(vm, chunk);
 
         // Interpreter interpreter(typechecker.nodes, parser.file_name);
         // interpreter.evaluate();

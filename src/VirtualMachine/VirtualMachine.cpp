@@ -13,21 +13,28 @@ Value pop(VM& vm) {
 }
 
 static void runtimeError(VM& vm, std::string message, ...) {
+
+    CallFrame frame = vm.frames.back();
+
     va_list args;
     va_start(args, message);
     vfprintf(stderr, message.c_str(), args);
     va_end(args);
     fputs("\n", stderr);
 
-    size_t instruction = vm.ip - &vm.chunk.code[0] - 1;
-    int line = vm.chunk.lines[instruction];
+    size_t instruction = frame.ip - &frame.function->chunk.code[0] - 1;
+    int line = frame.function->chunk.lines[instruction];
     fprintf(stderr, "[line %d] in script\n", line);
 }
 
 static EvaluateResult run(VM& vm) {
-#define READ_BYTE() (*vm.ip++)
+#define READ_BYTE() (*frame.ip++)
 #define READ_INT() (bytes_to_int(READ_BYTE(), READ_BYTE(), READ_BYTE(), READ_BYTE()))
-#define READ_CONSTANT() (vm.chunk.constants[READ_INT()])
+#define READ_CONSTANT() (frame.function->chunk.constants[READ_INT()])
+
+    CallFrame& frame = vm.frames.back();
+    frame.ip = &frame.function->chunk.code[0];
+    frame.frame_start = vm.stack.size();
 
     for (;;) {
         #ifdef DEBUG_TRACE_EXECUTION
@@ -39,7 +46,7 @@ static EvaluateResult run(VM& vm) {
         }
         printf("]");
         printf("\n");
-            disassemble_instruction(vm.chunk, (int)(size_t)(vm.ip - &vm.chunk.code[0]));
+            disassemble_instruction(frame.function->chunk, (int)(size_t)(frame.ip - &frame.function->chunk.code[0]));
         #endif
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
@@ -49,9 +56,15 @@ static EvaluateResult run(VM& vm) {
                 return EVALUATE_OK;
             }
             case OP_RETURN: {
-                printValue(pop(vm));
-                printf("\n");
-                return EVALUATE_OK;
+                Value return_value = pop(vm);
+                vm.frames.pop_back();
+                frame = vm.frames.back();
+                int to_clean = vm.stack.size() - frame.sp;
+                for (int i = 0; i < to_clean; i++) {
+                    pop(vm);
+                }
+                push(vm, return_value);
+                break;
             }
             case OP_LOAD_CONST: {
                 Value constant = READ_CONSTANT();
@@ -60,32 +73,32 @@ static EvaluateResult run(VM& vm) {
             }
             case OP_LOAD: {
                 int index = READ_INT();
-                push(vm, vm.stack[index]);
+                push(vm, vm.stack[index + frame.frame_start]);
                 break;
             }
             case OP_SET: {
                 int index = READ_INT();
-                vm.stack[index] = pop(vm);
+                vm.stack[index + frame.frame_start] = pop(vm);
                 break;
             }
             case OP_JUMP_IF_FALSE: {
                 int offset = READ_INT();
                 if (is_falsey(vm.stack.back())) {
-                    vm.ip += offset;
+                    frame.ip += offset;
                 }
                 break;
             }
             case OP_JUMP_IF_TRUE: {
                 int offset = READ_INT();
                 if (!is_falsey(vm.stack.back())) {
-                    vm.ip += offset;
+                    frame.ip += offset;
                 }
                 break;
             }
             case OP_POP_JUMP_IF_FALSE: {
                 int offset = READ_INT();
                 if (is_falsey(vm.stack.back())) {
-                    vm.ip += offset;
+                    frame.ip += offset;
                 }
                 pop(vm);
                 break;
@@ -93,19 +106,19 @@ static EvaluateResult run(VM& vm) {
             case OP_POP_JUMP_IF_TRUE: {
                 int offset = READ_INT();
                 if (!is_falsey(vm.stack.back())) {
-                    vm.ip += offset;
+                    frame.ip += offset;
                 }
                 pop(vm);
                 break;
             }
             case OP_JUMP: {
                 int offset = READ_INT();
-                vm.ip += offset;
+                frame.ip += offset;
                 break;
             }
             case OP_JUMP_BACK: {
                 int offset = READ_INT();
-                vm.ip -= offset;
+                frame.ip -= offset;
                 break;
             }
             case OP_POP: {
@@ -113,16 +126,16 @@ static EvaluateResult run(VM& vm) {
                 break;
             }
             case OP_BREAK: {
-                while (*vm.ip != OP_JUMP_BACK) {
-                    vm.ip++;
+                while (*frame.ip != OP_JUMP_BACK) {
+                    frame.ip++;
                 }
                 READ_BYTE();
                 READ_INT();
                 break;
             }
             case OP_CONTINUE: {
-                while (*vm.ip != OP_JUMP_BACK) {
-                    vm.ip++;
+                while (*frame.ip != OP_JUMP_BACK) {
+                    frame.ip++;
                 }
                 break;
             }
@@ -164,6 +177,33 @@ static EvaluateResult run(VM& vm) {
                 }
                 Value value = number_val(list.get_list()->size());
                 push(vm, value);
+                break;
+            }
+            case OP_CALL: {
+                int param_num = READ_INT();
+                Value function = pop(vm);
+                if (!function.is_function()) {
+                    runtimeError(vm, "Object is not callable");
+                }
+
+                auto& function_obj = function.get_function();
+
+                for (int i = 0; i < function_obj->arity; i++) {
+                    Value arg = pop(vm);
+                    function_obj->chunk.constants[i] = arg;
+                }
+
+                frame.sp = vm.stack.size();
+
+                CallFrame call_frame;
+                call_frame.frame_start = vm.stack.size();
+                call_frame.function = function_obj;
+                vm.frames.push_back(call_frame);
+
+                frame = vm.frames.back();
+                frame.ip = &frame.function->chunk.code[0];
+                frame.frame_start = vm.stack.size();
+
                 break;
             }
             case OP_NEGATE: {
@@ -322,9 +362,7 @@ static EvaluateResult run(VM& vm) {
 #undef READ_CONSTANT
 }
 
-EvaluateResult evaluate(VM& vm, Chunk& chunk) {
-    vm.chunk = chunk;
-    vm.ip = &vm.chunk.code[0];
+EvaluateResult evaluate(VM& vm) {
     return run(vm);
 }
 

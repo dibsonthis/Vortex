@@ -40,7 +40,8 @@ enum OpCode {
     OP_CONTINUE,
     OP_BUILD_LIST,
     OP_ACCESSOR,
-    OP_LEN
+    OP_LEN,
+    OP_CALL
 };
 
 enum ValueType {
@@ -48,12 +49,34 @@ enum ValueType {
     String,
     Boolean,
     List,
+    Function,
     None
+};
+
+struct Value;
+
+struct Chunk {
+    std::vector<uint8_t> code;
+    std::vector<uint8_t> lines;
+    std::vector<Value> constants;
+};
+
+struct FunctionObj {
+    std::string name;
+    int arity;
+    Chunk chunk;
 };
 
 struct Value {
     ValueType type;
-    std::variant<double, std::string, bool, std::shared_ptr<std::vector<Value>>> value;
+    std::variant
+    <
+        double, 
+        std::string, 
+        bool, 
+        std::shared_ptr<std::vector<Value>>,
+        std::shared_ptr<FunctionObj>
+    > value;
     Value(ValueType type) : type(type) {
         switch (type)
         {
@@ -68,6 +91,9 @@ struct Value {
                 break;
             case List:
                 value = std::make_shared<std::vector<Value>>();
+                break;
+            case Function:
+                value = std::make_shared<FunctionObj>();
                 break;
             default:    
                 break;
@@ -88,6 +114,10 @@ struct Value {
         return std::get<std::shared_ptr<std::vector<Value>>>(this->value);
     }
 
+    std::shared_ptr<FunctionObj>& get_function() {
+        return std::get<std::shared_ptr<FunctionObj>>(this->value);
+    }
+
     bool is_number() {
         return type == Number;
     }
@@ -100,6 +130,9 @@ struct Value {
     bool is_list() {
         return type == List;
     }
+    bool is_function() {
+        return type == Function;
+    }
     bool is_none() {
         return type == None;
     }
@@ -110,13 +143,8 @@ Value number_val(double value);
 Value string_val(std::string value);
 Value boolean_val(bool value);
 Value list_val();
+Value function_val();
 Value none_val();
-
-struct Chunk {
-    std::vector<uint8_t> code;
-    std::vector<uint8_t> lines;
-    std::vector<Value> constants;
-};
 
 void printValue(Value value);
 
