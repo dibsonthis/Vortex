@@ -22,19 +22,28 @@ static void runtimeError(VM& vm, std::string message, ...) {
     va_end(args);
     fputs("\n", stderr);
 
-    size_t instruction = frame.ip - &frame.function->chunk.code[0] - 1;
-    int line = frame.function->chunk.lines[instruction];
-    fprintf(stderr, "[line %d] in script\n", line);
+    for (int i = vm.frames.size() - 1; i >= 0; i--) {
+        CallFrame* frame = &vm.frames[i];
+        auto& function = frame->function;
+        size_t instruction = frame->ip - function->chunk.code.data() - 1;
+        fprintf(stderr, "[line %d] in ", 
+                function->chunk.lines[instruction]);
+        if (function->name == "") {
+            fprintf(stderr, "script\n");
+        } else {
+            fprintf(stderr, "%s()\n", function->name.c_str());
+        }
+  }
 }
 
 static EvaluateResult run(VM& vm) {
-#define READ_BYTE() (*frame.ip++)
+#define READ_BYTE() (*frame->ip++)
 #define READ_INT() (bytes_to_int(READ_BYTE(), READ_BYTE(), READ_BYTE(), READ_BYTE()))
-#define READ_CONSTANT() (frame.function->chunk.constants[READ_INT()])
+#define READ_CONSTANT() (frame->function->chunk.constants[READ_INT()])
 
-    CallFrame& frame = vm.frames.back();
-    frame.ip = &frame.function->chunk.code[0];
-    frame.frame_start = vm.stack.size();
+    CallFrame* frame = &vm.frames.back();
+    frame->ip = frame->function->chunk.code.data();
+    frame->frame_start = vm.stack.size();
 
     for (;;) {
         #ifdef DEBUG_TRACE_EXECUTION
@@ -46,7 +55,7 @@ static EvaluateResult run(VM& vm) {
         }
         printf("]");
         printf("\n");
-            disassemble_instruction(frame.function->chunk, (int)(size_t)(frame.ip - &frame.function->chunk.code[0]));
+            disassemble_instruction(frame->function->chunk, (int)(size_t)(frame->ip - &frame->function->chunk.code[0]));
         #endif
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
@@ -57,11 +66,13 @@ static EvaluateResult run(VM& vm) {
             }
             case OP_RETURN: {
                 Value return_value = pop(vm);
+                volatile int to_clean = vm.stack.size() - frame->sp;
+                volatile int instruction_index = frame->instruction_index;
                 vm.frames.pop_back();
-                frame = vm.frames.back();
-                int to_clean = vm.stack.size() - frame.sp;
+                frame = &vm.frames.back();
+                frame->ip = &frame->function->chunk.code[instruction_index];
                 for (int i = 0; i < to_clean; i++) {
-                    pop(vm);
+                    vm.stack.pop_back();
                 }
                 push(vm, return_value);
                 break;
@@ -73,32 +84,32 @@ static EvaluateResult run(VM& vm) {
             }
             case OP_LOAD: {
                 int index = READ_INT();
-                push(vm, vm.stack[index + frame.frame_start]);
+                push(vm, vm.stack[index + frame->frame_start]);
                 break;
             }
             case OP_SET: {
                 int index = READ_INT();
-                vm.stack[index + frame.frame_start] = pop(vm);
+                vm.stack[index + frame->frame_start] = pop(vm);
                 break;
             }
             case OP_JUMP_IF_FALSE: {
                 int offset = READ_INT();
                 if (is_falsey(vm.stack.back())) {
-                    frame.ip += offset;
+                    frame->ip += offset;
                 }
                 break;
             }
             case OP_JUMP_IF_TRUE: {
                 int offset = READ_INT();
                 if (!is_falsey(vm.stack.back())) {
-                    frame.ip += offset;
+                    frame->ip += offset;
                 }
                 break;
             }
             case OP_POP_JUMP_IF_FALSE: {
                 int offset = READ_INT();
                 if (is_falsey(vm.stack.back())) {
-                    frame.ip += offset;
+                    frame->ip += offset;
                 }
                 pop(vm);
                 break;
@@ -106,19 +117,19 @@ static EvaluateResult run(VM& vm) {
             case OP_POP_JUMP_IF_TRUE: {
                 int offset = READ_INT();
                 if (!is_falsey(vm.stack.back())) {
-                    frame.ip += offset;
+                    frame->ip += offset;
                 }
                 pop(vm);
                 break;
             }
             case OP_JUMP: {
                 int offset = READ_INT();
-                frame.ip += offset;
+                frame->ip += offset;
                 break;
             }
             case OP_JUMP_BACK: {
                 int offset = READ_INT();
-                frame.ip -= offset;
+                frame->ip -= offset;
                 break;
             }
             case OP_POP: {
@@ -126,16 +137,16 @@ static EvaluateResult run(VM& vm) {
                 break;
             }
             case OP_BREAK: {
-                while (*frame.ip != OP_JUMP_BACK) {
-                    frame.ip++;
+                while (*frame->ip != OP_JUMP_BACK) {
+                    frame->ip++;
                 }
                 READ_BYTE();
                 READ_INT();
                 break;
             }
             case OP_CONTINUE: {
-                while (*frame.ip != OP_JUMP_BACK) {
-                    frame.ip++;
+                while (*frame->ip != OP_JUMP_BACK) {
+                    frame->ip++;
                 }
                 break;
             }
@@ -188,21 +199,27 @@ static EvaluateResult run(VM& vm) {
 
                 auto& function_obj = function.get_function();
 
-                for (int i = 0; i < function_obj->arity; i++) {
+                for (int i = 0; i < param_num; i++) {
                     Value arg = pop(vm);
                     function_obj->chunk.constants[i] = arg;
                 }
 
-                frame.sp = vm.stack.size();
+                disassemble_chunk(function_obj->chunk, function_obj->name + "__");
+
+                //frame->sp = vm.stack.size();
 
                 CallFrame call_frame;
                 call_frame.frame_start = vm.stack.size();
                 call_frame.function = function_obj;
-                vm.frames.push_back(call_frame);
+                call_frame.sp = vm.stack.size();
+                call_frame.ip = function_obj->chunk.code.data();
 
-                frame = vm.frames.back();
-                frame.ip = &frame.function->chunk.code[0];
-                frame.frame_start = vm.stack.size();
+                int instruction_index = frame->ip - &frame->function->chunk.code[0];
+                
+                call_frame.instruction_index = instruction_index;
+
+                vm.frames.push_back(call_frame);
+                frame = &vm.frames.back();
 
                 break;
             }

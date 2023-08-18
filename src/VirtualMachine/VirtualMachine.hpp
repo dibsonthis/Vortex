@@ -10,6 +10,7 @@ struct CallFrame {
   uint8_t* ip;
   int frame_start;
   int sp;
+  int instruction_index;
 };
 struct VM {
     std::vector<Value> stack;

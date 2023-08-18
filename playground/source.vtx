@@ -1,23 +1,9 @@
 var func = (a, b) => {
-    ret (a + b)
-}
-
-var l = 0
-var x = 10000
-var ls = 0..x
-
-for (ls, i, v1) {
-    for (ls, j, v2) {
-        l += func(v2, v2)
+    var inner = (x, y) => {
+        ret (x + y)
     }
+    ret inner(a, b)
 }
 
-l
-
-// for (ls, i) {
-//     for (ls, j) {
-//         l += func(i, j)
-//     }
-// }
-
-// l
+var x = func(40, 60)
+x

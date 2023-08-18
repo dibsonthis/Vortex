@@ -41,6 +41,9 @@ int main(int argc, char** argv)
         main->chunk = Chunk();
         CallFrame main_frame;
         main_frame.function = main;
+        main_frame.sp = 0;
+        main_frame.ip = main->chunk.code.data();
+        main_frame.frame_start = 0;
         vm.frames.push_back(main_frame);
 
         generate_bytecode(parser.nodes, main_frame.function->chunk);
