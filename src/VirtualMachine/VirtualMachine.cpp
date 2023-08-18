@@ -36,10 +36,20 @@ static void runtimeError(VM& vm, std::string message, ...) {
   }
 }
 
+static void define_native(VM& vm, std::string name, NativeFunction function) {
+    Value native = native_val();
+    native.get_native()->function = function;
+    vm.globals[name] = native;
+}
+
 static EvaluateResult run(VM& vm) {
 #define READ_BYTE() (*frame->ip++)
 #define READ_INT() (bytes_to_int(READ_BYTE(), READ_BYTE(), READ_BYTE(), READ_BYTE()))
 #define READ_CONSTANT() (frame->function->chunk.constants[READ_INT()])
+
+    // Define globals
+    define_native(vm, "print", printNative);
+    define_native(vm, "clock", clockNative);
 
     CallFrame* frame = &vm.frames.back();
     frame->ip = frame->function->chunk.code.data();
@@ -60,14 +70,14 @@ static EvaluateResult run(VM& vm) {
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
             case OP_EXIT: {
-                printValue(pop(vm));
-                printf("\n");
+                // printValue(pop(vm));
+                // printf("\n");
                 return EVALUATE_OK;
             }
             case OP_RETURN: {
                 Value return_value = pop(vm);
-                volatile int to_clean = vm.stack.size() - frame->sp;
-                volatile int instruction_index = frame->instruction_index;
+                int to_clean = vm.stack.size() - frame->sp;
+                int instruction_index = frame->instruction_index;
                 vm.frames.pop_back();
                 frame = &vm.frames.back();
                 frame->ip = &frame->function->chunk.code[instruction_index];
@@ -90,6 +100,11 @@ static EvaluateResult run(VM& vm) {
             case OP_SET: {
                 int index = READ_INT();
                 vm.stack[index + frame->frame_start] = pop(vm);
+                break;
+            }
+            case OP_LOAD_GLOBAL: {
+                Value name = pop(vm);
+                push(vm, vm.globals[name.get_string()]);
                 break;
             }
             case OP_JUMP_IF_FALSE: {
@@ -193,6 +208,18 @@ static EvaluateResult run(VM& vm) {
             case OP_CALL: {
                 int param_num = READ_INT();
                 Value function = pop(vm);
+
+                if (function.is_native()) {
+                    auto& native_function = function.get_native();
+                    std::vector<Value> args;
+                    for (int i = 0; i < param_num; i++) {
+                        args.push_back(pop(vm));
+                    }
+                    Value result = native_function->function(args);
+                    push(vm, result);
+                    break;
+                }
+
                 if (!function.is_function()) {
                     runtimeError(vm, "Object is not callable");
                 }
@@ -204,9 +231,7 @@ static EvaluateResult run(VM& vm) {
                     function_obj->chunk.constants[i] = arg;
                 }
 
-                disassemble_chunk(function_obj->chunk, function_obj->name + "__");
-
-                //frame->sp = vm.stack.size();
+                // disassemble_chunk(function_obj->chunk, function_obj->name + "__");
 
                 CallFrame call_frame;
                 call_frame.frame_start = vm.stack.size();
@@ -411,4 +436,15 @@ bool is_falsey(Value& value) {
 
 void freeVM(VM& vm) {
     //
+}
+
+static Value printNative(std::vector<Value>& args) {
+    for (Value& arg : args) {
+        printValue(arg);
+    }
+    return none_val();
+}
+
+static Value clockNative(std::vector<Value>& args) {
+    return number_val((double)clock() / CLOCKS_PER_SEC);
 }

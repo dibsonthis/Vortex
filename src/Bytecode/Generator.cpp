@@ -147,7 +147,10 @@ void gen_const(Chunk& chunk, node_ptr node) {
 void gen_id(Chunk& chunk, node_ptr node) {
     int index = resolve_variable(node->_Node.ID().value);
     if (index == -1) {
-        error("Variable '" + node->_Node.ID().value + "' is undefined");
+        add_constant_code(chunk, string_val(node->_Node.ID().value), node->line);
+        add_opcode(chunk, OP_LOAD_GLOBAL, index, node->line);
+        return;
+        //error("Variable '" + node->_Node.ID().value + "' is undefined");
     }
     add_opcode(chunk, OP_LOAD, index, node->line);
 }
@@ -351,6 +354,9 @@ void gen_function(Chunk& chunk, node_ptr node) {
         declareVariable(param->_Node.ID().value);
     }
 
+    add_constant_code(function->chunk, function_value, node->line);
+    declareVariable(function->name);
+
     generate_bytecode(node->_Node.Function().body->_Node.Object().elements, function->chunk);
 
     add_constant_code(function->chunk, none_val(), node->line);
@@ -367,7 +373,13 @@ void gen_function_call(Chunk& chunk, node_ptr node) {
     for (int i = node->_Node.FunctionCall().args.size() - 1; i >= 0; i--) {
         generate(node->_Node.FunctionCall().args[i], chunk);
     }
-    add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.FunctionCall().name), node->line);
+    int index = resolve_variable(node->_Node.FunctionCall().name);
+    if (index == -1) {
+        add_constant_code(chunk, string_val(node->_Node.FunctionCall().name), node->line);
+        add_code(chunk, OP_LOAD_GLOBAL, node->line);
+    } else {
+        add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.FunctionCall().name), node->line);
+    }
     add_opcode(chunk, OP_CALL, node->_Node.FunctionCall().args.size(), node->line);
 }
 

@@ -40,6 +40,11 @@ Value function_val() {
     return val;
 }
 
+Value native_val() {
+    Value val(Native);
+    return val;
+}
+
 Value none_val() {
     Value val(None);
     return val;
@@ -70,6 +75,10 @@ void printValue(Value value) {
         }
         case Function: {
             std::cout << "Function: " << value.get_function()->name;
+            break;
+        }
+        case Native: {
+            std::cout << "<Native Function>";
             break;
         }
         case None: {
@@ -164,6 +173,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return simple_instruction("OP_POP", offset);
     case OP_RETURN:
         return simple_instruction("OP_RETURN", offset);
+    case OP_LOAD_GLOBAL:
+        return simple_instruction("OP_LOAD_GLOBAL", offset);
     case OP_LOAD_CONST:
         return constant_instruction("OP_LOAD_CONST", chunk, offset);
     case OP_STORE_VAR:

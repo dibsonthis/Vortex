@@ -18,6 +18,7 @@ struct VM {
     /* Possibly change to array with specified MAX_DEPTH */
     std::vector<CallFrame> frames;
     std::vector<Value*> objects;
+    std::unordered_map<std::string, Value> globals;
 };
 
 enum EvaluateResult {
@@ -30,6 +31,7 @@ void push(VM& vm, Value& value);
 Value pop(VM& vm);
 
 static void runtimeError(VM& vm, std::string message, ...);
+static void define_native(VM& vm, std::string name, NativeFunction function);
 static EvaluateResult run(VM& vm);
 EvaluateResult evaluate(VM& vm);
 
@@ -37,3 +39,6 @@ void freeVM(VM& vm);
 
 bool is_equal(Value& v1, Value& v2);
 bool is_falsey(Value& value);
+
+static Value printNative(std::vector<Value>& args);
+static Value clockNative(std::vector<Value>& args);

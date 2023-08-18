@@ -27,6 +27,7 @@ enum OpCode {
     OP_RANGE,
     OP_STORE_VAR,
     OP_LOAD,
+    OP_LOAD_GLOBAL,
     OP_SET,
     OP_POP,
     OP_JUMP_IF_FALSE,
@@ -50,6 +51,7 @@ enum ValueType {
     Boolean,
     List,
     Function,
+    Native,
     None
 };
 
@@ -67,6 +69,12 @@ struct FunctionObj {
     Chunk chunk;
 };
 
+typedef Value (*NativeFunction)(std::vector<Value>& args);
+
+struct NativeFunctionObj {
+    NativeFunction function = nullptr;
+};
+
 struct Value {
     ValueType type;
     std::variant
@@ -75,8 +83,11 @@ struct Value {
         std::string, 
         bool, 
         std::shared_ptr<std::vector<Value>>,
-        std::shared_ptr<FunctionObj>
+        std::shared_ptr<FunctionObj>,
+        std::shared_ptr<NativeFunctionObj>
     > value;
+
+    Value() : type(None) {}
     Value(ValueType type) : type(type) {
         switch (type)
         {
@@ -94,6 +105,9 @@ struct Value {
                 break;
             case Function:
                 value = std::make_shared<FunctionObj>();
+                break;
+            case Native:
+                value = std::make_shared<NativeFunctionObj>();
                 break;
             default:    
                 break;
@@ -118,6 +132,10 @@ struct Value {
         return std::get<std::shared_ptr<FunctionObj>>(this->value);
     }
 
+    std::shared_ptr<NativeFunctionObj>& get_native() {
+        return std::get<std::shared_ptr<NativeFunctionObj>>(this->value);
+    }
+
     bool is_number() {
         return type == Number;
     }
@@ -133,6 +151,9 @@ struct Value {
     bool is_function() {
         return type == Function;
     }
+    bool is_native() {
+        return type == Native;
+    }
     bool is_none() {
         return type == None;
     }
@@ -144,6 +165,7 @@ Value string_val(std::string value);
 Value boolean_val(bool value);
 Value list_val();
 Value function_val();
+Value native_val();
 Value none_val();
 
 void printValue(Value value);

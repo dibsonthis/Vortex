@@ -1,9 +1,12 @@
-var func = (a, b) => {
-    var inner = (x, y) => {
-        ret (x + y)
+var fib = (n) => {
+    if (n < 2) {
+        ret n
     }
-    ret inner(a, b)
+    ret (fib(n - 2) + fib(n - 1))
 }
 
-var x = func(40, 60)
-x
+const start = clock()
+var f = fib(30)
+const duration = clock() - start
+
+print("Duration: ", duration)
