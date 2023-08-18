@@ -50,6 +50,7 @@ static EvaluateResult run(VM& vm) {
     // Define globals
     define_native(vm, "print", printNative);
     define_native(vm, "clock", clockNative);
+    define_native(vm, "dis", disNative);
 
     CallFrame* frame = &vm.frames.back();
     frame->ip = frame->function->chunk.code.data();
@@ -447,4 +448,29 @@ static Value printNative(std::vector<Value>& args) {
 
 static Value clockNative(std::vector<Value>& args) {
     return number_val((double)clock() / CLOCKS_PER_SEC);
+}
+
+static Value disNative(std::vector<Value>& args) {
+    if (args.size() != 1) {
+        error("Function 'dis' expects 1 argument");
+    }
+
+    Value function = args[0];
+
+    if (function.is_native()) {
+        std::ostringstream oss;
+        oss << &function.get_native()->function;
+        std::string address = oss.str();
+        std::cout << "\n== C function ==\n<code> at " + address;
+        return none_val();
+    }
+
+    if (!function.is_function()) {
+        error("Function 'dis' expects 1 'Function' argument");
+    }
+
+    std::cout << '\n';
+    disassemble_chunk(function.get_function()->chunk, function.get_function()->name);
+
+    return none_val();
 }

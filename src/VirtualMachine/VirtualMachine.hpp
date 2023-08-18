@@ -1,5 +1,8 @@
 #pragma once
 
+#include <iostream>
+#include <sstream>
+
 #include "../Bytecode/Bytecode.hpp"
 #include "../Bytecode/Generator.hpp"
 
@@ -42,3 +45,4 @@ bool is_falsey(Value& value);
 
 static Value printNative(std::vector<Value>& args);
 static Value clockNative(std::vector<Value>& args);
+static Value disNative(std::vector<Value>& args);

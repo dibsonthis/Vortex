@@ -2,23 +2,32 @@ var fib = (n) => {
     if (n < 2) {
         ret n
     }
-    ret (fib(n - 2) + fib(n - 1))
+    ret fib(n - 2) + fib(n - 1)
 }
 
 var bloop = () => {
     var l = 0
-    for (0..10000, i, v1) {
-        for (0..10000, j, v2) {
+    for (0..2000, i, v1) {
+        for (0..2000, j, v2) {
             l += v1 + v2
         }
     }
 }
 
+const println = (text) => {
+    print(text, "\n")
+}
+
 const start = clock()
-// var f = fib(30)
-print("Starting\n")
+println("Starting...")
+println("Executing 'fib'...")
+const f = fib(35)
+print("fib(35): ", f, "\n")
+print("Executing 'bloop'...\n")
 bloop()
-print("Done\n")
+println("Done")
 const duration = clock() - start
 
 print("Duration: ", duration)
+
+dis(fib)
