@@ -5,8 +5,20 @@ var fib = (n) => {
     ret (fib(n - 2) + fib(n - 1))
 }
 
+var bloop = () => {
+    var l = 0
+    for (0..10000, i, v1) {
+        for (0..10000, j, v2) {
+            l += v1 + v2
+        }
+    }
+}
+
 const start = clock()
-var f = fib(30)
+// var f = fib(30)
+print("Starting\n")
+bloop()
+print("Done\n")
 const duration = clock() - start
 
 print("Duration: ", duration)

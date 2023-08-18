@@ -361,7 +361,7 @@ void gen_function(Chunk& chunk, node_ptr node) {
 
     add_constant_code(function->chunk, none_val(), node->line);
     add_code(function->chunk, OP_RETURN, node->line);
-    disassemble_chunk(function->chunk, function->name);
+    //disassemble_chunk(function->chunk, function->name);
 
     current->in_function = false;
 
@@ -580,6 +580,11 @@ void generate_bytecode(std::vector<node_ptr>& nodes, Chunk& chunk) {
             node->type == NodeType::BOOLEAN ||
             node->type == NodeType::LIST ||
             node->type == NodeType::OBJECT) {
+            continue;
+        }
+        if (node->type == NodeType::FUNC_CALL) {
+            generate(node, chunk);
+            add_code(chunk, OP_POP, node->line);
             continue;
         }
         generate(node, chunk);
