@@ -1,33 +1,39 @@
-var fib = (n) => {
-    if (n < 2) {
-        ret n
-    }
-    ret fib(n - 2) + fib(n - 1)
+const add = (a, b = 10) => {
+    ret a + b
 }
 
-var bloop = () => {
-    var l = 0
-    for (0..2000, i, v1) {
-        for (0..2000, j, v2) {
-            l += v1 + v2
-        }
-    }
-}
+print(add(5, 4))
 
-const println = (text) => {
-    print(text, "\n")
-}
+// var fib = (n) => {
+//     if (n < 2) {
+//         ret n
+//     }
+//     ret fib(n - 2) + fib(n - 1)
+// }
 
-const start = clock()
-println("Starting...")
-println("Executing 'fib'...")
-const f = fib(35)
-print("fib(35): ", f, "\n")
-print("Executing 'bloop'...\n")
-bloop()
-println("Done")
-const duration = clock() - start
+// var bloop = () => {
+//     var l = 0
+//     for (0..2000, i, v1) {
+//         for (0..2000, j, v2) {
+//             l += v1 + v2
+//         }
+//     }
+// }
 
-print("Duration: ", duration)
+// const println = (text) => {
+//     print(text, "\n")
+// }
 
-dis(fib)
+// const start = clock()
+// println("Starting...")
+// println("Executing 'fib'...")
+// const f = fib(35)
+// print("fib(35): ", f, "\n")
+// print("Executing 'bloop'...\n")
+// bloop()
+// println("Done")
+// const duration = clock() - start
+
+// print("Duration: ", duration)
+
+// dis(fib)

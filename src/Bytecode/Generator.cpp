@@ -346,6 +346,7 @@ void gen_function(Chunk& chunk, node_ptr node) {
     for (auto& param : node->_Node.Function().params) {
         std::string param_name = param->_Node.ID().value;
         if (node->_Node.Function().default_values.count(param_name)) {
+            function->defaults++;
             generate(node->_Node.Function().default_values[param_name], function->chunk);
         } else {
             add_constant_code(function->chunk, none_val(), param->line);

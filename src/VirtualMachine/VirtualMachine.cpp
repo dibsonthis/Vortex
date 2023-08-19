@@ -182,9 +182,11 @@ static EvaluateResult run(VM& vm) {
 
                 if (!_list.is_list()) {
                     runtimeError(vm, "Object is not accessable");
+                    return EVALUATE_RUNTIME_ERROR;
                 }
                 if (!_index.is_number()) {
                     runtimeError(vm, "Accessor must be a number");
+                    return EVALUATE_RUNTIME_ERROR;
                 }
                 int index = _index.get_number();
                 auto& list = _list.get_list();
@@ -223,9 +225,16 @@ static EvaluateResult run(VM& vm) {
 
                 if (!function.is_function()) {
                     runtimeError(vm, "Object is not callable");
+                    return EVALUATE_RUNTIME_ERROR;
                 }
 
                 auto& function_obj = function.get_function();
+                int positional_args = function_obj->arity - function_obj->defaults;
+
+                if ((param_num < positional_args) || (param_num > function_obj->arity)) {
+                    runtimeError(vm, "Function '" + function_obj->name + "' expects " + std::to_string(function_obj->arity) + " arguments");
+                    return EVALUATE_RUNTIME_ERROR;
+                }
 
                 for (int i = 0; i < param_num; i++) {
                     Value arg = pop(vm);

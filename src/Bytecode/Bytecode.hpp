@@ -66,6 +66,7 @@ struct Chunk {
 struct FunctionObj {
     std::string name;
     int arity;
+    int defaults;
     Chunk chunk;
 };
 

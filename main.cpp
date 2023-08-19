@@ -124,7 +124,7 @@ int main(int argc, char** argv)
 
         // Interpreter interpreter(typechecker.nodes, parser.file_name);
         // interpreter.evaluate();
-        
+
         exit(0);
     }
 }
