@@ -147,12 +147,27 @@ void gen_const(Chunk& chunk, node_ptr node) {
 void gen_id(Chunk& chunk, node_ptr node) {
     int index = resolve_variable(node->_Node.ID().value);
     if (index == -1) {
-        add_constant_code(chunk, string_val(node->_Node.ID().value), node->line);
-        add_opcode(chunk, OP_LOAD_GLOBAL, index, node->line);
+        auto prev_compiler = current;
+        if (!current->prev) {
+            goto is_global;
+        }
+        current = current->prev;
+        int index = resolve_variable(node->_Node.ID().value);
+        if (index == -1) {
+            goto is_global;
+        }
+        current->closed_vars.push_back(index);
+        add_opcode(chunk, OP_LOAD_CLOSURE, current->closed_vars.size()-1, node->line);
+        current = prev_compiler;
         return;
-        //error("Variable '" + node->_Node.ID().value + "' is undefined");
     }
     add_opcode(chunk, OP_LOAD, index, node->line);
+    return;
+
+    is_global:
+        add_constant_code(chunk, string_val(node->_Node.ID().value), node->line);
+        add_code(chunk, OP_LOAD_GLOBAL, node->line);
+        return;
 }
 
 void gen_if(Chunk& chunk, node_ptr node) {
@@ -332,6 +347,7 @@ void gen_function(Chunk& chunk, node_ptr node) {
 
     auto prev_compiler = current;
     current = std::make_shared<Compiler>();
+    current->prev = prev_compiler;
 
     current->in_function = true;
 
@@ -368,9 +384,13 @@ void gen_function(Chunk& chunk, node_ptr node) {
     }
 
     current->in_function = false;
+    function->closed_vars = current->closed_vars;
 
     current = prev_compiler;
     add_constant_code(chunk, function_value, node->line);
+
+
+    disassemble_chunk(function->chunk, function->name);
 }
 
 void gen_function_call(Chunk& chunk, node_ptr node) {

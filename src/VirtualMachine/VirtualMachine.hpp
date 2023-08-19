@@ -14,6 +14,7 @@ struct CallFrame {
   int frame_start;
   int sp;
   int instruction_index;
+  std::vector<Value> closed_values;
 };
 struct VM {
     std::vector<Value> stack;

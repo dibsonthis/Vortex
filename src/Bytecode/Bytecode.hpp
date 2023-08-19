@@ -28,6 +28,7 @@ enum OpCode {
     OP_STORE_VAR,
     OP_LOAD,
     OP_LOAD_GLOBAL,
+    OP_LOAD_CLOSURE,
     OP_SET,
     OP_POP,
     OP_JUMP_IF_FALSE,
@@ -68,6 +69,7 @@ struct FunctionObj {
     int arity;
     int defaults;
     Chunk chunk;
+    std::vector<int> closed_vars;
 };
 
 typedef Value (*NativeFunction)(std::vector<Value>& args);

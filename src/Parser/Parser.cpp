@@ -538,7 +538,7 @@ void Parser::parse_func_call(std::string end) {
         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
             break;
         }
-        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "ret") {
+        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "return") {
             advance();
             continue;
         }
@@ -576,7 +576,7 @@ void Parser::parse_object_desconstruct(std::string end) {
         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
             break;
         }
-        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "ret") {
+        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "return") {
             advance();
             continue;
         }
@@ -601,7 +601,7 @@ void Parser::parse_accessor(std::string end) {
             advance();
             continue;
         }
-		else if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "ret") {
+		else if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "return") {
             advance();
             continue;
         }
@@ -980,7 +980,7 @@ void Parser::parse_return(std::string end) {
             break;
         }
 
-        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "ret") {
+        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "return") {
             current_node->type = NodeType::RETURN;
             current_node->_Node = ReturnNode();
             if (peek()->type == NodeType::OP && (peek()->_Node.Op().value == ";" || peek()->_Node.Op().value == "}")) {

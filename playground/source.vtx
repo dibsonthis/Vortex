@@ -1,37 +1,32 @@
-const add = (a = 9, b = 10) => a + b
-
-print(add(10, 2))
-
-// var fib = (n) => {
-//     if (n < 2) {
-//         ret n
-//     }
-//     ret fib(n - 2) + fib(n - 1)
+// const outer = () => {
+//     var j = true
+//     var x = "hi"
+//     var y = 12
+//     const inner = () => [x, x]
+//     ret inner
 // }
 
-// var bloop = () => {
-//     var l = 0
-//     for (0..2000, i, v1) {
-//         for (0..2000, j, v2) {
-//             l += v1 + v2
-//         }
-//     }
-// }
+// const closure = outer()
+// const x = closure()
+// print(x)
 
-// const println = (text) => {
-//     print(text, "\n")
-// }
+const f = () => {
+    const x = 12
+    const blah1 = () => {
+        print(x, "\n")
+    }
+    return blah1
+}
 
-// const start = clock()
-// println("Starting...")
-// println("Executing 'fib'...")
-// const f = fib(35)
-// print("fib(35): ", f, "\n")
-// print("Executing 'bloop'...\n")
-// bloop()
-// println("Done")
-// const duration = clock() - start
+const g = () => {
+    const x = "hi"
+    const blah2 = () => {
+        print(x, "\n")
+    }
+    return blah2
+}
 
-// print("Duration: ", duration)
-
-// dis(fib)
+var a = g()
+a()
+var b = f()
+b()

@@ -1,5 +1,7 @@
 #include "VirtualMachine.hpp"
 
+int closure_count = 0;
+
 void push(VM& vm, Value& value) {
     vm.stack.push_back(value);
     vm.sp = &vm.stack.back();
@@ -71,20 +73,21 @@ static EvaluateResult run(VM& vm) {
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
             case OP_EXIT: {
-                // printValue(pop(vm));
-                // printf("\n");
                 return EVALUATE_OK;
             }
             case OP_RETURN: {
                 Value return_value = pop(vm);
                 int to_clean = vm.stack.size() - frame->sp;
                 int instruction_index = frame->instruction_index;
-                vm.frames.pop_back();
-                frame = &vm.frames.back();
-                frame->ip = &frame->function->chunk.code[instruction_index];
+                for (int& index : frame->function->closed_vars) {
+                    vm.frames[vm.frames.size()-2].closed_values.push_back(vm.stack[index + frame->frame_start]);
+                }
                 for (int i = 0; i < to_clean; i++) {
                     vm.stack.pop_back();
                 }
+                vm.frames.pop_back();
+                frame = &vm.frames.back();
+                frame->ip = &frame->function->chunk.code[instruction_index];
                 push(vm, return_value);
                 break;
             }
@@ -105,7 +108,25 @@ static EvaluateResult run(VM& vm) {
             }
             case OP_LOAD_GLOBAL: {
                 Value name = pop(vm);
-                push(vm, vm.globals[name.get_string()]);
+                std::string& name_str = name.get_string();
+                if (!vm.globals.count(name_str)) {
+                    runtimeError(vm, "Global '" + name_str + "' is undefined");
+                    return EVALUATE_RUNTIME_ERROR; 
+                }
+                push(vm, vm.globals[name_str]);
+                break;
+            }
+            case OP_LOAD_CLOSURE: {
+                int index = READ_INT();
+                CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
+                if (prev_frame && prev_frame->closed_values.size() >= index + 1) {
+                    push(vm, prev_frame->closed_values[index + closure_count]);
+                    closure_count++;
+                } else {
+                    int stack_index = prev_frame->function->closed_vars[index];
+                    stack_index = prev_frame->frame_start + stack_index;
+                    push(vm, vm.stack[stack_index]);
+                }
                 break;
             }
             case OP_JUMP_IF_FALSE: {

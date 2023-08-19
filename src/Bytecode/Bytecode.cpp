@@ -181,6 +181,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return constant_instruction("OP_STORE_VAR", chunk, offset);
     case OP_LOAD:
         return op_code_instruction("OP_LOAD", chunk, offset);
+    case OP_LOAD_CLOSURE:
+        return op_code_instruction("OP_LOAD_CLOSURE", chunk, offset);
     case OP_SET:
         return op_code_instruction("OP_SET", chunk, offset);
     case OP_JUMP_IF_FALSE:

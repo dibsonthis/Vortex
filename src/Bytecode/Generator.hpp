@@ -14,6 +14,8 @@ struct Compiler {
     int scopeDepth;
     bool in_loop;
     bool in_function;
+    std::vector<int> closed_vars;
+    std::shared_ptr<Compiler> prev;
 };
 
 void gen_literal(Chunk& chunk, node_ptr node);

@@ -57,7 +57,7 @@
             "label": "C/C++: clang++ build and debug active file",
             "command": "/usr/bin/clang++",
             "args": [
-                "-O3",
+                "-g",
                 "-std=c++20",
                 "-stdlib=libc++",
                 "${fileDirname}/src/Node/Node.cpp",
