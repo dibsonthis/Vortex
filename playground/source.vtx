@@ -1,8 +1,6 @@
-const add = (a, b = 10) => {
-    ret a + b
-}
+const add = (a = 9, b = 10) => a + b
 
-print(add(5, 4))
+print(add(10, 2))
 
 // var fib = (n) => {
 //     if (n < 2) {

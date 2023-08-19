@@ -358,11 +358,14 @@ void gen_function(Chunk& chunk, node_ptr node) {
     add_constant_code(function->chunk, function_value, node->line);
     declareVariable(function->name);
 
-    generate_bytecode(node->_Node.Function().body->_Node.Object().elements, function->chunk);
-
-    add_constant_code(function->chunk, none_val(), node->line);
-    add_code(function->chunk, OP_RETURN, node->line);
-    //disassemble_chunk(function->chunk, function->name);
+    if (node->_Node.Function().body->type == NodeType::OBJECT) {
+        generate_bytecode(node->_Node.Function().body->_Node.Object().elements, function->chunk);
+        add_constant_code(function->chunk, none_val(), node->line);
+        add_code(function->chunk, OP_RETURN, node->line);
+    } else {
+        generate(node->_Node.Function().body, function->chunk);
+        add_code(function->chunk, OP_RETURN, node->line);
+    }
 
     current->in_function = false;
 
