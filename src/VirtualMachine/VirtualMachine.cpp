@@ -1,7 +1,5 @@
 #include "VirtualMachine.hpp"
 
-int closure_count = 0;
-
 void push(VM& vm, Value& value) {
     vm.stack.push_back(value);
     vm.sp = &vm.stack.back();
@@ -79,8 +77,13 @@ static EvaluateResult run(VM& vm) {
                 Value return_value = pop(vm);
                 int to_clean = vm.stack.size() - frame->sp;
                 int instruction_index = frame->instruction_index;
+                CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
                 for (int& index : frame->function->closed_vars) {
-                    vm.frames[vm.frames.size()-2].closed_values.push_back(vm.stack[index + frame->frame_start]);
+                    Closure closure;
+                    closure.value = std::make_shared<Value>(vm.stack[index + frame->frame_start]);
+                    closure.index = index;
+                    vm.closed_values[index] = closure;
+                    //vm.closed_values.push_back(closure);
                 }
                 for (int i = 0; i < to_clean; i++) {
                     vm.stack.pop_back();
@@ -118,14 +121,11 @@ static EvaluateResult run(VM& vm) {
             }
             case OP_LOAD_CLOSURE: {
                 int index = READ_INT();
-                CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
-                if (prev_frame && prev_frame->closed_values.size() >= index + 1) {
-                    push(vm, prev_frame->closed_values[index + closure_count]);
-                    closure_count++;
+                if (vm.closed_values[index].value) {
+                    push(vm, *vm.closed_values[index].value);
                 } else {
-                    int stack_index = prev_frame->function->closed_vars[index];
-                    stack_index = prev_frame->frame_start + stack_index;
-                    push(vm, vm.stack[stack_index]);
+                    CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
+                    push(vm, vm.stack[index + prev_frame->frame_start]);
                 }
                 break;
             }

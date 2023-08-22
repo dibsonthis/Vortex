@@ -156,8 +156,18 @@ void gen_id(Chunk& chunk, node_ptr node) {
         if (index == -1) {
             goto is_global;
         }
-        current->closed_vars.push_back(index);
-        add_opcode(chunk, OP_LOAD_CLOSURE, current->closed_vars.size()-1, node->line);
+        bool captured = false;
+        for (int var : current->closed_vars) {
+            if (index == var) {
+                captured = true;
+                break;
+            }
+        }
+        if (!captured) {
+            current->closed_vars.push_back(index);
+            // closure_count++;
+        }
+        add_opcode(chunk, OP_LOAD_CLOSURE, index, node->line);
         current = prev_compiler;
         return;
     }
@@ -388,7 +398,6 @@ void gen_function(Chunk& chunk, node_ptr node) {
 
     current = prev_compiler;
     add_constant_code(chunk, function_value, node->line);
-
 
     disassemble_chunk(function->chunk, function->name);
 }

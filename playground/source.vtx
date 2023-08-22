@@ -1,32 +1,20 @@
-// const outer = () => {
-//     var j = true
-//     var x = "hi"
-//     var y = 12
-//     const inner = () => [x, x]
-//     ret inner
-// }
+const start = clock()
 
-// const closure = outer()
-// const x = closure()
-// print(x)
-
-const f = () => {
-    const x = 12
-    const blah1 = () => {
-        print(x, "\n")
-    }
-    return blah1
+const outer = (x) => {
+    const inner = () => print(x)
+    inner()
+    return x
 }
 
-const g = () => {
-    const x = "hi"
-    const blah2 = () => {
-        print(x, "\n")
-    }
-    return blah2
-}
+outer(45)
 
-var a = g()
-a()
-var b = f()
-b()
+print("Duration: ", clock() - start)
+
+/*
+    TODO
+
+    - Add SET_CLOSURE
+    - Add nested closures
+    - Add Objects
+    - Add Imports
+*/

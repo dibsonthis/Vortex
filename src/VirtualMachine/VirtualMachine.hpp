@@ -8,13 +8,17 @@
 
 // #define DEBUG_TRACE_EXECUTION
 
+struct Closure {
+  int index;
+  std::shared_ptr<Value> value;
+};
+
 struct CallFrame {
   std::shared_ptr<FunctionObj> function;
   uint8_t* ip;
   int frame_start;
   int sp;
   int instruction_index;
-  std::vector<Value> closed_values;
 };
 struct VM {
     std::vector<Value> stack;
@@ -23,6 +27,9 @@ struct VM {
     std::vector<CallFrame> frames;
     std::vector<Value*> objects;
     std::unordered_map<std::string, Value> globals;
+    std::vector<Closure> closed_values;
+
+    VM() : closed_values(500) {}
 };
 
 enum EvaluateResult {
