@@ -50,6 +50,7 @@ static EvaluateResult run(VM& vm) {
     // Define globals
     define_native(vm, "print", printNative);
     define_native(vm, "clock", clockNative);
+    define_native(vm, "string", toStringNative);
     define_native(vm, "dis", disNative);
 
     CallFrame* frame = &vm.frames.back();
@@ -78,13 +79,12 @@ static EvaluateResult run(VM& vm) {
                 int to_clean = vm.stack.size() - frame->sp;
                 int instruction_index = frame->instruction_index;
                 CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
-                for (int& index : frame->function->closed_vars) {
-                    Closure closure;
-                    closure.value = std::make_shared<Value>(vm.stack[index + frame->frame_start]);
-                    closure.index = index;
-                    vm.closed_values[index] = closure;
-                    //vm.closed_values.push_back(closure);
-                }
+                // for (int& index : frame->function->closed_var_indexes) {
+                //     Closure closure;
+                //     closure.value = std::make_shared<Value>(vm.stack[index + frame->frame_start]);
+                //     closure.index = index;
+                //     vm.closed_values[index] = closure;
+                // }
                 for (int i = 0; i < to_clean; i++) {
                     vm.stack.pop_back();
                 }
@@ -119,14 +119,54 @@ static EvaluateResult run(VM& vm) {
                 push(vm, vm.globals[name_str]);
                 break;
             }
+            case OP_MAKE_CLOSURE: {
+                int index = READ_INT();
+                auto& function = pop(vm).get_function();
+                Value closure = function_val();
+                auto& closure_obj = closure.get_function();
+                closure_obj->arity = function->arity;
+                closure_obj->closed_var_indexes = function->closed_var_indexes;
+                closure_obj->chunk = function->chunk;
+                closure_obj->defaults = function->defaults;
+                closure_obj->name = function->name;
+                closure_obj->closed_vars = std::vector<std::shared_ptr<Value>>(500);
+                for (int& index : closure_obj->closed_var_indexes) {
+                    auto value = std::make_shared<Value>(vm.stack[index + frame->frame_start]);
+                    closure_obj->closed_vars[index] = value;
+                }
+                push(vm, closure);
+                break;
+            }
             case OP_LOAD_CLOSURE: {
                 int index = READ_INT();
-                if (vm.closed_values[index].value) {
-                    push(vm, *vm.closed_values[index].value);
+                if (frame->function->closed_vars[index]) {
+                    push(vm, *frame->function->closed_vars[index]);
                 } else {
                     CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
                     push(vm, vm.stack[index + prev_frame->frame_start]);
                 }
+                // if (vm.closed_values[index].value) {
+                //     push(vm, *vm.closed_values[index].value);
+                // } else {
+                //     CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
+                //     push(vm, vm.stack[index + prev_frame->frame_start]);
+                // }
+                break;
+            }
+            case OP_SET_CLOSURE: {
+                int index = READ_INT();
+                 if (frame->function->closed_vars[index]) {
+                    *frame->function->closed_vars[index] = pop(vm);
+                } else {
+                    CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
+                    vm.stack[index + prev_frame->frame_start] = pop(vm);
+                }
+                // if (vm.closed_values[index].value) {
+                //     *vm.closed_values[index].value = pop(vm);
+                // } else {
+                //     CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
+                //     vm.stack[index + prev_frame->frame_start] = pop(vm);
+                // }
                 break;
             }
             case OP_JUMP_IF_FALSE: {
@@ -503,4 +543,14 @@ static Value disNative(std::vector<Value>& args) {
     disassemble_chunk(function.get_function()->chunk, function.get_function()->name);
 
     return none_val();
+}
+
+static Value toStringNative(std::vector<Value>& args) {
+    if (args.size() != 1) {
+        error("Function 'string' expects 1 argument");
+    }
+
+    Value value = args[0];
+
+    return string_val(toString(value));
 }

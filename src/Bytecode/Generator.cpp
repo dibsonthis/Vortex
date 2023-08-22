@@ -116,15 +116,23 @@ void gen_eq(Chunk& chunk, node_ptr node) {
     node_ptr left = node->_Node.Op().left;
     if (left->type == NodeType::ID) {
         int index = resolve_variable(left->_Node.ID().value);
+        int closure_index = -1;
         if (index == -1) {
-            error("Variable '" + left->_Node.ID().value + "' is undefined");
+            closure_index = resolve_closure(left->_Node.ID().value);
+            if (closure_index == -1) {
+                error("Variable '" + left->_Node.ID().value + "' is undefined");
+            }
         }
         Variable variable = current->variables[index];
         if (variable.is_const) {
             error("Cannot modify constant '" + left->_Node.ID().value + "'");
         }
         generate(node->_Node.Op().right, chunk);
-        add_opcode(chunk, OP_SET, index, node->line);
+        if (closure_index != -1) {
+            add_opcode(chunk, OP_SET_CLOSURE, closure_index, node->line);
+        } else {
+            add_opcode(chunk, OP_SET, index, node->line);
+        }
     }
 }
 
@@ -154,18 +162,18 @@ void gen_id(Chunk& chunk, node_ptr node) {
         current = current->prev;
         int index = resolve_variable(node->_Node.ID().value);
         if (index == -1) {
+            current = prev_compiler;
             goto is_global;
         }
         bool captured = false;
-        for (int var : current->closed_vars) {
+        for (int var : prev_compiler->closed_vars) {
             if (index == var) {
                 captured = true;
                 break;
             }
         }
         if (!captured) {
-            current->closed_vars.push_back(index);
-            // closure_count++;
+            prev_compiler->closed_vars.push_back(index);
         }
         add_opcode(chunk, OP_LOAD_CLOSURE, index, node->line);
         current = prev_compiler;
@@ -394,10 +402,14 @@ void gen_function(Chunk& chunk, node_ptr node) {
     }
 
     current->in_function = false;
-    function->closed_vars = current->closed_vars;
+    function->closed_var_indexes = current->closed_vars;
 
     current = prev_compiler;
     add_constant_code(chunk, function_value, node->line);
+
+    if (function->closed_var_indexes.size() > 0) {
+        add_opcode(chunk, OP_MAKE_CLOSURE, 0, node->line);
+    }
 
     disassemble_chunk(function->chunk, function->name);
 }
@@ -673,6 +685,21 @@ static int resolve_variable(std::string name) {
     }
 
     return -1;
+}
+
+static int resolve_closure(std::string name) {
+    auto prev_compiler = current;
+    if (!current->prev) {
+        return -1;
+    }
+    current = current->prev;
+    int index = resolve_variable(name);
+    if (index == -1) {
+        current = prev_compiler;
+        return -1;
+    }
+    current = prev_compiler;
+    return index;
 }
 
 void error(std::string message) {

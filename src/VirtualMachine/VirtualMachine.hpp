@@ -27,9 +27,6 @@ struct VM {
     std::vector<CallFrame> frames;
     std::vector<Value*> objects;
     std::unordered_map<std::string, Value> globals;
-    std::vector<Closure> closed_values;
-
-    VM() : closed_values(500) {}
 };
 
 enum EvaluateResult {
@@ -54,3 +51,4 @@ bool is_falsey(Value& value);
 static Value printNative(std::vector<Value>& args);
 static Value clockNative(std::vector<Value>& args);
 static Value disNative(std::vector<Value>& args);
+static Value toStringNative(std::vector<Value>& args);

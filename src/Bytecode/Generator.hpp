@@ -62,6 +62,6 @@ static void addVariable(std::string name, bool is_const);
 static void declareVariable(std::string name, bool is_const = false);
 
 static int resolve_variable(std::string name);
-static int resolve_global(std::string name);
+static int resolve_closure(std::string name);
 
 void error(std::string message);

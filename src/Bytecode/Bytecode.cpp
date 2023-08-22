@@ -50,45 +50,42 @@ Value none_val() {
     return val;
 }
 
-void printValue(Value value) {
+std::string toString(Value value) {
     switch(value.type) {
         case Number: {
-            std::cout << std::fixed << value.get_number() << std::defaultfloat;
-            break;
+            return std::to_string(value.get_number());
         }
         case String: {
-            std::cout << value.get_string();
-            break;
+            return(value.get_string());
         }
         case Boolean: {
-            std::cout << (value.get_boolean() ? "true" : "false");
-            break;
+            return (value.get_boolean() ? "true" : "false");
         }
         case List: {
-            std::cout << "[ ";
+            std::string repr = "[ ";
             for (Value& v : *value.get_list()) {
-                printValue(v);
-                std::cout << " ";
+                repr += toString(v) + " ";
             }
-            std::cout << "]";
-            break;
+            repr += "]";
+            return repr;
         }
         case Function: {
-            std::cout << "Function: " << value.get_function()->name;
-            break;
+            return "Function: " + value.get_function()->name;
         }
         case Native: {
-            std::cout << "<Native Function>";
-            break;
+            return "<Native Function>";
         }
         case None: {
-            std::cout << "None";
-            break;
+            return "None";
         }
         default: {
-            std::cout << "Undefined";
+            return "Undefined";
         }
     }
+}
+
+void printValue(Value value) {
+    std::cout << toString(value);
 }
 
 void add_code(Chunk& chunk, uint8_t code, uint8_t line) {
@@ -185,6 +182,10 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return op_code_instruction("OP_LOAD_CLOSURE", chunk, offset);
     case OP_SET:
         return op_code_instruction("OP_SET", chunk, offset);
+    case OP_SET_CLOSURE:
+        return op_code_instruction("OP_SET_CLOSURE", chunk, offset);
+    case OP_MAKE_CLOSURE:
+        return op_code_instruction("OP_MAKE_CLOSURE", chunk, offset);
     case OP_JUMP_IF_FALSE:
         return op_code_instruction("OP_JUMP_IF_FALSE", chunk, offset);
     case OP_JUMP_IF_TRUE:
