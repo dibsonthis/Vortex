@@ -42,12 +42,25 @@ static void define_native(VM& vm, std::string name, NativeFunction function) {
     vm.globals[name] = native;
 }
 
+static void define_global(VM& vm, std::string name, Value value) {
+    vm.globals[name] = value;
+}
+
 static EvaluateResult run(VM& vm) {
 #define READ_BYTE() (*frame->ip++)
 #define READ_INT() (bytes_to_int(READ_BYTE(), READ_BYTE(), READ_BYTE(), READ_BYTE()))
 #define READ_CONSTANT() (frame->function->chunk.constants[READ_INT()])
 
     // Define globals
+    define_global(vm, "String", type_val("String"));
+    define_global(vm, "Number", type_val("Number"));
+    define_global(vm, "Boolean", type_val("Boolean"));
+    define_global(vm, "List", type_val("List"));
+    define_global(vm, "Object", type_val("Object"));
+    define_global(vm, "Function", type_val("Function"));
+    define_global(vm, "None", type_val("None"));
+
+    // Define native functions
     define_native(vm, "print", printNative);
     define_native(vm, "clock", clockNative);
     define_native(vm, "string", toStringNative);
@@ -78,13 +91,6 @@ static EvaluateResult run(VM& vm) {
                 Value return_value = pop(vm);
                 int to_clean = vm.stack.size() - frame->sp;
                 int instruction_index = frame->instruction_index;
-                CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
-                // for (int& index : frame->function->closed_var_indexes) {
-                //     Closure closure;
-                //     closure.value = std::make_shared<Value>(vm.stack[index + frame->frame_start]);
-                //     closure.index = index;
-                //     vm.closed_values[index] = closure;
-                // }
                 for (int i = 0; i < to_clean; i++) {
                     vm.stack.pop_back();
                 }
@@ -117,6 +123,46 @@ static EvaluateResult run(VM& vm) {
                     return EVALUATE_RUNTIME_ERROR; 
                 }
                 push(vm, vm.globals[name_str]);
+                break;
+            }
+            case OP_MAKE_OBJECT: {
+                int size = READ_INT();
+                Value object = object_val();
+                auto& object_obj = object.get_object();
+                for (int i = 0; i < size; i++) {
+                    Value prop_value = pop(vm);
+                    Value prop_name = pop(vm);
+
+                    object_obj->values[prop_name.get_string()] = prop_value;
+                }
+                push(vm, object);
+                break;
+            }
+            case OP_MAKE_TYPE: {
+                int size = READ_INT();
+                Value type = type_val("");
+                auto& type_obj = type.get_type();
+                for (int i = 0; i < size; i++) {
+                    Value prop_type = pop(vm);
+                    Value prop_name = pop(vm);
+
+                    type_obj->types[prop_name.get_string()] = prop_type;
+                }
+
+                Value name = pop(vm);
+                type_obj->name = name.get_string();
+                push(vm, type);
+                break;
+            }
+            case OP_TYPE_DEFAULTS: {
+                int size = READ_INT();
+                auto& type = vm.stack[vm.stack.size()- (size * 2) - 1];
+                for (int i = 0; i < size; i++) {
+                    Value prop_default = pop(vm);
+                    Value prop_name = pop(vm);
+
+                    type.get_type()->defaults[prop_name.get_string()] = prop_default;
+                }
                 break;
             }
             case OP_MAKE_CLOSURE: {
@@ -239,23 +285,39 @@ static EvaluateResult run(VM& vm) {
             }
             case OP_ACCESSOR: {
                 Value _index = pop(vm);
-                Value _list = pop(vm);
+                Value _container = pop(vm);
 
-                if (!_list.is_list()) {
+                if (!_container.is_list() && !_container.is_object()) {
                     runtimeError(vm, "Object is not accessable");
                     return EVALUATE_RUNTIME_ERROR;
                 }
-                if (!_index.is_number()) {
-                    runtimeError(vm, "Accessor must be a number");
-                    return EVALUATE_RUNTIME_ERROR;
-                }
-                int index = _index.get_number();
-                auto& list = _list.get_list();
-                if (index >= list->size() || index < 0) {
-                    Value none = none_val();
-                    push(vm, none);
-                } else {
-                    push(vm, (*list)[index]);
+
+                if (_container.is_list()) {
+                    if (!_index.is_number()) {
+                        runtimeError(vm, "Accessor must be a number");
+                        return EVALUATE_RUNTIME_ERROR;
+                    }
+                    int index = _index.get_number();
+                    auto& list = _container.get_list();
+                    if (index >= list->size() || index < 0) {
+                        Value none = none_val();
+                        push(vm, none);
+                    } else {
+                        push(vm, (*list)[index]);
+                    }
+                } else if (_container.is_object()) {
+                    if (!_index.is_string()) {
+                        runtimeError(vm, "Accessor must be a string");
+                        return EVALUATE_RUNTIME_ERROR;
+                    }
+                    std::string& index = _index.get_string();
+                    auto& object = _container.get_object();
+                    if (!object->values.count(index)) {
+                        Value none = none_val();
+                        push(vm, none);
+                    } else {
+                        push(vm, object->values[index]);
+                    }
                 }
                 break;
             }

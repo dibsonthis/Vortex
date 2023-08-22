@@ -1,20 +1,19 @@
 const start = clock()
 
-const g = 100
+// type Person = {
+//     id,
+//     name: String,
+//     age: Number = 45
+// }
 
-const outer = () => {
-    var g = g
-    const inner = () => {
-        g += 200
-        return g
-    }
-    print(g, "\n")
-    return inner
+const person = {
+    name: "John",
+    age: 45,
+    blah: () => 145
 }
 
-const inner = outer()
-print(inner(), "\n")
-print(inner(), "\n")
+const blah = person["blah"]
+print(blah())
 
 print("Duration: ", clock() - start)
 

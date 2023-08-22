@@ -1,5 +1,6 @@
 #pragma once
 #include <variant>
+#include <unordered_map>
 #include <iomanip>
 #include "../Node/Node.hpp"
 
@@ -32,6 +33,9 @@ enum OpCode {
     OP_SET,
     OP_SET_CLOSURE,
     OP_MAKE_CLOSURE,
+    OP_MAKE_TYPE,
+    OP_MAKE_OBJECT,
+    OP_TYPE_DEFAULTS,
     OP_POP,
     OP_JUMP_IF_FALSE,
     OP_JUMP_IF_TRUE,
@@ -53,6 +57,8 @@ enum ValueType {
     String,
     Boolean,
     List,
+    Type,
+    Object,
     Function,
     Native,
     None
@@ -75,6 +81,17 @@ struct FunctionObj {
     std::vector<std::shared_ptr<Value>> closed_vars;
 };
 
+struct TypeObj {
+    std::string name;
+    std::unordered_map<std::string, Value> types;
+    std::unordered_map<std::string, Value> defaults;
+};
+
+struct ObjectObj {
+    TypeObj* type;
+    std::unordered_map<std::string, Value> values;
+};
+
 typedef Value (*NativeFunction)(std::vector<Value>& args);
 
 struct NativeFunctionObj {
@@ -90,6 +107,8 @@ struct Value {
         bool, 
         std::shared_ptr<std::vector<Value>>,
         std::shared_ptr<FunctionObj>,
+        std::shared_ptr<TypeObj>,
+        std::shared_ptr<ObjectObj>,
         std::shared_ptr<NativeFunctionObj>
     > value;
 
@@ -108,6 +127,12 @@ struct Value {
                 break;
             case List:
                 value = std::make_shared<std::vector<Value>>();
+                break;
+            case Type:
+                value = std::make_shared<TypeObj>();
+                break;
+            case Object:
+                value = std::make_shared<ObjectObj>();
                 break;
             case Function:
                 value = std::make_shared<FunctionObj>();
@@ -134,6 +159,14 @@ struct Value {
         return std::get<std::shared_ptr<std::vector<Value>>>(this->value);
     }
 
+    std::shared_ptr<TypeObj>& get_type() {
+        return std::get<std::shared_ptr<TypeObj>>(this->value);
+    }
+
+    std::shared_ptr<ObjectObj>& get_object() {
+        return std::get<std::shared_ptr<ObjectObj>>(this->value);
+    }
+
     std::shared_ptr<FunctionObj>& get_function() {
         return std::get<std::shared_ptr<FunctionObj>>(this->value);
     }
@@ -154,6 +187,12 @@ struct Value {
     bool is_list() {
         return type == List;
     }
+    bool is_type() {
+        return type == Type;
+    }
+    bool is_object() {
+        return type == Object;
+    }
     bool is_function() {
         return type == Function;
     }
@@ -170,6 +209,8 @@ Value number_val(double value);
 Value string_val(std::string value);
 Value boolean_val(bool value);
 Value list_val();
+Value type_val(std::string name);
+Value object_val();
 Value function_val();
 Value native_val();
 Value none_val();

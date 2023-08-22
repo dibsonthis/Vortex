@@ -39,6 +39,7 @@ void push(VM& vm, Value& value);
 Value pop(VM& vm);
 
 static void runtimeError(VM& vm, std::string message, ...);
+static void define_global(VM& vm, std::string name, Value value);
 static void define_native(VM& vm, std::string name, NativeFunction function);
 static EvaluateResult run(VM& vm);
 EvaluateResult evaluate(VM& vm);

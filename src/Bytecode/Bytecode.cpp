@@ -35,6 +35,17 @@ Value list_val() {
     return val;
 }
 
+Value type_val(std::string name) {
+    Value val(Type);
+    val.get_type()->name = name;
+    return val;
+}
+
+Value object_val() {
+    Value val(Object);
+    return val;
+}
+
 Value function_val() {
     Value val(Function);
     return val;
@@ -67,6 +78,16 @@ std::string toString(Value value) {
                 repr += toString(v) + " ";
             }
             repr += "]";
+            return repr;
+        }
+        case Type: {
+            return "Type: " + value.get_type()->name;
+        }
+        case Object: {
+            std::string repr = "Object";
+            if (value.get_object()->type) {
+                repr += ": " + value.get_object()->type->name;
+            }
             return repr;
         }
         case Function: {
@@ -186,6 +207,12 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return op_code_instruction("OP_SET_CLOSURE", chunk, offset);
     case OP_MAKE_CLOSURE:
         return op_code_instruction("OP_MAKE_CLOSURE", chunk, offset);
+    case OP_MAKE_TYPE:
+        return op_code_instruction("OP_MAKE_TYPE", chunk, offset);
+    case OP_MAKE_OBJECT:
+        return op_code_instruction("OP_MAKE_OBJECT", chunk, offset);
+    case OP_TYPE_DEFAULTS:
+        return op_code_instruction("OP_TYPE_DEFAULTS", chunk, offset);
     case OP_JUMP_IF_FALSE:
         return op_code_instruction("OP_JUMP_IF_FALSE", chunk, offset);
     case OP_JUMP_IF_TRUE:

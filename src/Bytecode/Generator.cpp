@@ -428,6 +428,123 @@ void gen_function_call(Chunk& chunk, node_ptr node) {
     add_opcode(chunk, OP_CALL, node->_Node.FunctionCall().args.size(), node->line);
 }
 
+void gen_type(Chunk& chunk, node_ptr node) {
+    TypeNode& type_node = node->_Node.Type();
+    std::vector<node_ptr> elements;
+    add_constant_code(chunk, string_val(type_node.name), node->line);
+    if (!type_node.body || type_node.body->_Node.Object().elements.size() == 0) {
+        add_opcode(chunk, OP_MAKE_TYPE, 0, node->line);
+        return;
+    }
+
+    if (type_node.body->_Node.Object().elements.size() == 1 && type_node.body->_Node.Object().elements[0]->type == NodeType::COMMA_LIST) {
+        elements = type_node.body->_Node.Object().elements[0]->_Node.List().elements;
+    } else {
+        elements.push_back(type_node.body->_Node.Object().elements[0]);
+    }
+
+    std::unordered_map<std::string, node_ptr> defaults;
+
+    for (auto& elem : elements) {
+        switch(elem->type) {
+            case NodeType::ID: {
+                add_constant_code(chunk, string_val(elem->_Node.ID().value), node->line);
+                add_constant_code(chunk, type_val("None"), node->line);
+                break;
+            }
+            case NodeType::OP: {
+                node_ptr type_elem = elem;
+                node_ptr default_elem;
+                if (elem->_Node.Op().value == "=") {
+                    type_elem = elem->_Node.Op().left;
+                    default_elem = elem->_Node.Op().right;
+                    defaults[type_elem->_Node.Op().left->_Node.ID().value] = default_elem;
+                } else {
+                    type_elem = elem;
+                }
+
+                add_constant_code(chunk, string_val(type_elem->_Node.Op().left->_Node.ID().value), node->line);
+                // Due to how the parser is set up for built-in types, we need to do a conversion here
+                NodeType right_type = type_elem->_Node.Op().right->type;
+                switch (right_type) {
+                    case NodeType::STRING: {
+                        add_constant_code(chunk, type_val("String"), node->line);
+                        break;
+                    }
+                    case NodeType::NUMBER: {
+                        add_constant_code(chunk, type_val("Number"), node->line);
+                        break;
+                    }
+                    case NodeType::BOOLEAN: {
+                        add_constant_code(chunk, type_val("Boolean"), node->line);
+                        break;
+                    }
+                    case NodeType::LIST: {
+                        add_constant_code(chunk, type_val("List"), node->line);
+                        break;
+                    }
+                    case NodeType::OBJECT: {
+                        add_constant_code(chunk, type_val("Object"), node->line);
+                        break;
+                    }
+                    case NodeType::FUNC: {
+                        add_constant_code(chunk, type_val("Function"), node->line);
+                        break;
+                    }
+                    case NodeType::NONE: {
+                        add_constant_code(chunk, type_val("None"), node->line);
+                        break;
+                    }
+                    default: {
+                        generate(type_elem->_Node.Op().right, chunk);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    add_opcode(chunk, OP_MAKE_TYPE, elements.size(), node->line);
+
+    if (defaults.size() > 0) {
+        for (auto& def : defaults) {
+            add_constant_code(chunk, string_val(def.first), node->line);
+            generate(def.second, chunk);
+        }
+        add_opcode(chunk, OP_TYPE_DEFAULTS, defaults.size(), node->line);
+    }
+
+    declareVariable(type_node.name, true);
+}
+
+void gen_typed_object(Chunk& chunk, node_ptr node) {
+}
+
+void gen_object(Chunk& chunk, node_ptr node) {
+    ObjectNode& object_node = node->_Node.Object();
+    std::vector<node_ptr> elements;
+    if (object_node.elements.size() == 0) {
+        add_opcode(chunk, OP_MAKE_OBJECT, 0, node->line);
+        return;
+    }
+
+    if (object_node.elements.size() == 1 && object_node.elements[0]->type == NodeType::COMMA_LIST) {
+        elements = object_node.elements[0]->_Node.List().elements;
+    } else {
+        elements.push_back(object_node.elements[0]);
+    }
+
+    for (auto& elem : elements) {
+        if (elem->type != NodeType::OP && elem->_Node.Op().value != ":") {
+            error("Object properties must be in shape (name: value)");
+        }
+        add_constant_code(chunk, string_val(elem->_Node.Op().left->_Node.ID().value), node->line);
+        generate(elem->_Node.Op().right, chunk);
+    }
+
+    add_opcode(chunk, OP_MAKE_OBJECT, elements.size(), node->line);
+}
+
 void gen_and(Chunk& chunk, node_ptr node) {
     generate(node->_Node.Op().left, chunk);
     int jump_instruction = chunk.code.size() + 1;
@@ -517,6 +634,18 @@ void generate(node_ptr node, Chunk& chunk) {
         }
         case NodeType::FUNC_CALL: {
             gen_function_call(chunk, node);
+            break;
+        }
+        case NodeType::TYPE: {
+            gen_type(chunk, node);
+            break;
+        }
+        case NodeType::OBJECT_DECONSTRUCT: {
+            gen_typed_object(chunk, node);
+            break;
+        }
+        case NodeType::OBJECT: {
+            gen_object(chunk, node);
             break;
         }
     }

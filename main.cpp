@@ -9,17 +9,17 @@
 #include "src/Bytecode/Generator.hpp"
 #include "src/VirtualMachine/VirtualMachine.hpp"
 
-enum Type
+enum CompType
 {
     DEV,
     INTERP,
 };
 
-Type type = Type::DEV;
+CompType type = CompType::DEV;
 
 int main(int argc, char** argv)
 {
-    if (type == Type::DEV)
+    if (type == CompType::DEV)
     {
         std::filesystem::current_path("../../../playground");
         Lexer lexer("source.vtx");
@@ -58,7 +58,7 @@ int main(int argc, char** argv)
         exit(0);
     }
 
-    if (type == Type::INTERP)
+    if (type == CompType::INTERP)
     {
         if (argc == 1)
         {

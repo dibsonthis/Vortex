@@ -48,6 +48,9 @@ void gen_break(Chunk& chunk, node_ptr node);
 void gen_continue(Chunk& chunk, node_ptr node);
 void gen_function(Chunk& chunk, node_ptr node);
 void gen_function_call(Chunk& chunk, node_ptr node);
+void gen_type(Chunk& chunk, node_ptr node);
+void gen_typed_object(Chunk& chunk, node_ptr node);
+void gen_object(Chunk& chunk, node_ptr node);
 
 void gen_list(Chunk& chunk, node_ptr node);
 
