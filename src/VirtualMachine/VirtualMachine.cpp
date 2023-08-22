@@ -115,6 +115,37 @@ static EvaluateResult run(VM& vm) {
                 vm.stack[index + frame->frame_start] = pop(vm);
                 break;
             }
+            case OP_SET_PROPERTY: {
+                Value value = pop(vm);
+                Value accessor = pop(vm);
+                Value container = pop(vm);
+                if (container.is_object()) {
+                    if (!accessor.is_string()) {
+                        runtimeError(vm, "Object accessor must be a string");
+                        return EVALUATE_RUNTIME_ERROR;
+                    }
+                    container.get_object()->values[accessor.get_string()] = value;
+                }
+                else if (container.is_list()) {
+                    if (!accessor.is_number()) {
+                        runtimeError(vm, "List accessor must be a number");
+                        return EVALUATE_RUNTIME_ERROR;
+                    }
+                    auto& list = *container.get_list();
+                    int acc = accessor.get_number();
+                    if (acc < 0) {
+                        list.insert(list.begin(), value);
+                    } else if (acc >= list.size()) {
+                        list.push_back(value);
+                    } else {
+                        list[acc] = value;
+                    }
+                } else {
+                    runtimeError(vm, "Object is not accessible");
+                    return EVALUATE_RUNTIME_ERROR;
+                }
+                break;
+            }
             case OP_LOAD_GLOBAL: {
                 Value name = pop(vm);
                 std::string& name_str = name.get_string();

@@ -1,19 +1,12 @@
 const start = clock()
 
-// type Person = {
-//     id,
-//     name: String,
-//     age: Number = 45
-// }
+var list = []
 
-const person = {
-    name: "John",
-    age: 45,
-    blah: () => 145
+for (0..1000, i) {
+    list[i] = i * 2
 }
 
-const blah = person["blah"]
-print(blah())
+print(list)
 
 print("Duration: ", clock() - start)
 

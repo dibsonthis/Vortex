@@ -31,6 +31,7 @@ enum OpCode {
     OP_LOAD_GLOBAL,
     OP_LOAD_CLOSURE,
     OP_SET,
+    OP_SET_PROPERTY,
     OP_SET_CLOSURE,
     OP_MAKE_CLOSURE,
     OP_MAKE_TYPE,

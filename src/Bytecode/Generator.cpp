@@ -133,6 +133,20 @@ void gen_eq(Chunk& chunk, node_ptr node) {
         } else {
             add_opcode(chunk, OP_SET, index, node->line);
         }
+    } else if (left->type == NodeType::ACCESSOR) {
+        if (left->_Node.Accessor().container->type == NodeType::ID) {
+            int index = resolve_variable(left->_Node.Accessor().container->_Node.ID().value);
+            if (index != -1) {
+                Variable variable = current->variables[index];
+                if (variable.is_const) {
+                    error("Cannot modify constant '" + variable.name + "'");
+                }
+            }
+        }
+        generate(left->_Node.Accessor().container, chunk);
+        generate(left->_Node.Accessor().accessor->_Node.List().elements[0], chunk);
+        generate(node->_Node.Op().right, chunk);
+        add_code(chunk, OP_SET_PROPERTY, node->line);
     }
 }
 
