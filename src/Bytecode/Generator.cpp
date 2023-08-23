@@ -462,7 +462,7 @@ void gen_function(Chunk& chunk, node_ptr node) {
         add_opcode(chunk, OP_MAKE_CLOSURE, 0, node->line);
     }
 
-    //disassemble_chunk(function->chunk, function->name);
+    disassemble_chunk(function->chunk, function->name);
 }
 
 void gen_function_call(Chunk& chunk, node_ptr node) {
@@ -810,15 +810,25 @@ void generate(node_ptr node, Chunk& chunk) {
 
 void generate_bytecode(std::vector<node_ptr>& nodes, Chunk& chunk) {
     for (node_ptr& node : nodes) {
-        if ((node->type == NodeType::OP && node->_Node.Op().value != "=" && node->_Node.Op().value != "+=" && node->_Node.Op().value != "-=" && node->_Node.Op().value != ".") ||
+        // if ((node->type == NodeType::OP && node->_Node.Op().value != "=" && node->_Node.Op().value != "+=" && node->_Node.Op().value != "-=" && node->_Node.Op().value != ".") ||
+        //     node->type == NodeType::STRING ||
+        //     node->type == NodeType::NUMBER ||
+        //     node->type == NodeType::BOOLEAN ||
+        //     node->type == NodeType::LIST ||
+        //     node->type == NodeType::OBJECT) {
+        //     continue;
+        // }
+        if (node->type == NodeType::OP) {
+            generate(node, chunk);
+            add_code(chunk, OP_POP, node->line);
+            continue;
+        }
+        if (node->type == NodeType::FUNC_CALL || 
             node->type == NodeType::STRING ||
             node->type == NodeType::NUMBER ||
             node->type == NodeType::BOOLEAN ||
             node->type == NodeType::LIST ||
             node->type == NodeType::OBJECT) {
-            continue;
-        }
-        if (node->type == NodeType::FUNC_CALL) {
             generate(node, chunk);
             add_code(chunk, OP_POP, node->line);
             continue;

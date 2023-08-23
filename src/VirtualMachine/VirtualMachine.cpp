@@ -121,7 +121,8 @@ static EvaluateResult run(VM& vm) {
             }
             case OP_SET: {
                 int index = READ_INT();
-                vm.stack[index + frame->frame_start] = pop(vm);
+                //vm.stack[index + frame->frame_start] = pop(vm);
+                vm.stack[index + frame->frame_start] = vm.stack.back();
                 break;
             }
             case OP_SET_PROPERTY: {
@@ -153,6 +154,7 @@ static EvaluateResult run(VM& vm) {
                     runtimeError(vm, "Object is not accessible");
                     return EVALUATE_RUNTIME_ERROR;
                 }
+                push(vm, value);
                 break;
             }
             case OP_LOAD_GLOBAL: {
@@ -241,10 +243,12 @@ static EvaluateResult run(VM& vm) {
             case OP_SET_CLOSURE: {
                 int index = READ_INT();
                  if (frame->function->closed_vars[index]) {
-                    *frame->function->closed_vars[index] = pop(vm);
+                    //*frame->function->closed_vars[index] = pop(vm);
+                    *frame->function->closed_vars[index] = vm.stack.back();
                 } else {
                     CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
-                    vm.stack[index + prev_frame->frame_start] = pop(vm);
+                    //vm.stack[index + prev_frame->frame_start] = pop(vm);
+                    vm.stack[index + prev_frame->frame_start] = vm.stack.back();
                 }
                 break;
             }
@@ -322,6 +326,10 @@ static EvaluateResult run(VM& vm) {
                 Value _container = pop(vm);
 
                 if (!_container.is_list() && !_container.is_object()) {
+                    if (flag == 1) {
+                        push(vm, _container);
+                        break;
+                    }
                     runtimeError(vm, "Object is not accessable");
                     return EVALUATE_RUNTIME_ERROR;
                 }
@@ -423,7 +431,15 @@ static EvaluateResult run(VM& vm) {
                 int param_num = READ_INT();
                 Value backup_function = pop(vm);
                 Value object = pop(vm);
-                Value function = pop(vm);
+                Value function;
+
+                if (!object.is_object()) {
+                    function = backup_function;
+                    param_num++;
+                    push(vm, object);
+                } else {
+                    function = pop(vm);
+                }
 
                 if (function.is_none()) {
                     function = backup_function;

@@ -1,23 +1,21 @@
 const start = clock()
 
-var person = {
-    first: "John",
-    last: "Smith",
-    age: 45,
-    nums: [1, 2, 3, 4],
-    getName: () => f"${this.first} ${this.last}",
-    addAge: (n) => {
-        this["age"] += n
-        return this
-    }
+var x = 10
+
+const addOne = (x) => {
+    return x += 1
 }
 
-const addNums = (person, n) => {
-    person.nums[100] = n
-    return person
+const prependText = (value, message) => {
+    return message + string(value)
 }
 
-person.addNums(10).print()
+x
+.addOne()
+.addOne()
+.addOne()
+.prependText("Value of 'x': ")
+.print("\n")
 
 print("Duration: ", clock() - start, "\n")
 
