@@ -421,8 +421,26 @@ static EvaluateResult run(VM& vm) {
             }
             case OP_CALL_METHOD: {
                 int param_num = READ_INT();
+                Value backup_function = pop(vm);
                 Value object = pop(vm);
                 Value function = pop(vm);
+
+                if (function.is_none()) {
+                    function = backup_function;
+                    param_num++;
+                    push(vm, object);
+                }
+
+                if (function.is_native()) {
+                    auto& native_function = function.get_native();
+                    std::vector<Value> args;
+                    for (int i = 0; i < param_num; i++) {
+                        args.push_back(pop(vm));
+                    }
+                    Value result = native_function->function(args);
+                    push(vm, result);
+                    break;
+                }
 
                 if (!function.is_function()) {
                     runtimeError(vm, "Object is not callable");

@@ -371,7 +371,9 @@ void gen_dot(Chunk& chunk, node_ptr node) {
         generate(node->_Node.Op().left, chunk);
         add_constant_code(chunk, string_val(node->_Node.Op().right->_Node.FunctionCall().name), node->line);
         add_opcode(chunk, OP_ACCESSOR, 1, node->line);
-        //generate(node->_Node.Op().left, chunk);
+        node_ptr backup_function_node = std::make_shared<Node>(NodeType::ID);
+        backup_function_node->_Node.ID().value = node->_Node.Op().right->_Node.FunctionCall().name;
+        gen_id(chunk, backup_function_node);
         add_opcode(chunk, OP_CALL_METHOD, node->_Node.Op().right->_Node.FunctionCall().args.size(), node->line);
         return;
     } else {
@@ -460,7 +462,7 @@ void gen_function(Chunk& chunk, node_ptr node) {
         add_opcode(chunk, OP_MAKE_CLOSURE, 0, node->line);
     }
 
-    disassemble_chunk(function->chunk, function->name);
+    //disassemble_chunk(function->chunk, function->name);
 }
 
 void gen_function_call(Chunk& chunk, node_ptr node) {

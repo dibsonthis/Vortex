@@ -12,11 +12,14 @@ var person = {
     }
 }
 
-person.addAge(10).addAge(10)
+const addNums = (person, n) => {
+    person.nums[100] = n
+    return person
+}
 
-print(person)
+person.addNums(10).print()
 
-print("Duration: ", clock() - start)
+print("Duration: ", clock() - start, "\n")
 
 /*
     TODO
