@@ -1,6 +1,7 @@
 const start = clock()
 
 var x = 10
+var y = 0
 
 const addOne = (x) => {
     return x += 1
@@ -10,12 +11,26 @@ const prependText = (value, message) => {
     return message + string(value)
 }
 
+const println = (message) => {
+    print(message, "\n")
+}
+
+const chain = (x) => {
+    return (x
+    .addOne()
+    .addOne()
+    .addOne()
+    .prependText("Value: "))
+}
+
 x
-.addOne()
-.addOne()
-.addOne()
-.prependText("Value of 'x': ")
-.print("\n")
+.chain()
+.println()
+
+y
+.chain()
+.println()
+
 
 print("Duration: ", clock() - start, "\n")
 

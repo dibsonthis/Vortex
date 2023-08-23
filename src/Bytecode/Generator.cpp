@@ -178,6 +178,9 @@ void gen_const(Chunk& chunk, node_ptr node) {
 
 void gen_id(Chunk& chunk, node_ptr node) {
     if (node->_Node.ID().value == "this") {
+        if (!current->in_object) {
+            error("Cannot use 'this' in outer scope");
+        }
         add_code(chunk, OP_LOAD_THIS, node->line);
         return;
     }
@@ -469,13 +472,16 @@ void gen_function_call(Chunk& chunk, node_ptr node) {
     for (int i = node->_Node.FunctionCall().args.size() - 1; i >= 0; i--) {
         generate(node->_Node.FunctionCall().args[i], chunk);
     }
-    int index = resolve_variable(node->_Node.FunctionCall().name);
-    if (index == -1) {
-        add_constant_code(chunk, string_val(node->_Node.FunctionCall().name), node->line);
-        add_code(chunk, OP_LOAD_GLOBAL, node->line);
-    } else {
-        add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.FunctionCall().name), node->line);
-    }
+    node_ptr id = std::make_shared<Node>(NodeType::ID);
+    id->_Node.ID().value = node->_Node.FunctionCall().name;
+    gen_id(chunk, id);
+    // int index = resolve_variable(node->_Node.FunctionCall().name);
+    // if (index == -1) {
+    //     add_constant_code(chunk, string_val(node->_Node.FunctionCall().name), node->line);
+    //     add_code(chunk, OP_LOAD_GLOBAL, node->line);
+    // } else {
+    //     add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.FunctionCall().name), node->line);
+    // }
     add_opcode(chunk, OP_CALL, node->_Node.FunctionCall().args.size(), node->line);
 }
 
