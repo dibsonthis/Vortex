@@ -13,6 +13,7 @@ int bytes_to_int(uint8_t a, uint8_t b, uint8_t c, uint8_t d);
 enum OpCode {
     OP_RETURN,
     OP_LOAD_CONST,
+    OP_LOAD_THIS,
     OP_NEGATE,
     OP_ADD,
     OP_SUBTRACT,
@@ -52,7 +53,8 @@ enum OpCode {
     OP_BUILD_LIST,
     OP_ACCESSOR,
     OP_LEN,
-    OP_CALL
+    OP_CALL,
+    OP_CALL_METHOD
 };
 
 enum ValueType {
@@ -82,6 +84,7 @@ struct FunctionObj {
     Chunk chunk;
     std::vector<int> closed_var_indexes;
     std::vector<std::shared_ptr<Value>> closed_vars;
+    std::shared_ptr<Value> object;
 };
 
 struct TypeObj {

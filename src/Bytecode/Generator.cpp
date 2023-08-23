@@ -147,6 +147,16 @@ void gen_eq(Chunk& chunk, node_ptr node) {
         generate(left->_Node.Accessor().accessor->_Node.List().elements[0], chunk);
         generate(node->_Node.Op().right, chunk);
         add_code(chunk, OP_SET_PROPERTY, node->line);
+    } else if (left->type == NodeType::OP && left->_Node.Op().value == ".") {
+        if (left->_Node.Op().right->type == NodeType::ID) {
+            generate(left->_Node.Op().left, chunk);
+            add_constant_code(chunk, string_val(left->_Node.Op().right->_Node.ID().value), node->line);
+            generate(node->_Node.Op().right, chunk);
+            add_code(chunk, OP_SET_PROPERTY, node->line);
+            return;
+        }
+        
+        error("Right hand side of '.' operator must be an identifier");
     }
 }
 
@@ -167,6 +177,10 @@ void gen_const(Chunk& chunk, node_ptr node) {
 }
 
 void gen_id(Chunk& chunk, node_ptr node) {
+    if (node->_Node.ID().value == "this") {
+        add_code(chunk, OP_LOAD_THIS, node->line);
+        return;
+    }
     int index = resolve_variable(node->_Node.ID().value);
     if (index == -1) {
         auto prev_compiler = current;
@@ -305,7 +319,7 @@ void gen_for_loop(Chunk& chunk, node_ptr node) {
         if (node->_Node.ForLoop().value_name) {
             add_opcode(chunk, OP_LOAD, resolve_variable("___iter___"), node->line);
             add_constant_code(chunk, number_val(0));
-            add_code(chunk, OP_ACCESSOR, node->line);
+            add_opcode(chunk, OP_ACCESSOR, 0, node->line);
             declareVariable(node->_Node.ForLoop().value_name->_Node.ID().value);
         }
 
@@ -325,7 +339,7 @@ void gen_for_loop(Chunk& chunk, node_ptr node) {
         if (node->_Node.ForLoop().value_name) {
             add_opcode(chunk, OP_LOAD, resolve_variable("___iter___"), node->line);
             add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
-            add_code(chunk, OP_ACCESSOR, node->line);
+            add_opcode(chunk, OP_ACCESSOR, 0, node->line);
             add_opcode(chunk, OP_SET, resolve_variable(node->_Node.ForLoop().value_name->_Node.ID().value), node->line);
         }
 
@@ -343,17 +357,28 @@ void gen_for_loop(Chunk& chunk, node_ptr node) {
 void gen_accessor(Chunk& chunk, node_ptr node) {
     generate(node->_Node.Accessor().container, chunk);
     generate(node->_Node.Accessor().accessor->_Node.List().elements[0], chunk);
-    add_code(chunk, OP_ACCESSOR, node->line);
+    add_opcode(chunk, OP_ACCESSOR, 0, node->line);
 }
 
 void gen_dot(Chunk& chunk, node_ptr node) {
-    generate(node->_Node.Op().left, chunk);
     if (node->_Node.Op().right->type == NodeType::ID) {
+        generate(node->_Node.Op().left, chunk);
         add_constant_code(chunk, string_val(node->_Node.Op().right->_Node.ID().value), node->line);
+    } else if (node->_Node.Op().right->type == NodeType::FUNC_CALL) {
+        for (int i = node->_Node.Op().right->_Node.FunctionCall().args.size() - 1; i >= 0; i--) {
+            generate(node->_Node.Op().right->_Node.FunctionCall().args[i], chunk);
+        }
+        generate(node->_Node.Op().left, chunk);
+        add_constant_code(chunk, string_val(node->_Node.Op().right->_Node.FunctionCall().name), node->line);
+        add_opcode(chunk, OP_ACCESSOR, 1, node->line);
+        //generate(node->_Node.Op().left, chunk);
+        add_opcode(chunk, OP_CALL_METHOD, node->_Node.Op().right->_Node.FunctionCall().args.size(), node->line);
+        return;
     } else {
+        generate(node->_Node.Op().left, chunk);
         generate(node->_Node.Op().right, chunk);
     }
-    add_code(chunk, OP_ACCESSOR, node->line);
+    add_opcode(chunk, OP_ACCESSOR, 0, node->line);
 }
 
 void gen_break(Chunk& chunk, node_ptr node) {
@@ -550,6 +575,7 @@ void gen_typed_object(Chunk& chunk, node_ptr node) {
 }
 
 void gen_object(Chunk& chunk, node_ptr node) {
+    current->in_object = true;
     ObjectNode& object_node = node->_Node.Object();
     std::vector<node_ptr> elements;
     if (object_node.elements.size() == 0) {
@@ -572,6 +598,7 @@ void gen_object(Chunk& chunk, node_ptr node) {
     }
 
     add_opcode(chunk, OP_MAKE_OBJECT, elements.size(), node->line);
+    current->in_object = false;
 }
 
 void gen_and(Chunk& chunk, node_ptr node) {
@@ -781,7 +808,7 @@ void generate(node_ptr node, Chunk& chunk) {
 
 void generate_bytecode(std::vector<node_ptr>& nodes, Chunk& chunk) {
     for (node_ptr& node : nodes) {
-        if ((node->type == NodeType::OP && node->_Node.Op().value != "=" && node->_Node.Op().value != "+=" && node->_Node.Op().value != "-=") ||
+        if ((node->type == NodeType::OP && node->_Node.Op().value != "=" && node->_Node.Op().value != "+=" && node->_Node.Op().value != "-=" && node->_Node.Op().value != ".") ||
             node->type == NodeType::STRING ||
             node->type == NodeType::NUMBER ||
             node->type == NodeType::BOOLEAN ||
@@ -790,6 +817,11 @@ void generate_bytecode(std::vector<node_ptr>& nodes, Chunk& chunk) {
             continue;
         }
         if (node->type == NodeType::FUNC_CALL) {
+            generate(node, chunk);
+            add_code(chunk, OP_POP, node->line);
+            continue;
+        }
+        if (node->type == NodeType::OP && node->_Node.Op().value == ".") {
             generate(node, chunk);
             add_code(chunk, OP_POP, node->line);
             continue;

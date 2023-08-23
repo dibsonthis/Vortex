@@ -100,6 +100,15 @@ static EvaluateResult run(VM& vm) {
                 push(vm, return_value);
                 break;
             }
+            case OP_LOAD_THIS: {
+                if (!frame->function->object) {
+                    Value none = none_val();
+                    push(vm, none);
+                } else {
+                    push(vm, *frame->function->object);
+                }
+                break;
+            }
             case OP_LOAD_CONST: {
                 Value constant = READ_CONSTANT();
                 push(vm, constant);
@@ -163,7 +172,6 @@ static EvaluateResult run(VM& vm) {
                 for (int i = 0; i < size; i++) {
                     Value prop_value = pop(vm);
                     Value prop_name = pop(vm);
-
                     object_obj->values[prop_name.get_string()] = prop_value;
                 }
                 push(vm, object);
@@ -309,6 +317,7 @@ static EvaluateResult run(VM& vm) {
                 break;
             }
             case OP_ACCESSOR: {
+                int flag = READ_INT();
                 Value _index = pop(vm);
                 Value _container = pop(vm);
 
@@ -343,6 +352,10 @@ static EvaluateResult run(VM& vm) {
                     } else {
                         push(vm, object->values[index]);
                     }
+                }
+
+                if (flag == 1) {
+                    push(vm, _container);
                 }
                 break;
             }
@@ -394,6 +407,47 @@ static EvaluateResult run(VM& vm) {
                 CallFrame call_frame;
                 call_frame.frame_start = vm.stack.size();
                 call_frame.function = function_obj;
+                call_frame.sp = vm.stack.size();
+                call_frame.ip = function_obj->chunk.code.data();
+
+                int instruction_index = frame->ip - &frame->function->chunk.code[0];
+                
+                call_frame.instruction_index = instruction_index;
+
+                vm.frames.push_back(call_frame);
+                frame = &vm.frames.back();
+
+                break;
+            }
+            case OP_CALL_METHOD: {
+                int param_num = READ_INT();
+                Value object = pop(vm);
+                Value function = pop(vm);
+
+                if (!function.is_function()) {
+                    runtimeError(vm, "Object is not callable");
+                    return EVALUATE_RUNTIME_ERROR;
+                }
+
+                auto& function_obj = function.get_function();
+                int positional_args = function_obj->arity - function_obj->defaults;
+
+                if ((param_num < positional_args) || (param_num > function_obj->arity)) {
+                    runtimeError(vm, "Function '" + function_obj->name + "' expects " + std::to_string(function_obj->arity) + " arguments");
+                    return EVALUATE_RUNTIME_ERROR;
+                }
+
+                for (int i = 0; i < param_num; i++) {
+                    Value arg = pop(vm);
+                    function_obj->chunk.constants[i] = arg;
+                }
+
+                // disassemble_chunk(function_obj->chunk, function_obj->name + "__");
+
+                CallFrame call_frame;
+                call_frame.frame_start = vm.stack.size();
+                call_frame.function = function_obj;
+                call_frame.function->object = std::make_shared<Value>(object);
                 call_frame.sp = vm.stack.size();
                 call_frame.ip = function_obj->chunk.code.data();
 

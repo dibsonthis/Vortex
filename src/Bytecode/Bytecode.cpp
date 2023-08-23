@@ -84,10 +84,22 @@ std::string toString(Value value) {
             return "Type: " + value.get_type()->name;
         }
         case Object: {
-            std::string repr = "Object";
-            if (value.get_object()->type) {
-                repr += ": " + value.get_object()->type->name;
+            auto& obj = value.get_object();
+            std::string repr;
+            if (obj->type) {
+                repr += value.get_object()->type->name + " ";
             }
+            repr += "{ ";
+            int i = 0;
+            int size = obj->values.size();
+            for (auto& prop : obj->values) {
+                repr += prop.first + ": " + toString(prop.second);
+                i++;
+                if (i < size) {
+                    repr += ", ";
+                }
+            }
+            repr += " }";
             return repr;
         }
         case Function: {
@@ -195,6 +207,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return simple_instruction("OP_LOAD_GLOBAL", offset);
     case OP_LOAD_CONST:
         return constant_instruction("OP_LOAD_CONST", chunk, offset);
+    case OP_LOAD_THIS:
+        return simple_instruction("OP_LOAD_THIS", offset);
     case OP_STORE_VAR:
         return constant_instruction("OP_STORE_VAR", chunk, offset);
     case OP_LOAD:
@@ -237,6 +251,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return op_code_instruction("OP_BUILD_LIST", chunk, offset);
     case OP_CALL:
         return op_code_instruction("OP_CALL", chunk, offset);
+    case OP_CALL_METHOD:
+        return op_code_instruction("OP_CALL_METHOD", chunk, offset);
     case OP_NEGATE:
         return simple_instruction("OP_NEGATE", offset);
     case OP_ADD:
@@ -266,7 +282,7 @@ int disassemble_instruction(Chunk& chunk, int offset) {
     case OP_DOT:
         return simple_instruction("OP_DOT", offset);
     case OP_ACCESSOR:
-        return simple_instruction("OP_ACCESSOR", offset);
+        return op_code_instruction("OP_ACCESSOR", chunk, offset);
     case OP_LEN:
         return simple_instruction("OP_LEN", offset);
     default:

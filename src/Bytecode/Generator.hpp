@@ -14,6 +14,7 @@ struct Compiler {
     int scopeDepth;
     bool in_loop;
     bool in_function;
+    bool in_object;
     std::vector<int> closed_vars;
     std::shared_ptr<Compiler> prev;
 };
