@@ -26,6 +26,7 @@ enum OpCode {
     OP_LT,
     OP_GT,
     OP_RANGE,
+    OP_DOT,
     OP_STORE_VAR,
     OP_LOAD,
     OP_LOAD_GLOBAL,
@@ -35,6 +36,7 @@ enum OpCode {
     OP_SET_CLOSURE,
     OP_MAKE_CLOSURE,
     OP_MAKE_TYPE,
+    OP_MAKE_TYPED,
     OP_MAKE_OBJECT,
     OP_TYPE_DEFAULTS,
     OP_POP,
@@ -89,7 +91,7 @@ struct TypeObj {
 };
 
 struct ObjectObj {
-    TypeObj* type;
+    std::shared_ptr<TypeObj> type;
     std::unordered_map<std::string, Value> values;
 };
 

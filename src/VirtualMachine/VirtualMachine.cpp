@@ -196,6 +196,12 @@ static EvaluateResult run(VM& vm) {
                 }
                 break;
             }
+            case OP_MAKE_TYPED: {
+                Value type = pop(vm);
+                Value& object = vm.stack.back();
+                object.get_object()->type = type.get_type();
+                break;
+            }
             case OP_MAKE_CLOSURE: {
                 int index = READ_INT();
                 auto& function = pop(vm).get_function();
@@ -222,12 +228,6 @@ static EvaluateResult run(VM& vm) {
                     CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
                     push(vm, vm.stack[index + prev_frame->frame_start]);
                 }
-                // if (vm.closed_values[index].value) {
-                //     push(vm, *vm.closed_values[index].value);
-                // } else {
-                //     CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
-                //     push(vm, vm.stack[index + prev_frame->frame_start]);
-                // }
                 break;
             }
             case OP_SET_CLOSURE: {
@@ -238,12 +238,6 @@ static EvaluateResult run(VM& vm) {
                     CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
                     vm.stack[index + prev_frame->frame_start] = pop(vm);
                 }
-                // if (vm.closed_values[index].value) {
-                //     *vm.closed_values[index].value = pop(vm);
-                // } else {
-                //     CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
-                //     vm.stack[index + prev_frame->frame_start] = pop(vm);
-                // }
                 break;
             }
             case OP_JUMP_IF_FALSE: {

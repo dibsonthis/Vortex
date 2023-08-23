@@ -346,6 +346,16 @@ void gen_accessor(Chunk& chunk, node_ptr node) {
     add_code(chunk, OP_ACCESSOR, node->line);
 }
 
+void gen_dot(Chunk& chunk, node_ptr node) {
+    generate(node->_Node.Op().left, chunk);
+    if (node->_Node.Op().right->type == NodeType::ID) {
+        add_constant_code(chunk, string_val(node->_Node.Op().right->_Node.ID().value), node->line);
+    } else {
+        generate(node->_Node.Op().right, chunk);
+    }
+    add_code(chunk, OP_ACCESSOR, node->line);
+}
+
 void gen_break(Chunk& chunk, node_ptr node) {
     if (!current->in_loop) {
         error("Cannot use 'break' outside of a loop");
@@ -532,6 +542,11 @@ void gen_type(Chunk& chunk, node_ptr node) {
 }
 
 void gen_typed_object(Chunk& chunk, node_ptr node) {
+    gen_object(chunk, node->_Node.ObjectDeconstruct().body);
+    int index = resolve_variable(node->_Node.ObjectDeconstruct().name);
+    add_opcode(chunk, OP_LOAD, index, node->line);
+    add_code(chunk, OP_MAKE_TYPED, node->line);
+    return;
 }
 
 void gen_object(Chunk& chunk, node_ptr node) {
@@ -755,6 +770,10 @@ void generate(node_ptr node, Chunk& chunk) {
         }
         if (node->_Node.Op().value == "..") {
             gen_range(chunk, node);
+            return;
+        }
+        if (node->_Node.Op().value == ".") {
+            gen_dot(chunk, node);
             return;
         }
     }

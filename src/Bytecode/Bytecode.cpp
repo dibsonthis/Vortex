@@ -211,6 +211,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return op_code_instruction("OP_MAKE_CLOSURE", chunk, offset);
     case OP_MAKE_TYPE:
         return op_code_instruction("OP_MAKE_TYPE", chunk, offset);
+    case OP_MAKE_TYPED:
+        return simple_instruction("OP_MAKE_TYPED", offset);
     case OP_MAKE_OBJECT:
         return op_code_instruction("OP_MAKE_OBJECT", chunk, offset);
     case OP_TYPE_DEFAULTS:
@@ -261,6 +263,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return simple_instruction("OP_GT", offset);
     case OP_RANGE:
         return simple_instruction("OP_RANGE", offset);
+    case OP_DOT:
+        return simple_instruction("OP_DOT", offset);
     case OP_ACCESSOR:
         return simple_instruction("OP_ACCESSOR", offset);
     case OP_LEN:
