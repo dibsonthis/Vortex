@@ -214,9 +214,9 @@ static EvaluateResult run(VM& vm) {
             }
             case OP_MAKE_CLOSURE: {
                 int index = READ_INT();
-                auto& function = pop(vm).get_function();
+                auto function = pop(vm).get_function();
                 Value closure = function_val();
-                auto& closure_obj = closure.get_function();
+                auto closure_obj = closure.get_function();
                 closure_obj->arity = function->arity;
                 closure_obj->closed_var_indexes = function->closed_var_indexes;
                 closure_obj->chunk = function->chunk;

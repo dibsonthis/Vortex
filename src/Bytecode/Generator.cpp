@@ -465,7 +465,7 @@ void gen_function(Chunk& chunk, node_ptr node) {
         add_opcode(chunk, OP_MAKE_CLOSURE, 0, node->line);
     }
 
-    disassemble_chunk(function->chunk, function->name);
+    //disassemble_chunk(function->chunk, function->name);
 }
 
 void gen_function_call(Chunk& chunk, node_ptr node) {
@@ -475,13 +475,6 @@ void gen_function_call(Chunk& chunk, node_ptr node) {
     node_ptr id = std::make_shared<Node>(NodeType::ID);
     id->_Node.ID().value = node->_Node.FunctionCall().name;
     gen_id(chunk, id);
-    // int index = resolve_variable(node->_Node.FunctionCall().name);
-    // if (index == -1) {
-    //     add_constant_code(chunk, string_val(node->_Node.FunctionCall().name), node->line);
-    //     add_code(chunk, OP_LOAD_GLOBAL, node->line);
-    // } else {
-    //     add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.FunctionCall().name), node->line);
-    // }
     add_opcode(chunk, OP_CALL, node->_Node.FunctionCall().args.size(), node->line);
 }
 
