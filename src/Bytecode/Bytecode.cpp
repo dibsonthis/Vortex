@@ -283,6 +283,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return simple_instruction("OP_DOT", offset);
     case OP_ACCESSOR:
         return op_code_instruction("OP_ACCESSOR", chunk, offset);
+    case OP_IMPORT:
+        return op_code_instruction("OP_IMPORT", chunk, offset);
     case OP_LEN:
         return simple_instruction("OP_LEN", offset);
     default:

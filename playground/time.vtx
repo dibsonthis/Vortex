@@ -1,0 +1,5 @@
+const time = (func) => {
+    const start = clock()
+    func()
+    return clock() - start
+}

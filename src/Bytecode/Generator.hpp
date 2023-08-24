@@ -1,4 +1,5 @@
 #pragma once
+#include "../utils/utils.hpp"
 #include "Bytecode.hpp"
 #include "../Node/Node.hpp"
 
@@ -53,6 +54,7 @@ void gen_type(Chunk& chunk, node_ptr node);
 void gen_typed_object(Chunk& chunk, node_ptr node);
 void gen_object(Chunk& chunk, node_ptr node);
 void gen_dot(Chunk& chunk, node_ptr node);
+void gen_import(Chunk& chunk, node_ptr node);
 
 void gen_list(Chunk& chunk, node_ptr node);
 
@@ -70,3 +72,4 @@ static int resolve_variable(std::string name);
 static int resolve_closure(std::string name);
 
 void error(std::string message);
+void reset();

@@ -54,7 +54,8 @@ enum OpCode {
     OP_ACCESSOR,
     OP_LEN,
     OP_CALL,
-    OP_CALL_METHOD
+    OP_CALL_METHOD,
+    OP_IMPORT
 };
 
 enum ValueType {
@@ -75,6 +76,7 @@ struct Chunk {
     std::vector<uint8_t> code;
     std::vector<uint8_t> lines;
     std::vector<Value> constants;
+    std::vector<std::string> variables;
 };
 
 struct FunctionObj {

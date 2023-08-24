@@ -65,6 +65,7 @@ static EvaluateResult run(VM& vm) {
     define_native(vm, "clock", clockNative);
     define_native(vm, "string", toStringNative);
     define_native(vm, "dis", disNative);
+    define_native(vm, "length", lengthNative);
 
     CallFrame* frame = &vm.frames.back();
     frame->ip = frame->function->chunk.code.data();
@@ -335,6 +336,11 @@ static EvaluateResult run(VM& vm) {
                 }
 
                 if (_container.is_list()) {
+                    if (flag == 1) {
+                        Value none = none_val();
+                        push(vm, _container);
+                        break;
+                    }
                     if (!_index.is_number()) {
                         runtimeError(vm, "Accessor must be a number");
                         return EVALUATE_RUNTIME_ERROR;
@@ -492,6 +498,167 @@ static EvaluateResult run(VM& vm) {
                 vm.frames.push_back(call_frame);
                 frame = &vm.frames.back();
 
+                break;
+            }
+            case OP_IMPORT: {
+                int index = READ_INT();
+                if (index == 0) {
+                    Value mod = pop(vm);
+                    Value path = pop(vm);
+
+                    if (mod.is_none()) {
+                        
+                        Lexer lexer(path.get_string());
+                        lexer.tokenize();
+
+                        Parser parser(lexer.nodes, lexer.file_name);
+                        parser.parse(0, "_");
+                        parser.remove_op_node(";");
+
+                        auto current_path = std::filesystem::current_path();
+                        auto parent_path = std::filesystem::path(path.get_string()).parent_path();
+                        try {
+                            if (parent_path != "") {
+                                std::filesystem::current_path(parent_path);
+                            }
+                        } catch(...) {
+                            runtimeError(vm, "No such file or directory: '" + parent_path.string() + "'");
+                            return EVALUATE_RUNTIME_ERROR;
+                        }
+
+                        VM import_vm;
+                        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+                        main->name = "";
+                        main->arity = 0;
+                        main->chunk = Chunk();
+                        CallFrame main_frame;
+                        main_frame.function = main;
+                        main_frame.sp = 0;
+                        main_frame.ip = main->chunk.code.data();
+                        main_frame.frame_start = 0;
+                        import_vm.frames.push_back(main_frame);
+
+                        reset();
+                        generate_bytecode(parser.nodes, main_frame.function->chunk);
+                        add_code(main_frame.function->chunk, OP_EXIT);
+                        evaluate(import_vm);
+
+                        std::filesystem::current_path(current_path);
+
+                        for (int i = 0; i < import_vm.frames[0].function->chunk.variables.size(); i++) {
+                            auto& var = import_vm.frames[0].function->chunk.variables[i];
+                            define_global(vm, var, import_vm.stack[i]);
+                        }
+
+                        break;
+                    } else {
+                        // import mod : path
+                        Lexer lexer(path.get_string());
+                        lexer.tokenize();
+
+                        Parser parser(lexer.nodes, lexer.file_name);
+                        parser.parse(0, "_");
+                        parser.remove_op_node(";");
+
+                        auto current_path = std::filesystem::current_path();
+                        auto parent_path = std::filesystem::path(path.get_string()).parent_path();
+                        try {
+                            if (parent_path != "") {
+                                std::filesystem::current_path(parent_path);
+                            }
+                        } catch(...) {
+                            runtimeError(vm, "No such file or directory: '" + parent_path.string() + "'");
+                            return EVALUATE_RUNTIME_ERROR;
+                        }
+
+                        VM import_vm;
+                        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+                        main->name = "";
+                        main->arity = 0;
+                        main->chunk = Chunk();
+                        CallFrame main_frame;
+                        main_frame.function = main;
+                        main_frame.sp = 0;
+                        main_frame.ip = main->chunk.code.data();
+                        main_frame.frame_start = 0;
+                        import_vm.frames.push_back(main_frame);
+
+                        reset();
+                        generate_bytecode(parser.nodes, main_frame.function->chunk);
+                        add_code(main_frame.function->chunk, OP_EXIT);
+                        evaluate(import_vm);
+
+                        std::filesystem::current_path(current_path);
+
+                        Value import_obj = object_val();
+                        auto& obj = import_obj.get_object();
+                        for (int i = 0; i < import_vm.frames[0].function->chunk.variables.size(); i++) {
+                            auto& var = import_vm.frames[0].function->chunk.variables[i];
+                            obj->values[var] = import_vm.stack[i];
+                        }
+
+                        push(vm, import_obj);
+
+                        break;
+                    }
+                } else {
+                    // import [a, b, c] : path
+                    std::vector<std::string> names;
+
+                    for (int i = 0; i < index; i++) {
+                        names.push_back(pop(vm).get_string());
+                    }
+
+                    Value path = pop(vm);
+                    
+                    Lexer lexer(path.get_string());
+                    lexer.tokenize();
+
+                    Parser parser(lexer.nodes, lexer.file_name);
+                    parser.parse(0, "_");
+                    parser.remove_op_node(";");
+
+                    auto current_path = std::filesystem::current_path();
+                    auto parent_path = std::filesystem::path(path.get_string()).parent_path();
+                    try {
+                        if (parent_path != "") {
+                            std::filesystem::current_path(parent_path);
+                        }
+                    } catch(...) {
+                        runtimeError(vm, "No such file or directory: '" + parent_path.string() + "'");
+                        return EVALUATE_RUNTIME_ERROR;
+                    }
+
+                    VM import_vm;
+                    std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+                    main->name = "";
+                    main->arity = 0;
+                    main->chunk = Chunk();
+                    CallFrame main_frame;
+                    main_frame.function = main;
+                    main_frame.sp = 0;
+                    main_frame.ip = main->chunk.code.data();
+                    main_frame.frame_start = 0;
+                    import_vm.frames.push_back(main_frame);
+
+                    reset();
+                    generate_bytecode(parser.nodes, main_frame.function->chunk);
+                    add_code(main_frame.function->chunk, OP_EXIT);
+                    evaluate(import_vm);
+
+                    std::filesystem::current_path(current_path);
+
+                    for (int i = 0; i < names.size(); i++) {
+                        if (vector_contains_string(import_vm.frames[0].function->chunk.variables, names[i])) {
+                            push(vm, import_vm.stack[i]);
+                        } else {
+                            runtimeError(vm, "Cannot import variable '" + names[i] + "' from '" + path.get_string() + "'");
+                            return EVALUATE_RUNTIME_ERROR;
+                        }
+                    }
+
+                    break;
+                }
                 break;
             }
             case OP_NEGATE: {
@@ -728,4 +895,27 @@ static Value toStringNative(std::vector<Value>& args) {
     Value value = args[0];
 
     return string_val(toString(value));
+}
+
+static Value lengthNative(std::vector<Value>& args) {
+    if (args.size() != 1) {
+        error("Function 'length' expects 1 argument");
+    }
+
+    Value value = args[0];
+
+    switch (value.type) {
+        case List: {
+            return number_val(value.get_list()->size());
+        }
+        case Object: {
+            return number_val(value.get_object()->values.size());
+        }
+        case Type: {
+            return number_val(value.get_type()->types.size());
+        }
+        default: {
+            return none_val();
+        }
+    }
 }

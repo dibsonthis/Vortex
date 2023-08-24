@@ -289,12 +289,14 @@ void gen_for_loop(Chunk& chunk, node_ptr node) {
         add_constant_code(chunk, number_val(1), node->line);
         add_code(chunk, OP_ADD, node->line);
         add_opcode(chunk, OP_SET, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
+        add_code(chunk, OP_POP, node->line);
 
         if (node->_Node.ForLoop().value_name) {
             add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().value_name->_Node.ID().value), node->line);
             add_constant_code(chunk, number_val(1), node->line);
             add_code(chunk, OP_ADD, node->line);
             add_opcode(chunk, OP_SET, resolve_variable(node->_Node.ForLoop().value_name->_Node.ID().value), node->line);
+            add_code(chunk, OP_POP, node->line);
         }
 
         add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
@@ -338,12 +340,14 @@ void gen_for_loop(Chunk& chunk, node_ptr node) {
         add_constant_code(chunk, number_val(1), node->line);
         add_code(chunk, OP_ADD, node->line);
         add_opcode(chunk, OP_SET, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
+        add_code(chunk, OP_POP, node->line);
 
         if (node->_Node.ForLoop().value_name) {
             add_opcode(chunk, OP_LOAD, resolve_variable("___iter___"), node->line);
             add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
             add_opcode(chunk, OP_ACCESSOR, 0, node->line);
             add_opcode(chunk, OP_SET, resolve_variable(node->_Node.ForLoop().value_name->_Node.ID().value), node->line);
+            add_code(chunk, OP_POP, node->line);
         }
 
         add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
@@ -465,7 +469,7 @@ void gen_function(Chunk& chunk, node_ptr node) {
         add_opcode(chunk, OP_MAKE_CLOSURE, 0, node->line);
     }
 
-    //disassemble_chunk(function->chunk, function->name);
+    disassemble_chunk(function->chunk, function->name);
 }
 
 void gen_function_call(Chunk& chunk, node_ptr node) {
@@ -602,6 +606,74 @@ void gen_object(Chunk& chunk, node_ptr node) {
     current->in_object = false;
 }
 
+void gen_import(Chunk& chunk, node_ptr node) {
+    if (node->_Node.Import().is_default) {
+        node->_Node.Import().target = std::make_shared<Node>(NodeType::STRING);
+        node->_Node.Import().target->_Node.String().value = "@modules/" + node->_Node.Import().module->_Node.ID().value;
+    }
+
+    if (node->_Node.Import().target->type == NodeType::ID) {
+        node->_Node.Import().target = std::make_shared<Node>(NodeType::STRING);
+        node->_Node.Import().target->_Node.String().value = "@modules/" + node->_Node.Import().target->_Node.ID().value;
+    }
+
+    if (node->_Node.Import().target->type != NodeType::STRING) {
+        error("Import target must be a string");
+    }
+
+    std::string target_name = std::string(node->_Node.Import().target->_Node.String().value);
+    
+    replaceAll(target_name, "@modules/", "");
+
+    std::string path = node->_Node.Import().target->_Node.String().value + ".vtx";
+
+    #if GCC_COMPILER
+        #if __apple__ || __linux__
+            replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
+        #else
+            replaceAll(path, "@modules", "C:/Program Files/Vortex/modules/" + target_name);
+        #endif
+    #else
+        #if defined(__APPLE__) || defined(__linux__)
+            replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
+        #else
+            replaceAll(path, "@modules", "C:/Program Files/Vortex/modules/" + target_name);
+        #endif
+    #endif
+
+    add_constant_code(chunk, string_val(path), node->line);
+
+    if (node->_Node.Import().module->type == NodeType::ID) {
+        // import x : x
+        add_constant_code(chunk, string_val(node->_Node.Import().module->_Node.ID().value), node->line);
+        declareVariable(node->_Node.Import().module->_Node.ID().value, true);
+        add_opcode(chunk, OP_IMPORT, 0, node->line);
+    } else if (node->_Node.Import().module->type == NodeType::LIST && node->_Node.Import().module->_Node.List().elements.size() == 0) {
+        // import [] : x
+        if (current->in_function || current->in_object) {
+            error("Cannot import [] outside of global scope");
+        }
+        add_constant_code(chunk, none_val(), node->line);
+        add_opcode(chunk, OP_IMPORT, 0, node->line);
+    } else {
+        // import [a, b, c] : x
+        std::vector<node_ptr> elements;
+        if (node->_Node.Import().module->_Node.List().elements.size() == 1 && node->_Node.Import().module->_Node.List().elements[0]->type == NodeType::COMMA_LIST) {
+            elements = node->_Node.Import().module->_Node.List().elements[0]->_Node.List().elements;
+        } else {
+            elements = node->_Node.Import().module->_Node.List().elements;
+        }
+        for (auto& elem : elements) {
+            if (elem->type != NodeType::ID) {
+                error("Import variables must be identifiers");
+            }
+            add_constant_code(chunk, string_val(elem->_Node.ID().value), node->line);
+            declareVariable(elem->_Node.ID().value, true);
+        }
+        add_opcode(chunk, OP_IMPORT, elements.size(), node->line);
+    }
+}
+
 void gen_and(Chunk& chunk, node_ptr node) {
     generate(node->_Node.Op().left, chunk);
     int jump_instruction = chunk.code.size() + 1;
@@ -703,6 +775,10 @@ void generate(node_ptr node, Chunk& chunk) {
         }
         case NodeType::OBJECT: {
             gen_object(chunk, node);
+            break;
+        }
+        case NodeType::IMPORT: {
+            gen_import(chunk, node);
             break;
         }
     }
@@ -809,14 +885,6 @@ void generate(node_ptr node, Chunk& chunk) {
 
 void generate_bytecode(std::vector<node_ptr>& nodes, Chunk& chunk) {
     for (node_ptr& node : nodes) {
-        // if ((node->type == NodeType::OP && node->_Node.Op().value != "=" && node->_Node.Op().value != "+=" && node->_Node.Op().value != "-=" && node->_Node.Op().value != ".") ||
-        //     node->type == NodeType::STRING ||
-        //     node->type == NodeType::NUMBER ||
-        //     node->type == NodeType::BOOLEAN ||
-        //     node->type == NodeType::LIST ||
-        //     node->type == NodeType::OBJECT) {
-        //     continue;
-        // }
         if (node->type == NodeType::OP) {
             generate(node, chunk);
             add_code(chunk, OP_POP, node->line);
@@ -838,6 +906,10 @@ void generate_bytecode(std::vector<node_ptr>& nodes, Chunk& chunk) {
             continue;
         }
         generate(node, chunk);
+    }
+    
+    for (Variable& var : current->variables) {
+        chunk.variables.push_back(var.name);
     }
 }
 
@@ -910,4 +982,8 @@ static int resolve_closure(std::string name) {
 void error(std::string message) {
     std::cout << message << "\n";
     exit(1);
+}
+
+void reset() {
+    current = std::make_shared<Compiler>();
 }

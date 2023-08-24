@@ -1,41 +1,33 @@
-const start = clock()
+import [] : "time"
 
-var x = 10
-var y = 0
-
-const addOne = (x) => {
-    return x += 1
+const somefunc = () => {
+    var l = 0
+    for (0..100, i) {
+        l += i
+    }
 }
 
-const prependText = (value, message) => {
-    return message + string(value)
+const average = (list) => {
+    var sum = 0
+    var len = list.length()
+    for (list, i, v) {
+        sum += v
+    }
+    return sum / len
 }
 
-const println = (message) => {
-    print(message, "\n")
+var times = []
+
+for (0..10, i) {
+    times[100] = time(somefunc)
 }
 
-const chain = (x) => {
-    return (x
-    .addOne()
-    .addOne()
-    .addOne()
-    .prependText("Value: "))
-}
+var avg = average(times)
 
-x
-.chain()
-.println()
-
-y
-.chain()
-.println()
-
-print("Duration: ", clock() - start, "\n")
+print("Average: ", avg, "\n")
 
 /*
     TODO
     - Add nested closures
-    - Add Imports
     - Typechecking
 */

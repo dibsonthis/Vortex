@@ -3,6 +3,9 @@
 #include <iostream>
 #include <sstream>
 
+#include "../utils/utils.hpp"
+#include "../Lexer/Lexer.hpp"
+#include "../Parser/Parser.hpp"
 #include "../Bytecode/Bytecode.hpp"
 #include "../Bytecode/Generator.hpp"
 
@@ -53,3 +56,4 @@ static Value printNative(std::vector<Value>& args);
 static Value clockNative(std::vector<Value>& args);
 static Value disNative(std::vector<Value>& args);
 static Value toStringNative(std::vector<Value>& args);
+static Value lengthNative(std::vector<Value>& args);
