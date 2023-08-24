@@ -1,53 +1,42 @@
-import [add] : blah
+import sdl
 
-print(add(20, 3.5))
+const window = sdl.createWindow("Test", 0, 0, 800, 600)
+const renderer = sdl.createRenderer(window)
 
-// import [] : "time"
+var running = true
 
-// const prepend = (list, value) => {
-//     list[-1] = value
-//     return list
+const onQuit = () => {
+    print("Done\n")
+    running = false
+}
+
+const onKeyDown = (event) => {
+	const keyStr = sdl.getKeyName(event.key.keysm.sym)
+	print(keyStr, "\n")
+	if (keyStr == "Escape") {
+        onQuit()
+        //running = false
+	}
+}
+
+print(dis(onKeyDown))
+
+// while (running) {
+//     var status
+// 	while (status != 0) {
+//         const poll = sdl.pollEvent()
+//         status = poll.status
+//         const event = poll.event
+
+//         if (event.type == sdl.EventType.QUIT) {
+// 			onQuit()
+// 		}
+
+//         if (event.type == sdl.EventType.KEYDOWN) {
+// 			onKeyDown(event)
+// 		}
+// 	}
+
+// 	sdl.renderClear(renderer)
+// 	sdl.renderPresent(renderer)
 // }
-
-// const append = (list, value) => {
-//     list[list.length()] = value
-//     return list
-// }
-
-// const ins = (list, value, pos = 0) => {
-//     list.insert(value, pos)
-// }
-
-// const somefunc = () => {
-//     var l = 0
-//     for (0..100, i) {
-//         l += i
-//     }
-// }
-
-// const average = (list) => {
-//     var sum = 0
-//     var len = list.length()
-//     for (list, i, v) {
-//         sum += v
-//     }
-//     return sum / len
-// }
-
-// var times = []
-
-// for (0..10, i) {
-//     times.append(time(somefunc))
-// }
-
-// var avg = average(times)
-
-// times.ins("fhufdf")
-
-// print("Times: ", times, " Average: ", avg, "\n")
-
-// /*
-//     TODO
-//     - Add nested closures
-//     - Typechecking
-// */

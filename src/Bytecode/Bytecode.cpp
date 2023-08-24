@@ -56,6 +56,11 @@ Value native_val() {
     return val;
 }
 
+Value pointer_val() {
+    Value val(Pointer);
+    return val;
+}
+
 Value none_val() {
     Value val(None);
     return val;
@@ -107,6 +112,9 @@ std::string toString(Value value) {
         }
         case Native: {
             return "<Native Function>";
+        }
+        case Pointer: {
+            return "<Pointer>";
         }
         case None: {
             return "None";

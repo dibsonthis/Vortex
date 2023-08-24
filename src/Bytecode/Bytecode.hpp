@@ -70,6 +70,7 @@ enum ValueType {
     Object,
     Function,
     Native,
+    Pointer,
     None
 };
 
@@ -103,6 +104,10 @@ struct ObjectObj {
     std::unordered_map<std::string, Value> values;
 };
 
+struct PointerObj {
+    void* value;
+};
+
 typedef Value (*NativeFunction)(std::vector<Value>& args);
 
 struct NativeFunctionObj {
@@ -120,7 +125,8 @@ struct Value {
         std::shared_ptr<FunctionObj>,
         std::shared_ptr<TypeObj>,
         std::shared_ptr<ObjectObj>,
-        std::shared_ptr<NativeFunctionObj>
+        std::shared_ptr<NativeFunctionObj>,
+        std::shared_ptr<PointerObj>
     > value;
 
     Value() : type(None) {}
@@ -150,6 +156,9 @@ struct Value {
                 break;
             case Native:
                 value = std::make_shared<NativeFunctionObj>();
+                break;
+            case Pointer:
+                value = std::make_shared<PointerObj>();
                 break;
             default:    
                 break;
@@ -186,6 +195,10 @@ struct Value {
         return std::get<std::shared_ptr<NativeFunctionObj>>(this->value);
     }
 
+    std::shared_ptr<PointerObj>& get_pointer() {
+        return std::get<std::shared_ptr<PointerObj>>(this->value);
+    }
+
     bool is_number() {
         return type == Number;
     }
@@ -210,6 +223,9 @@ struct Value {
     bool is_native() {
         return type == Native;
     }
+    bool is_pointer() {
+        return type == Pointer;
+    }
     bool is_none() {
         return type == None;
     }
@@ -224,6 +240,7 @@ Value type_val(std::string name);
 Value object_val();
 Value function_val();
 Value native_val();
+Value pointer_val();
 Value none_val();
 
 void printValue(Value value);

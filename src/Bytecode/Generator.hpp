@@ -5,17 +5,17 @@
 
 struct Variable {
     std::string name;
-    int depth;
-    bool is_const;
+    int depth = 0;
+    bool is_const = false;
 };
 
 struct Compiler {
     std::vector<Variable> variables;
-    int variableCount;
-    int scopeDepth;
-    bool in_loop;
-    bool in_function;
-    bool in_object;
+    int variableCount = 0;
+    int scopeDepth = 0;
+    bool in_loop = false;
+    bool in_function = false;
+    bool in_object = false;
     std::vector<int> closed_vars;
     std::shared_ptr<Compiler> prev;
 };

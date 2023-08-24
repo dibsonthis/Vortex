@@ -142,7 +142,7 @@ void gen_eq(Chunk& chunk, node_ptr node) {
             }
         }
         Variable variable = current->variables[index];
-        if (variable.is_const) {
+        if (index >= 0 && variable.is_const) {
             error("Cannot modify constant '" + left->_Node.ID().value + "'");
         }
         generate(node->_Node.Op().right, chunk);
@@ -271,7 +271,7 @@ void gen_while_loop(Chunk& chunk, node_ptr node) {
     generate_bytecode(node->_Node.WhileLoop().body->_Node.Object().elements, chunk);
     end_scope(chunk);
     current->in_loop = false;
-    add_opcode(chunk, OP_JUMP_BACK, chunk.code.size() - start_index + 4, node->_Node.WhileLoop().body->_Node.Object().elements.back()->line);
+    add_opcode(chunk, OP_JUMP_BACK, chunk.code.size() - start_index + 4, node->line);
     int offset = chunk.code.size() - jump_instruction - 4;
     uint8_t* bytes = int_to_bytes(offset);
     patch_bytes(chunk, jump_instruction, bytes);

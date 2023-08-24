@@ -14,6 +14,8 @@ Value pop(VM& vm) {
 
 static void runtimeError(VM& vm, std::string message, ...) {
 
+    vm.status = 1;
+
     CallFrame frame = vm.frames.back();
 
     va_list args;
@@ -234,6 +236,9 @@ static EvaluateResult run(VM& vm) {
                 closure_obj->name = function->name;
                 closure_obj->closed_vars = std::vector<std::shared_ptr<Value>>(500);
                 for (int& index : closure_obj->closed_var_indexes) {
+                    // for (auto& value : vm.closed_values) {
+                    //     if (*value)
+                    // }
                     auto value = std::make_shared<Value>(vm.stack[index + frame->frame_start]);
                     closure_obj->closed_vars[index] = value;
                 }
@@ -242,7 +247,7 @@ static EvaluateResult run(VM& vm) {
             }
             case OP_LOAD_CLOSURE: {
                 int index = READ_INT();
-                if (frame->function->closed_vars[index]) {
+                if (frame->function->closed_vars.size() > index && frame->function->closed_vars[index]) {
                     push(vm, *frame->function->closed_vars[index]);
                 } else {
                     CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
@@ -252,12 +257,10 @@ static EvaluateResult run(VM& vm) {
             }
             case OP_SET_CLOSURE: {
                 int index = READ_INT();
-                 if (frame->function->closed_vars[index]) {
-                    //*frame->function->closed_vars[index] = pop(vm);
+                 if (frame->function->closed_vars.size() > index && frame->function->closed_vars[index]) {
                     *frame->function->closed_vars[index] = vm.stack.back();
                 } else {
                     CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
-                    //vm.stack[index + prev_frame->frame_start] = pop(vm);
                     vm.stack[index + prev_frame->frame_start] = vm.stack.back();
                 }
                 break;
@@ -552,6 +555,10 @@ static EvaluateResult run(VM& vm) {
                         add_code(main_frame.function->chunk, OP_EXIT);
                         evaluate(import_vm);
 
+                        if (import_vm.status != 0) {
+                            exit(import_vm.status);
+                        }
+
                         std::filesystem::current_path(current_path);
 
                         for (int i = 0; i < import_vm.frames[0].function->chunk.variables.size(); i++) {
@@ -596,6 +603,10 @@ static EvaluateResult run(VM& vm) {
                         generate_bytecode(parser.nodes, main_frame.function->chunk);
                         add_code(main_frame.function->chunk, OP_EXIT);
                         evaluate(import_vm);
+
+                        if (import_vm.status != 0) {
+                            exit(import_vm.status);
+                        }
 
                         std::filesystem::current_path(current_path);
 
@@ -654,6 +665,10 @@ static EvaluateResult run(VM& vm) {
                     generate_bytecode(parser.nodes, main_frame.function->chunk);
                     add_code(main_frame.function->chunk, OP_EXIT);
                     evaluate(import_vm);
+
+                    if (import_vm.status != 0) {
+                        exit(import_vm.status);
+                    }
 
                     std::filesystem::current_path(current_path);
 
@@ -1011,11 +1026,11 @@ static Value load_lib_builtin(std::vector<Value>& args) {
     Value func_list = args[1];
 
     if (!path.is_string()) {
-        error("Function 'load_lib' expects argumebt 'path' to be a string");
+        error("Function 'load_lib' expects arg 'path' to be a string");
     }
 
     if (!func_list.is_list()) {
-        error("Function 'load_lib' expects argumebt 'func_list' to be a list");
+        error("Function 'load_lib' expects arg 'func_list' to be a list");
     }
 
     void* handle = dlopen(path.get_string().c_str(), RTLD_LAZY);
