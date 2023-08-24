@@ -1,0 +1,5 @@
+const lib = load_lib("./bin/blah", ["add"])
+
+const add = (a, b) => {
+    return lib.add(a, b)
+}
