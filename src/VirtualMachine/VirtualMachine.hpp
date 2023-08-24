@@ -9,6 +9,22 @@
 #include "../Bytecode/Bytecode.hpp"
 #include "../Bytecode/Generator.hpp"
 
+#define GCC_COMPILER (defined(__GNUC__) && !defined(__clang__))
+
+#if GCC_COMPILER
+    #if __apple__ || __linux__
+        #include <dlfcn.h>
+    #else
+        #include <windows.h>
+    #endif
+#else
+    #if defined(__APPLE__) || defined(__linux__)
+        #include <dlfcn.h>
+    #else
+        #include <windows.h>
+    #endif
+#endif
+
 // #define DEBUG_TRACE_EXECUTION
 
 struct Closure {
@@ -52,8 +68,10 @@ void freeVM(VM& vm);
 bool is_equal(Value& v1, Value& v2);
 bool is_falsey(Value& value);
 
-static Value printNative(std::vector<Value>& args);
-static Value clockNative(std::vector<Value>& args);
-static Value disNative(std::vector<Value>& args);
-static Value toStringNative(std::vector<Value>& args);
-static Value lengthNative(std::vector<Value>& args);
+static Value print_builtin(std::vector<Value>& args);
+static Value clock_builtin(std::vector<Value>& args);
+static Value dis_builtin(std::vector<Value>& args);
+static Value to_string_builtin(std::vector<Value>& args);
+static Value insert_builtin(std::vector<Value>& args);
+static Value length_builtin(std::vector<Value>& args);
+static Value load_lib_builtin(std::vector<Value>& args);

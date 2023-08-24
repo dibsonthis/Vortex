@@ -1,4 +1,22 @@
+import [add] : blah
+
+print(add(20, 3.5))
+
 // import [] : "time"
+
+// const prepend = (list, value) => {
+//     list[-1] = value
+//     return list
+// }
+
+// const append = (list, value) => {
+//     list[list.length()] = value
+//     return list
+// }
+
+// const ins = (list, value, pos = 0) => {
+//     list.insert(value, pos)
+// }
 
 // const somefunc = () => {
 //     var l = 0
@@ -19,17 +37,17 @@
 // var times = []
 
 // for (0..10, i) {
-//     times[100] = time(somefunc)
+//     times.append(time(somefunc))
 // }
 
 // var avg = average(times)
 
-// print("Average: ", avg, "\n")
+// times.ins("fhufdf")
+
+// print("Times: ", times, " Average: ", avg, "\n")
 
 // /*
 //     TODO
 //     - Add nested closures
 //     - Typechecking
 // */
-
-4 | 9 | 5

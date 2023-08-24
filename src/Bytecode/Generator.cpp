@@ -194,7 +194,7 @@ void gen_const(Chunk& chunk, node_ptr node) {
     declareVariable(node->_Node.ConstantDeclatation().name, true);
 }
 
-void gen_id(Chunk& chunk, node_ptr node) {
+void gen_id(Chunk& chunk, node_ptr node, int global_flag) {
     if (node->_Node.ID().value == "this") {
         if (!current->in_object) {
             error("Cannot use 'this' in outer scope");
@@ -233,7 +233,7 @@ void gen_id(Chunk& chunk, node_ptr node) {
 
     is_global:
         add_constant_code(chunk, string_val(node->_Node.ID().value), node->line);
-        add_code(chunk, OP_LOAD_GLOBAL, node->line);
+        add_opcode(chunk, OP_LOAD_GLOBAL, global_flag, node->line);
         return;
 }
 
@@ -398,7 +398,7 @@ void gen_dot(Chunk& chunk, node_ptr node) {
         add_opcode(chunk, OP_ACCESSOR, 1, node->line);
         node_ptr backup_function_node = std::make_shared<Node>(NodeType::ID);
         backup_function_node->_Node.ID().value = node->_Node.Op().right->_Node.FunctionCall().name;
-        gen_id(chunk, backup_function_node);
+        gen_id(chunk, backup_function_node, 1);
         add_opcode(chunk, OP_CALL_METHOD, node->_Node.Op().right->_Node.FunctionCall().args.size(), node->line);
         return;
     } else {
@@ -442,6 +442,7 @@ void gen_function(Chunk& chunk, node_ptr node) {
     auto prev_compiler = current;
     current = std::make_shared<Compiler>();
     current->prev = prev_compiler;
+    current->in_object = prev_compiler->in_object;
 
     current->in_function = true;
 
@@ -487,7 +488,7 @@ void gen_function(Chunk& chunk, node_ptr node) {
         add_opcode(chunk, OP_MAKE_CLOSURE, 0, node->line);
     }
 
-    disassemble_chunk(function->chunk, function->name);
+    //disassemble_chunk(function->chunk, function->name);
 }
 
 void gen_function_call(Chunk& chunk, node_ptr node) {
@@ -631,8 +632,9 @@ void gen_import(Chunk& chunk, node_ptr node) {
     }
 
     if (node->_Node.Import().target->type == NodeType::ID) {
+        std::string target_value = node->_Node.Import().target->_Node.ID().value;
         node->_Node.Import().target = std::make_shared<Node>(NodeType::STRING);
-        node->_Node.Import().target->_Node.String().value = "@modules/" + node->_Node.Import().target->_Node.ID().value;
+        node->_Node.Import().target->_Node.String().value = "@modules/" + target_value;
     }
 
     if (node->_Node.Import().target->type != NodeType::STRING) {

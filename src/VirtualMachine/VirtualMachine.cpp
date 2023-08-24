@@ -61,11 +61,13 @@ static EvaluateResult run(VM& vm) {
     define_global(vm, "None", type_val("None"));
 
     // Define native functions
-    define_native(vm, "print", printNative);
-    define_native(vm, "clock", clockNative);
-    define_native(vm, "string", toStringNative);
-    define_native(vm, "dis", disNative);
-    define_native(vm, "length", lengthNative);
+    define_native(vm, "print", print_builtin);
+    define_native(vm, "clock", clock_builtin);
+    define_native(vm, "string", to_string_builtin);
+    define_native(vm, "insert", insert_builtin);
+    define_native(vm, "dis", dis_builtin);
+    define_native(vm, "length", length_builtin);
+    define_native(vm, "load_lib", load_lib_builtin);
 
     CallFrame* frame = &vm.frames.back();
     frame->ip = frame->function->chunk.code.data();
@@ -159,11 +161,18 @@ static EvaluateResult run(VM& vm) {
                 break;
             }
             case OP_LOAD_GLOBAL: {
+                int flag = READ_INT();
                 Value name = pop(vm);
                 std::string& name_str = name.get_string();
                 if (!vm.globals.count(name_str)) {
-                    runtimeError(vm, "Global '" + name_str + "' is undefined");
-                    return EVALUATE_RUNTIME_ERROR; 
+                    if (flag == 0) {
+                        runtimeError(vm, "Global '" + name_str + "' is undefined");
+                        return EVALUATE_RUNTIME_ERROR;
+                    } else if (flag == 1) {
+                        Value none = none_val();
+                        push(vm, none);
+                        break;
+                    }
                 }
                 push(vm, vm.globals[name_str]);
                 break;
@@ -648,11 +657,18 @@ static EvaluateResult run(VM& vm) {
 
                     std::filesystem::current_path(current_path);
 
-                    for (int i = 0; i < names.size(); i++) {
-                        if (vector_contains_string(import_vm.frames[0].function->chunk.variables, names[i])) {
-                            push(vm, import_vm.stack[i]);
-                        } else {
-                            runtimeError(vm, "Cannot import variable '" + names[i] + "' from '" + path.get_string() + "'");
+                    for (auto& name : names) {
+                        bool found = false;
+                        for (int i = 0; i < import_vm.frames[0].function->chunk.variables.size(); i++) {
+                            if (name == import_vm.frames[0].function->chunk.variables[i]) {
+                                push(vm, import_vm.stack[i]);
+                                found = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!found) {
+                            runtimeError(vm, "Cannot import variable '" + name + "' from '" + path.get_string() + "'");
                             return EVALUATE_RUNTIME_ERROR;
                         }
                     }
@@ -884,18 +900,18 @@ void freeVM(VM& vm) {
     //
 }
 
-static Value printNative(std::vector<Value>& args) {
+static Value print_builtin(std::vector<Value>& args) {
     for (Value& arg : args) {
         printValue(arg);
     }
     return none_val();
 }
 
-static Value clockNative(std::vector<Value>& args) {
+static Value clock_builtin(std::vector<Value>& args) {
     return number_val((double)clock() / CLOCKS_PER_SEC);
 }
 
-static Value disNative(std::vector<Value>& args) {
+static Value dis_builtin(std::vector<Value>& args) {
     if (args.size() != 1) {
         error("Function 'dis' expects 1 argument");
     }
@@ -920,7 +936,7 @@ static Value disNative(std::vector<Value>& args) {
     return none_val();
 }
 
-static Value toStringNative(std::vector<Value>& args) {
+static Value to_string_builtin(std::vector<Value>& args) {
     if (args.size() != 1) {
         error("Function 'string' expects 1 argument");
     }
@@ -930,7 +946,39 @@ static Value toStringNative(std::vector<Value>& args) {
     return string_val(toString(value));
 }
 
-static Value lengthNative(std::vector<Value>& args) {
+static Value insert_builtin(std::vector<Value>& args) {
+    int arg_count = 3;
+    if (args.size() != arg_count) {
+        error("Function 'string' expects " + std::to_string(arg_count) + " argument(s)");
+    }
+
+    Value list = args[0];
+    Value value = args[1];
+    Value pos = args[2];
+
+    if (!list.is_list()) {
+        error("Function 'insert' expects argument 'list' to be a list");
+    }
+
+    if (!pos.is_number()) {
+        error("Function 'insert' expects argument 'pos' to be a number");
+    }
+
+    int pos_num = pos.get_number();
+    auto& ls = list.get_list();
+
+    if (pos_num < 0) {
+        pos_num = 0;
+    } else if (pos_num >= ls->size()) {
+        pos_num = ls->size();
+    }
+
+    ls->insert(ls->begin() + pos_num, value);
+
+    return list;
+}
+
+static Value length_builtin(std::vector<Value>& args) {
     if (args.size() != 1) {
         error("Function 'length' expects 1 argument");
     }
@@ -951,4 +999,46 @@ static Value lengthNative(std::vector<Value>& args) {
             return none_val();
         }
     }
+}
+
+static Value load_lib_builtin(std::vector<Value>& args) {
+    int arg_count = 2;
+    if (args.size() != arg_count) {
+        error("Function 'load_lib' expects " + std::to_string(arg_count) + " argument(s)");
+    }
+
+    Value path = args[0];
+    Value func_list = args[1];
+
+    if (!path.is_string()) {
+        error("Function 'load_lib' expects argumebt 'path' to be a string");
+    }
+
+    if (!func_list.is_list()) {
+        error("Function 'load_lib' expects argumebt 'func_list' to be a list");
+    }
+
+    void* handle = dlopen(path.get_string().c_str(), RTLD_LAZY);
+
+    if (!handle) {
+        error("Cannot open library: " + std::string(dlerror()));
+    }
+
+    typedef void (*load_t)(VM& vm);
+    
+    Value lib_obj = object_val();
+    auto& obj = lib_obj.get_object();
+    
+    for (auto& name : *func_list.get_list()) {
+        if (!name.is_string()) {
+            error("Function names must be strings");
+        }
+
+        NativeFunction fn = (NativeFunction) dlsym(handle, name.get_string().c_str());
+        Value native = native_val();
+        native.get_native()->function = fn;
+        obj->values[name.get_string()] = native;
+    }
+
+    return lib_obj;
 }
