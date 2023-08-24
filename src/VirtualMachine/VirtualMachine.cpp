@@ -736,6 +736,39 @@ static EvaluateResult run(VM& vm) {
                 push(vm, value);
                 break;
             }
+            case OP_MOD: {
+                Value v2 = pop(vm);
+                Value v1 = pop(vm);
+                if (!v1.is_number() || !v2.is_number() ) {
+                    runtimeError(vm, "Operands must be numbers");
+                    return EVALUATE_RUNTIME_ERROR;
+                }
+                Value value = number_val(fmod(v1.get_number(), v2.get_number()));
+                push(vm, value);
+                break;
+            }
+            case OP_AND: {
+                Value v2 = pop(vm);
+                Value v1 = pop(vm);
+                if (!v1.is_number() || !v2.is_number() ) {
+                    runtimeError(vm, "Operands must be numbers");
+                    return EVALUATE_RUNTIME_ERROR;
+                }
+                Value value = number_val((int)v1.get_number() & (int)v2.get_number());
+                push(vm, value);
+                break;
+            }
+            case OP_OR: {
+                Value v2 = pop(vm);
+                Value v1 = pop(vm);
+                if (!v1.is_number() || !v2.is_number() ) {
+                    runtimeError(vm, "Operands must be numbers");
+                    return EVALUATE_RUNTIME_ERROR;
+                }
+                Value value = number_val((int)v1.get_number() | (int)v2.get_number());
+                push(vm, value);
+                break;
+            }
             case OP_EQ_EQ: {
                 Value v2 = pop(vm);
                 Value v1 = pop(vm);

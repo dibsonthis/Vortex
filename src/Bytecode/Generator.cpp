@@ -71,6 +71,24 @@ void gen_divide(Chunk& chunk, node_ptr node) {
     add_code(chunk, OP_DIVIDE, node->line);
 }
 
+void gen_mod(Chunk& chunk, node_ptr node) {
+    generate(node->_Node.Op().left, chunk);
+    generate(node->_Node.Op().right, chunk);
+    add_code(chunk, OP_MOD, node->line);
+}
+
+void gen_bin_and(Chunk& chunk, node_ptr node) {
+    generate(node->_Node.Op().left, chunk);
+    generate(node->_Node.Op().right, chunk);
+    add_code(chunk, OP_AND, node->line);
+}
+
+void gen_bin_or(Chunk& chunk, node_ptr node) {
+    generate(node->_Node.Op().left, chunk);
+    generate(node->_Node.Op().right, chunk);
+    add_code(chunk, OP_OR, node->line);
+}
+
 void gen_not(Chunk& chunk, node_ptr node) {
     generate(node->_Node.Op().right, chunk);
     add_code(chunk, OP_NOT, node->line);
@@ -781,6 +799,22 @@ void generate(node_ptr node, Chunk& chunk) {
             gen_import(chunk, node);
             break;
         }
+        case NodeType::PIPE_LIST: {
+            for (int i = 0; i < node->_Node.List().elements.size(); i++) {
+                node_ptr elem = node->_Node.List().elements[i];
+                int size = node->_Node.List().elements.size() - i;
+                if (size == 1) {
+                    generate(elem, chunk);
+                    add_code(chunk, OP_OR, node->line);
+                    break;
+                }
+                generate(elem, chunk);
+                i++;
+                generate(node->_Node.List().elements[i], chunk);
+                add_code(chunk, OP_OR, node->line);
+            }
+            break;
+        }
     }
 
     if (node->type == NodeType::OP) {
@@ -802,6 +836,18 @@ void generate(node_ptr node, Chunk& chunk) {
         }
         if (node->_Node.Op().value == "/") {
             gen_divide(chunk, node);
+            return;
+        }
+        if (node->_Node.Op().value == "%") {
+            gen_mod(chunk, node);
+            return;
+        }
+        if (node->_Node.Op().value == "&") {
+            gen_and(chunk, node);
+            return;
+        }
+        if (node->_Node.Op().value == "|") {
+            gen_or(chunk, node);
             return;
         }
         if (node->_Node.Op().value == "-=") {
