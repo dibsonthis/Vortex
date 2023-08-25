@@ -60,7 +60,7 @@ static EvaluateResult run(VM& vm) {
     define_global(vm, "List", type_val("List"));
     define_global(vm, "Object", type_val("Object"));
     define_global(vm, "Function", type_val("Function"));
-    define_global(vm, "None", type_val("None"));
+    define_global(vm, "None", none_val());
 
     // Define native functions
     define_native(vm, "print", print_builtin);

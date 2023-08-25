@@ -1,7 +1,10 @@
 const lib = load_lib("./bin/sdl", 
 	["initSDL", "createWindow", "createRenderer",
 	"pollEvent", "renderClear", "renderPresent",
-	"getKeyName"])
+	"getKeyName", "setRenderDrawColor", "delay",
+	"drawPoint", "drawLine", "drawRect", "drawGeometry",
+	"loadTexture", "loadText", "getWindowSize",
+	"showCursor"])
 
 const initSDL = () => lib.initSDL()
 const createWindow = (windowName, xPos, yPos, width, height, flags = 4) 
@@ -10,6 +13,17 @@ const createRenderer = (window, index = -1) => lib.createRenderer(window, index)
 const renderClear = (renderer) => lib.renderClear(renderer)
 const renderPresent = (renderer) => lib.renderPresent(renderer)
 const getKeyName = (keyCode) => lib.getKeyName(keyCode)
+const setRenderDrawColor = (renderer, r = 0, g = 0, b = 0, a = 255) 
+	=> lib.setRenderDrawColor(renderer, r, g, b, a)
+const delay = (ms) => lib.delay(ms)
+const drawPoint = (renderer, xPos, yPos) => lib.drawPoint(renderer, xPos, yPos)
+const drawLine = (renderer, x1, y1, x2, y2) => lib.drawLine(renderer, x1, y1, x2, y2)
+const drawRect = (renderer, x, y, w, h) => lib.drawRect(renderer, x, y, w, h)
+const drawGeometry = (renderer, vertices, texture = None) => lib.drawGeometry(renderer, vertices, texture)
+const loadTexture = (renderer, filePath) => lib.loadTexture(renderer, filePath)
+const loadText = (renderer, fontPath, fontSize, r, g, b, text) => lib.loadText(renderer, fontPath, fontSize, r, g, b, text)
+const getWindowSize = (window) => lib.getWindowSize(window)
+const showCursor = (flag) => lib.showCursor(flag)
 
 const pollEvent = () => {
 	const eventObj = lib.pollEvent()
