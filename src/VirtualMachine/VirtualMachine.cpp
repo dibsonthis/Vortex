@@ -90,6 +90,12 @@ static EvaluateResult run(VM& vm) {
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
             case OP_EXIT: {
+                for (auto& closure : vm.closed_values) {
+                    closure->closed = *closure->location;
+                    closure->location = &closure->closed;
+                    // closure.second->closed = *closure.second->location;
+                    // closure.second->location = &closure.second->closed;
+                }
                 return EVALUATE_OK;
             }
             case OP_RETURN: {
@@ -97,7 +103,19 @@ static EvaluateResult run(VM& vm) {
                 int to_clean = vm.stack.size() - frame->sp;
                 int instruction_index = frame->instruction_index;
                 for (int i = 0; i < to_clean; i++) {
-                    vm.stack.pop_back();
+                    //vm.stack.pop_back();
+                    Value value = pop(vm);
+                    for (auto& closure : vm.closed_values) {
+                        if (closure->location == &value) {
+                            closure->closed = value;
+                            closure->location = &closure->closed;
+                            break;
+                        }
+                    }
+                    // if (vm.closed_values.count(&value)) {
+                    //     vm.closed_values[&value]->closed = value;
+                    //     vm.closed_values[&value]->location = &vm.closed_values[&value]->closed;
+                    // }
                 }
                 vm.frames.pop_back();
                 frame = &vm.frames.back();
@@ -234,35 +252,62 @@ static EvaluateResult run(VM& vm) {
                 closure_obj->chunk = function->chunk;
                 closure_obj->defaults = function->defaults;
                 closure_obj->name = function->name;
-                closure_obj->closed_vars = std::vector<std::shared_ptr<Value>>(500);
+                //closure_obj->closed_vars = std::vector<std::shared_ptr<Value>>(500);
+                closure_obj->closed_vars = std::vector<std::shared_ptr<Closure>>(500);
                 for (int& index : closure_obj->closed_var_indexes) {
-                    // for (auto& value : vm.closed_values) {
-                    //     if (*value)
+                    auto& value = vm.stack[index + frame->frame_start];
+                    auto hoisted = std::make_shared<Closure>();
+                    hoisted->location = &value;
+                    //auto hoisted = std::make_shared<Value>(value);
+                    if (vm.closed_values.size() == 0) {
+                        closure_obj->closed_vars[index] = hoisted;
+                        vm.closed_values.push_back(hoisted);
+                    } else {
+                        bool found = false;
+                        for (auto& cl : vm.closed_values) {
+                            if (cl->location == &value) {
+                                closure_obj->closed_vars[index] = cl;
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (!found) {
+                            closure_obj->closed_vars[index] = hoisted;
+                            vm.closed_values.push_back(hoisted);
+                        }
+                    }
+
+                    // if (vm.closed_values.count(&value)) {
+                    //     closure_obj->closed_vars[index] = vm.closed_values[&value];
+                    // } else {
+                    //     closure_obj->closed_vars[index] = hoisted;
+                    //     vm.closed_values[&value] = hoisted;
                     // }
-                    auto value = std::make_shared<Value>(vm.stack[index + frame->frame_start]);
-                    closure_obj->closed_vars[index] = value;
                 }
                 push(vm, closure);
                 break;
             }
             case OP_LOAD_CLOSURE: {
                 int index = READ_INT();
-                if (frame->function->closed_vars.size() > index && frame->function->closed_vars[index]) {
-                    push(vm, *frame->function->closed_vars[index]);
-                } else {
-                    CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
-                    push(vm, vm.stack[index + prev_frame->frame_start]);
-                }
+                push(vm, *frame->function->closed_vars[index]->location);
+                // if (frame->function->closed_vars.size() > index && frame->function->closed_vars[index]) {
+                //     push(vm, *frame->function->closed_vars[index]);
+                // } else {
+                //     CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
+                //     push(vm, vm.stack[index + prev_frame->frame_start]);
+                // }
                 break;
             }
             case OP_SET_CLOSURE: {
                 int index = READ_INT();
-                 if (frame->function->closed_vars.size() > index && frame->function->closed_vars[index]) {
-                    *frame->function->closed_vars[index] = vm.stack.back();
-                } else {
-                    CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
-                    vm.stack[index + prev_frame->frame_start] = vm.stack.back();
-                }
+                *frame->function->closed_vars[index]->location = vm.stack.back();
+                // if (frame->function->closed_vars.size() > index && frame->function->closed_vars[index]) {
+                //     *frame->function->closed_vars[index] = vm.stack.back();
+                // } else {
+                //     CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
+                //     vm.stack[index + prev_frame->frame_start] = vm.stack.back();
+                // }
                 break;
             }
             case OP_JUMP_IF_FALSE: {

@@ -15,28 +15,29 @@ const onKeyDown = (event) => {
 	print(keyStr, "\n")
 	if (keyStr == "Escape") {
         onQuit()
-        //running = false
 	}
 }
 
-print(dis(onKeyDown))
+const run = () => {
+    while (running) {
+        var status
+        while (status != 0) {
+            const poll = sdl.pollEvent()
+            status = poll.status
+            const event = poll.event
 
-// while (running) {
-//     var status
-// 	while (status != 0) {
-//         const poll = sdl.pollEvent()
-//         status = poll.status
-//         const event = poll.event
+            if (event.type == sdl.EventType.QUIT) {
+                onQuit()
+            }
 
-//         if (event.type == sdl.EventType.QUIT) {
-// 			onQuit()
-// 		}
+            if (event.type == sdl.EventType.KEYDOWN) {
+                onKeyDown(event)
+            }
+        }
 
-//         if (event.type == sdl.EventType.KEYDOWN) {
-// 			onKeyDown(event)
-// 		}
-// 	}
+        sdl.renderClear(renderer)
+        sdl.renderPresent(renderer)
+    }
+}
 
-// 	sdl.renderClear(renderer)
-// 	sdl.renderPresent(renderer)
-// }
+run()

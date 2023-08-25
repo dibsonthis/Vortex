@@ -16,12 +16,6 @@ const pollEvent = () => {
 	return eventObj
 }
 
-// const pollEvent = (evt) => {
-// 	const eventObj = lib.pollEvent()
-// 	evt = eventObj.event
-// 	return eventObj.status
-// }
-
 const EventType = {
 	QUIT: 256,
 	WINDOW: 512,

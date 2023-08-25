@@ -147,6 +147,16 @@ void gen_eq(Chunk& chunk, node_ptr node) {
         }
         generate(node->_Node.Op().right, chunk);
         if (closure_index != -1) {
+            bool captured = false;
+            for (int var : current->closed_vars) {
+                if (index == var) {
+                    captured = true;
+                    break;
+                }
+            }
+            if (!captured) {
+                current->closed_vars.push_back(closure_index);
+            }
             add_opcode(chunk, OP_SET_CLOSURE, closure_index, node->line);
         } else {
             add_opcode(chunk, OP_SET, index, node->line);
