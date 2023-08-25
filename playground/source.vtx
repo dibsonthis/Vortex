@@ -360,13 +360,19 @@
 // 	//sdl.delay(20)
 // }
 
+
 const func = () => {
     for (0..10, i) {
         if (i > 5) {
             var g = 10
             print(g, "\n")
         }
+
+        const p = 100
+        print(p, "\n")
     }
 }
+
+dis(func)
 
 func()

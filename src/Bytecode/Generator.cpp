@@ -317,7 +317,11 @@ void gen_for_loop(Chunk& chunk, node_ptr node) {
 
         int loop_start = chunk.code.size() - 1;
 
+        begin_scope();
+
         generate_bytecode(node->_Node.ForLoop().body->_Node.Object().elements, chunk);
+
+        end_scope(chunk);
 
         add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
         add_constant_code(chunk, number_val(1), node->line);
@@ -1007,7 +1011,7 @@ static void end_scope(Chunk& chunk) {
     && current->variables[current->variableCount - 1].depth > current->scopeDepth) {
         add_code(chunk, OP_POP);
         current->variables.erase(current->variables.begin() + current->variableCount - 1);
-        chunk.variables.pop_back();
+        //chunk.variables.pop_back();
         current->variableCount--;
   }
 }
