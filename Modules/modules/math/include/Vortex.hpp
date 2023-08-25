@@ -20,6 +20,7 @@ enum ValueType {
 };
 
 struct Value;
+struct Closure;
 
 struct Chunk {
     std::vector<uint8_t> code;
@@ -34,7 +35,8 @@ struct FunctionObj {
     int defaults;
     Chunk chunk;
     std::vector<int> closed_var_indexes;
-    std::vector<std::shared_ptr<Value>> closed_vars;
+    //std::vector<std::shared_ptr<Value>> closed_vars;
+    std::vector<std::shared_ptr<Closure>> closed_vars;
     std::shared_ptr<Value> object;
 };
 
@@ -174,6 +176,11 @@ struct Value {
     bool is_none() {
         return type == None;
     }
+};
+
+struct Closure {
+  Value* location;
+  Value closed;
 };
 
 Value new_val() {

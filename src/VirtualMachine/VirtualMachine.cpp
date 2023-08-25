@@ -173,6 +173,25 @@ static EvaluateResult run(VM& vm) {
                     } else {
                         list[acc] = value;
                     }
+                } else if (container.is_string()) {
+                    if (!accessor.is_number()) {
+                        runtimeError(vm, "String accessor must be a number");
+                        return EVALUATE_RUNTIME_ERROR;
+                    }
+                    if (!value.is_string()) {
+                        runtimeError(vm, "String values must be of type string");
+                        return EVALUATE_RUNTIME_ERROR;
+                    }
+                    auto& string = container.get_string();
+                    int acc = accessor.get_number();
+                    // TODO: Fix this
+                    if (acc < 0) {
+                        string = value.get_string() + string;
+                    } else if (acc >= string.length()) {
+                        string += value.get_string();
+                    } else {
+                        string[acc] = value.get_string()[0];
+                    }
                 } else {
                     runtimeError(vm, "Object is not accessible");
                     return EVALUATE_RUNTIME_ERROR;
@@ -207,6 +226,15 @@ static EvaluateResult run(VM& vm) {
                     object_obj->values[prop_name.get_string()] = prop_value;
                 }
                 push(vm, object);
+                break;
+            }
+            case OP_MAKE_FUNCTION: {
+                int count = READ_INT();
+                Value function = pop(vm);
+                for (int i = 0; i < count; i++) {
+                    function.get_function()->default_values.push_back(pop(vm));
+                }
+                push(vm, function);
                 break;
             }
             case OP_MAKE_TYPE: {
@@ -383,7 +411,7 @@ static EvaluateResult run(VM& vm) {
                 Value _index = pop(vm);
                 Value _container = pop(vm);
 
-                if (!_container.is_list() && !_container.is_object()) {
+                if (!_container.is_list() && !_container.is_object() && !_container.is_string()) {
                     if (flag == 1) {
                         push(vm, _container);
                         break;
@@ -422,6 +450,25 @@ static EvaluateResult run(VM& vm) {
                         push(vm, none);
                     } else {
                         push(vm, object->values[index]);
+                    }
+                } else if (_container.is_string()) {
+                    if (flag == 1) {
+                        Value none = none_val();
+                        push(vm, _container);
+                        break;
+                    }
+                    if (!_index.is_number()) {
+                        runtimeError(vm, "Accessor must be a number");
+                        return EVALUATE_RUNTIME_ERROR;
+                    }
+                    int index = _index.get_number();
+                    auto& string = _container.get_string();
+                    if (index >= string.length() || index < 0) {
+                        Value none = none_val();
+                        push(vm, none);
+                    } else {
+                        Value str = string_val(std::string(1, string[index]));
+                        push(vm, str);
                     }
                 }
 
@@ -473,7 +520,16 @@ static EvaluateResult run(VM& vm) {
                     function_obj->chunk.constants[i] = arg;
                 }
 
-                // disassemble_chunk(function_obj->chunk, function_obj->name + "__");
+                if (param_num < function_obj->arity) {
+                    // We have defaults we want to inject
+                    int default_index = 0;
+                    for (int i = param_num; i < function_obj->arity; i++) {
+                        function_obj->chunk.constants[i] = function_obj->default_values[default_index];
+                        default_index++;
+                    }
+                }
+
+                //disassemble_chunk(function_obj->chunk, function_obj->name + "__");
 
                 CallFrame call_frame;
                 call_frame.frame_start = vm.stack.size();
@@ -539,7 +595,16 @@ static EvaluateResult run(VM& vm) {
                     function_obj->chunk.constants[i] = arg;
                 }
 
-                // disassemble_chunk(function_obj->chunk, function_obj->name + "__");
+                if (param_num < function_obj->arity) {
+                    // We have defaults we want to inject
+                    int default_index = 0;
+                    for (int i = param_num; i < function_obj->arity; i++) {
+                        function_obj->chunk.constants[i] = function_obj->default_values[default_index];
+                        default_index++;
+                    }
+                }
+
+                //disassemble_chunk(function_obj->chunk, function_obj->name + "__");
 
                 CallFrame call_frame;
                 call_frame.frame_start = vm.stack.size();
@@ -991,7 +1056,7 @@ static Value dis_builtin(std::vector<Value>& args) {
     }
 
     std::cout << '\n';
-    disassemble_chunk(function.get_function()->chunk, function.get_function()->name);
+    //disassemble_chunk(function.get_function()->chunk, function.get_function()->name);
 
     return none_val();
 }

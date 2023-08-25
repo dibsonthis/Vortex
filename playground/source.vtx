@@ -1,59 +1,66 @@
-import sdl
+import io
 
-const window = sdl.createWindow("Test", 0, 0, 800, 600)
-const renderer = sdl.createRenderer(window)
+var x = io.readf("source.vtx")
+io.writef("test.txt", x)
 
-sdl.setRenderDrawColor(renderer, 0, 255)
+print(x)
 
-var running = true
-var xPos = 0;
-var yPos = 0;
+// import sdl
 
-const onQuit = () => {
-    print("Done\n")
-    running = false
-}
+// const window = sdl.createWindow("Test", 0, 0, 800, 600)
+// const renderer = sdl.createRenderer(window)
 
-const onKeyDown = (event) => {
-	const keyStr = sdl.getKeyName(event.key.keysm.sym)
-	print(keyStr, "\n")
-	if (keyStr == "Escape") {
-        onQuit()
-	}
-}
+// sdl.setRenderDrawColor(renderer, 0, 255)
 
-const onMouseMotion = (event) => {
-    xPos = event.motion.x
-    yPos = event.motion.y
-}
+// var running = true
+// var xPos = 0;
+// var yPos = 0;
 
-while (running) {
-    var status;
-    while (status != 0) {
-        const poll = sdl.pollEvent()
-        status = poll.status
-        const event = poll.event
+// const onQuit = () => {
+//     print("Done\n")
+//     running = false
+// }
 
-        if (event.type == sdl.EventType.QUIT) {
-            onQuit()
-        }
+// const onKeyDown = (event) => {
+// 	const keyStr = sdl.getKeyName(event.key.keysm.sym)
+// 	print(keyStr, "\n")
+// 	if (keyStr == "Escape") {
+//         onQuit()
+// 	}
+// }
 
-        if (event.type == sdl.EventType.KEYDOWN) {
-            onKeyDown(event)
-        }
+// const onMouseMotion = (event) => {
+//     xPos = event.motion.x
+//     yPos = event.motion.y
+// }
 
-        if (event.type == sdl.EventType.MOUSEMOTION) {
-			onMouseMotion(event)
-		}
-    }
+// while (running) {
+//     var status;
+//     while (status != 0) {
+//         const poll = sdl.pollEvent()
+//         status = poll.status
+//         const event = poll.event
 
-    sdl.renderClear(renderer)
+//         if (event.type == sdl.EventType.QUIT) {
+//             onQuit()
+//         }
 
-    sdl.setRenderDrawColor(renderer, 255)
+//         if (event.type == sdl.EventType.KEYDOWN) {
+//             onKeyDown(event)
+//         }
 
-	sdl.drawRect(renderer, xPos, yPos, 100, 100)
+//         if (event.type == sdl.EventType.MOUSEMOTION) {
+// 			onMouseMotion(event)
+// 		}
+//     }
 
-    sdl.setRenderDrawColor(renderer, 0, 255)
+//     sdl.renderClear(renderer)
 
-    sdl.renderPresent(renderer)
-}
+//     sdl.setRenderDrawColor(renderer, 255)
+
+// 	sdl.drawRect(renderer, xPos, yPos, 100, 100)
+
+//     sdl.setRenderDrawColor(renderer, 0, 255)
+
+//     sdl.renderPresent(renderer)
+// }

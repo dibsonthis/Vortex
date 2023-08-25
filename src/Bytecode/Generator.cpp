@@ -468,7 +468,12 @@ void gen_function(Chunk& chunk, node_ptr node) {
         std::string param_name = param->_Node.ID().value;
         if (node->_Node.Function().default_values.count(param_name)) {
             function->defaults++;
-            generate(node->_Node.Function().default_values[param_name], function->chunk);
+            //generate(node->_Node.Function().default_values[param_name], function->chunk);
+            auto temp = current;
+            current = prev_compiler;
+            generate(node->_Node.Function().default_values[param_name], chunk);
+            current = temp;
+            add_constant_code(function->chunk, none_val(), param->line);
         } else {
             add_constant_code(function->chunk, none_val(), param->line);
         }
@@ -496,6 +501,10 @@ void gen_function(Chunk& chunk, node_ptr node) {
 
     if (function->closed_var_indexes.size() > 0) {
         add_opcode(chunk, OP_MAKE_CLOSURE, 0, node->line);
+    }
+
+    if (function->defaults > 0) {
+        add_opcode(chunk, OP_MAKE_FUNCTION, function->defaults, node->line);
     }
 
     //disassemble_chunk(function->chunk, function->name);

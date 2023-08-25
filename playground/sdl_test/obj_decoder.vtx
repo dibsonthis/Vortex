@@ -5,8 +5,8 @@ const loadObject = (filePath: String): Mesh => {
     const src = io.readf(filePath)
     const lines = src.split("\n")
 
-    var vecs: [Vec3] = []
-    var triangles: [Triangle] = []
+    var vecs = []
+    var triangles = []
 
     for (lines, i, line) {
         if (line[0] == "v") {

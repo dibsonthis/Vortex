@@ -42,6 +42,7 @@ enum OpCode {
     OP_MAKE_TYPE,
     OP_MAKE_TYPED,
     OP_MAKE_OBJECT,
+    OP_MAKE_FUNCTION,
     OP_TYPE_DEFAULTS,
     OP_POP,
     OP_JUMP_IF_FALSE,
@@ -90,8 +91,8 @@ struct FunctionObj {
     int defaults;
     Chunk chunk;
     std::vector<int> closed_var_indexes;
-    //std::vector<std::shared_ptr<Value>> closed_vars;
     std::vector<std::shared_ptr<Closure>> closed_vars;
+    std::vector<Value> default_values;
     std::shared_ptr<Value> object;
 };
 
@@ -233,6 +234,11 @@ struct Value {
     }
 };
 
+struct Closure {
+  Value* location;
+  Value closed;
+};
+
 Value new_val();
 Value number_val(double value);
 Value string_val(std::string value);
@@ -244,11 +250,6 @@ Value function_val();
 Value native_val();
 Value pointer_val();
 Value none_val();
-
-struct Closure {
-  Value* location;
-  Value closed;
-};
 
 void printValue(Value value);
 std::string toString(Value value);

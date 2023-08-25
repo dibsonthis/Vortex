@@ -42,8 +42,6 @@ struct VM {
     std::vector<Value*> objects;
     std::unordered_map<std::string, Value> globals;
     int status = 0;
-    //std::unordered_map<Value*, std::shared_ptr<Value>> closed_values;
-    //std::unordered_map<Value*, std::shared_ptr<Closure>> closed_values;
     std::vector<std::shared_ptr<Closure>> closed_values;
 
     VM() {
