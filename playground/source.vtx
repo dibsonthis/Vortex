@@ -361,18 +361,21 @@
 // }
 
 
-const func = () => {
-    for (0..10, i) {
-        if (i > 5) {
-            var g = 10
-            print(g, "\n")
-        }
 
-        const p = 100
-        print(p, "\n")
-    }
+const x = 10
+
+if (x < 10) {
+    const g = 100
+    print(g, "\n")
+} else if (x > 10) {
+    const g = 4.5
+    print(g, "\n")
+} else {
+    const g = 0.005
+    print(g, "\n")
 }
 
-dis(func)
+print(g)
+
 
 func()

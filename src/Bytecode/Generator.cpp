@@ -272,7 +272,9 @@ void gen_if_block(Chunk& chunk, node_ptr node) {
         if (statement->type == NodeType::IF_STATEMENT) {
             gen_if(chunk, statement);
         } else if (statement->type == NodeType::OBJECT) {
+            begin_scope();
             generate_bytecode(statement->_Node.Object().elements, chunk);
+            end_scope(chunk);
         }
     }
 }
