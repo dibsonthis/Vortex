@@ -70,6 +70,8 @@ static EvaluateResult run(VM& vm) {
     define_native(vm, "insert", insert_builtin);
     define_native(vm, "dis", dis_builtin);
     define_native(vm, "length", length_builtin);
+    define_native(vm, "copy", copy_builtin);
+    define_native(vm, "sort", sort_builtin);
     define_native(vm, "load_lib", load_lib_builtin);
 
     CallFrame* frame = &vm.frames.back();
@@ -512,7 +514,7 @@ static EvaluateResult run(VM& vm) {
                 int positional_args = function_obj->arity - function_obj->defaults;
 
                 if ((param_num < positional_args) || (param_num > function_obj->arity)) {
-                    runtimeError(vm, "Function '" + function_obj->name + "' expects " + std::to_string(function_obj->arity) + " arguments");
+                    runtimeError(vm, "Function '" + function_obj->name + "' expects " + std::to_string(function_obj->arity) + " argument(s)");
                     return EVALUATE_RUNTIME_ERROR;
                 }
 
@@ -587,7 +589,7 @@ static EvaluateResult run(VM& vm) {
                 int positional_args = function_obj->arity - function_obj->defaults;
 
                 if ((param_num < positional_args) || (param_num > function_obj->arity)) {
-                    runtimeError(vm, "Function '" + function_obj->name + "' expects " + std::to_string(function_obj->arity) + " arguments");
+                    runtimeError(vm, "Function '" + function_obj->name + "' expects " + std::to_string(function_obj->arity) + " argument(s)");
                     return EVALUATE_RUNTIME_ERROR;
                 }
 
@@ -1211,4 +1213,105 @@ static Value load_lib_builtin(std::vector<Value>& args) {
     }
 
     return lib_obj;
+}
+
+Value copy(Value& value) {
+    switch (value.type) {
+        case List: {
+            Value new_list = list_val();
+            for (auto elem : *value.get_list()) {
+                new_list.get_list()->push_back(copy(elem));
+            }
+            return new_list;
+        }
+        case Object: {
+            Value new_object = object_val();
+            new_object.get_object()->type = value.get_object()->type;
+            for (auto prop : value.get_object()->values) {
+                new_object.get_object()->values[prop.first] = copy(prop.second);
+            }
+            return new_object;
+        }
+        default: {
+            return value;
+        }
+    }
+}
+
+static Value copy_builtin(std::vector<Value>& args) {
+    if (args.size() != 1) {
+        error("Function 'copy' expects 1 argument");
+    }
+
+    Value value = args[0];
+    return copy(value);
+}
+
+static Value sort_builtin(std::vector<Value>& args) {
+    if (args.size() != 2) {
+        error("Function 'sort' expects 2 argument");
+    }
+
+    Value value = args[0];
+    Value function = args[1];
+
+    if (!value.is_list() || !function.is_function()) {
+        error("Function 'sort' expects arg 'list' to be a list and arg 'function' to be a function");
+    }
+
+    if (value.get_list()->size() < 2) {
+        return value;
+    }
+
+    auto& func = function.get_function();
+
+    Value new_list = copy(value);
+
+    VM func_vm;
+    std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+    main->name = "";
+    main->arity = 0;
+    main->chunk = Chunk();
+    CallFrame main_frame;
+    main_frame.function = main;
+    main_frame.sp = 0;
+    main_frame.ip = main->chunk.code.data();
+    main_frame.frame_start = 0;
+    func_vm.frames.push_back(main_frame);
+
+    add_constant(main->chunk, function);
+
+    add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
+    add_opcode(main->chunk, OP_LOAD_CONST, 2, 0);
+    add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+    add_opcode(main->chunk, OP_CALL, 2, 0);
+    add_code(main->chunk, OP_EXIT, 0);
+
+    disassemble_chunk(main->chunk, "Sort");
+
+    std::sort(new_list.get_list()->begin(), new_list.get_list()->end(), 
+    [&func_vm, &function](Value lhs, Value rhs) {
+
+        auto& frame = func_vm.frames.back();
+        frame.function->chunk.constants.push_back(rhs);
+        frame.function->chunk.constants.push_back(lhs);
+
+        evaluate(func_vm);
+
+        if (func_vm.status != 0) {
+            error("Error in sort function");
+        }
+
+        frame = func_vm.frames.back();
+        frame.function->chunk.constants.pop_back();
+        frame.function->chunk.constants.pop_back();
+
+        if (!func_vm.stack.back().is_boolean()) {
+            return false;
+        }
+
+        return func_vm.stack.back().get_boolean();
+    });
+
+    return new_list;
 }

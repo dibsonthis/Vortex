@@ -68,6 +68,7 @@ void freeVM(VM& vm);
 
 bool is_equal(Value& v1, Value& v2);
 bool is_falsey(Value& value);
+Value copy(Value& value);
 
 static Value print_builtin(std::vector<Value>& args);
 static Value clock_builtin(std::vector<Value>& args);
@@ -77,3 +78,5 @@ static Value to_number_builtin(std::vector<Value>& args);
 static Value insert_builtin(std::vector<Value>& args);
 static Value length_builtin(std::vector<Value>& args);
 static Value load_lib_builtin(std::vector<Value>& args);
+static Value copy_builtin(std::vector<Value>& args);
+static Value sort_builtin(std::vector<Value>& args);
