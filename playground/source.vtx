@@ -18,26 +18,23 @@ const onKeyDown = (event) => {
 	}
 }
 
-const run = () => {
-    while (running) {
-        var status
-        while (status != 0) {
-            const poll = sdl.pollEvent()
-            status = poll.status
-            const event = poll.event
 
-            if (event.type == sdl.EventType.QUIT) {
-                onQuit()
-            }
+while (running) {
+    var status;
+    while (status != 0) {
+        const poll = sdl.pollEvent()
+        status = poll.status
+        const event = poll.event
 
-            if (event.type == sdl.EventType.KEYDOWN) {
-                onKeyDown(event)
-            }
+        if (event.type == sdl.EventType.QUIT) {
+            onQuit()
         }
 
-        sdl.renderClear(renderer)
-        sdl.renderPresent(renderer)
+        if (event.type == sdl.EventType.KEYDOWN) {
+            onKeyDown(event)
+        }
     }
-}
 
-run()
+    sdl.renderClear(renderer)
+    sdl.renderPresent(renderer)
+}

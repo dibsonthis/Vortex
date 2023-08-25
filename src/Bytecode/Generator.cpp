@@ -938,11 +938,17 @@ void generate(node_ptr node, Chunk& chunk) {
             gen_dot(chunk, node);
             return;
         }
+        if (node->_Node.Op().value == ";") {
+            return;
+        }
     }
 }
 
 void generate_bytecode(std::vector<node_ptr>& nodes, Chunk& chunk) {
     for (node_ptr& node : nodes) {
+        if (node->type == NodeType::OP && node->_Node.Op().value == ";") {
+            continue;
+        }
         if (node->type == NodeType::OP) {
             generate(node, chunk);
             add_code(chunk, OP_POP, node->line);
