@@ -1,7 +1,19 @@
 import io
 import [] : string
 
-const loadObject = (filePath: String): Mesh => {
+const vec = (x = 0, y = 0, z = 0) => {
+    return {x: x, y: y, z: z}
+}
+
+const triangle = (a, b, c) => {
+    return {a: a, b: b, c: c}
+}
+
+const append = (list, value) => {
+    list[list.length()] = value
+}
+
+const loadObject = (filePath) => {
     const src = io.readf(filePath)
     const lines = src.split("\n")
 
@@ -20,5 +32,5 @@ const loadObject = (filePath: String): Mesh => {
         }
     }
 
-   Mesh {triangles: triangles}
+   return { triangles: triangles }
 }

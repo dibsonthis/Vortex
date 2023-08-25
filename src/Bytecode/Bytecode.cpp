@@ -275,6 +275,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return simple_instruction("OP_DIVIDE", offset);
     case OP_MOD:
         return simple_instruction("OP_MOD", offset);
+    case OP_POW:
+        return simple_instruction("OP_POW", offset);
     case OP_AND:
         return simple_instruction("OP_AND", offset);
     case OP_OR:

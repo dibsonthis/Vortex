@@ -20,6 +20,7 @@ enum OpCode {
     OP_MULTIPLY,
     OP_DIVIDE,
     OP_MOD,
+    OP_POW,
     OP_AND,
     OP_OR,
     OP_NOT,

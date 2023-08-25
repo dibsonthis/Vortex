@@ -15,7 +15,7 @@ enum CompType
     INTERP,
 };
 
-CompType type = CompType::INTERP;
+CompType type = CompType::DEV;
 
 int main(int argc, char** argv)
 {

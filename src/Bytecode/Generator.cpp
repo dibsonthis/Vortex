@@ -77,6 +77,12 @@ void gen_mod(Chunk& chunk, node_ptr node) {
     add_code(chunk, OP_MOD, node->line);
 }
 
+void gen_pow(Chunk& chunk, node_ptr node) {
+    generate(node->_Node.Op().left, chunk);
+    generate(node->_Node.Op().right, chunk);
+    add_code(chunk, OP_POW, node->line);
+}
+
 void gen_bin_and(Chunk& chunk, node_ptr node) {
     generate(node->_Node.Op().left, chunk);
     generate(node->_Node.Op().right, chunk);
@@ -253,10 +259,10 @@ void gen_if(Chunk& chunk, node_ptr node) {
     int jump_instruction = chunk.code.size() + 1;
     add_opcode(chunk, OP_POP_JUMP_IF_FALSE, 0, node->line);
     generate_bytecode(node->_Node.IfStatement().body->_Node.Object().elements, chunk);
+    end_scope(chunk);
     int offset = chunk.code.size() - jump_instruction - 4;
     uint8_t* bytes = int_to_bytes(offset);
     patch_bytes(chunk, jump_instruction, bytes);
-    end_scope(chunk);
 }
 
 void gen_if_block(Chunk& chunk, node_ptr node) {
@@ -863,6 +869,10 @@ void generate(node_ptr node, Chunk& chunk) {
             gen_mod(chunk, node);
             return;
         }
+        if (node->_Node.Op().value == "^") {
+            gen_pow(chunk, node);
+            return;
+        }
         if (node->_Node.Op().value == "&") {
             gen_and(chunk, node);
             return;
@@ -997,6 +1007,7 @@ static void end_scope(Chunk& chunk) {
     && current->variables[current->variableCount - 1].depth > current->scopeDepth) {
         add_code(chunk, OP_POP);
         current->variables.erase(current->variables.begin() + current->variableCount - 1);
+        chunk.variables.pop_back();
         current->variableCount--;
   }
 }

@@ -1,59 +1,59 @@
-import sdl
+// import sdl
 
-const window = sdl.createWindow("Test", 0, 0, 800, 600)
-const renderer = sdl.createRenderer(window)
+// const window = sdl.createWindow("Test", 0, 0, 800, 600)
+// const renderer = sdl.createRenderer(window)
 
-sdl.setRenderDrawColor(renderer, 0, 255)
+// sdl.setRenderDrawColor(renderer, 0, 255)
 
-var running = true
-var xPos = 0;
-var yPos = 0;
+// var running = true
+// var xPos = 0;
+// var yPos = 0;
 
-const onQuit = () => {
-    print("Done\n")
-    running = false
-}
+// const onQuit = () => {
+//     print("Done\n")
+//     running = false
+// }
 
-const onKeyDown = (event) => {
-	const keyStr = sdl.getKeyName(event.key.keysm.sym)
-	print(keyStr, "\n")
-	if (keyStr == "Escape") {
-        onQuit()
-	}
-}
+// const onKeyDown = (event) => {
+// 	const keyStr = sdl.getKeyName(event.key.keysm.sym)
+// 	print(keyStr, "\n")
+// 	if (keyStr == "Escape") {
+//         onQuit()
+// 	}
+// }
 
-const onMouseMotion = (event) => {
-    xPos = event.motion.x
-    yPos = event.motion.y
-}
+// const onMouseMotion = (event) => {
+//     xPos = event.motion.x
+//     yPos = event.motion.y
+// }
 
-while (running) {
-    var status;
-    while (status != 0) {
-        const poll = sdl.pollEvent()
-        status = poll.status
-        const event = poll.event
+// while (running) {
+//     var status;
+//     while (status != 0) {
+//         const poll = sdl.pollEvent()
+//         status = poll.status
+//         const event = poll.event
 
-        if (event.type == sdl.EventType.QUIT) {
-            onQuit()
-        }
+//         if (event.type == sdl.EventType.QUIT) {
+//             onQuit()
+//         }
 
-        if (event.type == sdl.EventType.KEYDOWN) {
-            onKeyDown(event)
-        }
+//         if (event.type == sdl.EventType.KEYDOWN) {
+//             onKeyDown(event)
+//         }
 
-        if (event.type == sdl.EventType.MOUSEMOTION) {
-			onMouseMotion(event)
-		}
-    }
+//         if (event.type == sdl.EventType.MOUSEMOTION) {
+// 			onMouseMotion(event)
+// 		}
+//     }
 
-    sdl.renderClear(renderer)
+//     sdl.renderClear(renderer)
 
-    sdl.setRenderDrawColor(renderer, 255)
+//     sdl.setRenderDrawColor(renderer, 255)
 
-	sdl.drawRect(renderer, xPos, yPos, 100, 100)
+// 	sdl.drawRect(renderer, xPos, yPos, 100, 100)
 
-    sdl.setRenderDrawColor(renderer, 0, 255)
+//     sdl.setRenderDrawColor(renderer, 0, 255)
 
-    sdl.renderPresent(renderer)
-}
+//     sdl.renderPresent(renderer)
+// }

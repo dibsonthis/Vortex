@@ -142,6 +142,59 @@ extern "C" Value pow_(std::vector<Value>& args) {
     return number_val(new_value);
 }
 
+/* Trig Functions */
+
+extern "C" Value tan_(std::vector<Value>& args) {
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args) {
+        error("Function 'tan' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value value = args[0];
+
+    if (!value.is_number()) {
+        error("Parameter 'value' must be a number");
+    }
+
+    auto new_value = std::tan(value.get_number());
+    return number_val(new_value);
+}
+
+extern "C" Value sin_(std::vector<Value>& args) {
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args) {
+        error("Function 'sin' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value value = args[0];
+
+    if (!value.is_number()) {
+        error("Parameter 'value' must be a number");
+    }
+
+    auto new_value = std::sin(value.get_number());
+    return number_val(new_value);
+}
+
+extern "C" Value cos_(std::vector<Value>& args) {
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args) {
+        error("Function 'cos' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value value = args[0];
+
+    if (!value.is_number()) {
+        error("Parameter 'value' must be a number");
+    }
+
+    auto new_value = std::cos(value.get_number());
+    return number_val(new_value);
+}
+
 // /* Trig Functions */
 
 // VortexObj acos_(std::string name, std::vector<VortexObj> args) {
@@ -268,26 +321,6 @@ extern "C" Value pow_(std::vector<Value>& args) {
 //     }
 
 //     auto new_value = std::cos(value->_Node.Number().value);
-//     return new_number_node(new_value);
-// }
-
-// VortexObj tan(std::string name, std::vector<VortexObj> args) {
-    
-//     int num_required_args = 1;
-
-//     if (args.size() != num_required_args) {
-//         error_and_exit("Function '" + name + "' expects " + std::to_string(num_required_args) + " argument(s)");
-//     }
-
-//     VortexObj value = args[0];
-
-//     if (value->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
-//         error->_Node.Error().message = "Parameter 'value' must be a number";
-//         return error;
-//     }
-
-//     auto new_value = std::tan(value->_Node.Number().value);
 //     return new_number_node(new_value);
 // }
 

@@ -66,6 +66,7 @@ static EvaluateResult run(VM& vm) {
     define_native(vm, "print", print_builtin);
     define_native(vm, "clock", clock_builtin);
     define_native(vm, "string", to_string_builtin);
+    define_native(vm, "number", to_number_builtin);
     define_native(vm, "insert", insert_builtin);
     define_native(vm, "dis", dis_builtin);
     define_native(vm, "length", length_builtin);
@@ -888,6 +889,17 @@ static EvaluateResult run(VM& vm) {
                 push(vm, value);
                 break;
             }
+            case OP_POW: {
+                Value v2 = pop(vm);
+                Value v1 = pop(vm);
+                if (!v1.is_number() || !v2.is_number() ) {
+                    runtimeError(vm, "Operands must be numbers");
+                    return EVALUATE_RUNTIME_ERROR;
+                }
+                Value value = number_val(pow(v1.get_number(), v2.get_number()));
+                push(vm, value);
+                break;
+            }
             case OP_AND: {
                 Value v2 = pop(vm);
                 Value v1 = pop(vm);
@@ -1056,7 +1068,7 @@ static Value dis_builtin(std::vector<Value>& args) {
     }
 
     std::cout << '\n';
-    //disassemble_chunk(function.get_function()->chunk, function.get_function()->name);
+    disassemble_chunk(function.get_function()->chunk, function.get_function()->name);
 
     return none_val();
 }
@@ -1069,6 +1081,39 @@ static Value to_string_builtin(std::vector<Value>& args) {
     Value value = args[0];
 
     return string_val(toString(value));
+}
+
+static Value to_number_builtin(std::vector<Value>& args) {
+    if (args.size() < 1 || args.size() > 2) {
+        error("Function 'number' expects 1 or 2 argument");
+    }
+
+    Value value = args[0];
+
+    switch(value.type) {
+        case None: number_val(0);
+        case Number: return value;
+        case String: {
+            std::string str = value.get_string();
+            try {
+                if (args.size() == 2) {
+                    int base = args[1].get_number();
+                    return number_val(std::stol(str, nullptr, base));
+                }
+                return number_val(std::stod(str));
+            } catch(...) {
+                error("Cannot convert \"" + str + "\" to a number");
+            }
+        };
+        case Boolean: {
+            if (value.get_boolean()) {
+                return number_val(1);
+            }
+
+            return number_val(0);
+        };
+        default: return number_val(0);
+    }
 }
 
 static Value insert_builtin(std::vector<Value>& args) {

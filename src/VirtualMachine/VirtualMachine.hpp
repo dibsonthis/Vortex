@@ -45,7 +45,7 @@ struct VM {
     std::vector<std::shared_ptr<Closure>> closed_values;
 
     VM() {
-        stack.reserve(1000);
+        stack.reserve(100000);
     }
 };
 
@@ -73,6 +73,7 @@ static Value print_builtin(std::vector<Value>& args);
 static Value clock_builtin(std::vector<Value>& args);
 static Value dis_builtin(std::vector<Value>& args);
 static Value to_string_builtin(std::vector<Value>& args);
+static Value to_number_builtin(std::vector<Value>& args);
 static Value insert_builtin(std::vector<Value>& args);
 static Value length_builtin(std::vector<Value>& args);
 static Value load_lib_builtin(std::vector<Value>& args);

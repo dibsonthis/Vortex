@@ -520,7 +520,7 @@ extern "C" Value loadText(std::vector<Value>& args) {
 }
 
 extern "C" Value getWindowSize(std::vector<Value>& args) {
-    int num_required_args = 3;
+    int num_required_args = 1;
 
     if (args.size() != num_required_args) {
         error("Function 'getWindowSize' expects " + std::to_string(num_required_args) + " argument(s)");
