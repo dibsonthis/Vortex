@@ -195,6 +195,63 @@ extern "C" Value cos_(std::vector<Value>& args) {
     return number_val(new_value);
 }
 
+extern "C" Value multMat4(std::vector<Value>& args) {
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args) {
+        error("Function 'multMat4' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value vec = args[0];
+    Value mat = args[1];
+
+    if (!vec.is_object()) {
+        error("Parameter 'vec' must be an object");
+    }
+
+    auto& in = vec.get_object();
+
+    if (!mat.is_list()) {
+        error("Parameter 'mat' must be an object");
+    }
+
+    auto& list = mat.get_list();
+
+    Value vecOut = object_val();
+    auto& out = vecOut.get_object();
+    out->values["x"] = number_val(
+        in->values["x"].get_number() * list->at(0).get_list()->at(0).get_number() +
+        in->values["y"].get_number() * list->at(1).get_list()->at(0).get_number() +
+        in->values["z"].get_number() * list->at(2).get_list()->at(0).get_number() +
+        list->at(3).get_list()->at(0).get_number());
+
+    out->values["y"] = number_val(
+        in->values["x"].get_number() * list->at(0).get_list()->at(1).get_number() +
+        in->values["y"].get_number() * list->at(1).get_list()->at(1).get_number() +
+        in->values["z"].get_number() * list->at(2).get_list()->at(1).get_number() +
+        list->at(3).get_list()->at(1).get_number());
+
+    out->values["z"] = number_val(
+        in->values["x"].get_number() * list->at(0).get_list()->at(2).get_number() +
+        in->values["y"].get_number() * list->at(1).get_list()->at(2).get_number() +
+        in->values["z"].get_number() * list->at(2).get_list()->at(2).get_number() +
+        list->at(3).get_list()->at(2).get_number());
+
+    double w =
+        in->values["x"].get_number() * list->at(0).get_list()->at(3).get_number() +
+        in->values["y"].get_number() * list->at(1).get_list()->at(3).get_number() +
+        in->values["z"].get_number() * list->at(2).get_list()->at(3).get_number() +
+        list->at(3).get_list()->at(3).get_number();
+
+    if (w != 0) {
+        out->values["x"] = number_val(out->values["x"].get_number() / w);
+        out->values["y"] = number_val(out->values["y"].get_number() / w);
+        out->values["z"] = number_val(out->values["z"].get_number() / w);
+    }
+
+    return vecOut;
+}
+
 // /* Trig Functions */
 
 // VortexObj acos_(std::string name, std::vector<VortexObj> args) {

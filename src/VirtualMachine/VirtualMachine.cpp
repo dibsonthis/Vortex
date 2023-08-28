@@ -106,8 +106,8 @@ static EvaluateResult run(VM& vm) {
                 int to_clean = vm.stack.size() - frame->sp;
                 int instruction_index = frame->instruction_index;
                 for (int i = 0; i < to_clean; i++) {
-                    //vm.stack.pop_back();
-                    Value value = pop(vm);
+                    //Value value = pop(vm);
+                    Value& value = vm.stack.back();
                     for (auto& closure : vm.closed_values) {
                         if (closure->location == &value) {
                             closure->closed = value;
@@ -115,6 +115,7 @@ static EvaluateResult run(VM& vm) {
                             break;
                         }
                     }
+                    vm.stack.pop_back();
                     // if (vm.closed_values.count(&value)) {
                     //     vm.closed_values[&value]->closed = value;
                     //     vm.closed_values[&value]->location = &vm.closed_values[&value]->closed;
@@ -1280,6 +1281,8 @@ static Value sort_builtin(std::vector<Value>& args) {
     func_vm.frames.push_back(main_frame);
 
     add_constant(main->chunk, function);
+    add_constant(main->chunk, new_list.get_list()->at(1));
+    add_constant(main->chunk, new_list.get_list()->at(0));
 
     add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
     add_opcode(main->chunk, OP_LOAD_CONST, 2, 0);
@@ -1287,14 +1290,16 @@ static Value sort_builtin(std::vector<Value>& args) {
     add_opcode(main->chunk, OP_CALL, 2, 0);
     add_code(main->chunk, OP_EXIT, 0);
 
-    disassemble_chunk(main->chunk, "Sort");
+    //disassemble_chunk(main->chunk, "Sort");
 
     std::sort(new_list.get_list()->begin(), new_list.get_list()->end(), 
-    [&func_vm, &function](Value lhs, Value rhs) {
+    [&func_vm, &function](const Value& lhs, const Value& rhs) {
 
         auto& frame = func_vm.frames.back();
-        frame.function->chunk.constants.push_back(rhs);
-        frame.function->chunk.constants.push_back(lhs);
+        frame.function->chunk.constants[1] = rhs;
+        frame.function->chunk.constants[2] = lhs;
+        // frame.function->chunk.constants.push_back(rhs);
+        // frame.function->chunk.constants.push_back(lhs);
 
         evaluate(func_vm);
 
@@ -1302,9 +1307,9 @@ static Value sort_builtin(std::vector<Value>& args) {
             error("Error in sort function");
         }
 
-        frame = func_vm.frames.back();
-        frame.function->chunk.constants.pop_back();
-        frame.function->chunk.constants.pop_back();
+        // frame = func_vm.frames.back();
+        // frame.function->chunk.constants.pop_back();
+        // frame.function->chunk.constants.pop_back();
 
         if (!func_vm.stack.back().is_boolean()) {
             return false;
