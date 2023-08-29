@@ -1,4 +1,4 @@
-const lib = load_lib("./bin/io")
+const lib = load_lib("./bin/io", ["open", "read", "write", "close", "input"])
 
 const OpenMode = {
 	app: 1,
@@ -7,46 +7,27 @@ const OpenMode = {
 	trunc: 32,
 }
 
-@pure
-const open = (filePath: String, openMode: Number = OpenMode.read): Pointer 
-	=> lib.call("open", [filePath, openMode])
+const open = (filePath, openMode = OpenMode.read) => lib.open(filePath, openMode)
+const close = (fileHandle) => lib.close(fileHandle)
+const read = (fileHandle) => lib.read(fileHandle)
+const write = (fileHandle, content) => lib.write(fileHandle, content)
+const input = () => lib.input()
 
-@pure
-const close = (fileHandle: Pointer): None 
-	=> lib.call("close", [fileHandle])
-
-@pure
-const read = (fileHandle: Pointer): String 
-	=> lib.call("read", [fileHandle])
-
-@pure
-const readf = (filePath: String): String => {
+const readf = (filePath) => {
 	const file = open(filePath, OpenMode.read)
 	const content = read(file)
 	close(file)
-	content
+	return content
 }
-
-const open_impure = (filePath: String, openMode: Number = 8): Pointer 
-	=> { lib.call("open", [filePath, openMode]) }
-
-const close_impure = (fileHandle: Pointer): None 
-	=> lib.call("close", [fileHandle])
-
-const write = (fileHandle: Pointer, content: String): None 
-	=> lib.call("write", [fileHandle, content])
-
-const input = (): String 
-	=> lib.call("input", [])
 	
-const writef = (filePath: String, content: String): None => {
-	const file = open_impure(filePath, OpenMode.write or OpenMode.trunc)
+const writef = (filePath, content) => {
+	const file = open(filePath, OpenMode.write | OpenMode.trunc)
 	write(file, content)
-	close_impure(file)
+	close(file)
 }
 	
-const appendf = (filePath: String, content: String): None => {
-	const file = open(filePath, OpenMode.write or OpenMode.app)
+const appendf = (filePath, content) => {
+	const file = open(filePath, OpenMode.write | OpenMode.app)
 	write(file, content)
 	close(file)
 }

@@ -1,23 +1,8 @@
-@pure
-const lib = load_lib("./bin/string")
+const lib = load_lib("./bin/string", ["split", "trim", "chars"])
 
-const split = (str: String, delim: String): [String] 
-	=> lib.call("split", [str, delim])
-
-const split = (str: String): [String] 
-	=> lib.call("split", [str, ""])
-
-const trim = (str: String): String 
-	=> lib.call("trim", [str])
-
-const chars = (str: String): [String] 
-	=> lib.call("chars", [str])
-
-const at = (str: String, index: Number) 
-	=> str[index]
-
-const first = (str: String) 
-	=> str[0]
-
-const last = (str: String) 
-	=> str[str.length()-1]
+const split = (str, delim = "") => lib.split(str, delim)
+const trim = (str) => lib.trim(str)
+const chars = (str) => lib.chars(str)
+const at = (str, index) => str[index]
+const first = (str) => str[0]
+const last = (str) => str[str.length()-1]

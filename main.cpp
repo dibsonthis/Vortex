@@ -5,21 +5,22 @@
 #include "src/Parser/Parser.hpp"
 #include "src/Interpreter/Interpreter.hpp"
 #include "src/Typechecker/Typechecker.hpp"
+#include "src/Bytecode/Bytecode.hpp"
+#include "src/Bytecode/Generator.hpp"
+#include "src/VirtualMachine/VirtualMachine.hpp"
 
-enum Type
+enum CompType
 {
     DEV,
     INTERP,
 };
 
-Type type = Type::INTERP;
+CompType type = CompType::INTERP;
 
 int main(int argc, char** argv)
 {
-    if (type == Type::DEV)
+    if (type == CompType::DEV)
     {
-        // std::filesystem::current_path("../../../playground/project_4-sdl/src");
-        // Lexer lexer("main.vtx");
         std::filesystem::current_path("../../../playground");
         Lexer lexer("source.vtx");
 
@@ -30,17 +31,34 @@ int main(int argc, char** argv)
         parser.remove_op_node(";");
         auto ast = parser.nodes;
 
-        Typechecker typechecker(parser.nodes, parser.file_name);
-        typechecker.typecheck();
+        // Typechecker typechecker(parser.nodes, parser.file_name);
+        // typechecker.typecheck();
 
-        Interpreter interpreter(typechecker.nodes, parser.file_name);
-        interpreter.evaluate();
+        VM vm;
+        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+        main->name = "";
+        main->arity = 0;
+        main->chunk = Chunk();
+        CallFrame main_frame;
+        main_frame.function = main;
+        main_frame.sp = 0;
+        main_frame.ip = main->chunk.code.data();
+        main_frame.frame_start = 0;
+        vm.frames.push_back(main_frame);
+
+        generate_bytecode(parser.nodes, main_frame.function->chunk);
+        add_code(main_frame.function->chunk, OP_EXIT);
+        disassemble_chunk(main_frame.function->chunk, "Test");
+        evaluate(vm);
+
+        // Interpreter interpreter(typechecker.nodes, parser.file_name);
+        // interpreter.evaluate();
 
         std::cin.get();
         exit(0);
     }
 
-    if (type == Type::INTERP)
+    if (type == CompType::INTERP)
     {
         if (argc == 1)
         {
@@ -61,22 +79,52 @@ int main(int argc, char** argv)
         Lexer lexer(path);
         lexer.tokenize();
 
+        // Parser parser(lexer.nodes, lexer.file_name);
+        // parser.parse(0, "_");
+        // parser.remove_op_node(";");
+        // auto ast = parser.nodes;
+
+        // auto parent_path = std::filesystem::path(path).parent_path();
+        // if (parent_path != "") {
+        //     std::filesystem::current_path(parent_path);
+        // }
+
+        // Typechecker typechecker(parser.nodes, parser.file_name);
+        // typechecker.typecheck();
+
+        // Interpreter interpreter(typechecker.nodes, parser.file_name);
+        // interpreter.evaluate();
+        
+        // exit(0);
+
         Parser parser(lexer.nodes, lexer.file_name);
         parser.parse(0, "_");
         parser.remove_op_node(";");
         auto ast = parser.nodes;
 
-        auto parent_path = std::filesystem::path(path).parent_path();
-        if (parent_path != "") {
-            std::filesystem::current_path(parent_path);
-        }
+        // Typechecker typechecker(parser.nodes, parser.file_name);
+        // typechecker.typecheck();
 
-        Typechecker typechecker(parser.nodes, parser.file_name);
-        typechecker.typecheck();
+        VM vm;
+        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+        main->name = "";
+        main->arity = 0;
+        main->chunk = Chunk();
+        CallFrame main_frame;
+        main_frame.function = main;
+        main_frame.sp = 0;
+        main_frame.ip = main->chunk.code.data();
+        main_frame.frame_start = 0;
+        vm.frames.push_back(main_frame);
 
-        Interpreter interpreter(typechecker.nodes, parser.file_name);
-        interpreter.evaluate();
-        
+        generate_bytecode(parser.nodes, main_frame.function->chunk);
+        add_code(main_frame.function->chunk, OP_EXIT);
+        //disassemble_chunk(main_frame.function->chunk, "Test");
+        evaluate(vm);
+
+        // Interpreter interpreter(typechecker.nodes, parser.file_name);
+        // interpreter.evaluate();
+
         exit(0);
     }
 }

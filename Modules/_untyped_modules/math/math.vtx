@@ -1,0 +1,33 @@
+@pure
+const lib = load_lib("./bin/math")
+
+const e = 2.718281828459045
+const PI = 3.141592653589793
+
+const ceil = (value: Number): Number => lib.call("ceil", [value])
+const floor = (value: Number): Number => lib.call("floor", [value])
+const abs = (value: Number): Number => lib.call("abs", [value])
+const sqrt = (value: Number): Number => lib.call("sqrt", [value])
+const trunc = (value: Number): Number => lib.call("trunc", [value])
+const log = (value: Number, base: Number): Number => lib.call("log", [value, base])
+const log = (value: Number): Number => lib.call("log", [value, e])
+const pow = (value: Number, exponent: Number): Number => lib.call("pow", [value, exponent])
+const pow = (value: Number): Number => lib.call("pow", [value, 2])
+/* Trig Functions */
+const acos = (value: Number): Number => lib.call("acos", [value])
+const asin = (value: Number): Number => lib.call("asin", [value])
+const atan = (value: Number): Number => lib.call("atan", [value])
+const atan2 = (value_a: Number, value_b: Number): Number => lib.call("atan2", [value_a, value_b])
+const sin = (value: Number): Number => lib.call("sin", [value])
+const cos = (value: Number): Number => lib.call("cos", [value])
+const tan = (value: Number): Number => lib.call("tan", [value])
+/* Angular Conversion */
+const deg = (value: Number): Number => lib.call("deg", [value])
+const rad = (value: Number): Number => lib.call("rad", [value])
+/* Hyperbolic Functions */
+const acosh = (value: Number): Number => lib.call("acosh", [value])
+const asinh = (value: Number): Number => lib.call("asinh", [value])
+const atanh = (value: Number): Number => lib.call("atanh", [value])
+const cosh = (value: Number): Number => lib.call("cosh", [value])
+const sinh = (value: Number): Number => lib.call("sinh", [value])
+const tanh = (value: Number): Number => lib.call("tanh", [value])

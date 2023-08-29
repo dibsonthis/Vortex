@@ -1,28 +1,33 @@
-const lib = load_lib("./bin/sdl")
+const lib = load_lib("./bin/sdl", 
+	["initSDL", "createWindow", "createRenderer",
+	"pollEvent", "renderClear", "renderPresent",
+	"getKeyName", "setRenderDrawColor", "delay",
+	"drawPoint", "drawLine", "drawRect", "drawGeometry",
+	"loadTexture", "loadText", "getWindowSize",
+	"showCursor"])
 
-type Color = {
-	r: Number = 0,
-	g: Number = 0,
-	b: Number = 0,
-	a: Number = 255
-};
+const initSDL = () => lib.initSDL()
+const createWindow = (windowName, xPos, yPos, width, height, flags = 4) 
+	=> lib.createWindow(windowName, xPos, yPos, width, height, flags)
+const createRenderer = (window, index = -1) => lib.createRenderer(window, index)
+const renderClear = (renderer) => lib.renderClear(renderer)
+const renderPresent = (renderer) => lib.renderPresent(renderer)
+const getKeyName = (keyCode) => lib.getKeyName(keyCode)
+const setRenderDrawColor = (renderer, r = 0, g = 0, b = 0, a = 255) 
+	=> lib.setRenderDrawColor(renderer, r, g, b, a)
+const delay = (ms) => lib.delay(ms)
+const drawPoint = (renderer, xPos, yPos) => lib.drawPoint(renderer, xPos, yPos)
+const drawLine = (renderer, x1, y1, x2, y2) => lib.drawLine(renderer, x1, y1, x2, y2)
+const drawRect = (renderer, x, y, w, h) => lib.drawRect(renderer, x, y, w, h)
+const drawGeometry = (renderer, vertices, texture = None) => lib.drawGeometry(renderer, vertices, texture)
+const loadTexture = (renderer, filePath) => lib.loadTexture(renderer, filePath)
+const loadText = (renderer, fontPath, fontSize, r, g, b, text) => lib.loadText(renderer, fontPath, fontSize, r, g, b, text)
+const getWindowSize = (window) => lib.getWindowSize(window)
+const showCursor = (flag) => lib.showCursor(flag)
 
-type WindowConfig = {
-	width: Number = 1000,
-	height: Number = 600,
-	title: String = "Test Window",
-	xPos: Number = 300,
-	yPos: Number = 100,
-	color: Color = Color {},
-	flags: Number = 4
-}
-
-const Colors = {
-	Red: Color { r: 255 },
-	Green: Color { g: 255 },
-	Blue: Color { b: 255 },
-	Black: Color { },
-	White: Color { r: 255, g: 255, b: 255 }
+const pollEvent = () => {
+	const eventObj = lib.pollEvent()
+	return eventObj
 }
 
 const EventType = {
@@ -35,211 +40,248 @@ const EventType = {
 	MOUSEBUTTONUP: 1026
 }
 
-const ButtonEventType = {
-	BUTTON_LEFT: 1,
-	BUTTON_MIDDLE: 2,
-	BUTTON_RIGHT: 3
-}
+// const lib = load_lib("./bin/sdl")
 
-const StateEventType = {
-	RELEASED: 0,
-	PRESSED: 1,
-}
+// type Color = {
+// 	r: Number = 0,
+// 	g: Number = 0,
+// 	b: Number = 0,
+// 	a: Number = 255
+// };
 
-const WindowEventType = {
-	MOVED: 4,
-	RESIZED: 5
-}
+// type WindowConfig = {
+// 	width: Number = 1000,
+// 	height: Number = 600,
+// 	title: String = "Test Window",
+// 	xPos: Number = 300,
+// 	yPos: Number = 100,
+// 	color: Color = Color {},
+// 	flags: Number = 4
+// }
 
-const CursorToggleType = {
-	QUERY: -1,
-	DISABLE: 0,
-	ENABLE: 1
-}
+// const Colors = {
+// 	Red: Color { r: 255 },
+// 	Green: Color { g: 255 },
+// 	Blue: Color { b: 255 },
+// 	Black: Color { },
+// 	White: Color { r: 255, g: 255, b: 255 }
+// }
 
-const Event = { 
-	type: Number,
-	button: { 
-		clicks: Number, 
-		x: Number, 
-		y: Number, 
-		button: Number 
-	},
-	motion: { 
-		x: Number, 
-		y: Number 
-	},
-	key: { 
-		keysm: { 
-			sym: Number, 
-			scancode: Number, 
-			mod: Number
-		},
-		state: Number,
-		repeat: Number,
-		type: Number 
-	},
-	window: {
-		event: Number,
-		data1: Number,
-		data2: Number
-	}
-}
+// const EventType = {
+// 	QUIT: 256,
+// 	WINDOW: 512,
+// 	KEYDOWN: 768,
+// 	KEYUP: 769,
+// 	MOUSEMOTION: 1024,
+// 	MOUSEBUTTONDOWN: 1025,
+// 	MOUSEBUTTONUP: 1026
+// }
 
-type Vec3 = {
-	x: Number = 0,
-	y: Number = 0,
-	z: Number = 0
-}
+// const ButtonEventType = {
+// 	BUTTON_LEFT: 1,
+// 	BUTTON_MIDDLE: 2,
+// 	BUTTON_RIGHT: 3
+// }
 
-type Vertex = {
-	color: Color,
-	position: Vec3
-}
+// const StateEventType = {
+// 	RELEASED: 0,
+// 	PRESSED: 1,
+// }
 
-var initSDL = (): Number 
-	=> lib.call("sdl_init", [])
+// const WindowEventType = {
+// 	MOVED: 4,
+// 	RESIZED: 5
+// }
 
-var createWindow = (windowConfig: WindowConfig): Pointer
-	=> lib.call("create_window", [windowConfig.title, windowConfig.xPos, windowConfig.yPos, windowConfig.width, windowConfig.height, windowConfig.flags])
+// const CursorToggleType = {
+// 	QUERY: -1,
+// 	DISABLE: 0,
+// 	ENABLE: 1
+// }
 
-var destroyWindow = (window: Pointer): None
-	=> lib.call("destroy_window", [window])
+// const Event = { 
+// 	type: Number,
+// 	button: { 
+// 		clicks: Number, 
+// 		x: Number, 
+// 		y: Number, 
+// 		button: Number 
+// 	},
+// 	motion: { 
+// 		x: Number, 
+// 		y: Number 
+// 	},
+// 	key: { 
+// 		keysm: { 
+// 			sym: Number, 
+// 			scancode: Number, 
+// 			mod: Number
+// 		},
+// 		state: Number,
+// 		repeat: Number,
+// 		type: Number 
+// 	},
+// 	window: {
+// 		event: Number,
+// 		data1: Number,
+// 		data2: Number
+// 	}
+// }
 
-var createRenderer = (window: Pointer, index: Number): Pointer
-	=> lib.call("create_renderer", [window, index])
+// type Vec3 = {
+// 	x: Number = 0,
+// 	y: Number = 0,
+// 	z: Number = 0
+// }
 
-var setRenderDrawColor = (renderer: Pointer, color: Color): None
-	=> lib.call("set_render_draw_color", [renderer, color.r, color.g, color.b, color.a])
+// type Vertex = {
+// 	color: Color,
+// 	position: Vec3
+// }
 
-var renderClear = (renderer: Pointer): None
-	=> lib.call("render_clear", [renderer])
+// var initSDL = (): Number 
+// 	=> lib.call("sdl_init", [])
 
-var renderPresent = (renderer: Pointer): None 
-	=> lib.call("render_present", [renderer])
+// var createWindow = (windowConfig: WindowConfig): Pointer
+// 	=> lib.call("create_window", [windowConfig.title, windowConfig.xPos, windowConfig.yPos, windowConfig.width, windowConfig.height, windowConfig.flags])
 
-var destroyRenderer = (renderer: Pointer): None 
-	=> lib.call("destroy_renderer", [renderer])
+// var destroyWindow = (window: Pointer): None
+// 	=> lib.call("destroy_window", [window])
 
-var getKeyName = (keyCode: Number): String 
-	=> lib.call("get_key_name", [keyCode])
+// var createRenderer = (window: Pointer, index: Number): Pointer
+// 	=> lib.call("create_renderer", [window, index])
 
-var getScanCode = (keyName: String): Number 
-	=> lib.call("get_scancode", [keyName])
+// var setRenderDrawColor = (renderer: Pointer, color: Color): None
+// 	=> lib.call("set_render_draw_color", [renderer, color.r, color.g, color.b, color.a])
 
-var drawPoint = (renderer: Pointer, xPos: Number, yPos: Number): None 
-	=> lib.call("draw_point", [renderer, xPos, yPos])
+// var renderClear = (renderer: Pointer): None
+// 	=> lib.call("render_clear", [renderer])
 
-var drawLine = (renderer: Pointer, x1: Number, y1: Number, x2: Number, y2: Number): None 
-	=> lib.call("draw_line", [renderer, x1, y1, x2, y2])
+// var renderPresent = (renderer: Pointer): None 
+// 	=> lib.call("render_present", [renderer])
 
-var drawRect = (renderer: Pointer, x: Number, y: Number, w: Number, h: Number): None 
-	=> lib.call("draw_rect", [renderer, x, y, w, h])
+// var destroyRenderer = (renderer: Pointer): None 
+// 	=> lib.call("destroy_renderer", [renderer])
 
-var drawGeometry = (renderer: Pointer, vertices: [Vertex], texture: Pointer | None = None): None 
-	=> lib.call("draw_geometry", [renderer, vertices, texture])
+// var getKeyName = (keyCode: Number): String 
+// 	=> lib.call("get_key_name", [keyCode])
 
-var loadTexture = (renderer: Pointer, filePath: String): Pointer 
-	=> lib.call("load_texture", [renderer, filePath])
+// var getScanCode = (keyName: String): Number 
+// 	=> lib.call("get_scancode", [keyName])
 
-var loadText = (renderer: Pointer, text: String, fontPath: String, fontSize: Number = 12, color: Color = Colors.White ): Pointer 
-	=> lib.call("load_text", [renderer, fontPath, fontSize, color.r, color.g, color.b, text])
+// var drawPoint = (renderer: Pointer, xPos: Number, yPos: Number): None 
+// 	=> lib.call("draw_point", [renderer, xPos, yPos])
 
-var destroyTexture = (texture: Pointer): None 
-	=> lib.call("destroy_texture", [texture])
+// var drawLine = (renderer: Pointer, x1: Number, y1: Number, x2: Number, y2: Number): None 
+// 	=> lib.call("draw_line", [renderer, x1, y1, x2, y2])
 
-var renderCopy = (
-	renderer: Pointer, 
-	texture: Pointer, 
-	src_x: Number = -1, 
-	src_y: Number = -1, 
-	src_w: Number = -1, 
-	src_h: Number = -1, 
-	dest_x: Number = -1, 
-	dest_y: Number = -1, 
-	dest_w: Number = -1, 
-	dest_h: Number = -1): None 
-		=> lib.call("render_copy", [renderer, texture, src_x, src_y, src_w, src_h, dest_x, dest_y, dest_w, dest_h])
+// var drawRect = (renderer: Pointer, x: Number, y: Number, w: Number, h: Number): None 
+// 	=> lib.call("draw_rect", [renderer, x, y, w, h])
 
-var renderCopyEx = (
-	renderer: Pointer, 
-	texture: Pointer, 
-	src_x: Number = -1, 
-	src_y: Number = -1, 
-	src_w: Number = -1, 
-	src_h: Number = -1, 
-	dest_x: Number = -1, 
-	dest_y: Number = -1, 
-	dest_w: Number = -1, 
-	dest_h: Number = -1,
-	angle: Number = 0,
-	rot_x: Number = -1,
-	rot_y: Number = -1,
-	flip: Number = 0
-	): None 
-		=> lib.call("render_copy_ex", [renderer, texture, src_x, src_y, src_w, src_h, dest_x, dest_y, dest_w, dest_h, angle, rot_x, rot_y, flip])
+// var drawGeometry = (renderer: Pointer, vertices: [Vertex], texture: Pointer | None = None): None 
+// 	=> lib.call("draw_geometry", [renderer, vertices, texture])
 
-var delay = (ms: Number): None 
-	=> lib.call("sdl_delay", [ms])
+// var loadTexture = (renderer: Pointer, filePath: String): Pointer 
+// 	=> lib.call("load_texture", [renderer, filePath])
 
-var pollEvent = (evt: Any) => {
-	const eventObj = lib.call("poll_event", [])
-	evt = eventObj.event
-	eventObj.status
-}
+// var loadText = (renderer: Pointer, text: String, fontPath: String, fontSize: Number = 12, color: Color = Colors.White ): Pointer 
+// 	=> lib.call("load_text", [renderer, fontPath, fontSize, color.r, color.g, color.b, text])
 
-var quitSDL = (): None
-	=> lib.call("sdl_quit", [])
+// var destroyTexture = (texture: Pointer): None 
+// 	=> lib.call("destroy_texture", [texture])
 
-var getPerformanceCounter = (): Number
-	=> lib.call("sdl_get_performance_counter", [])
+// var renderCopy = (
+// 	renderer: Pointer, 
+// 	texture: Pointer, 
+// 	src_x: Number = -1, 
+// 	src_y: Number = -1, 
+// 	src_w: Number = -1, 
+// 	src_h: Number = -1, 
+// 	dest_x: Number = -1, 
+// 	dest_y: Number = -1, 
+// 	dest_w: Number = -1, 
+// 	dest_h: Number = -1): None 
+// 		=> lib.call("render_copy", [renderer, texture, src_x, src_y, src_w, src_h, dest_x, dest_y, dest_w, dest_h])
 
-var getPerformanceFrequency = (): Number
-	=> lib.call("sdl_get_performance_frequency", [])
+// var renderCopyEx = (
+// 	renderer: Pointer, 
+// 	texture: Pointer, 
+// 	src_x: Number = -1, 
+// 	src_y: Number = -1, 
+// 	src_w: Number = -1, 
+// 	src_h: Number = -1, 
+// 	dest_x: Number = -1, 
+// 	dest_y: Number = -1, 
+// 	dest_w: Number = -1, 
+// 	dest_h: Number = -1,
+// 	angle: Number = 0,
+// 	rot_x: Number = -1,
+// 	rot_y: Number = -1,
+// 	flip: Number = 0
+// 	): None 
+// 		=> lib.call("render_copy_ex", [renderer, texture, src_x, src_y, src_w, src_h, dest_x, dest_y, dest_w, dest_h, angle, rot_x, rot_y, flip])
 
-var getKeyboardState = (): [Boolean]
-	=> lib.call("sdl_get_keyboard_state", [])
+// var delay = (ms: Number): None 
+// 	=> lib.call("sdl_delay", [ms])
 
-var getWindowSize = (window: Pointer): {w: Number, h: Number}
-	=> lib.call("sdl_get_window_size", [window])
+// var pollEvent = (evt: Any) => {
+// 	const eventObj = lib.call("poll_event", [])
+// 	evt = eventObj.event
+// 	eventObj.status
+// }
 
-var showCursor = (toggle: Number): Number
-	=> lib.call("sdl_show_cursor", [toggle])
+// var quitSDL = (): None
+// 	=> lib.call("sdl_quit", [])
 
-// GL Functions
+// var getPerformanceCounter = (): Number
+// 	=> lib.call("sdl_get_performance_counter", [])
 
-var glEnable = (glEnum: Number): None
-	=> lib.call("gl_enable", [glEnum])
+// var getPerformanceFrequency = (): Number
+// 	=> lib.call("sdl_get_performance_frequency", [])
 
-var glClear = (glBitField: Number): None
-	=> lib.call("gl_clear", [glBitField])
+// var getKeyboardState = (): [Boolean]
+// 	=> lib.call("sdl_get_keyboard_state", [])
 
-var glClearColor = (color: Color): None
-	=> lib.call("gl_clear_color", [color.r, color.g, color.b, color.a])
+// var getWindowSize = (window: Pointer): {w: Number, h: Number}
+// 	=> lib.call("sdl_get_window_size", [window])
+
+// var showCursor = (toggle: Number): Number
+// 	=> lib.call("sdl_show_cursor", [toggle])
+
+// // GL Functions
+
+// var glEnable = (glEnum: Number): None
+// 	=> lib.call("gl_enable", [glEnum])
+
+// var glClear = (glBitField: Number): None
+// 	=> lib.call("gl_clear", [glBitField])
+
+// var glClearColor = (color: Color): None
+// 	=> lib.call("gl_clear_color", [color.r, color.g, color.b, color.a])
 	
-var glViewport = (x: Number, y: Number, w: Number, h: Number): None
-	=> lib.call("gl_viewport", [x, y, w, h])
+// var glViewport = (x: Number, y: Number, w: Number, h: Number): None
+// 	=> lib.call("gl_viewport", [x, y, w, h])
 
-var glCreateContext = (window: Pointer): Pointer
-	=> lib.call("gl_create_context", [window])
+// var glCreateContext = (window: Pointer): Pointer
+// 	=> lib.call("gl_create_context", [window])
 
-var glSwapWindow = (window: Pointer): None
-	=> lib.call("gl_swap_window", [window])
+// var glSwapWindow = (window: Pointer): None
+// 	=> lib.call("gl_swap_window", [window])
 
-// Helper Functions
+// // Helper Functions
 
-var changeBackgroundColor = (renderer: Pointer, color: Color): None => {
-	setRenderDrawColor(renderer, color)
-	renderClear(renderer)
-	renderPresent(renderer)
-}
+// var changeBackgroundColor = (renderer: Pointer, color: Color): None => {
+// 	setRenderDrawColor(renderer, color)
+// 	renderClear(renderer)
+// 	renderPresent(renderer)
+// }
 
-var interpolate = (value: Number, x0: Number, x1: Number, y0: Number, y1: Number): Number => {
-	y0 + (value - x0) * ((y0 - y1)/(x0 - x1))
-}
+// var interpolate = (value: Number, x0: Number, x1: Number, y0: Number, y1: Number): Number => {
+// 	y0 + (value - x0) * ((y0 - y1)/(x0 - x1))
+// }
 
-type Window = {
-	window: Pointer,
-	renderer: Pointer,
-	changeColor: ((color: Color) => None) = (color: Color) => changeBackgroundColor(this.renderer, color)
-}
+// type Window = {
+// 	window: Pointer,
+// 	renderer: Pointer,
+// 	changeColor: ((color: Color) => None) = (color: Color) => changeBackgroundColor(this.renderer, color)
+// }
