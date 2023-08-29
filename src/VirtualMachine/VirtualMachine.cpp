@@ -1024,6 +1024,9 @@ bool is_equal(Value& v1, Value& v2) {
     if (v1.is_boolean()) {
         return v1.get_boolean() == v2.get_boolean();
     }
+    if (v1.is_none()) {
+        return true;
+    }
 
     return false;
 }
