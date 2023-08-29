@@ -530,7 +530,7 @@ void gen_function(Chunk& chunk, node_ptr node) {
         add_opcode(chunk, OP_MAKE_FUNCTION, function->defaults, node->line);
     }
 
-    disassemble_chunk(function->chunk, function->name);
+    //disassemble_chunk(function->chunk, function->name);
 }
 
 void gen_function_call(Chunk& chunk, node_ptr node) {

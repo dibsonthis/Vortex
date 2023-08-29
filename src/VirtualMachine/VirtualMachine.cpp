@@ -653,23 +653,50 @@ static EvaluateResult run(VM& vm) {
                 auto& function_obj = function.get_function();
                 int positional_args = function_obj->arity - function_obj->defaults;
 
+                int num_captured = 0;
                 int num_unpacked = 0;
+                int capturing = -1;
 
                 for (int i = 0; i < param_num; i++) {
                     Value arg = pop(vm);
                     if (arg.meta.unpack) {
                         arg.meta.unpack = false;
+                        num_unpacked--;
                         for (int j = 0; j < arg.get_list()->size(); j++) {
                             num_unpacked++;
                             auto& _arg = arg.get_list()->at(j);
-                            function_obj->chunk.constants[i + j] = _arg;
+
+                            Value& constant = function_obj->chunk.constants[i+j];
+
+                            if (constant.is_list()) {
+                                capturing = i+j;
+                                constant.get_list()->push_back(_arg);
+                            } else {
+                                if (capturing >= 0) {
+                                    function_obj->chunk.constants[capturing].get_list()->push_back(_arg);
+                                    num_captured++;
+                                } else {
+                                    function_obj->chunk.constants[i + j] = _arg;
+                                }
+                            }
                         }
                     } else {
-                        function_obj->chunk.constants[i] = arg;
+                        Value& constant = function_obj->chunk.constants[i];
+                        if (constant.is_list()) {
+                            capturing = i;
+                            constant.get_list()->push_back(arg);
+                        } else {
+                            if (capturing >= 0) {
+                                function_obj->chunk.constants[capturing].get_list()->push_back(arg);
+                                num_captured++;
+                            } else {
+                                function_obj->chunk.constants[i] = arg;
+                            }
+                        }
                     }
                 }
 
-                param_num += num_unpacked - 1;
+                param_num += num_unpacked - num_captured;
 
                 if ((param_num < positional_args) || (param_num > function_obj->arity)) {
                     runtimeError(vm, "Function '" + function_obj->name + "' expects " + std::to_string(function_obj->arity) + " argument(s)");
