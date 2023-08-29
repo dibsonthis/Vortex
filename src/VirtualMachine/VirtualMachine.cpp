@@ -107,7 +107,6 @@ static EvaluateResult run(VM& vm) {
                 int to_clean = vm.stack.size() - frame->sp;
                 int instruction_index = frame->instruction_index;
                 for (int i = 0; i < to_clean; i++) {
-                    //Value value = pop(vm);
                     Value& value = vm.stack.back();
                     for (auto& closure : vm.closed_values) {
                         if (closure->location == &value) {
@@ -117,10 +116,6 @@ static EvaluateResult run(VM& vm) {
                         }
                     }
                     vm.stack.pop_back();
-                    // if (vm.closed_values.count(&value)) {
-                    //     vm.closed_values[&value]->closed = value;
-                    //     vm.closed_values[&value]->location = &vm.closed_values[&value]->closed;
-                    // }
                 }
                 vm.frames.pop_back();
                 frame = &vm.frames.back();
@@ -285,13 +280,12 @@ static EvaluateResult run(VM& vm) {
                 closure_obj->chunk = function->chunk;
                 closure_obj->defaults = function->defaults;
                 closure_obj->name = function->name;
-                //closure_obj->closed_vars = std::vector<std::shared_ptr<Value>>(500);
+                closure_obj->params = function->params;
                 closure_obj->closed_vars = std::vector<std::shared_ptr<Closure>>(500);
                 for (int& index : closure_obj->closed_var_indexes) {
                     auto& value = vm.stack[index + frame->frame_start];
                     auto hoisted = std::make_shared<Closure>();
                     hoisted->location = &value;
-                    //auto hoisted = std::make_shared<Value>(value);
                     if (vm.closed_values.size() == 0) {
                         closure_obj->closed_vars[index] = hoisted;
                         vm.closed_values.push_back(hoisted);
@@ -310,13 +304,6 @@ static EvaluateResult run(VM& vm) {
                             vm.closed_values.push_back(hoisted);
                         }
                     }
-
-                    // if (vm.closed_values.count(&value)) {
-                    //     closure_obj->closed_vars[index] = vm.closed_values[&value];
-                    // } else {
-                    //     closure_obj->closed_vars[index] = hoisted;
-                    //     vm.closed_values[&value] = hoisted;
-                    // }
                 }
                 push(vm, closure);
                 break;
@@ -549,6 +536,7 @@ static EvaluateResult run(VM& vm) {
                                 capturing = i+j;
                                 constant.get_list()->clear();
                                 constant.get_list()->push_back(_arg);
+                                constant.meta.unpack = false;
                             } else {
                                 if (capturing >= 0) {
                                     function_obj->chunk.constants[capturing].get_list()->push_back(_arg);
@@ -564,6 +552,7 @@ static EvaluateResult run(VM& vm) {
                             capturing = i;
                             constant.get_list()->clear();
                             constant.get_list()->push_back(arg);
+                            constant.meta.unpack = false;
                         } else {
                             if (capturing >= 0) {
                                 function_obj->chunk.constants[capturing].get_list()->push_back(arg);
@@ -674,6 +663,7 @@ static EvaluateResult run(VM& vm) {
                                 capturing = i+j;
                                 constant.get_list()->clear();
                                 constant.get_list()->push_back(_arg);
+                                constant.meta.unpack = false;
                             } else {
                                 if (capturing >= 0) {
                                     function_obj->chunk.constants[capturing].get_list()->push_back(_arg);
@@ -689,6 +679,7 @@ static EvaluateResult run(VM& vm) {
                             capturing = i;
                             constant.get_list()->clear();
                             constant.get_list()->push_back(arg);
+                            constant.meta.unpack = false;
                         } else {
                             if (capturing >= 0) {
                                 function_obj->chunk.constants[capturing].get_list()->push_back(arg);
@@ -1447,18 +1438,12 @@ static Value sort_builtin(std::vector<Value>& args) {
         auto& frame = func_vm.frames.back();
         frame.function->chunk.constants[1] = rhs;
         frame.function->chunk.constants[2] = lhs;
-        // frame.function->chunk.constants.push_back(rhs);
-        // frame.function->chunk.constants.push_back(lhs);
 
         evaluate(func_vm);
 
         if (func_vm.status != 0) {
             error("Error in sort function");
         }
-
-        // frame = func_vm.frames.back();
-        // frame.function->chunk.constants.pop_back();
-        // frame.function->chunk.constants.pop_back();
 
         if (!func_vm.stack.back().is_boolean()) {
             return false;
