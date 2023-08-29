@@ -545,8 +545,9 @@ static EvaluateResult run(VM& vm) {
                             num_unpacked++;
                             auto& _arg = arg.get_list()->at(j);
                             Value& constant = function_obj->chunk.constants[i+j];
-                            if (constant.is_list()) {
+                            if (constant.is_list() && constant.meta.unpack) {
                                 capturing = i+j;
+                                constant.get_list()->clear();
                                 constant.get_list()->push_back(_arg);
                             } else {
                                 if (capturing >= 0) {
@@ -559,8 +560,9 @@ static EvaluateResult run(VM& vm) {
                         }
                     } else {
                         Value& constant = function_obj->chunk.constants[i];
-                        if (constant.is_list()) {
+                        if (constant.is_list() && constant.meta.unpack) {
                             capturing = i;
+                            constant.get_list()->clear();
                             constant.get_list()->push_back(arg);
                         } else {
                             if (capturing >= 0) {
@@ -668,8 +670,9 @@ static EvaluateResult run(VM& vm) {
 
                             Value& constant = function_obj->chunk.constants[i+j];
 
-                            if (constant.is_list()) {
+                            if (constant.is_list() && constant.meta.unpack) {
                                 capturing = i+j;
+                                constant.get_list()->clear();
                                 constant.get_list()->push_back(_arg);
                             } else {
                                 if (capturing >= 0) {
@@ -682,8 +685,9 @@ static EvaluateResult run(VM& vm) {
                         }
                     } else {
                         Value& constant = function_obj->chunk.constants[i];
-                        if (constant.is_list()) {
+                        if (constant.is_list() && constant.meta.unpack) {
                             capturing = i;
+                            constant.get_list()->clear();
                             constant.get_list()->push_back(arg);
                         } else {
                             if (capturing >= 0) {

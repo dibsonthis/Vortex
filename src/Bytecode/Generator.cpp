@@ -487,6 +487,10 @@ void gen_function(Chunk& chunk, node_ptr node) {
             node->_Node.Function().default_values[param_name] = std::make_shared<Node>(NodeType::LIST);
         }
         function->params.push_back(param_name);
+
+        Value placeholder = list_val();
+        placeholder.meta.unpack = true;
+
         if (node->_Node.Function().default_values.count(param_name)) {
             if (is_capture && node->_Node.Function().default_values[param_name]->type != NodeType::LIST) {
                 error("Capture param (...) cannot have a default value");
@@ -496,9 +500,9 @@ void gen_function(Chunk& chunk, node_ptr node) {
             current = prev_compiler;
             generate(node->_Node.Function().default_values[param_name], chunk);
             current = temp;
-            add_constant_code(function->chunk, is_capture ? list_val() : none_val(), param->line);
+            add_constant_code(function->chunk, is_capture ? placeholder : none_val(), param->line);
         } else {
-            is_capture ? add_constant_code(function->chunk, list_val(), param->line) : add_constant_code(function->chunk, none_val(), param->line);
+            is_capture ? add_constant_code(function->chunk, placeholder, param->line) : add_constant_code(function->chunk, none_val(), param->line);
         }
 
         declareVariable(param->_Node.ID().value);
