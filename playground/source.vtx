@@ -1,2 +1,24 @@
-const g = None
-print(g == None)
+const timer = (func, ...args) => {
+    const wrapper = () => {
+        const start = clock()
+        var res = func(...args)
+        const duration = clock() - start
+        print(func.info().name, " - duration: ", duration, "\n")
+        return res
+    }
+
+    return wrapper
+}
+
+var func = (n = 100) => {
+    var l = 0
+    for (0..n, i) {
+        for (0..n, j) {
+            l += i+j
+        }
+    }
+    return l
+}
+
+func = timer(func, 1000)
+func()

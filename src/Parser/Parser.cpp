@@ -415,9 +415,22 @@ void Parser::parse_func_def(std::string end) {
                     params->_Node.Paren().elements[0] = list;
                 }
 
-                for (node_ptr& elem : params->_Node.Paren().elements[0]->_Node.List().elements) {
-                    // x: String
+                int elem_count = -1;
 
+                for (node_ptr& elem : params->_Node.Paren().elements[0]->_Node.List().elements) {
+
+                    elem_count++;
+            
+                    // ...args
+                    if (elem->type == NodeType::OP && elem->_Node.Op().value == "...") {
+                        if (elem_count < params->_Node.Paren().elements[0]->_Node.List().elements.size() - 1) {
+                            error_and_exit("Argument captures (...) must be defined last");
+                        }
+                        node_ptr param_name = elem->_Node.Op().right;
+                        param_name->Meta.tags.push_back("capture");
+                        elem = param_name;
+                    }
+                    // x: String
                     if (elem->type == NodeType::OP && elem->_Node.Op().value == ":") {
 
                         // Check if we already have defaults, if we do, we raise an error
@@ -1113,6 +1126,8 @@ void Parser::parse(int start, std::string end) {
     parse_un_op({"@"}, end);
     reset(start);
     parse_un_op({"!"}, end);
+    reset(start);
+    parse_un_op({"..."}, end);
     reset(start);
     parse_un_op_amb({"+", "-"}, end);
     reset(start);

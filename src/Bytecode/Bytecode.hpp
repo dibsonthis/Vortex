@@ -60,7 +60,8 @@ enum OpCode {
     OP_LEN,
     OP_CALL,
     OP_CALL_METHOD,
-    OP_IMPORT
+    OP_IMPORT,
+    OP_UNPACK
 };
 
 enum ValueType {
@@ -95,6 +96,7 @@ struct FunctionObj {
     std::vector<std::shared_ptr<Closure>> closed_vars;
     std::vector<Value> default_values;
     std::shared_ptr<Value> object;
+    std::vector<std::string> params;
 };
 
 struct TypeObj {
@@ -118,8 +120,13 @@ struct NativeFunctionObj {
     NativeFunction function = nullptr;
 };
 
+struct Meta {
+    bool unpack = false;
+};
+
 struct Value {
     ValueType type;
+    Meta meta;
     std::variant
     <
         double, 

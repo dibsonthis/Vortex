@@ -482,16 +482,23 @@ void gen_function(Chunk& chunk, node_ptr node) {
 
     for (auto& param : node->_Node.Function().params) {
         std::string param_name = param->_Node.ID().value;
+        bool is_capture = param->Meta.tags.size() == 1 && param->Meta.tags[0] == "capture";
+        if (is_capture) {
+            node->_Node.Function().default_values[param_name] = std::make_shared<Node>(NodeType::LIST);
+        }
+        function->params.push_back(param_name);
         if (node->_Node.Function().default_values.count(param_name)) {
+            if (is_capture && node->_Node.Function().default_values[param_name]->type != NodeType::LIST) {
+                error("Capture param (...) cannot have a default value");
+            }
             function->defaults++;
-            //generate(node->_Node.Function().default_values[param_name], function->chunk);
             auto temp = current;
             current = prev_compiler;
             generate(node->_Node.Function().default_values[param_name], chunk);
             current = temp;
-            add_constant_code(function->chunk, none_val(), param->line);
+            add_constant_code(function->chunk, is_capture ? list_val() : none_val(), param->line);
         } else {
-            add_constant_code(function->chunk, none_val(), param->line);
+            is_capture ? add_constant_code(function->chunk, list_val(), param->line) : add_constant_code(function->chunk, none_val(), param->line);
         }
 
         declareVariable(param->_Node.ID().value);
@@ -523,12 +530,18 @@ void gen_function(Chunk& chunk, node_ptr node) {
         add_opcode(chunk, OP_MAKE_FUNCTION, function->defaults, node->line);
     }
 
-    //disassemble_chunk(function->chunk, function->name);
+    disassemble_chunk(function->chunk, function->name);
 }
 
 void gen_function_call(Chunk& chunk, node_ptr node) {
     for (int i = node->_Node.FunctionCall().args.size() - 1; i >= 0; i--) {
-        generate(node->_Node.FunctionCall().args[i], chunk);
+        node_ptr& arg = node->_Node.FunctionCall().args[i];
+        if (arg->type == NodeType::OP && arg->_Node.Op().value == "...") {
+            generate(arg->_Node.Op().right, chunk);
+            add_code(chunk, OP_UNPACK, node->line);
+        } else {
+            generate(arg, chunk);
+        }
     }
     node_ptr id = std::make_shared<Node>(NodeType::ID);
     id->_Node.ID().value = node->_Node.FunctionCall().name;
@@ -969,6 +982,9 @@ void generate(node_ptr node, Chunk& chunk) {
         }
         if (node->_Node.Op().value == ";") {
             return;
+        }
+        if (node->_Node.Op().value == "...") {
+            error("Cannot unpack value here");
         }
     }
 }

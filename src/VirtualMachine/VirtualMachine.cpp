@@ -70,6 +70,7 @@ static EvaluateResult run(VM& vm) {
     define_native(vm, "insert", insert_builtin);
     define_native(vm, "dis", dis_builtin);
     define_native(vm, "length", length_builtin);
+    define_native(vm, "info", info_builtin);
     define_native(vm, "copy", copy_builtin);
     define_native(vm, "sort", sort_builtin);
     define_native(vm, "load_lib", load_lib_builtin);
@@ -491,6 +492,15 @@ static EvaluateResult run(VM& vm) {
                 push(vm, value);
                 break;
             }
+            case OP_UNPACK: {
+                Value& list = vm.stack.back();
+                if (!list.is_list()) {
+                    runtimeError(vm, "Operand must be a list");
+                    return EVALUATE_RUNTIME_ERROR;
+                }
+                list.meta.unpack = true;
+                break;
+            }
             case OP_CALL: {
                 int param_num = READ_INT();
                 Value function = pop(vm);
@@ -499,7 +509,15 @@ static EvaluateResult run(VM& vm) {
                     auto& native_function = function.get_native();
                     std::vector<Value> args;
                     for (int i = 0; i < param_num; i++) {
-                        args.push_back(pop(vm));
+                        Value arg = pop(vm);
+                        if (arg.meta.unpack) {
+                            arg.meta.unpack = false;
+                            for (auto& elem : *arg.get_list()) {
+                                args.push_back(elem);
+                            }
+                        } else {
+                            args.push_back(arg);
+                        }
                     }
                     Value result = native_function->function(args);
                     push(vm, result);
@@ -514,14 +532,52 @@ static EvaluateResult run(VM& vm) {
                 auto& function_obj = function.get_function();
                 int positional_args = function_obj->arity - function_obj->defaults;
 
+                int num_unpacked = 0;
+                int num_captured = 0;
+                int capturing = -1;
+                
+                for (int i = 0; i < param_num; i++) {
+                    Value arg = pop(vm);
+                    if (arg.meta.unpack) {
+                        arg.meta.unpack = false;
+                        num_unpacked--;
+                        for (int j = 0; j < arg.get_list()->size(); j++) {
+                            num_unpacked++;
+                            auto& _arg = arg.get_list()->at(j);
+                            Value& constant = function_obj->chunk.constants[i+j];
+                            if (constant.is_list()) {
+                                capturing = i+j;
+                                constant.get_list()->push_back(_arg);
+                            } else {
+                                if (capturing >= 0) {
+                                    function_obj->chunk.constants[capturing].get_list()->push_back(_arg);
+                                    num_captured++;
+                                } else {
+                                    function_obj->chunk.constants[i + j] = _arg;
+                                }
+                            }
+                        }
+                    } else {
+                        Value& constant = function_obj->chunk.constants[i];
+                        if (constant.is_list()) {
+                            capturing = i;
+                            constant.get_list()->push_back(arg);
+                        } else {
+                            if (capturing >= 0) {
+                                function_obj->chunk.constants[capturing].get_list()->push_back(arg);
+                                num_captured++;
+                            } else {
+                                function_obj->chunk.constants[i] = arg;
+                            }
+                        }
+                    }
+                }
+
+                param_num += num_unpacked - num_captured;
+
                 if ((param_num < positional_args) || (param_num > function_obj->arity)) {
                     runtimeError(vm, "Function '" + function_obj->name + "' expects " + std::to_string(function_obj->arity) + " argument(s)");
                     return EVALUATE_RUNTIME_ERROR;
-                }
-
-                for (int i = 0; i < param_num; i++) {
-                    Value arg = pop(vm);
-                    function_obj->chunk.constants[i] = arg;
                 }
 
                 if (param_num < function_obj->arity) {
@@ -574,7 +630,15 @@ static EvaluateResult run(VM& vm) {
                     auto& native_function = function.get_native();
                     std::vector<Value> args;
                     for (int i = 0; i < param_num; i++) {
-                        args.push_back(pop(vm));
+                        Value arg = pop(vm);
+                        if (arg.meta.unpack) {
+                            arg.meta.unpack = false;
+                            for (auto& elem : *arg.get_list()) {
+                                args.push_back(elem);
+                            }
+                        } else {
+                            args.push_back(arg);
+                        }
                     }
                     Value result = native_function->function(args);
                     push(vm, result);
@@ -589,14 +653,27 @@ static EvaluateResult run(VM& vm) {
                 auto& function_obj = function.get_function();
                 int positional_args = function_obj->arity - function_obj->defaults;
 
-                if ((param_num < positional_args) || (param_num > function_obj->arity)) {
-                    runtimeError(vm, "Function '" + function_obj->name + "' expects " + std::to_string(function_obj->arity) + " argument(s)");
-                    return EVALUATE_RUNTIME_ERROR;
-                }
+                int num_unpacked = 0;
 
                 for (int i = 0; i < param_num; i++) {
                     Value arg = pop(vm);
-                    function_obj->chunk.constants[i] = arg;
+                    if (arg.meta.unpack) {
+                        arg.meta.unpack = false;
+                        for (int j = 0; j < arg.get_list()->size(); j++) {
+                            num_unpacked++;
+                            auto& _arg = arg.get_list()->at(j);
+                            function_obj->chunk.constants[i + j] = _arg;
+                        }
+                    } else {
+                        function_obj->chunk.constants[i] = arg;
+                    }
+                }
+
+                param_num += num_unpacked - 1;
+
+                if ((param_num < positional_args) || (param_num > function_obj->arity)) {
+                    runtimeError(vm, "Function '" + function_obj->name + "' expects " + std::to_string(function_obj->arity) + " argument(s)");
+                    return EVALUATE_RUNTIME_ERROR;
                 }
 
                 if (param_num < function_obj->arity) {
@@ -1173,6 +1250,44 @@ static Value length_builtin(std::vector<Value>& args) {
         }
         default: {
             return none_val();
+        }
+    }
+}
+
+static Value info_builtin(std::vector<Value>& args) {
+    if (args.size() != 1) {
+        error("Function 'name' expects 1 argument");
+    }
+
+    Value value = args[0];
+
+    Value info = object_val();
+    auto& obj = info.get_object();
+
+    switch (value.type) {
+        case Function: {
+            auto& func = value.get_function();
+            obj->values["name"] = string_val(func->name);
+            obj->values["arity"] = string_val(std::to_string(func->arity));
+            obj->values["params"] = list_val();
+            for (auto& param : func->params) {
+                obj->values["params"].get_list()->push_back(string_val(param));
+            }
+            return info;
+        }
+        case Object: {
+            auto& object = value.get_object();
+            obj->values["type"] = object->type == nullptr ? none_val() : string_val(object->type->name);
+            obj->values["keys"] = list_val();
+            obj->values["values"] = list_val();
+            for (auto& prop : object->values) {
+                obj->values["keys"].get_list()->push_back(string_val(prop.first));
+                obj->values["values"].get_list()->push_back(prop.second);
+            }
+            return info;
+        }
+        default: {
+            return info;
         }
     }
 }
