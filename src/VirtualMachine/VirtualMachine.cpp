@@ -519,10 +519,6 @@ static EvaluateResult run(VM& vm) {
                 auto& function_obj = function.get_function();
                 int positional_args = function_obj->arity - function_obj->defaults;
 
-                if (function_obj->name == "next") {
-                    std::cout << "here";
-                }
-
                 int num_unpacked = 0;
                 int num_captured = 0;
                 int capturing = -1;
