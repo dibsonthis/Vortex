@@ -122,6 +122,7 @@ struct NativeFunctionObj {
 
 struct Meta {
     bool unpack = false;
+    bool packer = false;
 };
 
 struct Value {

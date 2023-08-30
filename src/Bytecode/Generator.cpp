@@ -489,7 +489,7 @@ void gen_function(Chunk& chunk, node_ptr node) {
         function->params.push_back(param_name);
 
         Value placeholder = list_val();
-        placeholder.meta.unpack = true;
+        placeholder.meta.packer = true;
 
         if (node->_Node.Function().default_values.count(param_name)) {
             if (is_capture && node->_Node.Function().default_values[param_name]->type != NodeType::LIST) {

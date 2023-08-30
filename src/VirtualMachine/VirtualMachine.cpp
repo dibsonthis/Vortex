@@ -519,6 +519,10 @@ static EvaluateResult run(VM& vm) {
                 auto& function_obj = function.get_function();
                 int positional_args = function_obj->arity - function_obj->defaults;
 
+                if (function_obj->name == "next") {
+                    std::cout << "here";
+                }
+
                 int num_unpacked = 0;
                 int num_captured = 0;
                 int capturing = -1;
@@ -532,11 +536,10 @@ static EvaluateResult run(VM& vm) {
                             num_unpacked++;
                             auto& _arg = arg.get_list()->at(j);
                             Value& constant = function_obj->chunk.constants[i+j];
-                            if (constant.is_list() && constant.meta.unpack) {
+                            if (constant.is_list() && constant.meta.packer) {
                                 capturing = i+j;
                                 constant.get_list()->clear();
                                 constant.get_list()->push_back(_arg);
-                                constant.meta.unpack = false;
                             } else {
                                 if (capturing >= 0) {
                                     function_obj->chunk.constants[capturing].get_list()->push_back(_arg);
@@ -548,11 +551,10 @@ static EvaluateResult run(VM& vm) {
                         }
                     } else {
                         Value& constant = function_obj->chunk.constants[i];
-                        if (constant.is_list() && constant.meta.unpack) {
+                        if (constant.is_list() && constant.meta.packer) {
                             capturing = i;
                             constant.get_list()->clear();
                             constant.get_list()->push_back(arg);
-                            constant.meta.unpack = false;
                         } else {
                             if (capturing >= 0) {
                                 function_obj->chunk.constants[capturing].get_list()->push_back(arg);
@@ -575,11 +577,13 @@ static EvaluateResult run(VM& vm) {
                     // We have defaults we want to inject
                     int default_index = 0;
                     for (int i = param_num; i < function_obj->arity; i++) {
+                        Meta meta = function_obj->chunk.constants[i].meta;
                         function_obj->chunk.constants[i] = function_obj->default_values[default_index];
+                        function_obj->chunk.constants[i].meta = meta;
                         default_index++;
                     }
                 }
-
+                
                 //disassemble_chunk(function_obj->chunk, function_obj->name + "__");
 
                 CallFrame call_frame;
@@ -659,11 +663,10 @@ static EvaluateResult run(VM& vm) {
 
                             Value& constant = function_obj->chunk.constants[i+j];
 
-                            if (constant.is_list() && constant.meta.unpack) {
+                            if (constant.is_list() && constant.meta.packer) {
                                 capturing = i+j;
                                 constant.get_list()->clear();
                                 constant.get_list()->push_back(_arg);
-                                constant.meta.unpack = false;
                             } else {
                                 if (capturing >= 0) {
                                     function_obj->chunk.constants[capturing].get_list()->push_back(_arg);
@@ -675,11 +678,10 @@ static EvaluateResult run(VM& vm) {
                         }
                     } else {
                         Value& constant = function_obj->chunk.constants[i];
-                        if (constant.is_list() && constant.meta.unpack) {
+                        if (constant.is_list() && constant.meta.packer) {
                             capturing = i;
                             constant.get_list()->clear();
                             constant.get_list()->push_back(arg);
-                            constant.meta.unpack = false;
                         } else {
                             if (capturing >= 0) {
                                 function_obj->chunk.constants[capturing].get_list()->push_back(arg);
@@ -702,9 +704,16 @@ static EvaluateResult run(VM& vm) {
                     // We have defaults we want to inject
                     int default_index = 0;
                     for (int i = param_num; i < function_obj->arity; i++) {
+                        Meta meta = function_obj->chunk.constants[i].meta;
                         function_obj->chunk.constants[i] = function_obj->default_values[default_index];
+                        function_obj->chunk.constants[i].meta = meta;
                         default_index++;
                     }
+                }
+
+                if (capturing >= 0) {
+                    function_obj->chunk.constants[capturing].get_list()->clear();
+                    function_obj->chunk.constants[capturing].meta.unpack = true;
                 }
 
                 //disassemble_chunk(function_obj->chunk, function_obj->name + "__");
