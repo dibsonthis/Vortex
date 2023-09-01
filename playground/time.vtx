@@ -1,5 +1,15 @@
-const time = (func) => {
-    const start = clock()
-    func()
-    return clock() - start
+// const time = (func) => {
+//     const start = clock()
+//     func()
+//     return clock() - start
+// }
+
+const println = (...args) => {
+    print(...args, "\n")
+}
+
+const printlns = (...args) => {
+    for (args, i, arg) {
+        println(arg)
+    }
 }

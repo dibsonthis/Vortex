@@ -747,6 +747,8 @@ void gen_import(Chunk& chunk, node_ptr node) {
             elements = node->_Node.Import().module->_Node.List().elements;
         }
         for (auto& elem : elements) {
+        //for (int i = elements.size()-1; i >= 0; i--) {
+            //auto& elem = elements[i];
             if (elem->type != NodeType::ID) {
                 error("Import variables must be identifiers");
             }

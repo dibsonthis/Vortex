@@ -844,7 +844,7 @@ static EvaluateResult run(VM& vm) {
                     std::vector<std::string> names;
 
                     for (int i = 0; i < index; i++) {
-                        names.push_back(pop(vm).get_string());
+                        names.insert(names.begin(), pop(vm).get_string());
                     }
 
                     Value path = pop(vm);
