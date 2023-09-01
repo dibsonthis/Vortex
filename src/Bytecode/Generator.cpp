@@ -372,6 +372,13 @@ void gen_for_loop(Chunk& chunk, node_ptr node) {
         add_code(chunk, OP_LEN, node->line);
         declareVariable("___size___");
 
+        add_opcode(chunk, OP_LOAD, resolve_variable("___size___"));
+        add_constant_code(chunk, number_val(0), node->line);
+        add_code(chunk, OP_EQ_EQ, node->line);
+
+        int jump_if_empty = chunk.code.size() + 1;
+        add_opcode(chunk, OP_POP_JUMP_IF_TRUE, 0, node->line);
+
         int loop_start = chunk.code.size() - 1;
 
         begin_scope();
@@ -398,6 +405,10 @@ void gen_for_loop(Chunk& chunk, node_ptr node) {
         add_opcode(chunk, OP_LOAD, resolve_variable("___size___"));
         add_code(chunk, OP_GT_EQ, node->line);
         add_opcode(chunk, OP_POP_JUMP_IF_TRUE, 5, node->line);
+
+        int offset = chunk.code.size() - jump_if_empty + 1;
+        uint8_t* bytes = int_to_bytes(offset);
+        patch_bytes(chunk, jump_if_empty, bytes);
 
         add_opcode(chunk, OP_JUMP_BACK, chunk.code.size() - loop_start + 4, node->line);
 

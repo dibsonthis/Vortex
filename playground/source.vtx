@@ -1,26 +1,5 @@
-const generator = () => {
-    var index = -1
+var x = [5]
 
-    const functions = [
-        (...args) => print(1, "\n"),
-        (...args) => print(2, "\n"),
-        (...args) => print(3, "\n"),
-        (...args) => print(args, "\n")
-    ]
-
-    const next = (...args) => {
-        print(args)
-        index += 1
-        const function = functions[index]
-        if (function == None) {
-            return None
-        }
-        return function(...args)
-    }
-
-    return next
+for (x, i, v) {
+    print(i)
 }
-
-const gen = generator()
-gen()
-gen(1)
