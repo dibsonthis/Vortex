@@ -1,5 +1,5 @@
-const func = (...args) => {
-    print(...args)
-}
+var x = [5]
 
-func(1, 2, 3)
+for (x, i, v) {
+    print(i)
+}
