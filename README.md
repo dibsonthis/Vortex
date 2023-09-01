@@ -6,6 +6,10 @@ It heavily relies on side effects, and as such it would fall under the Dysfuncti
 
 ## About Vortex
 
+### Currently in the process of being updated...Please stand by.
+
+<!--
+
 Vortex's main focus is on what we call "hooks". Hooks allow the user to bind variables to functions in the context of specific events. 
 
 For example, if we wanted automatically increment variable y whenever variable x changes, we could use the onChange hook to do so:
@@ -233,3 +237,5 @@ println(lexer)
 [Removing non-string token: [1, 2, 3]]
 { currentNode: 5 tokens: [const, x, =, 5] index: 3 }
 ```
+
+-->
