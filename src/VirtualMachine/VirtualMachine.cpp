@@ -1388,6 +1388,9 @@ static Value info_builtin(std::vector<Value>& args) {
             for (auto& param : func->params) {
                 obj->values["params"].get_list()->push_back(string_val(param));
             }
+            obj->values["generator"] = boolean_val(func->is_generator);
+            obj->values["init"] = boolean_val(func->generator_init);
+            obj->values["done"] = boolean_val(func->generator_done);
             return info;
         }
         case Object: {

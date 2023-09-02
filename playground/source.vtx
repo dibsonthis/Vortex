@@ -12,11 +12,12 @@
 //     print(x, "\n")
 // }
 
-const co = () => {
-    yield _value
-    yield _value
-}
+var x = 10
 
-const gen = co()
-print(gen(10), "\n")
-print(gen(), "\n")
+if (x < 10) {
+    print("a")
+} else if (x > 10) {
+    print("b")
+} else {
+    print("c")
+}

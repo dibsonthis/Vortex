@@ -253,29 +253,41 @@ void gen_id(Chunk& chunk, node_ptr node, int global_flag) {
         return;
 }
 
-void gen_if(Chunk& chunk, node_ptr node) {
+int gen_if(Chunk& chunk, node_ptr node) {
     generate(node->_Node.IfStatement().condition, chunk);
     begin_scope();
     int jump_instruction = chunk.code.size() + 1;
     add_opcode(chunk, OP_POP_JUMP_IF_FALSE, 0, node->line);
     generate_bytecode(node->_Node.IfStatement().body->_Node.Object().elements, chunk);
+    int jump_true_instruction = chunk.code.size() + 1;
+    add_opcode(chunk, OP_JUMP, 0, node->line);
     end_scope(chunk);
     int offset = chunk.code.size() - jump_instruction - 4;
     uint8_t* bytes = int_to_bytes(offset);
     patch_bytes(chunk, jump_instruction, bytes);
+    return jump_true_instruction;
 }
 
 void gen_if_block(Chunk& chunk, node_ptr node) {
-    gen_if(chunk, node->_Node.IfBlock().statements[0]);
+    std::vector<int> jump_instructions;
+    int jump_instruction = gen_if(chunk, node->_Node.IfBlock().statements[0]);
+    jump_instructions.push_back(jump_instruction);
     for (int i = 1; i < node->_Node.IfBlock().statements.size(); i++) {
         node_ptr& statement = node->_Node.IfBlock().statements[i];
         if (statement->type == NodeType::IF_STATEMENT) {
-            gen_if(chunk, statement);
+            int jump_instr = gen_if(chunk, statement);
+            jump_instructions.push_back(jump_instr);
         } else if (statement->type == NodeType::OBJECT) {
             begin_scope();
             generate_bytecode(statement->_Node.Object().elements, chunk);
             end_scope(chunk);
         }
+    }
+
+    for (int jump_instruction : jump_instructions) {
+        int offset = chunk.code.size() - jump_instruction - 4;
+        uint8_t* bytes = int_to_bytes(offset);
+        patch_bytes(chunk, jump_instruction, bytes);
     }
 }
 
@@ -296,6 +308,7 @@ void gen_while_loop(Chunk& chunk, node_ptr node) {
 }
 
 void gen_for_loop(Chunk& chunk, node_ptr node) {
+    current->in_loop = true;
     if (!node->_Node.ForLoop().iterator) {
         if (!node->_Node.ForLoop().index_name) {
             node->_Node.ForLoop().index_name = std::make_shared<Node>(NodeType::ID);
@@ -414,6 +427,7 @@ void gen_for_loop(Chunk& chunk, node_ptr node) {
 
         end_scope(chunk);
     }
+    current->in_loop = false;
 }
 
 void gen_accessor(Chunk& chunk, node_ptr node) {
