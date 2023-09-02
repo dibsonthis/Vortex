@@ -1,23 +1,15 @@
-// const coroutine = () => {
-//     var output = 0
-//     while (true) {
-//         yield output
-//         output += 1
-//     }
-// }
+import [println] : "time"
 
-// const gen = coroutine()
-// var x = 0
-// while ((x = gen()) <= 5) {
-//     print(x, "\n")
-// }
-
-var x = 10
-
-if (x < 10) {
-    print("a")
-} else if (x > 10) {
-    print("b")
-} else {
-    print("c")
+const coroutine = (...args) => {
+    println(args)
+    var output = 0
+    while (true) {
+        yield output += 1
+    }
 }
+
+dis(coroutine)
+
+const gen = coroutine()
+gen()
+gen()

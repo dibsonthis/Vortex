@@ -141,6 +141,7 @@ static EvaluateResult run(VM& vm) {
                     frame->gen_stack.insert(frame->gen_stack.begin(), value);
                     vm.stack.pop_back();
                 }
+                *vm.gen_frames[frame->function->name] = *frame;
                 vm.frames.pop_back();
                 frame = &vm.frames.back();
                 frame->ip = &frame->function->chunk.code[instruction_index];
