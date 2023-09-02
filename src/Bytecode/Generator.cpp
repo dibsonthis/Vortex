@@ -474,6 +474,19 @@ void gen_return(Chunk& chunk, node_ptr node) {
     add_code(chunk, OP_RETURN, node->line);
 }
 
+void gen_yield(Chunk& chunk, node_ptr node) {
+    if (!current->in_function) {
+        error("Cannot use 'yield' at the top level");
+    }
+
+    if (node->_Node.Yield().value) {
+        generate(node->_Node.Yield().value, chunk);
+    } else {
+        add_constant_code(chunk, none_val(), node->line);
+    }
+    add_code(chunk, OP_YIELD, node->line);
+}
+
 void gen_function(Chunk& chunk, node_ptr node) {
 
     auto prev_compiler = current;
@@ -490,6 +503,8 @@ void gen_function(Chunk& chunk, node_ptr node) {
 
     Value function_value = function_val();
     function_value.value = function;
+
+    function->is_generator = node->_Node.Function().is_generator;
 
     for (auto& param : node->_Node.Function().params) {
         std::string param_name = param->_Node.ID().value;
@@ -521,6 +536,12 @@ void gen_function(Chunk& chunk, node_ptr node) {
 
     add_constant_code(function->chunk, function_value, node->line);
     declareVariable(function->name);
+
+    if (function->is_generator) {
+        Value none = none_val();
+        add_constant_code(function->chunk, none, node->line);
+        declareVariable("_value", false);
+    }
 
     if (node->_Node.Function().body->type == NodeType::OBJECT) {
         generate_bytecode(node->_Node.Function().body->_Node.Object().elements, function->chunk);
@@ -747,8 +768,6 @@ void gen_import(Chunk& chunk, node_ptr node) {
             elements = node->_Node.Import().module->_Node.List().elements;
         }
         for (auto& elem : elements) {
-        //for (int i = elements.size()-1; i >= 0; i--) {
-            //auto& elem = elements[i];
             if (elem->type != NodeType::ID) {
                 error("Import variables must be identifiers");
             }
@@ -836,6 +855,10 @@ void generate(node_ptr node, Chunk& chunk) {
         }
         case NodeType::RETURN: {
             gen_return(chunk, node);
+            break;
+        }
+        case NodeType::YIELD: {
+            gen_yield(chunk, node);
             break;
         }
         case NodeType::ACCESSOR: {

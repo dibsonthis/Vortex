@@ -33,12 +33,14 @@ struct CallFrame {
   int frame_start;
   int sp;
   int instruction_index;
+  std::vector<Value> gen_stack;
 };
 struct VM {
     std::vector<Value> stack;
     Value* sp;
     /* Possibly change to array with specified MAX_DEPTH */
     std::vector<CallFrame> frames;
+    std::unordered_map<std::string, std::shared_ptr<CallFrame>> gen_frames;
     std::vector<Value*> objects;
     std::unordered_map<std::string, Value> globals;
     int status = 0;

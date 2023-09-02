@@ -34,6 +34,7 @@ enum class NodeType {
 	FOR_LOOP,
 	WHILE_LOOP,
 	RETURN,
+	YIELD,
 	BREAK,
 	CONTINUE,
 	IMPORT,
@@ -89,6 +90,7 @@ struct ObjectNode {
 	std::unordered_map<std::string, node_ptr> defaults;
 	std::vector<std::string> keys;
 	std::vector<node_ptr> values;
+	bool contains_yield = false;
 
 	~ObjectNode() {
 		elements.clear();
@@ -133,6 +135,7 @@ struct FuncNode {
 	std::vector<node_ptr> dispatch_functions;
 	bool is_hook = false;
 	bool type_function = false;
+	bool is_generator = false;
 };
 
 struct AccessorNode {
@@ -227,6 +230,10 @@ struct ReturnNode {
 	node_ptr value;
 };
 
+struct YieldNode {
+	node_ptr value;
+};
+
 struct MetaInformation {
 	bool is_const = false;
 	bool is_untyped_property = false;
@@ -296,6 +303,7 @@ using _NodeType = std::variant<
 	IfStatementNode,
 	IfBlockNode,
 	ReturnNode,
+	YieldNode,
 	LibNode,
 	PointerNode,
 	EnumNode,
@@ -375,6 +383,9 @@ struct V : public _NodeType {
 		}
 		ReturnNode& Return() {
 			return std::get<ReturnNode>(*this);
+		}
+		YieldNode& Yield() {
+			return std::get<YieldNode>(*this);
 		}
 		LibNode& Lib() {
 			return std::get<LibNode>(*this);
@@ -492,6 +503,10 @@ struct Node {
 			}
 			case NodeType::RETURN: {
 				_Node = ReturnNode();
+				break;
+			}
+			case NodeType::YIELD: {
+				_Node = YieldNode();
 				break;
 			}
 			case NodeType::LIB: {
@@ -621,6 +636,10 @@ struct Node {
 			}
 			case NodeType::RETURN: {
 				_Node = ReturnNode();
+				break;
+			}
+			case NodeType::YIELD: {
+				_Node = YieldNode();
 				break;
 			}
 			case NodeType::LIB: {

@@ -233,6 +233,7 @@ void Parser::parse_object(std::string end) {
         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == "{") {
             current_node->type = NodeType::OBJECT;
             current_node->_Node = ObjectNode();
+            nested_objects.push_back(current_node);
             int curr_idx = index;
             int closing_index = find_closing_index(index, "{", "}");
             advance();
@@ -249,6 +250,7 @@ void Parser::parse_object(std::string end) {
                 erase_next();
             }
             erase_next();
+            nested_objects.pop_back();
         }
 
         advance();
@@ -396,6 +398,10 @@ void Parser::parse_func_def(std::string end) {
             current_node->_Node.Function().body = peek(1);
             erase_next();
 
+            if (current_node->_Node.Function().body->type == NodeType::OBJECT && current_node->_Node.Function().body->_Node.Object().contains_yield) {
+                current_node->_Node.Function().is_generator = true;
+            }
+
             if (params_node->type == NodeType::PAREN)
             {
                 node_ptr params = params_node;
@@ -497,10 +503,6 @@ void Parser::parse_func_def(std::string end) {
 
                     current_node->_Node.Function().args.push_back(nullptr);
                 }
-
-                // current_node->_Node.Function().body = peek();
-                // erase_next();
-                // erase_prev();
             }
 
             if (current_node->type == NodeType::FUNC && current_node->_Node.Function().body->type == NodeType::OBJECT) {
@@ -1008,6 +1010,30 @@ void Parser::parse_return(std::string end) {
     }
 }
 
+void Parser::parse_yield(std::string end) {
+    while (current_node->type != NodeType::END_OF_FILE) {
+        if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
+            break;
+        }
+
+        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "yield") {
+            current_node->type = NodeType::YIELD;
+            current_node->_Node = YieldNode();
+            for (auto& object : nested_objects) {
+                object->_Node.Object().contains_yield = true;
+            }
+            if (peek()->type == NodeType::OP && (peek()->_Node.Op().value == ";" || peek()->_Node.Op().value == "}")) {
+                advance();
+                continue;
+            } else {
+                current_node->_Node.Yield().value = peek();
+                erase_next();
+            }
+        }
+        advance();
+    }
+}
+
 void Parser::parse_keywords(std::string end) {
     while (current_node->type != NodeType::END_OF_FILE) {
         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
@@ -1182,6 +1208,8 @@ void Parser::parse(int start, std::string end) {
     parse_tag(end);
     reset(start);
     parse_return(end);
+    reset(start);
+    parse_yield(end);
     reset(start);
     parse_import(end);
     reset(start);

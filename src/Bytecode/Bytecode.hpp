@@ -12,6 +12,7 @@ int bytes_to_int(uint8_t a, uint8_t b, uint8_t c, uint8_t d);
 
 enum OpCode {
     OP_RETURN,
+    OP_YIELD,
     OP_LOAD_CONST,
     OP_LOAD_THIS,
     OP_NEGATE,
@@ -97,6 +98,9 @@ struct FunctionObj {
     std::vector<Value> default_values;
     std::shared_ptr<Value> object;
     std::vector<std::string> params;
+    bool is_generator = false;
+    bool generator_init = false;
+    bool generator_done = false;
 };
 
 struct TypeObj {

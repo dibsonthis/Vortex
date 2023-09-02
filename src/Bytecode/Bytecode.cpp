@@ -211,6 +211,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return simple_instruction("OP_POP", offset);
     case OP_RETURN:
         return simple_instruction("OP_RETURN", offset);
+    case OP_YIELD:
+        return simple_instruction("OP_YIELD", offset);
     case OP_LOAD_GLOBAL:
         return op_code_instruction("OP_LOAD_GLOBAL", chunk, offset);
     case OP_LOAD_CONST:

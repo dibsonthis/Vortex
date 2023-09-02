@@ -1,3 +1,22 @@
-import [println, printlns] : "time"
+// const coroutine = () => {
+//     var output = 0
+//     while (true) {
+//         yield output
+//         output += 1
+//     }
+// }
 
-println("hello", "world")
+// const gen = coroutine()
+// var x = 0
+// while ((x = gen()) <= 5) {
+//     print(x, "\n")
+// }
+
+const co = () => {
+    yield _value
+    yield _value
+}
+
+const gen = co()
+print(gen(10), "\n")
+print(gen(), "\n")

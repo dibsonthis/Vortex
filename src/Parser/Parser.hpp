@@ -10,6 +10,7 @@ public:
     int index = 0;
     std::string file_name;
     int line, column;
+    std::vector<node_ptr> nested_objects;
 
 public:
     Parser() = default;
@@ -48,6 +49,7 @@ public:
     void parse_import(std::string end);
     void parse_tag(std::string end);
     void parse_return(std::string end);
+    void parse_yield(std::string end);
     void parse_keywords(std::string end);
     void parse_object_desconstruct(std::string end);
     void parse_hook_implementation(std::string end);

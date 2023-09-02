@@ -97,12 +97,13 @@ static EvaluateResult run(VM& vm) {
                 for (auto& closure : vm.closed_values) {
                     closure->closed = *closure->location;
                     closure->location = &closure->closed;
-                    // closure.second->closed = *closure.second->location;
-                    // closure.second->location = &closure.second->closed;
                 }
                 return EVALUATE_OK;
             }
             case OP_RETURN: {
+                if (frame->function->is_generator) {
+                    frame->function->generator_done = true;
+                }
                 Value return_value = pop(vm);
                 int to_clean = vm.stack.size() - frame->sp;
                 int instruction_index = frame->instruction_index;
@@ -115,6 +116,29 @@ static EvaluateResult run(VM& vm) {
                             break;
                         }
                     }
+                    vm.stack.pop_back();
+                }
+                vm.frames.pop_back();
+                frame = &vm.frames.back();
+                frame->ip = &frame->function->chunk.code[instruction_index];
+                push(vm, return_value);
+                break;
+            }
+            case OP_YIELD: {
+                frame->gen_stack.clear();
+                Value return_value = pop(vm);
+                int to_clean = vm.stack.size() - frame->sp;
+                int instruction_index = frame->instruction_index;
+                for (int i = 0; i < to_clean; i++) {
+                    Value& value = vm.stack.back();
+                    for (auto& closure : vm.closed_values) {
+                        if (closure->location == &value) {
+                            closure->closed = value;
+                            closure->location = &closure->closed;
+                            break;
+                        }
+                    }
+                    frame->gen_stack.insert(frame->gen_stack.begin(), value);
                     vm.stack.pop_back();
                 }
                 vm.frames.pop_back();
@@ -281,6 +305,9 @@ static EvaluateResult run(VM& vm) {
                 closure_obj->defaults = function->defaults;
                 closure_obj->name = function->name;
                 closure_obj->params = function->params;
+                closure_obj->is_generator = function->is_generator;
+                closure_obj->generator_init = function->generator_init;
+                closure_obj->generator_done = function->generator_done;
                 closure_obj->closed_vars = std::vector<std::shared_ptr<Closure>>(500);
                 for (int& index : closure_obj->closed_var_indexes) {
                     auto& value = vm.stack[index + frame->frame_start];
@@ -519,68 +546,135 @@ static EvaluateResult run(VM& vm) {
                 auto& function_obj = function.get_function();
                 int positional_args = function_obj->arity - function_obj->defaults;
 
-                int num_unpacked = 0;
-                int num_captured = 0;
-                int capturing = -1;
-                
-                for (int i = 0; i < param_num; i++) {
-                    Value arg = pop(vm);
-                    if (arg.meta.unpack) {
-                        arg.meta.unpack = false;
-                        num_unpacked--;
-                        for (int j = 0; j < arg.get_list()->size(); j++) {
-                            num_unpacked++;
-                            auto& _arg = arg.get_list()->at(j);
-                            Value& constant = function_obj->chunk.constants[i+j];
+                if (!function_obj->is_generator || (function_obj->is_generator && !function_obj->generator_init)) {
+                    int num_unpacked = 0;
+                    int num_captured = 0;
+                    int capturing = -1;
+                    
+                    for (int i = 0; i < param_num; i++) {
+                        Value arg = pop(vm);
+                        if (arg.meta.unpack) {
+                            arg.meta.unpack = false;
+                            num_unpacked--;
+                            for (int j = 0; j < arg.get_list()->size(); j++) {
+                                num_unpacked++;
+                                auto& _arg = arg.get_list()->at(j);
+                                Value& constant = function_obj->chunk.constants[i+j];
+                                if (constant.is_list() && constant.meta.packer) {
+                                    capturing = i+j;
+                                    constant.get_list()->clear();
+                                    constant.get_list()->push_back(_arg);
+                                } else {
+                                    if (capturing >= 0) {
+                                        function_obj->chunk.constants[capturing].get_list()->push_back(_arg);
+                                        num_captured++;
+                                    } else {
+                                        function_obj->chunk.constants[i + j] = _arg;
+                                    }
+                                }
+                            }
+                        } else {
+                            Value& constant = function_obj->chunk.constants[i];
                             if (constant.is_list() && constant.meta.packer) {
-                                capturing = i+j;
+                                capturing = i;
                                 constant.get_list()->clear();
-                                constant.get_list()->push_back(_arg);
+                                constant.get_list()->push_back(arg);
                             } else {
                                 if (capturing >= 0) {
-                                    function_obj->chunk.constants[capturing].get_list()->push_back(_arg);
+                                    function_obj->chunk.constants[capturing].get_list()->push_back(arg);
                                     num_captured++;
                                 } else {
-                                    function_obj->chunk.constants[i + j] = _arg;
+                                    function_obj->chunk.constants[i] = arg;
                                 }
                             }
                         }
-                    } else {
-                        Value& constant = function_obj->chunk.constants[i];
-                        if (constant.is_list() && constant.meta.packer) {
-                            capturing = i;
-                            constant.get_list()->clear();
-                            constant.get_list()->push_back(arg);
-                        } else {
-                            if (capturing >= 0) {
-                                function_obj->chunk.constants[capturing].get_list()->push_back(arg);
-                                num_captured++;
-                            } else {
-                                function_obj->chunk.constants[i] = arg;
-                            }
-                        }
                     }
-                }
 
-                param_num += num_unpacked - num_captured;
+                    param_num += num_unpacked - num_captured;
 
-                if ((param_num < positional_args) || (param_num > function_obj->arity)) {
-                    runtimeError(vm, "Function '" + function_obj->name + "' expects " + std::to_string(function_obj->arity) + " argument(s)");
-                    return EVALUATE_RUNTIME_ERROR;
-                }
+                    if ((param_num < positional_args) || (param_num > function_obj->arity)) {
+                        runtimeError(vm, "Function '" + function_obj->name + "' expects " + std::to_string(function_obj->arity) + " argument(s)");
+                        return EVALUATE_RUNTIME_ERROR;
+                    }
 
-                if (param_num < function_obj->arity) {
-                    // We have defaults we want to inject
-                    int default_index = 0;
-                    for (int i = param_num; i < function_obj->arity; i++) {
-                        Meta meta = function_obj->chunk.constants[i].meta;
-                        function_obj->chunk.constants[i] = function_obj->default_values[default_index];
-                        function_obj->chunk.constants[i].meta = meta;
-                        default_index++;
+                    if (param_num < function_obj->arity) {
+                        // We have defaults we want to inject
+                        int default_index = 0;
+                        for (int i = param_num; i < function_obj->arity; i++) {
+                            Meta meta = function_obj->chunk.constants[i].meta;
+                            function_obj->chunk.constants[i] = function_obj->default_values[default_index];
+                            function_obj->chunk.constants[i].meta = meta;
+                            default_index++;
+                        }
                     }
                 }
                 
                 //disassemble_chunk(function_obj->chunk, function_obj->name + "__");
+
+                if (function_obj->is_generator && !function_obj->generator_init) {
+                    function_obj->generator_init = true;
+                    auto call_frame = std::make_shared<CallFrame>();
+                    call_frame->frame_start = vm.stack.size();
+                    call_frame->function = function_obj;
+                    call_frame->sp = vm.stack.size();
+                    call_frame->ip = function_obj->chunk.code.data();
+
+                    int instruction_index = frame->ip - &frame->function->chunk.code[0];
+                    call_frame->instruction_index = instruction_index;
+                    vm.gen_frames[function_obj->name] = call_frame;
+
+                    push(vm, function);
+                    break;
+
+                } else if (function_obj->is_generator && function_obj->generator_init) {
+                    auto& call_frame = vm.gen_frames[function_obj->name];
+                    call_frame->frame_start = vm.stack.size();
+                    call_frame->sp = vm.stack.size();
+
+                    if (param_num > 1) {
+                        runtimeError(vm, "Coroutine can only be called with one argument for parameter '_value'");
+                    }
+
+                    int _value_index = -1;
+
+                    if (param_num == 1) {
+                        for (int i = 0; i < call_frame->function->chunk.variables.size(); i++) {
+                            if (call_frame->function->chunk.variables[i] == "_value") {
+                                _value_index = i;
+                                break;
+                            }
+                        }
+
+                        if (_value_index == -1) {
+                            runtimeError(vm, "Missing variable '_value'");
+                        }
+
+                        call_frame->function->chunk.constants[_value_index] = pop(vm);
+                        call_frame->frame_start--;
+                        call_frame->sp--;
+                    }
+
+                    for (int i = 0; i < call_frame->gen_stack.size(); i++) {
+                        Value& value = call_frame->gen_stack[i];
+                        if (i == _value_index) {
+                            push(vm, call_frame->function->chunk.constants[_value_index]);
+                        } else {
+                            push(vm, value);
+                        }
+                    }
+
+                    int instruction_index = frame->ip - &frame->function->chunk.code[0];
+                    call_frame->instruction_index = instruction_index;
+
+                    vm.frames.push_back(*call_frame);
+                    frame = &*call_frame;
+                    break;
+
+                } else if (function_obj->is_generator && function_obj->generator_done) {
+                    Value none = none_val();
+                    push(vm, none);
+                    break;
+                }
 
                 CallFrame call_frame;
                 call_frame.frame_start = vm.stack.size();
@@ -589,7 +683,6 @@ static EvaluateResult run(VM& vm) {
                 call_frame.ip = function_obj->chunk.code.data();
 
                 int instruction_index = frame->ip - &frame->function->chunk.code[0];
-                
                 call_frame.instruction_index = instruction_index;
 
                 vm.frames.push_back(call_frame);
@@ -705,11 +798,6 @@ static EvaluateResult run(VM& vm) {
                         function_obj->chunk.constants[i].meta = meta;
                         default_index++;
                     }
-                }
-
-                if (capturing >= 0) {
-                    function_obj->chunk.constants[capturing].get_list()->clear();
-                    function_obj->chunk.constants[capturing].meta.unpack = true;
                 }
 
                 //disassemble_chunk(function_obj->chunk, function_obj->name + "__");
