@@ -259,9 +259,9 @@ int gen_if(Chunk& chunk, node_ptr node) {
     int jump_instruction = chunk.code.size() + 1;
     add_opcode(chunk, OP_POP_JUMP_IF_FALSE, 0, node->line);
     generate_bytecode(node->_Node.IfStatement().body->_Node.Object().elements, chunk);
+    end_scope(chunk);
     int jump_true_instruction = chunk.code.size() + 1;
     add_opcode(chunk, OP_JUMP, 0, node->line);
-    end_scope(chunk);
     int offset = chunk.code.size() - jump_instruction - 4;
     uint8_t* bytes = int_to_bytes(offset);
     patch_bytes(chunk, jump_instruction, bytes);

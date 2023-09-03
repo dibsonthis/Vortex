@@ -1,15 +1,9 @@
-import [println] : "time"
+var ls = 1..10
 
-const coroutine = (...args) => {
-    println(args)
-    var output = 0
-    while (true) {
-        yield output += 1
+for (ls, i, v) {
+    if (v < 5) {
+        print("a")
+    } else if (v >= 5) {
+        print("b")
     }
 }
-
-dis(coroutine)
-
-const gen = coroutine()
-gen()
-gen()
