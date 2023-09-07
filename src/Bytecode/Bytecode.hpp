@@ -45,6 +45,7 @@ enum OpCode {
     OP_MAKE_TYPED,
     OP_MAKE_OBJECT,
     OP_MAKE_FUNCTION,
+    OP_MAKE_CONST,
     OP_TYPE_DEFAULTS,
     OP_POP,
     OP_JUMP_IF_FALSE,
@@ -102,7 +103,6 @@ struct FunctionObj {
     bool generator_init = false;
     bool generator_done = false;
     bool is_type_generator = false;
-
 };
 
 struct TypeObj {
@@ -130,6 +130,8 @@ struct NativeFunctionObj {
 struct Meta {
     bool unpack = false;
     bool packer = false;
+    bool is_const = false;
+    bool temp_non_const = false;
 };
 
 struct Value {

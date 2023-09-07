@@ -1,25 +1,8 @@
-type Person = (name, age = 0) => {
-    return {
-        name: name,
-        age: age
-    }
+const b = {
+    count: 0,
+    blah: () => this.count += 1
 }
 
-type Person2 = (name, age = 0) => {
-    return {
-        name: name,
-        age: age
-    }
-}
+b.blah()
 
-const is_instance = (_type, obj) => {
-    if (type(_type) != "Function" or type(obj) != "Object") {
-        return false
-    }
-    const fname = _type.info().name
-    const typename = obj.info().typename
-
-    return fname == typename
-}
-
-print(is_instance(Person, Person2("Allan")))
+b.count += 1

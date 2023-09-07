@@ -108,6 +108,7 @@ static EvaluateResult run(VM& vm) {
                     frame->function->generator_done = true;
                 }
                 Value return_value = pop(vm);
+                return_value.meta.temp_non_const = false;
                 if (frame->function->is_type_generator && return_value.is_object()) {
                     return_value.get_object()->type_name = frame->function->name;
                 }
@@ -159,7 +160,9 @@ static EvaluateResult run(VM& vm) {
                     Value none = none_val();
                     push(vm, none);
                 } else {
-                    push(vm, *frame->function->object);
+                    Value& value = *frame->function->object;
+                    value.meta.temp_non_const = true;
+                    push(vm, value);
                 }
                 break;
             }
@@ -175,7 +178,13 @@ static EvaluateResult run(VM& vm) {
             }
             case OP_SET: {
                 int index = READ_INT();
-                //vm.stack[index + frame->frame_start] = pop(vm);
+                Value value = vm.stack[index + frame->frame_start];
+                if (value.meta.is_const) {
+                    if (!value.meta.temp_non_const) {
+                        runtimeError(vm, "Cannot modify const");
+                        return EVALUATE_RUNTIME_ERROR;
+                    }
+                }
                 vm.stack[index + frame->frame_start] = vm.stack.back();
                 break;
             }
@@ -183,6 +192,13 @@ static EvaluateResult run(VM& vm) {
                 Value value = pop(vm);
                 Value accessor = pop(vm);
                 Value container = pop(vm);
+
+                if (container.meta.is_const) {
+                    if (!container.meta.temp_non_const) {
+                        runtimeError(vm, "Cannot modify const");
+                        return EVALUATE_RUNTIME_ERROR;
+                    }
+                }
                 if (container.is_object()) {
                     if (!accessor.is_string()) {
                         runtimeError(vm, "Object accessor must be a string");
@@ -284,6 +300,10 @@ static EvaluateResult run(VM& vm) {
                 push(vm, type);
                 break;
             }
+            case OP_MAKE_CONST: {
+                vm.stack.back().meta.is_const = true;
+                break;
+            }
             case OP_TYPE_DEFAULTS: {
                 int size = READ_INT();
                 auto& type = vm.stack[vm.stack.size()- (size * 2) - 1];
@@ -355,6 +375,13 @@ static EvaluateResult run(VM& vm) {
             }
             case OP_SET_CLOSURE: {
                 int index = READ_INT();
+                Value value = *frame->function->closed_vars[index]->location;
+                if (value.meta.is_const) {
+                    if (value.meta.temp_non_const) {
+                        runtimeError(vm, "Cannot modify const");
+                        return EVALUATE_RUNTIME_ERROR;
+                    }
+                }
                 *frame->function->closed_vars[index]->location = vm.stack.back();
                 // if (frame->function->closed_vars.size() > index && frame->function->closed_vars[index]) {
                 //     *frame->function->closed_vars[index] = vm.stack.back();
@@ -1566,6 +1593,7 @@ Value copy(Value& value) {
         case Object: {
             Value new_object = object_val();
             new_object.get_object()->type = value.get_object()->type;
+            new_object.get_object()->type_name = value.get_object()->type_name;
             for (auto prop : value.get_object()->values) {
                 new_object.get_object()->values[prop.first] = copy(prop.second);
             }

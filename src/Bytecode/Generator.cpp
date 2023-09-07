@@ -22,6 +22,9 @@ void gen_literal(Chunk& chunk, node_ptr node) {
             add_constant_code(chunk, none_val(), node->line);
             break;
         }
+        default: {
+            return;
+        }
     }
 }
 
@@ -182,6 +185,15 @@ void gen_eq(Chunk& chunk, node_ptr node) {
         generate(node->_Node.Op().right, chunk);
         add_code(chunk, OP_SET_PROPERTY, node->line);
     } else if (left->type == NodeType::OP && left->_Node.Op().value == ".") {
+        if (left->_Node.Op().left->type == NodeType::ID) {
+            int index = resolve_variable(left->_Node.Op().left->_Node.ID().value);
+            if (index != -1) {
+                Variable variable = current->variables[index];
+                if (variable.is_const) {
+                    error("Cannot modify constant '" + variable.name + "'");
+                }
+            }
+        }
         if (left->_Node.Op().right->type == NodeType::ID) {
             generate(left->_Node.Op().left, chunk);
             add_constant_code(chunk, string_val(left->_Node.Op().right->_Node.ID().value), node->line);
@@ -208,6 +220,7 @@ void gen_var(Chunk& chunk, node_ptr node) {
 void gen_const(Chunk& chunk, node_ptr node) {
     generate(node->_Node.ConstantDeclatation().value, chunk);
     declareVariable(node->_Node.ConstantDeclatation().name, true);
+    add_code(chunk, OP_MAKE_CONST, node->line);
 }
 
 void gen_id(Chunk& chunk, node_ptr node, int global_flag) {
@@ -698,6 +711,9 @@ void gen_type(Chunk& chunk, node_ptr node) {
                     }
                 }
             }
+            default: {
+                break;
+            }
         }
     }
 
@@ -943,6 +959,9 @@ void generate(node_ptr node, Chunk& chunk) {
                 generate(node->_Node.List().elements[i], chunk);
                 add_code(chunk, OP_OR, node->line);
             }
+            break;
+        }
+        default: {
             break;
         }
     }

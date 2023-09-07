@@ -35,9 +35,13 @@ struct FunctionObj {
     int defaults;
     Chunk chunk;
     std::vector<int> closed_var_indexes;
-    //std::vector<std::shared_ptr<Value>> closed_vars;
     std::vector<std::shared_ptr<Closure>> closed_vars;
     std::shared_ptr<Value> object;
+    std::vector<std::string> params;
+    bool is_generator = false;
+    bool generator_init = false;
+    bool generator_done = false;
+    bool is_type_generator = false;
 };
 
 struct TypeObj {
