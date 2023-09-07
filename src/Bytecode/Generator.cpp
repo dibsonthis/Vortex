@@ -459,11 +459,6 @@ void gen_dot(Chunk& chunk, node_ptr node) {
         new_dot->_Node.Op().right = node->_Node.Op().right->_Node.Accessor().container;
         gen_dot(chunk, new_dot);
         generate(node->_Node.Op().right->_Node.Accessor().accessor->_Node.List().elements[0], chunk);
-        // if (right_container->type == NodeType::ID) {
-        //     add_constant_code(chunk, string_val(right_container->_Node.ID().value), node->line);
-        // }
-        // add_opcode(chunk, OP_ACCESSOR, 0, node->line);
-        // generate(node->_Node.Op().right->_Node.Accessor().accessor->_Node.List().elements[0], chunk);
     } else {
         generate(node->_Node.Op().left, chunk);
         generate(node->_Node.Op().right, chunk);
@@ -531,6 +526,7 @@ void gen_function(Chunk& chunk, node_ptr node) {
     function_value.value = function;
 
     function->is_generator = node->_Node.Function().is_generator;
+    function->is_type_generator = node->_Node.Function().is_type_generator;
 
     for (auto& param : node->_Node.Function().params) {
         std::string param_name = param->_Node.ID().value;
@@ -613,11 +609,29 @@ void gen_function_call(Chunk& chunk, node_ptr node) {
 
 void gen_type(Chunk& chunk, node_ptr node) {
     TypeNode& type_node = node->_Node.Type();
+
+    if (type_node.body && type_node.body->type == NodeType::FUNC) {
+        // We just make this a const decl
+        // But tag the function as a type generator
+        node_ptr const_decl = std::make_shared<Node>(NodeType::CONSTANT_DECLARATION);
+        const_decl->_Node.ConstantDeclatation().name = type_node.name;
+        const_decl->_Node.ConstantDeclatation().value = type_node.body;
+        const_decl->_Node.ConstantDeclatation().value->_Node.Function().is_type_generator = true;
+        gen_const(chunk, const_decl);
+        return;
+    }
+
     std::vector<node_ptr> elements;
     add_constant_code(chunk, string_val(type_node.name), node->line);
-    if (!type_node.body || type_node.body->_Node.Object().elements.size() == 0) {
+    if (
+        !type_node.body || 
+        (type_node.body->type == NodeType::OBJECT && type_node.body->_Node.Object().elements.size() == 0)) {
         add_opcode(chunk, OP_MAKE_TYPE, 0, node->line);
         return;
+    }
+
+    if (type_node.body->type != NodeType::OBJECT) {
+        error("Invalid type body");
     }
 
     if (type_node.body->_Node.Object().elements.size() == 1 && type_node.body->_Node.Object().elements[0]->type == NodeType::COMMA_LIST) {

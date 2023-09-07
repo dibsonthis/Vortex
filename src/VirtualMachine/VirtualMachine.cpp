@@ -73,6 +73,7 @@ static EvaluateResult run(VM& vm) {
     define_native(vm, "dis", dis_builtin);
     define_native(vm, "length", length_builtin);
     define_native(vm, "info", info_builtin);
+    define_native(vm, "type", type_builtin);
     define_native(vm, "copy", copy_builtin);
     define_native(vm, "sort", sort_builtin);
     define_native(vm, "load_lib", load_lib_builtin);
@@ -107,6 +108,9 @@ static EvaluateResult run(VM& vm) {
                     frame->function->generator_done = true;
                 }
                 Value return_value = pop(vm);
+                if (frame->function->is_type_generator && return_value.is_object()) {
+                    return_value.get_object()->type_name = frame->function->name;
+                }
                 int to_clean = vm.stack.size() - frame->sp;
                 int instruction_index = frame->instruction_index;
                 for (int i = 0; i < to_clean; i++) {
@@ -1425,6 +1429,47 @@ static Value length_builtin(std::vector<Value>& args) {
     }
 }
 
+static Value type_builtin(std::vector<Value>& args) {
+    if (args.size() != 1) {
+        error("Function 'type' expects 1 argument");
+    }
+
+    Value value = args[0];
+
+    switch (value.type) {
+        case Number: {
+            return string_val("Number");
+        }
+        case String: {
+            return string_val("String");
+        }
+        case Boolean: {
+            return string_val("Boolean");
+        }
+        case Function: {
+            return string_val("Function");
+        }
+        case List: {
+            return string_val("List");
+        }
+        case Object: {
+            return string_val("Object");
+        }
+        case Pointer: {
+            return string_val("Pointer");
+        }
+        case Native: {
+            return string_val("Native");
+        }
+        case Type: {
+            return string_val("Type");
+        }
+        case None: {
+            return string_val("None");
+        }
+    }
+}
+
 static Value info_builtin(std::vector<Value>& args) {
     if (args.size() != 1) {
         error("Function 'name' expects 1 argument");
@@ -1452,6 +1497,7 @@ static Value info_builtin(std::vector<Value>& args) {
         case Object: {
             auto& object = value.get_object();
             obj->values["type"] = object->type == nullptr ? none_val() : string_val(object->type->name);
+            obj->values["typename"] = string_val(object->type_name);
             obj->values["keys"] = list_val();
             obj->values["values"] = list_val();
             for (auto& prop : object->values) {

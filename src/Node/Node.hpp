@@ -136,6 +136,7 @@ struct FuncNode {
 	bool is_hook = false;
 	bool type_function = false;
 	bool is_generator = false;
+	bool is_type_generator = false;
 };
 
 struct AccessorNode {

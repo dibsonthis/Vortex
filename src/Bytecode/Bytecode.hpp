@@ -101,6 +101,8 @@ struct FunctionObj {
     bool is_generator = false;
     bool generator_init = false;
     bool generator_done = false;
+    bool is_type_generator = false;
+
 };
 
 struct TypeObj {
@@ -112,6 +114,7 @@ struct TypeObj {
 struct ObjectObj {
     std::shared_ptr<TypeObj> type;
     std::unordered_map<std::string, Value> values;
+    std::string type_name;
 };
 
 struct PointerObj {

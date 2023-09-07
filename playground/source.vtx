@@ -1,5 +1,25 @@
-const blah = {
-    hmm: [[[-1, -2], "A"], [2, "B"], [3, "C"]]
+type Person = (name, age = 0) => {
+    return {
+        name: name,
+        age: age
+    }
 }
 
-print(blah.hmm[0][0][1])
+type Person2 = (name, age = 0) => {
+    return {
+        name: name,
+        age: age
+    }
+}
+
+const is_instance = (_type, obj) => {
+    if (type(_type) != "Function" or type(obj) != "Object") {
+        return false
+    }
+    const fname = _type.info().name
+    const typename = obj.info().typename
+
+    return fname == typename
+}
+
+print(is_instance(Person, Person2("Allan")))
