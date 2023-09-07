@@ -84,7 +84,7 @@ struct Closure;
 
 struct Chunk {
     std::vector<uint8_t> code;
-    std::vector<uint8_t> lines;
+    std::vector<int> lines;
     std::vector<Value> constants;
     std::vector<std::string> variables;
 };
@@ -272,15 +272,15 @@ Value none_val();
 void printValue(Value value);
 std::string toString(Value value);
 
-void add_code(Chunk& chunk, uint8_t code, uint8_t line = 0);
+void add_code(Chunk& chunk, uint8_t code, int line = 0);
 
-void add_opcode(Chunk& chunk, uint8_t op, int operand, uint8_t line = 0);
+void add_opcode(Chunk& chunk, uint8_t op, int operand, int line = 0);
 
 int add_constant(Chunk& chunk, Value value);
 
-void add_constant_code(Chunk& chunk, Value value, uint8_t line = 0);
+void add_constant_code(Chunk& chunk, Value value, int line = 0);
 
-void add_bytes(Chunk& chunk, Value value, uint8_t op, uint8_t line = 0);
+void add_bytes(Chunk& chunk, Value value, uint8_t op, int line = 0);
 
 void patch_bytes(Chunk& chunk, int offset, uint8_t* bytes);
 

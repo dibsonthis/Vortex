@@ -129,7 +129,7 @@ void printValue(Value value) {
     std::cout << toString(value);
 }
 
-void add_code(Chunk& chunk, uint8_t code, uint8_t line) {
+void add_code(Chunk& chunk, uint8_t code, int line) {
     chunk.code.push_back(code);
     chunk.lines.push_back(line);
 }
@@ -139,7 +139,7 @@ int add_constant(Chunk& chunk, Value value) {
     return chunk.constants.size()-1;
 }
 
-void add_constant_code(Chunk& chunk, Value value, uint8_t line) {
+void add_constant_code(Chunk& chunk, Value value, int line) {
     int constant = add_constant(chunk, value);
     auto const_bytes = int_to_bytes(constant);
 
@@ -149,7 +149,7 @@ void add_constant_code(Chunk& chunk, Value value, uint8_t line) {
     }
 }
 
-void add_bytes(Chunk& chunk, Value value, uint8_t op, uint8_t line) {
+void add_bytes(Chunk& chunk, Value value, uint8_t op, int line) {
     int constant = add_constant(chunk, value);
     auto const_bytes = int_to_bytes(constant);
 
@@ -165,7 +165,7 @@ void patch_bytes(Chunk& chunk, int offset, uint8_t* bytes) {
     }
 }
 
-void add_opcode(Chunk& chunk, uint8_t op, int operand, uint8_t line) {
+void add_opcode(Chunk& chunk, uint8_t op, int operand, int line) {
     auto bytes = int_to_bytes(operand);
 
     add_code(chunk, op, line);

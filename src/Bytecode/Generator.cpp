@@ -1008,11 +1008,13 @@ void generate(node_ptr node, Chunk& chunk) {
             sub_node->_Node.Op().value = "-";
             sub_node->_Node.Op().left = node->_Node.Op().left;
             sub_node->_Node.Op().right = node->_Node.Op().right;
+            sub_node->line = node->line;
 
             node_ptr eq_node = std::make_shared<Node>(NodeType::OP);
             eq_node->_Node.Op().value = "=";
             eq_node->_Node.Op().left = node->_Node.Op().left;
             eq_node->_Node.Op().right = sub_node;
+            eq_node->line = node->line;
 
             gen_eq(chunk, eq_node);
             return;
@@ -1022,11 +1024,13 @@ void generate(node_ptr node, Chunk& chunk) {
             add_node->_Node.Op().value = "+";
             add_node->_Node.Op().left = node->_Node.Op().left;
             add_node->_Node.Op().right = node->_Node.Op().right;
+            add_node->line = node->line;
 
             node_ptr eq_node = std::make_shared<Node>(NodeType::OP);
             eq_node->_Node.Op().value = "=";
             eq_node->_Node.Op().left = node->_Node.Op().left;
             eq_node->_Node.Op().right = add_node;
+            eq_node->line = node->line;
 
             gen_eq(chunk, eq_node);
             return;

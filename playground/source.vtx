@@ -1,8 +1,260 @@
-const b = {
-    count: 0,
-    blah: () => this.count += 1
+// // const generator = (num, fn) => {
+// //     var _num = -1
+// //     const next = () => {
+// //         _num += 1
+// //         if (num == _num) {
+// //             return None
+// //         }
+
+// //         return fn(_num)
+// //     }
+// //     return next
+// // }
+
+// // const gen = generator(100, (x) => x * 1.43)
+
+// // const generate = (generator) => {
+// //     var ls = []
+// //     var r
+// //     while (r = gen()) {
+// //         ls[ls.length()] = r
+// //     }
+// //     return ls
+// // }
+
+// // print(gen.generate())
+
+// // const outer = (fn) => {
+// //     const inner = () => {
+// //         return fn()
+// //     }
+
+// //     return inner
+// // }
+
+// // const bloop = () => print("hi")
+// // const inner = outer(bloop)
+// // inner()
+
+
+
+// // const timer = (func, message = "") => {
+// //     import [rename] : functools
+// //     const wrapper = (...args) => {
+// //         const start = clock()
+// //         var res = func(...args)
+// //         const duration = clock() - start
+// //         print("Duration: ", duration, "\n")
+// //         if (message != "") {
+// //             print(message, "\n")
+// //         }
+// //         return res
+// //     }
+
+// //     return wrapper.rename(func.info().name)
+// // }
+
+// // const logger = (func) => {
+// //     import io
+// //     import [rename] : functools
+// //     const wrapper = (...args) => {
+// //         var log = f"${func.info().name}(${args})\n"
+// //         io.appendf(func.info().name + ".txt", log)
+// //         return func(...args)
+// //     }
+
+// //     return wrapper.rename(func.info().name)
+// // }
+
+// // var somefunc = (n = 100, m = 1) => {
+// //     var l = 0
+// //     for (0..n, i) {
+// //         for (0..n, j) {
+// //             l += (i + j) * m
+// //         }
+// //     }
+// //     return l
+// // }
+
+// // somefunc = somefunc.timer("Done").logger()
+// // somefunc(100, 1.5)
+
+
+// // const generator = () => {
+// //     var index = -1
+
+// //     const functions = [
+// //         (...args) => 1,
+// //         (...args) => 2,
+// //         (...args) => 3,
+// //         (...args) => args,
+// //         (...args) => args.length()
+// //     ]
+
+// //     const next = () => {
+// //         index += 1
+// //         if (index >= functions.length()) {
+// //             index = 0
+// //         }
+// //         return functions[index]
+// //     }
+
+// //     return next
+// // }
+
+// // const gen = generator()
+
+// // var func = gen()
+// // println(func(10, 2))
+// // func = gen()
+// // println(func(10, 2))
+// // func = gen()
+// // println(func(10, 2))
+// // func = gen()
+// // println(func(10, 2))
+// // func = gen()
+// // println(func(10, 2))
+// // func = gen()
+// // println(func(10, 2))
+
+// // const even_numbers_generator = () => {
+// //     var x = 0
+// //     while (true) {
+// //         yield x += 2
+// //         if (_value) {
+// //             break
+// //         }
+// //     }
+// // }
+
+// // const gen = even_numbers_generator()
+// // var i = -1
+// // while (!gen.info().done) {
+// //     if ((i += 1) >= 10) {
+// //         gen(true)
+// //     } else {
+// //         println(gen())
+// //     }
+// // }
+
+// // const coro1 = (y = 10) => {
+// //     var x = 0
+// //     while (x < y) {
+// //         yield x += 1
+// //     }
+// // }
+
+// // const coro2 = () => {
+// //     import [split] : string
+// //     var alpha = "a b c d e f g h i j k l m n o p q r s t u v w x y z".split()
+// //     for (alpha, i, v) {
+// //         yield v
+// //     }
+// // }
+
+// // const one_off = () => {
+// //     return "HELLO WORLD"
+// // }
+
+// // const popleft = (list) => {
+// //     var value = list[0]
+// //     list.remove(0)
+// //     return value
+// // }
+
+// // const scheduler = {
+// //     functions: [],
+// //     run: () => {
+// //         while (this.functions.length() > 0) {
+// //             const function = this.functions.popleft()
+// //             if (function.info().generator and !function.info().init) {
+// //                 // Initialise the generator function, and add back to queue
+// //                 function()
+// //                 this.functions.append(function)
+// //             } else if (function.info().generator) {
+// //                 // Call the generator, if it's not done yet, print the result and add back to queue
+// //                 // If done, do nothing
+// //                 const res = function()
+// //                 if (!function.info().done) {
+// //                     println(res)
+// //                     this.functions.append(function)
+// //                 }
+// //             } else {
+// //                 // Handle case when function is a one off (not a generator)
+// //                 println(function())
+// //             }
+// //         }
+// //     }
+// // }
+
+// // scheduler.functions = [coro1(5), one_off, coro2(), one_off]
+// // scheduler.run()
+
+// import [Stack] : "../../general/structs/Stack"
+// import [Queue] : "../../general/structs/Queue"
+// import [PriorityQueue] : "../../general/structs/PriorityQueue"
+
+// const stack = Stack()
+// stack.push(10)
+// stack.push(100)
+// println(stack.pop())
+
+// const queue = Queue()
+// queue.enqueue(10)
+// queue.enqueue(20)
+// println(queue.dequeue())
+
+// const pqueue = PriorityQueue()
+// pqueue.enqueue("help me")
+// pqueue.enqueue("help him", 10)
+// pqueue.enqueue("help her", 5)
+
+// println(pqueue.dequeue())
+// println(pqueue.dequeue())
+// println(pqueue.dequeue())
+
+// const pq = PriorityQueue()
+
+// const Priority = {
+//     CRITICAL: 0,
+//     ERROR: 1,
+//     DEBUG: 2,
+//     INFO: 3
+// }
+
+// pq.enqueue("Logging in", Priority.INFO)
+// pq.enqueue("Fuck", Priority.CRITICAL)
+// pq.enqueue("Uh ohhhh", Priority.ERROR)
+// pq.enqueue("Logging out", Priority.INFO)
+// pq.enqueue("Encountered bug", Priority.DEBUG)
+// pq.enqueue("The end is here", Priority.CRITICAL)
+
+// while (pq.size() > 0) {
+//     println(pq.dequeue())
+// }
+
+type Person = (name, age, id) => {
+    return {
+        name: name,
+        age: age,
+        id: id
+    }
 }
 
-b.blah()
+const PersonFactory = {
+    count: -1,
+    make_person: (name, age) => {
+        this.count += 1
+        return Person(name, age, this.count)
+    }
+}
 
-b.count += 1
+var people = []
+
+for (0..10) {
+    people.append(PersonFactory.make_person("Jack", 30))
+}
+
+const b = (p) => p.count += 100
+
+b(PersonFactory)

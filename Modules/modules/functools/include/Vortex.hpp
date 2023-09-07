@@ -24,7 +24,7 @@ struct Closure;
 
 struct Chunk {
     std::vector<uint8_t> code;
-    std::vector<uint8_t> lines;
+    std::vector<int> lines;
     std::vector<Value> constants;
     std::vector<std::string> variables;
 };
