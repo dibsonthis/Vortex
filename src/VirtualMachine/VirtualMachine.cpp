@@ -68,6 +68,8 @@ static EvaluateResult run(VM& vm) {
     define_native(vm, "string", to_string_builtin);
     define_native(vm, "number", to_number_builtin);
     define_native(vm, "insert", insert_builtin);
+    define_native(vm, "append", append_builtin);
+    define_native(vm, "remove", remove_builtin);
     define_native(vm, "dis", dis_builtin);
     define_native(vm, "length", length_builtin);
     define_native(vm, "info", info_builtin);
@@ -1318,7 +1320,7 @@ static Value to_number_builtin(std::vector<Value>& args) {
 static Value insert_builtin(std::vector<Value>& args) {
     int arg_count = 3;
     if (args.size() != arg_count) {
-        error("Function 'string' expects " + std::to_string(arg_count) + " argument(s)");
+        error("Function 'insert' expects " + std::to_string(arg_count) + " argument(s)");
     }
 
     Value list = args[0];
@@ -1343,6 +1345,59 @@ static Value insert_builtin(std::vector<Value>& args) {
     }
 
     ls->insert(ls->begin() + pos_num, value);
+
+    return list;
+}
+
+static Value append_builtin(std::vector<Value>& args) {
+    int arg_count = 2;
+    if (args.size() != arg_count) {
+        error("Function 'append' expects " + std::to_string(arg_count) + " argument(s)");
+    }
+
+    Value list = args[0];
+    Value value = args[1];
+
+    if (!list.is_list()) {
+        error("Function 'append' expects argument 'list' to be a list");
+    }
+
+    auto& ls = list.get_list();
+
+    ls->push_back(value);
+
+    return list;
+}
+
+static Value remove_builtin(std::vector<Value>& args) {
+    int arg_count = 2;
+    if (args.size() != arg_count) {
+        error("Function 'remove' expects " + std::to_string(arg_count) + " argument(s)");
+    }
+
+    Value list = args[0];
+    Value pos = args[1];
+
+    if (!list.is_list()) {
+        error("Function 'remove' expects argument 'list' to be a list");
+    }
+
+    if (!pos.is_number()) {
+        error("Function 'remove' expects argument 'pos' to be a number");
+    }
+
+    int pos_num = pos.get_number();
+    auto& ls = list.get_list();
+
+    if (pos_num < 0) {
+        pos_num = 0;
+    } else if (pos_num >= ls->size()) {
+        pos_num = ls->size()-1;
+    }
+
+    if (ls->size() > 0) {
+        ls->erase(ls->begin() + pos_num);
+    }
 
     return list;
 }

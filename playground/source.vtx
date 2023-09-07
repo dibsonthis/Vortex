@@ -1,9 +1,5 @@
-var ls = 1..10
-
-for (ls, i, v) {
-    if (v < 5) {
-        print("a")
-    } else if (v >= 5) {
-        print("b")
-    }
+const blah = {
+    hmm: [[[-1, -2], "A"], [2, "B"], [3, "C"]]
 }
+
+print(blah.hmm[0][0][1])

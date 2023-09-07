@@ -452,6 +452,18 @@ void gen_dot(Chunk& chunk, node_ptr node) {
         gen_id(chunk, backup_function_node, 1);
         add_opcode(chunk, OP_CALL_METHOD, node->_Node.Op().right->_Node.FunctionCall().args.size(), node->line);
         return;
+    } else if (node->_Node.Op().right->type == NodeType::ACCESSOR) {
+        node_ptr new_dot = std::make_shared<Node>(NodeType::OP);
+        new_dot->_Node.Op().value = ".";
+        new_dot->_Node.Op().left = node->_Node.Op().left;
+        new_dot->_Node.Op().right = node->_Node.Op().right->_Node.Accessor().container;
+        gen_dot(chunk, new_dot);
+        generate(node->_Node.Op().right->_Node.Accessor().accessor->_Node.List().elements[0], chunk);
+        // if (right_container->type == NodeType::ID) {
+        //     add_constant_code(chunk, string_val(right_container->_Node.ID().value), node->line);
+        // }
+        // add_opcode(chunk, OP_ACCESSOR, 0, node->line);
+        // generate(node->_Node.Op().right->_Node.Accessor().accessor->_Node.List().elements[0], chunk);
     } else {
         generate(node->_Node.Op().left, chunk);
         generate(node->_Node.Op().right, chunk);

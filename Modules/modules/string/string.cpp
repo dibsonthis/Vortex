@@ -14,7 +14,7 @@ extern "C" Value split(std::vector<Value>& args) {
     Value& delimiter = args[1];
 
     if (!text.is_string() || !delimiter.is_string()) {
-        error("Function 'createWindow' expects args 'text', 'delimiter' to be strings");
+        error("Function 'split' expects args 'text', 'delimiter' to be strings");
     }
 
     std::string& str = text.get_string();

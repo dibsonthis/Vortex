@@ -61,8 +61,14 @@ struct NativeFunctionObj {
     NativeFunction function = nullptr;
 };
 
+struct Meta {
+    bool unpack = false;
+    bool packer = false;
+};
+
 struct Value {
     ValueType type;
+    Meta meta;
     std::variant
     <
         double, 
