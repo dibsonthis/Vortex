@@ -756,43 +756,76 @@ void Parser::parse_tag(std::string end) {
         }
 
         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == "@") {
+            // node_ptr tag = current_node->_Node.Op().right;
+            // std::vector<std::string> tags;
+            // if (tag->type == NodeType::ID) {
+            //     tags.push_back(tag->_Node.ID().value);
+            // } else if (tag->type == NodeType::LIST) {
+            //     if (tag->_Node.List().elements.size() == 1 && tag->_Node.List().elements[0]->type == NodeType::COMMA_LIST) {
+            //         tag = tag->_Node.List().elements[0];
+            //     }
+            //     for (node_ptr& t : tag->_Node.List().elements) {
+            //         if (t->type != NodeType::ID) {
+            //             error_and_exit("Tags must be identifiers");
+            //         }
+            //         tags.push_back(t->_Node.ID().value);
+            //     }
+            // } else {
+            //     error_and_exit("Tag must be an identifier");
+            // }
+
             node_ptr tag = current_node->_Node.Op().right;
-            std::vector<std::string> tags;
-            if (tag->type == NodeType::ID) {
-                tags.push_back(tag->_Node.ID().value);
-            } else if (tag->type == NodeType::LIST) {
+            std::vector<node_ptr> tags;
+            if (tag->type == NodeType::LIST) {
                 if (tag->_Node.List().elements.size() == 1 && tag->_Node.List().elements[0]->type == NodeType::COMMA_LIST) {
                     tag = tag->_Node.List().elements[0];
                 }
                 for (node_ptr& t : tag->_Node.List().elements) {
-                    if (t->type != NodeType::ID) {
-                        error_and_exit("Tags must be identifiers");
-                    }
-                    tags.push_back(t->_Node.ID().value);
+                    tags.push_back(t);
                 }
             } else {
-                error_and_exit("Tag must be an identifier");
+                tags.push_back(tag);
             }
 
             node_ptr next = peek();
 
+            // if (next->type == NodeType::CONSTANT_DECLARATION) {
+            //     for (std::string tag : tags) {
+            //         next->_Node.ConstantDeclatation().value->Meta.tags.push_back(tag);
+            //     }
+            // } else if (next->type == NodeType::VARIABLE_DECLARATION) {
+            //     if (next->_Node.VariableDeclaration().value) {
+            //         for (std::string tag : tags) {
+            //             next->_Node.VariableDeclaration().value->Meta.tags.push_back(tag);
+            //         }
+            //     }
+            // } else if (next->type == NodeType::OP && (next->_Node.Op().value == "." || next->_Node.Op().value == ":")) {
+            //     for (std::string tag : tags) {
+            //         next->_Node.Op().right->Meta.tags.push_back(tag);
+            //     }
+            // } else {
+            //     for (std::string tag : tags) {
+            //         next->Meta.tags.push_back(tag);
+            //     }
+            // }
+
             if (next->type == NodeType::CONSTANT_DECLARATION) {
-                for (std::string tag : tags) {
-                    next->_Node.ConstantDeclatation().value->Meta.tags.push_back(tag);
+                for (node_ptr& tag : tags) {
+                    next->_Node.ConstantDeclatation().value->Meta.decorators.push_back(tag);
                 }
             } else if (next->type == NodeType::VARIABLE_DECLARATION) {
                 if (next->_Node.VariableDeclaration().value) {
-                    for (std::string tag : tags) {
-                        next->_Node.VariableDeclaration().value->Meta.tags.push_back(tag);
+                    for (node_ptr& tag : tags) {
+                        next->_Node.VariableDeclaration().value->Meta.decorators.push_back(tag);
                     }
                 }
             } else if (next->type == NodeType::OP && (next->_Node.Op().value == "." || next->_Node.Op().value == ":")) {
-                for (std::string tag : tags) {
-                    next->_Node.Op().right->Meta.tags.push_back(tag);
+                for (node_ptr& tag : tags) {
+                    next->_Node.Op().right->Meta.decorators.push_back(tag);
                 }
             } else {
-                for (std::string tag : tags) {
-                    next->Meta.tags.push_back(tag);
+                for (node_ptr& tag : tags) {
+                    next->Meta.decorators.push_back(tag);
                 }
             }
 

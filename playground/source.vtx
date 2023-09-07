@@ -1,6 +1,25 @@
-const obj = {
-    blah: 10,
-    bloop: () => (this.blah = 100)
+const Logger = (func) => {
+    return (...args) => {
+        print("Logging...\n")
+        var value = func(...args)
+        print("Done logging...\n")
+        return value
+    }
 }
 
-obj.bloop()
+const Timer = (func) => {
+    return (...args) => {
+        const start = clock()
+        var value = func(...args)
+        const duration = clock() - start
+        print("Duration: ", duration, "\n")
+        return value
+    }
+}
+
+@[Timer, Logger]
+const func = (message) => {
+    print("calling func: ", message, "\n")
+}
+
+func("Hi")

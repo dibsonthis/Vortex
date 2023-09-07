@@ -124,6 +124,7 @@ struct PointerObj {
 typedef Value (*NativeFunction)(std::vector<Value>& args);
 
 struct NativeFunctionObj {
+    std::string name;
     NativeFunction function = nullptr;
 };
 

@@ -66,6 +66,8 @@ static void define_native(VM& vm, std::string name, NativeFunction function);
 static EvaluateResult run(VM& vm);
 EvaluateResult evaluate(VM& vm);
 
+static int call_function(VM& vm, Value& function, int param_num, CallFrame*& frame);
+
 void freeVM(VM& vm);
 
 bool is_equal(Value& v1, Value& v2);

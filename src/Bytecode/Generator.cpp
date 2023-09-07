@@ -218,7 +218,14 @@ void gen_var(Chunk& chunk, node_ptr node) {
 }
 
 void gen_const(Chunk& chunk, node_ptr node) {
-    generate(node->_Node.ConstantDeclatation().value, chunk);
+    node_ptr& value = node->_Node.ConstantDeclatation().value;
+    generate(value, chunk);
+    if (value->type == NodeType::FUNC) {
+        for (auto& decorator : value->Meta.decorators) {
+            generate(decorator, chunk);
+            add_opcode(chunk, OP_CALL, 1, node->line);
+        }
+    }
     declareVariable(node->_Node.ConstantDeclatation().name, true);
     add_code(chunk, OP_MAKE_CONST, node->line);
 }
