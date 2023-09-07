@@ -53,6 +53,7 @@ struct TypeObj {
 struct ObjectObj {
     std::shared_ptr<TypeObj> type;
     std::unordered_map<std::string, Value> values;
+    std::string type_name;
 };
 
 struct PointerObj {
@@ -68,6 +69,8 @@ struct NativeFunctionObj {
 struct Meta {
     bool unpack = false;
     bool packer = false;
+    bool is_const = false;
+    bool temp_non_const = false;
 };
 
 struct Value {

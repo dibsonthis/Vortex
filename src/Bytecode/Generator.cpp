@@ -754,7 +754,7 @@ void gen_object(Chunk& chunk, node_ptr node) {
     }
 
     for (auto& elem : elements) {
-        if (elem->type != NodeType::OP && elem->_Node.Op().value != ":") {
+        if (elem->type != NodeType::OP || elem->_Node.Op().value != ":") {
             error("Object properties must be in shape (name: value)");
         }
         add_constant_code(chunk, string_val(elem->_Node.Op().left->_Node.ID().value), node->line);
