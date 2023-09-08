@@ -1,8 +1,10 @@
-const lib = load_lib("./bin/string", ["split", "trim", "chars"])
+const lib = load_lib("./bin/string", ["split", "trim", "chars", "replaceAll"])
 
 const split = (str, delim = "") => lib.split(str, delim)
 const trim = (str) => lib.trim(str)
 const chars = (str) => lib.chars(str)
+const replaceAll = (str, from, to) => lib.replaceAll(str, from, to)
+
 const at = (str, index) => str[index]
 const first = (str) => str[0]
 const last = (str) => str[str.length()-1]

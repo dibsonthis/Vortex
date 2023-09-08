@@ -88,3 +88,5 @@ static Value copy_builtin(std::vector<Value>& args);
 static Value sort_builtin(std::vector<Value>& args);
 static Value info_builtin(std::vector<Value>& args);
 static Value type_builtin(std::vector<Value>& args);
+static Value exit_builtin(std::vector<Value>& args);
+static Value error_builtin(std::vector<Value>& args);

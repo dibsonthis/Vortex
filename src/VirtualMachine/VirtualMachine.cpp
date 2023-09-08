@@ -77,6 +77,7 @@ static EvaluateResult run(VM& vm) {
     define_native(vm, "type", type_builtin);
     define_native(vm, "copy", copy_builtin);
     define_native(vm, "sort", sort_builtin);
+    define_native(vm, "exit", exit_builtin);
     define_native(vm, "load_lib", load_lib_builtin);
 
     CallFrame* frame = &vm.frames.back();
@@ -1688,7 +1689,7 @@ static Value info_builtin(std::vector<Value>& args) {
         case Function: {
             auto& func = value.get_function();
             obj->values["name"] = string_val(func->name);
-            obj->values["arity"] = string_val(std::to_string(func->arity));
+            obj->values["arity"] = number_val(func->arity);
             obj->values["params"] = list_val();
             for (auto& param : func->params) {
                 obj->values["params"].get_list()->push_back(string_val(param));
@@ -1857,4 +1858,20 @@ static Value sort_builtin(std::vector<Value>& args) {
     });
 
     return new_list;
+}
+
+static Value exit_builtin(std::vector<Value>& args) {
+    if (args.size() != 1) {
+        error("Function 'exit' expects 1 argument");
+    }
+
+    Value value = args[0];
+
+    if (!value.is_number()) {
+        error("Function 'exit' expects 1 number argument");
+    }
+
+    exit(value.get_number());
+
+    return value;
 }

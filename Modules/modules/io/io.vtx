@@ -31,3 +31,13 @@ const appendf = (filePath, content) => {
 	write(file, content)
 	close(file)
 }
+
+const println = (...args) => {
+    print(...args, "\n")
+}
+
+const printlns = (...args) => {
+    for (args, i, arg) {
+        println(arg)
+    }
+}

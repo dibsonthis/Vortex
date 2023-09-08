@@ -1,6 +1,8 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <string>
+#include <algorithm>
 #include "include/Vortex.hpp"
 
 extern "C" Value split(std::vector<Value>& args) {
@@ -82,4 +84,38 @@ extern "C" Value chars(std::vector<Value>& args) {
     }
 
     return list;
+}
+
+extern "C" Value replaceAll(std::vector<Value>& args) {
+    int num_required_args = 3;
+
+    if (args.size() != num_required_args) {
+        error("Function 'replaceAll' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value& _str = args[0];
+    Value& _from = args[1];
+    Value& _to = args[2];
+
+    if (!_str.is_string() || !_from.is_string() || !_to.is_string()) {
+        error("Function 'replaceAll' expects " + std::to_string(num_required_args) + " string argument(s)");
+    }
+
+    std::string& from = _from.get_string();
+    std::string& to = _to.get_string();
+    std::string& str = _str.get_string();
+
+    Value new_str = string_val(str);
+
+    if(from.empty()) {
+        return new_str;
+    }
+
+    size_t start_pos = 0;
+    while((start_pos = new_str.get_string().find(from, start_pos)) != std::string::npos) {
+        new_str.get_string().replace(start_pos, from.length(), to);
+        start_pos += to.length();
+    }
+
+    return new_str;
 }
