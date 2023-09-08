@@ -223,9 +223,27 @@ void gen_const(Chunk& chunk, node_ptr node) {
     if (value->type == NodeType::FUNC) {
         for (auto& decorator : value->Meta.decorators) {
             if (decorator->type == NodeType::FUNC_CALL) {
-                generate(decorator, chunk);
-                int arg_length = decorator->_Node.FunctionCall().args.size() + 1;
-                patch_bytes(chunk, chunk.code.size() - 4, int_to_bytes(arg_length));
+                // generate(decorator, chunk);
+                // int arg_length = decorator->_Node.FunctionCall().args.size() + 1;
+                // patch_bytes(chunk, chunk.code.size() - 4, int_to_bytes(arg_length));
+                // add_opcode(chunk, OP_REMOVE_PUSH, arg_length, node->line);
+                // add_code(chunk, OP_SWAP_TOS, node->line);
+                for (int i = decorator->_Node.FunctionCall().args.size() - 1; i >= 0; i--) {
+                    node_ptr& arg = decorator->_Node.FunctionCall().args[i];
+                    if (arg->type == NodeType::OP && arg->_Node.Op().value == "...") {
+                        generate(arg->_Node.Op().right, chunk);
+                        add_code(chunk, OP_UNPACK, decorator->line);
+                    } else {
+                        generate(arg, chunk);
+                    }
+                }
+                node_ptr id = std::make_shared<Node>(NodeType::ID);
+                id->_Node.ID().value = decorator->_Node.FunctionCall().name;
+                gen_id(chunk, id);
+                // Magic number 2: the function + initial arg we're pushing
+                add_opcode(chunk, OP_REMOVE_PUSH, decorator->_Node.FunctionCall().args.size() + 2, decorator->line);
+                add_code(chunk, OP_SWAP_TOS, decorator->line);
+                add_opcode(chunk, OP_CALL, decorator->_Node.FunctionCall().args.size() + 1, decorator->line);
             } else {
                 generate(decorator, chunk);
                 add_opcode(chunk, OP_CALL, 1, node->line);

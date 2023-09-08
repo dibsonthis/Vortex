@@ -552,6 +552,21 @@ static EvaluateResult run(VM& vm) {
                 list.meta.unpack = true;
                 break;
             }
+            case OP_REMOVE_PUSH: {
+                int index = READ_INT();
+                int _index = vm.stack.size() - index;
+                Value value = vm.stack[_index];
+                vm.stack.erase(vm.stack.begin() + _index);
+                push(vm, value);
+                break;
+            }
+            case OP_SWAP_TOS: {
+                Value v1 = pop(vm);
+                Value v2 = pop(vm);
+                push(vm, v1);
+                push(vm, v2);
+                break;
+            }
             case OP_CALL: {
                 int param_num = READ_INT();
                 Value function = pop(vm);

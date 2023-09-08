@@ -63,7 +63,9 @@ enum OpCode {
     OP_CALL,
     OP_CALL_METHOD,
     OP_IMPORT,
-    OP_UNPACK
+    OP_UNPACK,
+    OP_REMOVE_PUSH,
+    OP_SWAP_TOS
 };
 
 enum ValueType {

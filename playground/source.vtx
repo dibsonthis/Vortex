@@ -8,14 +8,14 @@
 //     }
 // }
 
-const Wrapper = (count, func) => {
+const Wrapper = (func, count = 1000) => {
     return (...args) => {
         print(count, "\n")
         return func(...args)
     }
 }
 
-@[Wrapper(10), Wrapper(100)]
+@[Wrapper()]
 const func = (a, b) => a + b
 
 print(func(10, 20))

@@ -269,6 +269,10 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return op_code_instruction("OP_CALL_METHOD", chunk, offset);
     case OP_UNPACK:
         return simple_instruction("OP_UNPACK", offset);
+    case OP_REMOVE_PUSH:
+        return op_code_instruction("OP_REMOVE_PUSH", chunk, offset);
+    case OP_SWAP_TOS:
+        return simple_instruction("OP_SWAP_TOS", offset);
     case OP_NEGATE:
         return simple_instruction("OP_NEGATE", offset);
     case OP_ADD:
