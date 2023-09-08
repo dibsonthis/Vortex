@@ -797,6 +797,7 @@ static EvaluateResult run(VM& vm) {
 
                             if (constant.is_list() && constant.meta.packer) {
                                 capturing = i+j;
+                                constant = copy(constant);
                                 constant.get_list()->clear();
                                 constant.get_list()->push_back(_arg);
                             } else {
@@ -812,6 +813,7 @@ static EvaluateResult run(VM& vm) {
                         Value& constant = function_obj->chunk.constants[i];
                         if (constant.is_list() && constant.meta.packer) {
                             capturing = i;
+                            constant = copy(constant);
                             constant.get_list()->clear();
                             constant.get_list()->push_back(arg);
                         } else {
@@ -1298,6 +1300,7 @@ static int call_function(VM& vm, Value& function, int param_num, CallFrame*& fra
                     Value& constant = function_obj->chunk.constants[i+j];
                     if (constant.is_list() && constant.meta.packer) {
                         capturing = i+j;
+                        constant = copy(constant);
                         constant.get_list()->clear();
                         constant.get_list()->push_back(_arg);
                     } else {
@@ -1313,6 +1316,7 @@ static int call_function(VM& vm, Value& function, int param_num, CallFrame*& fra
                 Value& constant = function_obj->chunk.constants[i];
                 if (constant.is_list() && constant.meta.packer) {
                     capturing = i;
+                    constant = copy(constant);
                     constant.get_list()->clear();
                     constant.get_list()->push_back(arg);
                 } else {
@@ -1743,6 +1747,7 @@ Value copy(Value& value) {
     switch (value.type) {
         case List: {
             Value new_list = list_val();
+            new_list.meta = value.meta;
             for (auto elem : *value.get_list()) {
                 new_list.get_list()->push_back(copy(elem));
             }

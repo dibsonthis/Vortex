@@ -1,25 +1,21 @@
-const Logger = (func) => {
+// const Timer = (func) => {
+//     return (...args) => {
+//         const start = clock()
+//         var value = func(...args)
+//         const duration = clock() - start
+//         print(f"Duration (${func.info().name}): ", duration, "\n")
+//         return value
+//     }
+// }
+
+const Wrapper = (count, func) => {
     return (...args) => {
-        print("Logging...\n")
-        var value = func(...args)
-        print("Done logging...\n")
-        return value
+        print(count, "\n")
+        return func(...args)
     }
 }
 
-const Timer = (func) => {
-    return (...args) => {
-        const start = clock()
-        var value = func(...args)
-        const duration = clock() - start
-        print("Duration: ", duration, "\n")
-        return value
-    }
-}
+@[Wrapper(10), Wrapper(100)]
+const func = (a, b) => a + b
 
-@[Timer, Logger]
-const func = (message) => {
-    print("calling func: ", message, "\n")
-}
-
-func("Hi")
+print(func(10, 20))

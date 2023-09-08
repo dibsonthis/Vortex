@@ -222,8 +222,14 @@ void gen_const(Chunk& chunk, node_ptr node) {
     generate(value, chunk);
     if (value->type == NodeType::FUNC) {
         for (auto& decorator : value->Meta.decorators) {
-            generate(decorator, chunk);
-            add_opcode(chunk, OP_CALL, 1, node->line);
+            if (decorator->type == NodeType::FUNC_CALL) {
+                generate(decorator, chunk);
+                int arg_length = decorator->_Node.FunctionCall().args.size() + 1;
+                patch_bytes(chunk, chunk.code.size() - 4, int_to_bytes(arg_length));
+            } else {
+                generate(decorator, chunk);
+                add_opcode(chunk, OP_CALL, 1, node->line);
+            }
         }
     }
     declareVariable(node->_Node.ConstantDeclatation().name, true);
