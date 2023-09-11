@@ -76,8 +76,11 @@ extern "C" Value chars(std::vector<Value>& args) {
     }
 
     Value& text = args[0];
-    
     Value list = list_val();
+
+    if (!text.is_string()) {
+        error("Function 'chars' expects argument 'text' to be a string");
+    }
 
     for (auto c : text.get_string()) {
         list.get_list()->push_back(string_val(std::string(1, c)));

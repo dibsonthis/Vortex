@@ -63,6 +63,10 @@ static EvaluateResult run(VM& vm) {
     define_global(vm, "Function", type_val("Function"));
     define_global(vm, "None", none_val());
 
+    Value vm_ptr = pointer_val();
+    vm_ptr.get_pointer()->value = &vm;
+    define_global(vm, "__vm__", vm_ptr);
+
     // Define native functions
     define_native(vm, "print", print_builtin);
     define_native(vm, "clock", clock_builtin);
@@ -78,6 +82,7 @@ static EvaluateResult run(VM& vm) {
     define_native(vm, "copy", copy_builtin);
     define_native(vm, "sort", sort_builtin);
     define_native(vm, "exit", exit_builtin);
+    define_native(vm, "__error__", error_builtin);
     define_native(vm, "load_lib", load_lib_builtin);
 
     CallFrame* frame = &vm.frames.back();
@@ -363,6 +368,7 @@ static EvaluateResult run(VM& vm) {
                         }
                     }
                 }
+                function->closed_vars = closure_obj->closed_vars;
                 push(vm, closure);
                 break;
             }
@@ -440,16 +446,28 @@ static EvaluateResult run(VM& vm) {
                 break;
             }
             case OP_BREAK: {
+                while (*frame->ip != OP_JUMP) {
+                    frame->ip++;
+                }
+                READ_BYTE();
+                READ_INT();
                 while (*frame->ip != OP_JUMP_BACK) {
                     frame->ip++;
+                    pop(vm);
                 }
                 READ_BYTE();
                 READ_INT();
                 break;
             }
             case OP_CONTINUE: {
+                while (*frame->ip != OP_JUMP) {
+                    frame->ip++;
+                }
+                READ_BYTE();
+                READ_INT();
                 while (*frame->ip != OP_JUMP_BACK) {
                     frame->ip++;
+                    pop(vm);
                 }
                 break;
             }
@@ -1512,7 +1530,8 @@ static Value to_number_builtin(std::vector<Value>& args) {
                 }
                 return number_val(std::stod(str));
             } catch(...) {
-                error("Cannot convert \"" + str + "\" to a number");
+                //error("Cannot convert \"" + str + "\" to a number");
+                return none_val();
             }
         };
         case Boolean: {
@@ -1627,6 +1646,9 @@ static Value length_builtin(std::vector<Value>& args) {
         }
         case Type: {
             return number_val(value.get_type()->types.size());
+        }
+        case String: {
+            return number_val(value.get_string().length());
         }
         default: {
             return none_val();
@@ -1874,4 +1896,27 @@ static Value exit_builtin(std::vector<Value>& args) {
     exit(value.get_number());
 
     return value;
+}
+
+static Value error_builtin(std::vector<Value>& args) {
+    if (args.size() != 2) {
+        error("Function 'error' expects 1 argument");
+    }
+
+    Value message = args[0];
+    Value vm = args[1];
+
+    if (!message.is_string()) {
+        error("Function 'exit' expects argument 'message' to be a string");
+    }
+    
+    if (!vm.is_pointer()) {
+        error("Function 'exit' expects argument 'vm' to be a pointer");
+    }
+
+    VM* _vm = (VM*)(vm.get_pointer()->value);
+    runtimeError(*_vm, message.get_string());
+    exit(0);
+
+    return message;
 }

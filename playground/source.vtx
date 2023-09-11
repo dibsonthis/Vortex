@@ -1,21 +1,11 @@
-// const Timer = (func) => {
-//     return (...args) => {
-//         const start = clock()
-//         var value = func(...args)
-//         const duration = clock() - start
-//         print(f"Duration (${func.info().name}): ", duration, "\n")
-//         return value
-//     }
-// }
+import [] : sys
 
-const Wrapper = (func, count = 1000) => {
-    return (...args) => {
-        print(count, "\n")
-        return func(...args)
+while (true) {
+    var x = 10
+    var y = 20
+    if (x < y) {
+        continue
     }
 }
 
-@[Wrapper()]
-const func = (a, b) => a + b
-
-print(func(10, 20))
+print(stack())

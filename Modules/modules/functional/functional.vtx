@@ -58,7 +58,7 @@ const flatmap = (list, func) => {
             }
         }
     } else {
-        print("Function 'map' expects a function with an arity of either 1, 2 or 3\n")
+        print("Function 'flatmap' expects a function with an arity of either 1, 2 or 3\n")
         exit(1)
     }
 
@@ -98,7 +98,7 @@ const reduce = (list, func) => {
     var res
     const arity = func.info().arity
     if (arity != 2) {
-        print("Function 'recuce' expects a function with an arity of 2\n")
+        print("Function 'reduce' expects a function with an arity of 2\n")
         exit(1)
     }
 
@@ -115,6 +115,52 @@ const reduce = (list, func) => {
     }
 
     return res
+}
+
+const find = (list, func) => {
+    const arity = func.info().arity
+    if (arity == 1) {
+        for (list, index, value) {
+            if (func(value)) {
+                return value
+            }
+        }
+    } else if (arity == 2) {
+        for (list, index, value) {
+            if (func(value, index)) {
+                return value
+            }
+        }
+    } else if (arity == 3) {
+        for (list, index, value) {
+            if (func(value, index, list)) {
+                return value
+            }
+        }
+    } else {
+        print("Function 'find' expects a function with an arity of either 1, 2 or 3\n")
+        exit(1)
+    }
+}
+
+const forEach = (list, func) => {
+    const arity = func.info().arity
+    if (arity == 1) {
+        for (list, index, value) {
+            func(value)
+        }
+    } else if (arity == 2) {
+        for (list, index, value) {
+            func(value, index)
+        }
+    } else if (arity == 3) {
+        for (list, index, value) {
+            func(value, index, list)
+        }
+    } else {
+        print("Function 'forEach' expects a function with an arity of either 1, 2 or 3\n")
+        exit(1)
+    }
 }
 
 const indexOf = (list, value) => {

@@ -8,3 +8,41 @@ const replaceAll = (str, from, to) => lib.replaceAll(str, from, to)
 const at = (str, index) => str[index]
 const first = (str) => str[0]
 const last = (str) => str[str.length()-1]
+
+const join = (list, delim = " ") => {
+    var str = ""
+    for (list, index, item) {
+        str += item + delim
+    }
+    return str.trim()
+}
+
+const startsWith = (str, start) => {
+    if (start.length() > str.length()) {
+        return false
+    }
+
+    for (start.chars(), index, c) {
+        if (c != str[index]) {
+            return false
+        }
+    }
+
+    return true
+}
+
+const endsWith = (str, end) => {
+    if (end.length() > str.length()) {
+        return false
+    }
+
+    const diff = str.length() - end.length()
+
+    for (end.chars(), index, c) {
+        if (c != str[index + diff]) {
+            return false
+        }
+    }
+
+    return true
+}
