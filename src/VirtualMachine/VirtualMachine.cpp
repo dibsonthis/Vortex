@@ -445,30 +445,74 @@ static EvaluateResult run(VM& vm) {
                 pop(vm);
                 break;
             }
-            case OP_BREAK: {
-                while (*frame->ip != OP_JUMP) {
-                    frame->ip++;
+            case OP_LOOP: {
+                int stack_size = vm.stack.size();
+                uint8_t* bytes = int_to_bytes(stack_size);
+                for (int i = 0; i < 4; i++) {
+                    frame->ip[i] = bytes[i];
                 }
-                READ_BYTE();
-                READ_INT();
-                while (*frame->ip != OP_JUMP_BACK) {
-                    frame->ip++;
-                    pop(vm);
-                }
-                READ_BYTE();
                 READ_INT();
                 break;
             }
-            case OP_CONTINUE: {
-                while (*frame->ip != OP_JUMP) {
+            case OP_LOOP_END: {
+                break;
+            }
+            case OP_ITER: {
+                break;
+            }
+            case OP_BREAK: {
+                int count = 1;
+                while (true) {
+                    frame->ip--;
+                    if (*frame->ip == OP_LOOP_END) {
+                        count--;
+                    } else if (*frame->ip == OP_LOOP) {
+                        count++;
+                        if (*frame->ip == OP_LOOP) {
+                            break;
+                        }
+                    }
+                }
+                READ_BYTE();
+                int stack_size_start = READ_INT();
+                int to_pop = vm.stack.size() - stack_size_start;
+                for (int i = 0; i < to_pop; i++) {
+                    pop(vm);
+                }
+                while (*frame->ip != OP_LOOP_END) {
                     frame->ip++;
                 }
                 READ_BYTE();
-                READ_INT();
-                while (*frame->ip != OP_JUMP_BACK) {
-                    frame->ip++;
+                break;
+            }
+            case OP_CONTINUE: {
+                int count = 1;
+                while (true) {
+                    frame->ip--;
+                    if (*frame->ip == OP_LOOP_END) {
+                        count--;
+                    } else if (*frame->ip == OP_LOOP) {
+                        count++;
+                        if (*frame->ip == OP_LOOP) {
+                            break;
+                        }
+                    }
+                }
+                READ_BYTE();
+                int stack_size_start = READ_INT();
+                int to_pop = vm.stack.size() - stack_size_start;
+                
+                for (int i = 0; i < to_pop; i++) {
                     pop(vm);
                 }
+                
+                while (*frame->ip != OP_JUMP_BACK) {
+                    if (*frame->ip == OP_ITER) {
+                        break;
+                    }
+                    frame->ip++;
+                }
+
                 break;
             }
             case OP_BUILD_LIST: {

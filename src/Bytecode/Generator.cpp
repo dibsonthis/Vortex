@@ -357,6 +357,7 @@ void gen_if_block(Chunk& chunk, node_ptr node) {
 }
 
 void gen_while_loop(Chunk& chunk, node_ptr node) {
+    add_opcode(chunk, OP_LOOP, 0, node->line);
     int start_index = chunk.code.size() - 1;
     generate(node->_Node.WhileLoop().condition, chunk);
     int jump_instruction = chunk.code.size() + 1;
@@ -370,6 +371,7 @@ void gen_while_loop(Chunk& chunk, node_ptr node) {
     int offset = chunk.code.size() - jump_instruction - 4;
     uint8_t* bytes = int_to_bytes(offset);
     patch_bytes(chunk, jump_instruction, bytes);
+    add_code(chunk, OP_LOOP_END, node->line);
 }
 
 void gen_for_loop(Chunk& chunk, node_ptr node) {
@@ -397,12 +399,15 @@ void gen_for_loop(Chunk& chunk, node_ptr node) {
 
         int loop_start = chunk.code.size() - 1;
 
+        add_opcode(chunk, OP_LOOP, 0, node->line);
+
         begin_scope();
 
         generate_bytecode(node->_Node.ForLoop().body->_Node.Object().elements, chunk);
 
         end_scope(chunk);
 
+        add_code(chunk, OP_ITER, node->line);
         add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
         add_constant_code(chunk, number_val(1), node->line);
         add_code(chunk, OP_ADD, node->line);
@@ -417,6 +422,7 @@ void gen_for_loop(Chunk& chunk, node_ptr node) {
             add_code(chunk, OP_POP, node->line);
         }
 
+        add_code(chunk, OP_ITER, node->line);
         add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
         add_opcode(chunk, OP_LOAD, resolve_variable("___size___"));
         add_code(chunk, OP_GT_EQ, node->line);
@@ -459,12 +465,15 @@ void gen_for_loop(Chunk& chunk, node_ptr node) {
 
         int loop_start = chunk.code.size() - 1;
 
+        add_opcode(chunk, OP_LOOP, 0, node->line);
+
         begin_scope();
 
         generate_bytecode(node->_Node.ForLoop().body->_Node.Object().elements, chunk);
 
         end_scope(chunk);
 
+        add_code(chunk, OP_ITER, node->line);
         add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
         add_constant_code(chunk, number_val(1), node->line);
         add_code(chunk, OP_ADD, node->line);
@@ -492,6 +501,7 @@ void gen_for_loop(Chunk& chunk, node_ptr node) {
 
         end_scope(chunk);
     }
+    add_code(chunk, OP_LOOP_END, node->line);
     current->in_loop = false;
 }
 

@@ -1,11 +1,24 @@
-import [] : sys
+import sys
 
-while (true) {
-    var x = 10
-    var y = 20
-    if (x < y) {
+const x = 100
+var h = "hi"
+
+// while (true) {
+//     var x = 10
+//     if (x == 10) {
+//         continue
+//     }
+//     var y = 20
+//     var z = 20
+// }
+
+for (0..10, i) {
+    var x = i
+    if (x > 5) {
         continue
     }
+    var z = 100
+    print(z, "\n")
 }
 
-print(stack())
+print(sys.stack())

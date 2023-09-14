@@ -257,6 +257,12 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return op_code_instruction("OP_JUMP", chunk, offset);
     case OP_JUMP_BACK:
         return op_code_instruction("OP_JUMP_BACK", chunk, offset);
+    case OP_LOOP:
+        return op_code_instruction("OP_LOOP", chunk, offset);
+    case OP_LOOP_END:
+        return simple_instruction("OP_LOOP_END", offset);
+    case OP_ITER:
+        return simple_instruction("OP_ITER", offset);
     case OP_BREAK:
         return simple_instruction("OP_BREAK", offset);
     case OP_CONTINUE:

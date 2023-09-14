@@ -65,7 +65,10 @@ enum OpCode {
     OP_IMPORT,
     OP_UNPACK,
     OP_REMOVE_PUSH,
-    OP_SWAP_TOS
+    OP_SWAP_TOS,
+    OP_LOOP,
+    OP_LOOP_END,
+    OP_ITER
 };
 
 enum ValueType {
