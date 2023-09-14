@@ -1,24 +1,39 @@
-import sys
-
-const x = 100
-var h = "hi"
-
-// while (true) {
-//     var x = 10
-//     if (x == 10) {
-//         continue
-//     }
-//     var y = 20
-//     var z = 20
-// }
-
-for (0..10, i) {
-    var x = i
-    if (x > 5) {
-        continue
-    }
-    var z = 100
-    print(z, "\n")
+const println = (...args) => {
+    print(...args, "\n")
 }
 
-print(sys.stack())
+const y = 10
+var x = 100
+var obj = {
+    name: "John"
+}
+
+const global = () => {
+    const g = 100
+    const outer = () => {
+        obj["name"] = "Allan"
+        obj.age = 34
+        return obj
+    }
+    return [outer(), g]
+}
+
+global().println()
+
+// const global = () => {
+//     const g = 20.4
+//     const outer = () => {
+//         const inner = () => {
+//             x = 200
+//             println(x)
+//             println(g)
+//             println(y)
+//         }
+//         return inner
+//     }
+//     return outer
+// }
+
+// const outer = global()
+// const inner = outer()
+// inner()

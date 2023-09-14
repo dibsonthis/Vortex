@@ -94,12 +94,19 @@ struct Chunk {
     std::vector<std::string> variables;
 };
 
+struct ClosedVar {
+    std::string name;
+    int index;
+    bool is_local;
+};
+
 struct FunctionObj {
     std::string name;
     int arity;
     int defaults;
     Chunk chunk;
-    std::vector<int> closed_var_indexes;
+    //std::vector<int> closed_var_indexes;
+    std::vector<ClosedVar> closed_var_indexes;
     std::vector<std::shared_ptr<Closure>> closed_vars;
     std::vector<Value> default_values;
     std::shared_ptr<Value> object;

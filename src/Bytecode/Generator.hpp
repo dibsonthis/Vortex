@@ -10,13 +10,16 @@ struct Variable {
 };
 
 struct Compiler {
+    std::string name;
+    bool root = true;
     std::vector<Variable> variables;
     int variableCount = 0;
     int scopeDepth = 0;
     bool in_loop = false;
     bool in_function = false;
     bool in_object = false;
-    std::vector<int> closed_vars;
+    //std::vector<int> closed_vars;
+    std::vector<ClosedVar> closed_vars;
     std::shared_ptr<Compiler> prev;
 };
 
@@ -73,6 +76,7 @@ static void declareVariable(std::string name, bool is_const = false);
 
 static int resolve_variable(std::string name);
 static int resolve_closure(std::string name);
+static int resolve_closure_nested(std::string name);
 
 void error(std::string message);
 void reset();

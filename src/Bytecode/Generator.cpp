@@ -142,34 +142,53 @@ void gen_gt(Chunk& chunk, node_ptr node) {
 void gen_eq(Chunk& chunk, node_ptr node) {
     node_ptr left = node->_Node.Op().left;
     if (left->type == NodeType::ID) {
-        int index = resolve_variable(left->_Node.ID().value);
-        int closure_index = -1;
-        if (index == -1) {
-            closure_index = resolve_closure(left->_Node.ID().value);
-            if (closure_index == -1) {
-                error("Variable '" + left->_Node.ID().value + "' is undefined");
-            }
-        }
-        Variable variable = current->variables[index];
-        if (index >= 0 && variable.is_const) {
-            error("Cannot modify constant '" + left->_Node.ID().value + "'");
-        }
+        // int index = resolve_variable(left->_Node.ID().value);
+        // int closure_index = -1;
+        // if (index == -1) {
+        //     closure_index = resolve_closure(left->_Node.ID().value);
+        //     if (closure_index == -1) {
+        //         error("Variable '" + left->_Node.ID().value + "' is undefined");
+        //     }
+        // }
+        // Variable variable = current->variables[index];
+
         generate(node->_Node.Op().right, chunk);
-        if (closure_index != -1) {
-            bool captured = false;
-            for (int var : current->closed_vars) {
-                if (index == var) {
-                    captured = true;
-                    break;
-                }
+
+        int index = resolve_variable(left->_Node.ID().value);
+
+        if (index != -1) {
+            Variable variable = current->variables[index];
+            if (variable.is_const) {
+                error("Cannot modify constant '" + left->_Node.ID().value + "'");
             }
-            if (!captured) {
-                current->closed_vars.push_back(closure_index);
-            }
-            add_opcode(chunk, OP_SET_CLOSURE, closure_index, node->line);
-        } else {
             add_opcode(chunk, OP_SET, index, node->line);
+            return;
         }
+        index = resolve_closure_nested(left->_Node.ID().value);
+        if (index == -1) {
+            error("Variable '" + left->_Node.ID().value + "' is undefined");
+        } else {
+            add_opcode(chunk, OP_SET_CLOSURE, index, node->line);
+        }
+        // if (index >= 0 && variable.is_const) {
+        //     error("Cannot modify constant '" + left->_Node.ID().value + "'");
+        // }
+        // generate(node->_Node.Op().right, chunk);
+        // if (closure_index != -1) {
+        //     bool captured = false;
+        //     for (int var : current->closed_vars) {
+        //         if (index == var) {
+        //             captured = true;
+        //             break;
+        //         }
+        //     }
+        //     if (!captured) {
+        //         current->closed_vars.push_back(closure_index);
+        //     }
+        //     add_opcode(chunk, OP_SET_CLOSURE, closure_index, node->line);
+        // } else {
+        //     add_opcode(chunk, OP_SET, index, node->line);
+        // }
     } else if (left->type == NodeType::ACCESSOR) {
         if (left->_Node.Accessor().container->type == NodeType::ID) {
             int index = resolve_variable(left->_Node.Accessor().container->_Node.ID().value);
@@ -284,38 +303,50 @@ void gen_id(Chunk& chunk, node_ptr node, int global_flag) {
         return;
     }
     int index = resolve_variable(node->_Node.ID().value);
-    if (index == -1) {
-        auto prev_compiler = current;
-        if (!current->prev) {
-            goto is_global;
-        }
-        current = current->prev;
-        int index = resolve_variable(node->_Node.ID().value);
-        if (index == -1) {
-            current = prev_compiler;
-            goto is_global;
-        }
-        bool captured = false;
-        for (int var : prev_compiler->closed_vars) {
-            if (index == var) {
-                captured = true;
-                break;
-            }
-        }
-        if (!captured) {
-            prev_compiler->closed_vars.push_back(index);
-        }
-        add_opcode(chunk, OP_LOAD_CLOSURE, index, node->line);
-        current = prev_compiler;
+    if (index != -1) {
+        add_opcode(chunk, OP_LOAD, index, node->line);
         return;
     }
-    add_opcode(chunk, OP_LOAD, index, node->line);
-    return;
-
-    is_global:
+    index = resolve_closure_nested(node->_Node.ID().value);
+    if (index == -1) {
         add_constant_code(chunk, string_val(node->_Node.ID().value), node->line);
         add_opcode(chunk, OP_LOAD_GLOBAL, global_flag, node->line);
-        return;
+    } else {
+        add_opcode(chunk, OP_LOAD_CLOSURE, index, node->line);
+    }
+    //int index = resolve_variable(node->_Node.ID().value);
+    // if (index == -1) {
+    //     auto prev_compiler = current;
+    //     if (!current->prev) {
+    //         goto is_global;
+    //     }
+    //     current = current->prev;
+    //     int index = resolve_variable(node->_Node.ID().value);
+    //     if (index == -1) {
+    //         current = prev_compiler;
+    //         goto is_global;
+    //     }
+    //     bool captured = false;
+    //     for (int var : prev_compiler->closed_vars) {
+    //         if (index == var) {
+    //             captured = true;
+    //             break;
+    //         }
+    //     }
+    //     if (!captured) {
+    //         prev_compiler->closed_vars.push_back(index);
+    //     }
+    //     add_opcode(chunk, OP_LOAD_CLOSURE, index, node->line);
+    //     current = prev_compiler;
+    //     return;
+    // }
+    // add_opcode(chunk, OP_LOAD, index, node->line);
+    // return;
+
+    // is_global:
+    //     add_constant_code(chunk, string_val(node->_Node.ID().value), node->line);
+    //     add_opcode(chunk, OP_LOAD_GLOBAL, global_flag, node->line);
+    //     return;
 }
 
 int gen_if(Chunk& chunk, node_ptr node) {
@@ -587,6 +618,8 @@ void gen_function(Chunk& chunk, node_ptr node) {
 
     auto prev_compiler = current;
     current = std::make_shared<Compiler>();
+    current->name = node->_Node.Function().name;
+    current->root = false;
     current->prev = prev_compiler;
     current->in_object = prev_compiler->in_object;
 
@@ -1252,6 +1285,69 @@ static int resolve_closure(std::string name) {
     }
     current = prev_compiler;
     return index;
+}
+
+static int resolve_closure_nested(std::string name) {
+    int index = resolve_variable(name);
+    if (index != -1) {
+        return index;
+    }
+
+    std::vector<std::shared_ptr<Compiler>> compilers;
+    auto original = current;
+    auto _current = current;
+    while (_current) {
+        compilers.push_back(_current);
+        _current = _current->prev;
+    }
+
+    bool is_local = true;
+
+    for (int i = 1; i < compilers.size(); i++) {
+        current = compilers[i];
+        index = resolve_variable(name);
+        if (index != -1) {
+            if (i > 1) {
+                is_local = false;
+            }
+            bool local = is_local;
+            for (int j = i-1; j >= 0; j--) {
+                auto comp = compilers[j];
+                if (compilers[j+1]->root || (j == i-1)) {
+                    is_local = true;
+                } else {
+                    is_local = local;
+                }
+                bool captured = false;
+                for (auto var : compilers[j]->closed_vars) {
+                    if (is_local == var.is_local && name == var.name) {
+                        captured = true;
+                        index = var.index;
+                        break;
+                    }
+                }
+                if (!captured) {
+                    ClosedVar var;
+                    var.name = name;
+                    if (is_local) {
+                        var.index = index;
+                    } else {
+                        var.index = compilers[j+1]->closed_vars.size()-1;
+                    }
+                    //var.index = compilers[j]->closed_vars.size();
+                    var.is_local = is_local;
+                    index = var.index;
+                    //compilers[j]->closed_vars.push_back(var);
+                    compilers[j]->closed_vars.insert(compilers[j]->closed_vars.begin(), var);
+                }
+            }
+            current = original;
+            return index;
+        }
+    }
+
+    current = original;
+    return -1;
 }
 
 void error(std::string message) {

@@ -344,26 +344,40 @@ static EvaluateResult run(VM& vm) {
                 closure_obj->generator_init = function->generator_init;
                 closure_obj->generator_done = function->generator_done;
                 closure_obj->is_type_generator = function->is_type_generator;
-                closure_obj->closed_vars = std::vector<std::shared_ptr<Closure>>(500);
-                for (int& index : closure_obj->closed_var_indexes) {
-                    auto& value = vm.stack[index + frame->frame_start];
+                closure_obj->closed_vars = std::vector<std::shared_ptr<Closure>>();
+                //for (int& index : closure_obj->closed_var_indexes) {
+                for (int i = closure_obj->closed_var_indexes.size()-1; i >= 0; i--) {
+                    auto& var = closure_obj->closed_var_indexes[i];
+                    int index = var.index;
+                    bool is_local = var.is_local;
+                    Value* value_pointer;
+                    if (is_local) {
+                        value_pointer = &vm.stack[index + frame->frame_start];
+                    } else {
+                        value_pointer = &*frame->function->closed_vars[index]->location;
+                        //value = vm.stack[index];
+                    }
+                    Value& value = *value_pointer;
                     auto hoisted = std::make_shared<Closure>();
                     hoisted->location = &value;
                     if (vm.closed_values.size() == 0) {
-                        closure_obj->closed_vars[index] = hoisted;
+                        //closure_obj->closed_vars[index] = hoisted;
+                        closure_obj->closed_vars.push_back(hoisted);
                         vm.closed_values.push_back(hoisted);
                     } else {
                         bool found = false;
                         for (auto& cl : vm.closed_values) {
                             if (cl->location == &value) {
-                                closure_obj->closed_vars[index] = cl;
+                                //closure_obj->closed_vars[index] = cl;
+                                closure_obj->closed_vars.push_back(cl);
                                 found = true;
                                 break;
                             }
                         }
 
                         if (!found) {
-                            closure_obj->closed_vars[index] = hoisted;
+                            //closure_obj->closed_vars[index] = hoisted;
+                            closure_obj->closed_vars.push_back(hoisted);
                             vm.closed_values.push_back(hoisted);
                         }
                     }
@@ -375,12 +389,6 @@ static EvaluateResult run(VM& vm) {
             case OP_LOAD_CLOSURE: {
                 int index = READ_INT();
                 push(vm, *frame->function->closed_vars[index]->location);
-                // if (frame->function->closed_vars.size() > index && frame->function->closed_vars[index]) {
-                //     push(vm, *frame->function->closed_vars[index]);
-                // } else {
-                //     CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
-                //     push(vm, vm.stack[index + prev_frame->frame_start]);
-                // }
                 break;
             }
             case OP_SET_CLOSURE: {
@@ -393,12 +401,6 @@ static EvaluateResult run(VM& vm) {
                     }
                 }
                 *frame->function->closed_vars[index]->location = vm.stack.back();
-                // if (frame->function->closed_vars.size() > index && frame->function->closed_vars[index]) {
-                //     *frame->function->closed_vars[index] = vm.stack.back();
-                // } else {
-                //     CallFrame* prev_frame = &vm.frames[vm.frames.size()-2];
-                //     vm.stack[index + prev_frame->frame_start] = vm.stack.back();
-                // }
                 break;
             }
             case OP_JUMP_IF_FALSE: {
