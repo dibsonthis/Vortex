@@ -11,8 +11,14 @@ const last = (str) => str[str.length()-1]
 
 const join = (list, delim = " ") => {
     var str = ""
+    if (list.length() == 0) {
+        return str
+    }
     for (list, index, item) {
-        str += item + delim
+        str += item
+        if (index < list.length()-1) {
+            str += delim
+        }
     }
     return str.trim()
 }
@@ -45,4 +51,32 @@ const endsWith = (str, end) => {
     }
 
     return true
+}
+
+const substring = (str, start, length) => {
+    var substr = ""
+    for (start..(start+length), index, value) {
+        const c = str[value]
+        if (c) {
+            substr += str[value]
+        }
+    }
+    return substr
+}
+
+const contains = (str, substr) => {
+    if (str.length() < substr.length()) {
+        return false
+    }
+
+    const str_chars = str.chars()
+
+    for (str_chars, i, c) {
+        const current_substr = substring(str, i, substr.length())
+        if (current_substr == substr) {
+            return true
+        }
+    }
+
+    return false
 }
