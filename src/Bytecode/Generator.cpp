@@ -572,6 +572,33 @@ void gen_dot(Chunk& chunk, node_ptr node) {
     add_opcode(chunk, OP_ACCESSOR, 0, node->line);
 }
 
+void gen_hook(Chunk& chunk, node_ptr node) {
+    if (node->_Node.Op().left->type == NodeType::ID) {
+        int index = resolve_variable(node->_Node.Op().left->_Node.ID().value);
+        if (index == -1) {
+            error("Cannot assign hook to closure or global variable");
+        }
+
+        if (node->_Node.Op().right->type != NodeType::FUNC_CALL) {
+            error("Hook must be a function call");
+        }
+
+        if (node->_Node.Op().right->_Node.FunctionCall().args.size() != 1) {
+            error("Cannot assign empty hook - make sure to include a valid function");
+        }
+
+        std::string hook_name = node->_Node.Op().right->_Node.FunctionCall().name;
+        node_ptr function = node->_Node.Op().right->_Node.FunctionCall().args[0];
+
+        generate(function, chunk);
+        if (hook_name == "onChange") {
+            add_opcode(chunk, OP_HOOK_ONCHANGE, index, node->line);
+        } else {
+            error("Invalid hook name: '" + hook_name + "'");
+        }
+    }
+}
+
 void gen_break(Chunk& chunk, node_ptr node) {
     if (!current->in_loop) {
         error("Cannot use 'break' outside of a loop");
@@ -1178,6 +1205,10 @@ void generate(node_ptr node, Chunk& chunk) {
             gen_dot(chunk, node);
             return;
         }
+        if (node->_Node.Op().value == "::") {
+            gen_hook(chunk, node);
+            return;
+        }
         if (node->_Node.Op().value == ";") {
             return;
         }
@@ -1190,6 +1221,10 @@ void generate(node_ptr node, Chunk& chunk) {
 void generate_bytecode(std::vector<node_ptr>& nodes, Chunk& chunk) {
     for (node_ptr& node : nodes) {
         if (node->type == NodeType::OP && node->_Node.Op().value == ";") {
+            continue;
+        }
+        if (node->type == NodeType::OP && node->_Node.Op().value == "::") {
+            generate(node, chunk);
             continue;
         }
         if (node->type == NodeType::OP) {

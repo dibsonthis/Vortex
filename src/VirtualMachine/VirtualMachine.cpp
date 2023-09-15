@@ -192,6 +192,41 @@ static EvaluateResult run(VM& vm) {
                         return EVALUATE_RUNTIME_ERROR;
                     }
                 }
+                if (value.hooks.onChangeHook) {
+
+                    Value new_value = pop(vm);
+
+                    Value obj = object_val();
+                    obj.get_object()->values["old"] = value;
+                    obj.get_object()->values["current"] = new_value;
+
+                    VM func_vm;
+                    std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+                    main->name = "";
+                    main->arity = 0;
+                    main->chunk = Chunk();
+                    CallFrame main_frame;
+                    main_frame.function = main;
+                    main_frame.sp = 0;
+                    main_frame.ip = main->chunk.code.data();
+                    main_frame.frame_start = 0;
+                    func_vm.frames.push_back(main_frame);
+
+                    add_constant(main->chunk, *value.hooks.onChangeHook);
+                    add_constant(main->chunk, obj);
+
+                    add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
+                    add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+                    add_opcode(main->chunk, OP_CALL, 1, 0);
+                    add_code(main->chunk, OP_EXIT, 0);
+
+                    auto status = evaluate(func_vm);
+
+                    obj.get_object()->values["current"].hooks.onChangeHook = value.hooks.onChangeHook;
+                    push(vm, obj.get_object()->values["current"]);
+                    vm.stack[index + frame->frame_start] = vm.stack.back();
+                    break;
+                }
                 vm.stack[index + frame->frame_start] = vm.stack.back();
                 break;
             }
@@ -983,6 +1018,12 @@ static EvaluateResult run(VM& vm) {
 
                     break;
                 }
+                break;
+            }
+            case OP_HOOK_ONCHANGE: {
+                int index = READ_INT();
+                Value function = pop(vm);
+                vm.stack[index + frame->frame_start].hooks.onChangeHook = std::make_shared<Value>(function);
                 break;
             }
             case OP_NEGATE: {
@@ -1787,8 +1828,6 @@ static Value sort_builtin(std::vector<Value>& args) {
     add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
     add_opcode(main->chunk, OP_CALL, 2, 0);
     add_code(main->chunk, OP_EXIT, 0);
-
-    //disassemble_chunk(main->chunk, "Sort");
 
     std::sort(new_list.get_list()->begin(), new_list.get_list()->end(), 
     [&func_vm, &function](const Value& lhs, const Value& rhs) {

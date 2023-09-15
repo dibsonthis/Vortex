@@ -243,6 +243,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return op_code_instruction("OP_MAKE_OBJECT", chunk, offset);
     case OP_MAKE_FUNCTION:
         return op_code_instruction("OP_MAKE_FUNCTION", chunk, offset);
+    case OP_HOOK_ONCHANGE:
+        return op_code_instruction("OP_HOOK_ONCHANGE", chunk, offset);
     case OP_MAKE_CONST:
         return simple_instruction("OP_MAKE_CONST", offset);
     case OP_TYPE_DEFAULTS:

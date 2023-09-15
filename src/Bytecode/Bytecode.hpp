@@ -69,7 +69,8 @@ enum OpCode {
     OP_SWAP_TOS,
     OP_LOOP,
     OP_LOOP_END,
-    OP_ITER
+    OP_ITER,
+    OP_HOOK_ONCHANGE
 };
 
 enum ValueType {
@@ -148,9 +149,14 @@ struct Meta {
     bool temp_non_const = false;
 };
 
+struct ValueHooks {
+    std::shared_ptr<Value> onChangeHook = nullptr;
+};
+
 struct Value {
     ValueType type;
     Meta meta;
+    ValueHooks hooks;
     std::variant
     <
         double, 

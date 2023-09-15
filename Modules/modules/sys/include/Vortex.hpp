@@ -73,9 +73,15 @@ struct Meta {
     bool temp_non_const = false;
 };
 
+struct ValueHooks {
+    std::shared_ptr<Value> onChangeHook = nullptr;
+};
+
+
 struct Value {
     ValueType type;
     Meta meta;
+    ValueHooks hooks;
     std::variant
     <
         double, 

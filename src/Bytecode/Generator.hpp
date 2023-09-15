@@ -60,6 +60,7 @@ void gen_type(Chunk& chunk, node_ptr node);
 void gen_typed_object(Chunk& chunk, node_ptr node);
 void gen_object(Chunk& chunk, node_ptr node);
 void gen_dot(Chunk& chunk, node_ptr node);
+void gen_hook(Chunk& chunk, node_ptr node);
 void gen_import(Chunk& chunk, node_ptr node);
 
 void gen_list(Chunk& chunk, node_ptr node);

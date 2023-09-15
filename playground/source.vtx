@@ -1,7 +1,16 @@
 var a = 100
+var b = 20
 
 a::onChange((info) => {
-    info.current = 400
+    b = info.current * 2
+    if (info.current > 100) {
+        info.current = 100
+    } else if (info.current < 0) {
+        info.current = 0
+    }
 })
 
-a = 10
+a = 50
+print(b, "\n")
+a = 30
+print(b, "\n")

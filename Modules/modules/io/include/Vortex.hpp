@@ -73,9 +73,15 @@ struct Meta {
     bool temp_non_const = false;
 };
 
+struct ValueHooks {
+    std::shared_ptr<Value> onChangeHook = nullptr;
+};
+
+
 struct Value {
     ValueType type;
     Meta meta;
+    ValueHooks hooks;
     std::variant
     <
         double, 
@@ -257,4 +263,55 @@ Value none_val() {
 void error(std::string message) {
     std::cout << message << "\n";
     exit(1);
+}
+
+struct CallFrame {
+  std::shared_ptr<FunctionObj> function;
+  uint8_t* ip;
+  int frame_start;
+  int sp;
+  int instruction_index;
+  std::vector<Value> gen_stack;
+};
+struct VM {
+    std::vector<Value> stack;
+    Value* sp;
+    /* Possibly change to array with specified MAX_DEPTH */
+    std::vector<CallFrame> frames;
+    std::unordered_map<std::string, std::shared_ptr<CallFrame>> gen_frames;
+    std::vector<Value*> objects;
+    std::unordered_map<std::string, Value> globals;
+    int status = 0;
+    std::vector<std::shared_ptr<Closure>> closed_values;
+    int coro_count = 0;
+
+    VM() {
+        stack.reserve(100000);
+    }
+};
+
+static void runtimeError(VM& vm, std::string message, ...) {
+
+    vm.status = 1;
+
+    CallFrame frame = vm.frames.back();
+
+    va_list args;
+    va_start(args, message);
+    vfprintf(stderr, message.c_str(), args);
+    va_end(args);
+    fputs("\n", stderr);
+
+    for (int i = vm.frames.size() - 1; i >= 0; i--) {
+        CallFrame* frame = &vm.frames[i];
+        auto& function = frame->function;
+        size_t instruction = frame->ip - function->chunk.code.data() - 1;
+        fprintf(stderr, "[line %d] in ", 
+                function->chunk.lines[instruction]);
+        if (function->name == "") {
+            fprintf(stderr, "script\n");
+        } else {
+            fprintf(stderr, "%s()\n", function->name.c_str());
+        }
+  }
 }
