@@ -263,6 +263,44 @@ static EvaluateResult run(VM& vm) {
                         return EVALUATE_RUNTIME_ERROR;
                     }
                     Value current = container.get_object()->values[accessor.get_string()];
+
+                    if (current.hooks.onChangeHook) {
+                        Value obj = object_val();
+                        obj.get_object()->values["old"] = current;
+                        obj.get_object()->values["current"] = value;
+
+                        VM func_vm;
+                        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+                        main->name = "";
+                        main->arity = 0;
+                        main->chunk = Chunk();
+                        CallFrame main_frame;
+                        main_frame.name = frame->name;
+                        main_frame.function = main;
+                        main_frame.sp = 0;
+                        main_frame.ip = main->chunk.code.data();
+                        main_frame.frame_start = 0;
+                        func_vm.frames.push_back(main_frame);
+
+                        add_constant(main->chunk, *current.hooks.onChangeHook);
+                        add_constant(main->chunk, obj);
+
+                        add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
+                        add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+                        add_opcode(main->chunk, OP_CALL, 1, 0);
+                        add_code(main->chunk, OP_EXIT, 0);
+
+                        auto status = evaluate(func_vm);
+
+                        if (status != 0) {
+                            exit(1);
+                        }
+
+                        obj.get_object()->values["current"].hooks.onChangeHook = current.hooks.onChangeHook;
+                        push(vm, obj.get_object()->values["current"]);
+                        container.get_object()->values[accessor.get_string()] = obj.get_object()->values["current"];
+                        break;
+                    }
                     container.get_object()->values[accessor.get_string()] = value;
                 }
                 else if (container.is_list()) {
@@ -444,6 +482,46 @@ static EvaluateResult run(VM& vm) {
                         runtimeError(vm, "Cannot modify const");
                         return EVALUATE_RUNTIME_ERROR;
                     }
+                }
+                if (value.hooks.onChangeHook) {
+
+                    Value new_value = pop(vm);
+
+                    Value obj = object_val();
+                    obj.get_object()->values["old"] = value;
+                    obj.get_object()->values["current"] = new_value;
+
+                    VM func_vm;
+                    std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+                    main->name = "";
+                    main->arity = 0;
+                    main->chunk = Chunk();
+                    CallFrame main_frame;
+                    main_frame.name = frame->name;
+                    main_frame.function = main;
+                    main_frame.sp = 0;
+                    main_frame.ip = main->chunk.code.data();
+                    main_frame.frame_start = 0;
+                    func_vm.frames.push_back(main_frame);
+
+                    add_constant(main->chunk, *value.hooks.onChangeHook);
+                    add_constant(main->chunk, obj);
+
+                    add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
+                    add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+                    add_opcode(main->chunk, OP_CALL, 1, 0);
+                    add_code(main->chunk, OP_EXIT, 0);
+
+                    auto status = evaluate(func_vm);
+
+                    if (status != 0) {
+                        exit(1);
+                    }
+
+                    obj.get_object()->values["current"].hooks.onChangeHook = value.hooks.onChangeHook;
+                    push(vm, obj.get_object()->values["current"]);
+                    *frame->function->closed_vars[index]->location = vm.stack.back();
+                    break;
                 }
                 *frame->function->closed_vars[index]->location = vm.stack.back();
                 break;
