@@ -1,39 +1,16 @@
-const println = (...args) => {
-    print(...args, "\n")
-}
+const x = 10
+const y = 100
 
-const y = 10
-var x = 100
-var obj = {
-    name: "John"
-}
-
-const global = () => {
-    const g = 100
-    const outer = () => {
-        obj["name"] = "Allan"
-        obj.age = 34
-        return obj
+const readf = () => {
+    print(x, "\n")
+    const g = 20
+    const inner = () => {
+        print(y, "\n")
+        print(g, "\n")
+        print(x, "\n")
     }
-    return [outer(), g]
+    return inner
 }
 
-global().println()
-
-// const global = () => {
-//     const g = 20.4
-//     const outer = () => {
-//         const inner = () => {
-//             x = 200
-//             println(x)
-//             println(g)
-//             println(y)
-//         }
-//         return inner
-//     }
-//     return outer
-// }
-
-// const outer = global()
-// const inner = outer()
-// inner()
+const inner = readf()
+inner()

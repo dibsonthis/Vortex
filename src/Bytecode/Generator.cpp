@@ -1329,16 +1329,26 @@ static int resolve_closure_nested(std::string name) {
                 if (!captured) {
                     ClosedVar var;
                     var.name = name;
-                    if (is_local) {
-                        var.index = index;
-                    } else {
-                        var.index = compilers[j+1]->closed_vars.size()-1;
-                    }
-                    //var.index = compilers[j]->closed_vars.size();
+                    var.index = index;
+                    index = compilers[j]->closed_vars.size();
+                    //index = var.index;
+                    // if (!is_local) {
+                    //     index = var.index;
+                    // }
+                    // if (is_local) {
+                    //     var.index = compilers[j]->closed_vars.size();
+                    //     //var.index = index;
+                    // } else {
+                    //     var.index = compilers[j]->closed_vars.size();
+                    //     //var.index = index;
+                    //     //index = compilers[j]->closed_vars.size();
+                    //     //var.index = compilers[j+1]->closed_vars.size()-1;
+                    //     //index = var.index;
+                    // }
                     var.is_local = is_local;
-                    index = var.index;
-                    //compilers[j]->closed_vars.push_back(var);
-                    compilers[j]->closed_vars.insert(compilers[j]->closed_vars.begin(), var);
+                    // index = var.index;
+                    // compilers[j]->closed_vars.insert(compilers[j]->closed_vars.begin(), var);
+                    compilers[j]->closed_vars.push_back(var);
                 }
             }
             current = original;
