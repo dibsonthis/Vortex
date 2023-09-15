@@ -195,6 +195,12 @@ static EvaluateResult run(VM& vm) {
                 vm.stack[index + frame->frame_start] = vm.stack.back();
                 break;
             }
+            case OP_SET_FORCE: {
+                int index = READ_INT();
+                Value value = vm.stack[index + frame->frame_start];
+                vm.stack[index + frame->frame_start] = vm.stack.back();
+                break;
+            }
             case OP_SET_PROPERTY: {
                 Value value = pop(vm);
                 Value accessor = pop(vm);
@@ -659,152 +665,6 @@ static EvaluateResult run(VM& vm) {
                 if (status < 0) {
                     return EVALUATE_RUNTIME_ERROR;
                 }
-
-                // auto& function_obj = function.get_function();
-                // int positional_args = function_obj->arity - function_obj->defaults;
-
-                // if (!function_obj->is_generator || (function_obj->is_generator && !function_obj->generator_init)) {
-                //     int num_unpacked = 0;
-                //     int num_captured = 0;
-                //     int capturing = -1;
-                    
-                //     for (int i = 0; i < param_num; i++) {
-                //         Value arg = pop(vm);
-                //         if (arg.meta.unpack) {
-                //             arg.meta.unpack = false;
-                //             num_unpacked--;
-                //             for (int j = 0; j < arg.get_list()->size(); j++) {
-                //                 num_unpacked++;
-                //                 auto& _arg = arg.get_list()->at(j);
-                //                 Value& constant = function_obj->chunk.constants[i+j];
-                //                 if (constant.is_list() && constant.meta.packer) {
-                //                     capturing = i+j;
-                //                     constant.get_list()->clear();
-                //                     constant.get_list()->push_back(_arg);
-                //                 } else {
-                //                     if (capturing >= 0) {
-                //                         function_obj->chunk.constants[capturing].get_list()->push_back(_arg);
-                //                         num_captured++;
-                //                     } else {
-                //                         function_obj->chunk.constants[i + j] = _arg;
-                //                     }
-                //                 }
-                //             }
-                //         } else {
-                //             Value& constant = function_obj->chunk.constants[i];
-                //             if (constant.is_list() && constant.meta.packer) {
-                //                 capturing = i;
-                //                 constant.get_list()->clear();
-                //                 constant.get_list()->push_back(arg);
-                //             } else {
-                //                 if (capturing >= 0) {
-                //                     function_obj->chunk.constants[capturing].get_list()->push_back(arg);
-                //                     num_captured++;
-                //                 } else {
-                //                     function_obj->chunk.constants[i] = arg;
-                //                 }
-                //             }
-                //         }
-                //     }
-
-                //     param_num += num_unpacked - num_captured;
-
-                //     if ((param_num < positional_args) || (param_num > function_obj->arity)) {
-                //         runtimeError(vm, "Function '" + function_obj->name + "' expects " + std::to_string(function_obj->arity) + " argument(s)");
-                //         return EVALUATE_RUNTIME_ERROR;
-                //     }
-
-                //     if (param_num < function_obj->arity) {
-                //         // We have defaults we want to inject
-                //         int default_index = 0;
-                //         for (int i = param_num; i < function_obj->arity; i++) {
-                //             Meta meta = function_obj->chunk.constants[i].meta;
-                //             function_obj->chunk.constants[i] = function_obj->default_values[default_index];
-                //             function_obj->chunk.constants[i].meta = meta;
-                //             default_index++;
-                //         }
-                //     }
-                // }
-                
-                // //disassemble_chunk(function_obj->chunk, function_obj->name + "__");
-
-                // if (function_obj->is_generator && !function_obj->generator_init) {
-                //     function_obj->generator_init = true;
-                //     auto call_frame = std::make_shared<CallFrame>();
-                //     call_frame->frame_start = vm.stack.size();
-                //     call_frame->function = function_obj;
-                //     call_frame->sp = vm.stack.size();
-                //     call_frame->ip = function_obj->chunk.code.data();
-
-                //     int instruction_index = frame->ip - &frame->function->chunk.code[0];
-                //     call_frame->instruction_index = instruction_index;
-                //     vm.gen_frames[function_obj->name] = call_frame;
-
-                //     push(vm, function);
-                //     break;
-
-                // } else if (function_obj->is_generator && function_obj->generator_init) {
-                //     auto& call_frame = vm.gen_frames[function_obj->name];
-                //     call_frame->frame_start = vm.stack.size();
-                //     call_frame->sp = vm.stack.size();
-
-                //     if (param_num > 1) {
-                //         runtimeError(vm, "Coroutine can only be called with one argument for parameter '_value'");
-                //     }
-
-                //     int _value_index = -1;
-
-                //     if (param_num == 1) {
-                //         for (int i = 0; i < call_frame->function->chunk.variables.size(); i++) {
-                //             if (call_frame->function->chunk.variables[i] == "_value") {
-                //                 _value_index = i;
-                //                 break;
-                //             }
-                //         }
-
-                //         if (_value_index == -1) {
-                //             runtimeError(vm, "Missing variable '_value'");
-                //         }
-
-                //         call_frame->function->chunk.constants[_value_index] = pop(vm);
-                //         call_frame->frame_start--;
-                //         call_frame->sp--;
-                //     }
-
-                //     for (int i = 0; i < call_frame->gen_stack.size(); i++) {
-                //         Value& value = call_frame->gen_stack[i];
-                //         if (i == _value_index) {
-                //             push(vm, call_frame->function->chunk.constants[_value_index]);
-                //         } else {
-                //             push(vm, value);
-                //         }
-                //     }
-
-                //     int instruction_index = frame->ip - &frame->function->chunk.code[0];
-                //     call_frame->instruction_index = instruction_index;
-
-                //     vm.frames.push_back(*call_frame);
-                //     frame = &*call_frame;
-                //     break;
-
-                // } else if (function_obj->is_generator && function_obj->generator_done) {
-                //     Value none = none_val();
-                //     push(vm, none);
-                //     break;
-                // }
-
-                // CallFrame call_frame;
-                // call_frame.frame_start = vm.stack.size();
-                // call_frame.function = function_obj;
-                // call_frame.sp = vm.stack.size();
-                // call_frame.ip = function_obj->chunk.code.data();
-
-                // int instruction_index = frame->ip - &frame->function->chunk.code[0];
-                // call_frame.instruction_index = instruction_index;
-
-                // vm.frames.push_back(call_frame);
-                // frame = &vm.frames.back();
-
                 break;
             }
             case OP_CALL_METHOD: {
@@ -851,91 +711,99 @@ static EvaluateResult run(VM& vm) {
                     return EVALUATE_RUNTIME_ERROR;
                 }
 
-                auto& function_obj = function.get_function();
-                int positional_args = function_obj->arity - function_obj->defaults;
+                int status = call_function(vm, function, param_num, frame, std::make_shared<Value>(object));
 
-                int num_captured = 0;
-                int num_unpacked = 0;
-                int capturing = -1;
-
-                for (int i = 0; i < param_num; i++) {
-                    Value arg = pop(vm);
-                    if (arg.meta.unpack) {
-                        arg.meta.unpack = false;
-                        num_unpacked--;
-                        for (int j = 0; j < arg.get_list()->size(); j++) {
-                            num_unpacked++;
-                            auto _arg = arg.get_list()->at(j);
-
-                            Value& constant = function_obj->chunk.constants[i+j];
-
-                            if (constant.is_list() && constant.meta.packer) {
-                                capturing = i+j;
-                                constant = copy(constant);
-                                constant.get_list()->clear();
-                                constant.get_list()->push_back(_arg);
-                            } else {
-                                if (capturing >= 0) {
-                                    function_obj->chunk.constants[capturing].get_list()->push_back(_arg);
-                                    num_captured++;
-                                } else {
-                                    function_obj->chunk.constants[i + j] = _arg;
-                                }
-                            }
-                        }
-                    } else {
-                        Value& constant = function_obj->chunk.constants[i];
-                        if (constant.is_list() && constant.meta.packer) {
-                            capturing = i;
-                            constant = copy(constant);
-                            constant.get_list()->clear();
-                            constant.get_list()->push_back(arg);
-                        } else {
-                            if (capturing >= 0) {
-                                function_obj->chunk.constants[capturing].get_list()->push_back(arg);
-                                num_captured++;
-                            } else {
-                                function_obj->chunk.constants[i] = arg;
-                            }
-                        }
-                    }
-                }
-
-                param_num += num_unpacked - num_captured;
-
-                if ((param_num < positional_args) || (param_num > function_obj->arity)) {
-                    runtimeError(vm, "Function '" + function_obj->name + "' expects " + std::to_string(function_obj->arity) + " argument(s)");
+                if (status < 0) {
                     return EVALUATE_RUNTIME_ERROR;
                 }
 
-                if (param_num < function_obj->arity) {
-                    // We have defaults we want to inject
-                    int default_index = 0;
-                    for (int i = param_num; i < function_obj->arity; i++) {
-                        Meta meta = function_obj->chunk.constants[i].meta;
-                        function_obj->chunk.constants[i] = function_obj->default_values[default_index];
-                        function_obj->chunk.constants[i].meta = meta;
-                        default_index++;
-                    }
-                }
-
-                //disassemble_chunk(function_obj->chunk, function_obj->name + "__");
-
-                CallFrame call_frame;
-                call_frame.frame_start = vm.stack.size();
-                call_frame.function = function_obj;
-                call_frame.function->object = std::make_shared<Value>(object);
-                call_frame.sp = vm.stack.size();
-                call_frame.ip = function_obj->chunk.code.data();
-
-                int instruction_index = frame->ip - &frame->function->chunk.code[0];
-                
-                call_frame.instruction_index = instruction_index;
-
-                vm.frames.push_back(call_frame);
-                frame = &vm.frames.back();
-
                 break;
+
+                // auto& function_obj = function.get_function();
+                // int positional_args = function_obj->arity - function_obj->defaults;
+
+                // int num_captured = 0;
+                // int num_unpacked = 0;
+                // int capturing = -1;
+
+                // for (int i = 0; i < param_num; i++) {
+                //     Value arg = pop(vm);
+                //     if (arg.meta.unpack) {
+                //         arg.meta.unpack = false;
+                //         num_unpacked--;
+                //         for (int j = 0; j < arg.get_list()->size(); j++) {
+                //             num_unpacked++;
+                //             auto _arg = arg.get_list()->at(j);
+
+                //             Value& constant = function_obj->chunk.constants[i+j];
+
+                //             if (constant.is_list() && constant.meta.packer) {
+                //                 capturing = i+j;
+                //                 constant = copy(constant);
+                //                 constant.get_list()->clear();
+                //                 constant.get_list()->push_back(_arg);
+                //             } else {
+                //                 if (capturing >= 0) {
+                //                     function_obj->chunk.constants[capturing].get_list()->push_back(_arg);
+                //                     num_captured++;
+                //                 } else {
+                //                     function_obj->chunk.constants[i + j] = _arg;
+                //                 }
+                //             }
+                //         }
+                //     } else {
+                //         Value& constant = function_obj->chunk.constants[i];
+                //         if (constant.is_list() && constant.meta.packer) {
+                //             capturing = i;
+                //             constant = copy(constant);
+                //             constant.get_list()->clear();
+                //             constant.get_list()->push_back(arg);
+                //         } else {
+                //             if (capturing >= 0) {
+                //                 function_obj->chunk.constants[capturing].get_list()->push_back(arg);
+                //                 num_captured++;
+                //             } else {
+                //                 function_obj->chunk.constants[i] = arg;
+                //             }
+                //         }
+                //     }
+                // }
+
+                // param_num += num_unpacked - num_captured;
+
+                // if ((param_num < positional_args) || (param_num > function_obj->arity)) {
+                //     runtimeError(vm, "Function '" + function_obj->name + "' expects " + std::to_string(function_obj->arity) + " argument(s)");
+                //     return EVALUATE_RUNTIME_ERROR;
+                // }
+
+                // if (param_num < function_obj->arity) {
+                //     // We have defaults we want to inject
+                //     int default_index = 0;
+                //     for (int i = param_num; i < function_obj->arity; i++) {
+                //         Meta meta = function_obj->chunk.constants[i].meta;
+                //         function_obj->chunk.constants[i] = function_obj->default_values[default_index];
+                //         function_obj->chunk.constants[i].meta = meta;
+                //         default_index++;
+                //     }
+                // }
+
+                // //disassemble_chunk(function_obj->chunk, function_obj->name + "__");
+
+                // CallFrame call_frame;
+                // call_frame.frame_start = vm.stack.size();
+                // call_frame.function = function_obj;
+                // call_frame.function->object = std::make_shared<Value>(object);
+                // call_frame.sp = vm.stack.size();
+                // call_frame.ip = function_obj->chunk.code.data();
+
+                // int instruction_index = frame->ip - &frame->function->chunk.code[0];
+                
+                // call_frame.instruction_index = instruction_index;
+
+                // vm.frames.push_back(call_frame);
+                // frame = &vm.frames.back();
+
+                // break;
             }
             case OP_IMPORT: {
                 int index = READ_INT();
@@ -1354,7 +1222,7 @@ void freeVM(VM& vm) {
     //
 }
 
-static int call_function(VM& vm, Value& function, int param_num, CallFrame*& frame) {
+static int call_function(VM& vm, Value& function, int param_num, CallFrame*& frame, std::shared_ptr<Value> object) {
     auto& function_obj = function.get_function();
     int positional_args = function_obj->arity - function_obj->defaults;
 
@@ -1426,20 +1294,28 @@ static int call_function(VM& vm, Value& function, int param_num, CallFrame*& fra
     //disassemble_chunk(function_obj->chunk, function_obj->name + "__");
 
     if (function_obj->is_generator && !function_obj->generator_init) {
-        function_obj->generator_init = true;
+        auto function_copy = copy(function);
+        auto& function_copy_obj = function_copy.get_function();
+        function_copy_obj->generator_init = true;
         auto call_frame = std::make_shared<CallFrame>();
         call_frame->frame_start = vm.stack.size();
-        call_frame->function = function_obj;
+        call_frame->function = function_copy_obj;
         call_frame->sp = vm.stack.size();
-        call_frame->ip = function_obj->chunk.code.data();
+        call_frame->ip = function_copy_obj->chunk.code.data();
+
+        function_copy_obj->name = function_copy_obj->name + "_" + std::to_string(vm.coro_count++);
 
         int instruction_index = frame->ip - &frame->function->chunk.code[0];
         call_frame->instruction_index = instruction_index;
-        vm.gen_frames[function_obj->name] = call_frame;
+        vm.gen_frames[function_copy_obj->name] = call_frame;
 
-        push(vm, function);
+        push(vm, function_copy);
         return 0;
 
+    } else if (function_obj->is_generator && function_obj->generator_done) {
+        Value none = none_val();
+        push(vm, none);
+        return 0;
     } else if (function_obj->is_generator && function_obj->generator_init) {
         auto& call_frame = vm.gen_frames[function_obj->name];
         call_frame->frame_start = vm.stack.size();
@@ -1484,15 +1360,14 @@ static int call_function(VM& vm, Value& function, int param_num, CallFrame*& fra
         frame = &*call_frame;
         return 0;
 
-    } else if (function_obj->is_generator && function_obj->generator_done) {
-        Value none = none_val();
-        push(vm, none);
-        return 0;
     }
 
     CallFrame call_frame;
     call_frame.frame_start = vm.stack.size();
     call_frame.function = function_obj;
+    if (object) {
+        call_frame.function->object = object;
+    }
     call_frame.sp = vm.stack.size();
     call_frame.ip = function_obj->chunk.code.data();
 
@@ -1823,6 +1698,22 @@ static Value load_lib_builtin(std::vector<Value>& args) {
 
 Value copy(Value& value) {
     switch (value.type) {
+        case Function: {
+            Value new_func = function_val();
+            new_func.get_function()->arity = value.get_function()->arity;
+            new_func.get_function()->chunk = value.get_function()->chunk;
+            new_func.get_function()->closed_var_indexes = value.get_function()->closed_var_indexes;
+            new_func.get_function()->closed_vars = value.get_function()->closed_vars;
+            new_func.get_function()->default_values = value.get_function()->default_values;
+            new_func.get_function()->generator_done = value.get_function()->generator_done;
+            new_func.get_function()->generator_init = value.get_function()->generator_init;
+            new_func.get_function()->is_generator = value.get_function()->is_generator;
+            new_func.get_function()->defaults = value.get_function()->defaults;
+            new_func.get_function()->is_type_generator = value.get_function()->is_type_generator;
+            new_func.get_function()->name = value.get_function()->name;
+            new_func.get_function()->object = value.get_function()->object;
+            return new_func;
+        }
         case List: {
             Value new_list = list_val();
             new_list.meta = value.meta;

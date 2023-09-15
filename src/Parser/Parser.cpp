@@ -553,7 +553,7 @@ void Parser::parse_func_call(std::string end) {
         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
             break;
         }
-        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "return") {
+        if (current_node->type == NodeType::ID && (current_node->_Node.ID().value == "return" || current_node->_Node.ID().value == "yield")) {
             advance();
             continue;
         }
@@ -591,7 +591,7 @@ void Parser::parse_object_desconstruct(std::string end) {
         if (current_node->type == NodeType::OP && current_node->_Node.Op().value == end) {
             break;
         }
-        if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "return") {
+        if (current_node->type == NodeType::ID && (current_node->_Node.ID().value == "return" || current_node->_Node.ID().value == "yield")) {
             advance();
             continue;
         }
@@ -616,7 +616,7 @@ void Parser::parse_accessor(std::string end) {
             advance();
             continue;
         }
-		else if (current_node->type == NodeType::ID && current_node->_Node.ID().value == "return") {
+		else if (current_node->type == NodeType::ID && (current_node->_Node.ID().value == "return" || current_node->_Node.ID().value == "yield")) {
             advance();
             continue;
         }

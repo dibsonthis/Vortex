@@ -442,14 +442,14 @@ void gen_for_loop(Chunk& chunk, node_ptr node) {
         add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
         add_constant_code(chunk, number_val(1), node->line);
         add_code(chunk, OP_ADD, node->line);
-        add_opcode(chunk, OP_SET, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
+        add_opcode(chunk, OP_SET_FORCE, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
         add_code(chunk, OP_POP, node->line);
 
         if (node->_Node.ForLoop().value_name) {
             add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().value_name->_Node.ID().value), node->line);
             add_constant_code(chunk, number_val(1), node->line);
             add_code(chunk, OP_ADD, node->line);
-            add_opcode(chunk, OP_SET, resolve_variable(node->_Node.ForLoop().value_name->_Node.ID().value), node->line);
+            add_opcode(chunk, OP_SET_FORCE, resolve_variable(node->_Node.ForLoop().value_name->_Node.ID().value), node->line);
             add_code(chunk, OP_POP, node->line);
         }
 
@@ -508,14 +508,14 @@ void gen_for_loop(Chunk& chunk, node_ptr node) {
         add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
         add_constant_code(chunk, number_val(1), node->line);
         add_code(chunk, OP_ADD, node->line);
-        add_opcode(chunk, OP_SET, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
+        add_opcode(chunk, OP_SET_FORCE, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
         add_code(chunk, OP_POP, node->line);
 
         if (node->_Node.ForLoop().value_name) {
             add_opcode(chunk, OP_LOAD, resolve_variable("___iter___"), node->line);
             add_opcode(chunk, OP_LOAD, resolve_variable(node->_Node.ForLoop().index_name->_Node.ID().value), node->line);
             add_opcode(chunk, OP_ACCESSOR, 0, node->line);
-            add_opcode(chunk, OP_SET, resolve_variable(node->_Node.ForLoop().value_name->_Node.ID().value), node->line);
+            add_opcode(chunk, OP_SET_FORCE, resolve_variable(node->_Node.ForLoop().value_name->_Node.ID().value), node->line);
             add_code(chunk, OP_POP, node->line);
         }
 

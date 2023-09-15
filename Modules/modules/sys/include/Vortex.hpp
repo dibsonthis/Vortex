@@ -277,6 +277,7 @@ struct VM {
     std::unordered_map<std::string, Value> globals;
     int status = 0;
     std::vector<std::shared_ptr<Closure>> closed_values;
+    int coro_count = 0;
 
     VM() {
         stack.reserve(100000);

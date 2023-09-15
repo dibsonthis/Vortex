@@ -227,6 +227,8 @@ int disassemble_instruction(Chunk& chunk, int offset) {
         return op_code_instruction("OP_LOAD_CLOSURE", chunk, offset);
     case OP_SET:
         return op_code_instruction("OP_SET", chunk, offset);
+    case OP_SET_FORCE:
+        return op_code_instruction("OP_SET_FORCE", chunk, offset);
     case OP_SET_PROPERTY:
         return simple_instruction("OP_SET_PROPERTY", offset);
     case OP_SET_CLOSURE:

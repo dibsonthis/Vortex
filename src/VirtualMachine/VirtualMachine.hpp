@@ -45,6 +45,7 @@ struct VM {
     std::unordered_map<std::string, Value> globals;
     int status = 0;
     std::vector<std::shared_ptr<Closure>> closed_values;
+    int coro_count = 0;
 
     VM() {
         stack.reserve(100000);
@@ -66,7 +67,7 @@ static void define_native(VM& vm, std::string name, NativeFunction function);
 static EvaluateResult run(VM& vm);
 EvaluateResult evaluate(VM& vm);
 
-static int call_function(VM& vm, Value& function, int param_num, CallFrame*& frame);
+static int call_function(VM& vm, Value& function, int param_num, CallFrame*& frame, std::shared_ptr<Value> object = nullptr);
 
 void freeVM(VM& vm);
 
