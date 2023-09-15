@@ -1,16 +1,204 @@
-const x = 10
-const y = 100
+import io
+import [println, printlns] : io
+import [] : string
+import [] : functional
+import [] : sys
 
-const readf = () => {
-    print(x, "\n")
-    const g = 20
-    const inner = () => {
-        print(y, "\n")
-        print(g, "\n")
-        print(x, "\n")
+const extract = (str) => {
+    var vars = []
+    for (str.chars(), index, c) {
+        if (c == "%") {
+            var word = ""
+            index += 1
+            while (str[index] != "%") {
+                word += str[index]
+                index += 1
+            }
+            index += 1
+            vars.append(word)
+        }
     }
-    return inner
+    return vars
 }
 
-const inner = readf()
-inner()
+const resolve = (var, dict) => {
+    const split_var = var.split(".")
+    if (split_var.length() > 1) {
+        var value;
+        for (split_var, i, v) {
+            var accessor = split_var[i]
+            var numeric_accessor = number(accessor)
+            if (numeric_accessor != None) {
+                accessor = numeric_accessor
+            }
+            if (i == 0) {
+                value = dict[accessor] // object/list
+            } else {
+                value = value[accessor]
+            }
+        }
+        return value
+    } else {
+        return dict[var]
+    }
+}
+
+const render_line = (line, dict) => {
+    var variables = extract(line)
+    var new_line = line
+    for (variables, index, var) {
+        new_line = new_line.replaceAll("%" + var + "%", string(resolve(var, dict)))
+    }
+
+    return new_line
+}
+
+const parse_lines = (lines, dict) => {
+    var new = []
+    var loop_nest_count = 0
+    for (lines, index, line) {
+        if (line.startsWith("loop")) {
+            loop_nest_count += 1
+            
+            const loop = line.split(":")
+            const iterator = loop.last().trim()
+            const variable = loop[0].split()[1].trim()
+    
+            var lines_to_loop = []
+            index += 1
+            while (loop_nest_count != 0) {
+                var _line = lines[index]
+                if (_line != None and _line.startsWith("loop")) {
+                    loop_nest_count += 1
+                }
+                if (_line != None and _line.startsWith("endloop")) {
+                    loop_nest_count -= 1
+                    if (loop_nest_count == 0) {
+                        break
+                    }
+                }
+                if (_line == None) {
+                    break
+                }
+                lines_to_loop.append(_line)
+                index += 1
+            }
+
+            var loop_block = lines_to_loop.join("\n")
+            var new_lines = []
+
+            if (frame().level == 4) {
+                print(lines_to_loop, "\n")
+            }
+    
+            for (dict[iterator], _i, _item) {
+                var new_line = loop_block
+                new_line = new_line.replaceAll("%" + variable, "%" + iterator + "." + string(_i).split(".")[0])
+                new_line = render_line(new_line, dict)
+                new_lines.append(new_line)
+            }
+
+            //new_lines = new_lines.parse_lines(dict).join("\n")
+            new_lines = new_lines.join("\n")
+            new.append(new_lines)
+    
+        } else if (line.startsWith("if")) {
+            const if_line = line.chars()
+            var expr = ""
+            var start = if_line.indexOf("(") + 1
+            var end = if_line.indexOf(")")
+            for (start..end, i, _i) {
+                expr += if_line[_i]
+            }
+            expr = expr.split()
+            for (expr, i, part) {
+                if (part.startsWith("%")) {
+                    var part_split = part.chars()
+                    part_split = part_split.remove(part_split.length()-1)
+                    part_split = part_split.remove(0)
+                    part_split = part_split.join()
+                    expr[i] = resolve(part_split, dict)
+                }
+            }
+
+            const expr_left = expr[0]
+            const expr_op = expr[1]
+            var expr_res = false
+
+            if (expr_op == "==") {
+                var right = expr[2]
+                if (expr_left.type() == "Number") {
+                    right = number(right)
+                }
+                expr_res = expr_left == right
+            } else if (expr_op == "!=") {
+                var right = expr[2]
+                if (expr_left.type() == "Number") {
+                    right = number(right)
+                }
+                expr_res = expr_left != right
+            } else if (expr_op == ">") {
+                const right = number(expr[2])
+                expr_res = expr_left > right
+            } else if (expr_op == "<") {
+                const right = number(expr[2])
+                expr_res = expr_left < right
+            } else if (expr_op == ">=") {
+                const right = number(expr[2])
+                expr_res = expr_left >= right
+            } else if (expr_op == "<=") {
+                const right = number(expr[2])
+                expr_res = expr_left <= right
+            } else {
+                error(f"Invalid operator '${expr_op}' in if statement")
+            }
+
+            var lines_to_render = []
+            index += 1
+            var to_render = expr_res
+            while (!lines[index].startsWith("endif")) {
+                var _line = lines[index]
+                if (to_render) {
+                    lines_to_render.append(_line)
+                }
+                index += 1
+
+                if (lines[index].startsWith("else")) {
+                    if (expr_res == false) {
+                        lines_to_render = []
+                    } else {
+                        to_render = false
+                    }
+                    index += 1
+                }
+            }
+    
+            lines_to_render = lines_to_render.join("\n")
+            var new_line = render_line(lines_to_render, dict)
+            new.append(new_line)
+        } else {
+            print(render_line)
+            var new_line = render_line(line, dict)
+            new.append(new_line)
+        }
+    }
+
+    return new
+}
+
+const render = (template, dict) => {
+    var lines = template.split("\n").map((l) => l.trim())
+    var new = parse_lines(lines, dict)
+    return new.join("\n")
+}
+
+const dict = {
+    admin: [["John", "0400 000 000"], ["Allan", "0400 000 000"], ["Dani", "0400 000 000"], ["Jack", "0400 000 000"]],
+    positions: [["IT Specialist", 80000], ["Eng L1", 84000], ["Eng L3", 125000]],
+    people: [
+        {name: "John", job: "Accountant"},
+        {name: "Adam", age: 28, job: "Scientist"}],
+    x: 10
+}
+
+io.writef("rendered.html", render(io.readf("template.txt"), dict))

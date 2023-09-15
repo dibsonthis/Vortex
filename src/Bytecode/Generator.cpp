@@ -1319,10 +1319,11 @@ static int resolve_closure_nested(std::string name) {
                     is_local = local;
                 }
                 bool captured = false;
-                for (auto var : compilers[j]->closed_vars) {
+                for (int k = 0; k < compilers[j]->closed_vars.size(); k++) {
+                    auto& var = compilers[j]->closed_vars[k];
                     if (is_local == var.is_local && name == var.name) {
                         captured = true;
-                        index = var.index;
+                        index = k;
                         break;
                     }
                 }
@@ -1331,23 +1332,7 @@ static int resolve_closure_nested(std::string name) {
                     var.name = name;
                     var.index = index;
                     index = compilers[j]->closed_vars.size();
-                    //index = var.index;
-                    // if (!is_local) {
-                    //     index = var.index;
-                    // }
-                    // if (is_local) {
-                    //     var.index = compilers[j]->closed_vars.size();
-                    //     //var.index = index;
-                    // } else {
-                    //     var.index = compilers[j]->closed_vars.size();
-                    //     //var.index = index;
-                    //     //index = compilers[j]->closed_vars.size();
-                    //     //var.index = compilers[j+1]->closed_vars.size()-1;
-                    //     //index = var.index;
-                    // }
                     var.is_local = is_local;
-                    // index = var.index;
-                    // compilers[j]->closed_vars.insert(compilers[j]->closed_vars.begin(), var);
                     compilers[j]->closed_vars.push_back(var);
                 }
             }
