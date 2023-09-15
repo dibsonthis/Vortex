@@ -28,6 +28,7 @@
 // #define DEBUG_TRACE_EXECUTION
 
 struct CallFrame {
+  std::string name;
   std::shared_ptr<FunctionObj> function;
   uint8_t* ip;
   int frame_start;

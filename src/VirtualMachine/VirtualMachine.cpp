@@ -31,7 +31,12 @@ static void runtimeError(VM& vm, std::string message, ...) {
         fprintf(stderr, "[line %d] in ", 
                 function->chunk.lines[instruction]);
         if (function->name == "") {
-            fprintf(stderr, "script\n");
+            //fprintf(stderr, "script\n");
+            std::string name = frame->name;
+            if (name == "") {
+                name = "script";
+            }
+            fprintf(stderr, "%s", (name + "\n").c_str());
         } else {
             fprintf(stderr, "%s()\n", function->name.c_str());
         }
@@ -206,6 +211,7 @@ static EvaluateResult run(VM& vm) {
                     main->arity = 0;
                     main->chunk = Chunk();
                     CallFrame main_frame;
+                    main_frame.name = frame->name;
                     main_frame.function = main;
                     main_frame.sp = 0;
                     main_frame.ip = main->chunk.code.data();
@@ -221,6 +227,10 @@ static EvaluateResult run(VM& vm) {
                     add_code(main->chunk, OP_EXIT, 0);
 
                     auto status = evaluate(func_vm);
+
+                    if (status != 0) {
+                        exit(1);
+                    }
 
                     obj.get_object()->values["current"].hooks.onChangeHook = value.hooks.onChangeHook;
                     push(vm, obj.get_object()->values["current"]);
@@ -430,7 +440,7 @@ static EvaluateResult run(VM& vm) {
                 int index = READ_INT();
                 Value value = *frame->function->closed_vars[index]->location;
                 if (value.meta.is_const) {
-                    if (value.meta.temp_non_const) {
+                    if (!value.meta.temp_non_const) {
                         runtimeError(vm, "Cannot modify const");
                         return EVALUATE_RUNTIME_ERROR;
                     }
@@ -872,6 +882,7 @@ static EvaluateResult run(VM& vm) {
                         main->arity = 0;
                         main->chunk = Chunk();
                         CallFrame main_frame;
+                        main_frame.name = frame->name;
                         main_frame.function = main;
                         main_frame.sp = 0;
                         main_frame.ip = main->chunk.code.data();
@@ -921,6 +932,7 @@ static EvaluateResult run(VM& vm) {
                         main->arity = 0;
                         main->chunk = Chunk();
                         CallFrame main_frame;
+                        main_frame.name = frame->name;
                         main_frame.function = main;
                         main_frame.sp = 0;
                         main_frame.ip = main->chunk.code.data();
@@ -983,6 +995,7 @@ static EvaluateResult run(VM& vm) {
                     main->arity = 0;
                     main->chunk = Chunk();
                     CallFrame main_frame;
+                    main_frame.name = frame->name;
                     main_frame.function = main;
                     main_frame.sp = 0;
                     main_frame.ip = main->chunk.code.data();

@@ -1,16 +1,8 @@
 var a = 100
-var b = 20
+const b = 10
 
-a::onChange((info) => {
-    b = info.current * 2
-    if (info.current > 100) {
-        info.current = 100
-    } else if (info.current < 0) {
-        info.current = 0
-    }
-})
+const g = () => {
+    b = 20
+}
 
-a = 50
-print(b, "\n")
-a = 30
-print(b, "\n")
+g()
