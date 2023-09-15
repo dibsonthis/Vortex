@@ -1,9 +1,7 @@
-const a = 10
-const b = 20
-const c = 30
+var a = 100
 
-const ls = [a, b, c]
+a::onChange((info) => {
+    info.current = 400
+})
 
-for (ls, i, v) {
-    print(v)
-}
+a = 10
