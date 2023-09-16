@@ -107,6 +107,59 @@ const res = PI * e + fib(20)
 
 Vortex's imports use relative paths to retrieve modules.
 
+## How to start using Vortex
+
+Clone the repo.
+
+Go to the root of the directory.
+
+<i>[Mac/Linux]</i> Run the build script: build.sh (requires clang) \
+<i>[Windows]</i> Run the build script: build.bat (requires g++) (Support for Windows version is currently extremely limited and mostly untested)
+
+If you're on Mac/Linux, the installer will ask if you want to store the interpreter in usr/local/bin (and set up modules in usr/local/share). This allows you to call Vortex from anywhere. If you choose yes, you'll need to input your password to continue.
+
+<b>Note:</b> If you choose to add Vortex in your bin folder (and modules in share), you can later remove them by running the uninstall.sh script found in usr/local/share/vortex
+
+Depending on your system, the interpreter would have compiled in one of the system folders in bin/build (either mac, windows or linux). The executable we just compiled (vortex) is the interpreter that we'll be using to run our Vortex code.
+
+If you chose not to add Vortex to your bin folder, you can manually add it to your PATH so you can call it globally. Otherwise, you'll need to either store it somewhere accessible or within your project.
+
+Choosing not to add Vortex to your PATH when building means the standard library modules will also not be added and therefore cannot be used.
+
+## Your first Vortex program
+
+Let's write a very quick Vortex program that defines some functions and calls them in a loop.
+
+Start by creating a vortex source file (a file ending in the extension .vtx) and paste the below code in:
+
+```go
+const addVars = (a, b) => a + b
+const mulTwo = (a) => a * 2
+
+for (0..5, index) {
+    const add = addVars(index, index + 1)
+    const res = mulTwo(add)
+    print(res, "\n")
+}
+
+print("Obligatory 'Hello World'\n")
+```
+
+Run the above Vortex program by calling: vortex <path/to/dir>/hello.vtx
+
+This is the expected output:
+
+```go
+2
+6
+10
+14
+18
+Obligatory 'Hello World'
+```
+
+Congratulations! You just ran your first Vortex code 🎉
+
 <!-- ## How to start using Vortex
 
 You can find the [full Vortex documentation here](https://dibs.gitbook.io/vortex-docs/). This includes steps on how to get started using Vortex on your local machine. -->
