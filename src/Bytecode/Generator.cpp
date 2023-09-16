@@ -596,6 +596,8 @@ void gen_hook(Chunk& chunk, node_ptr node) {
         } else {
             error("Invalid hook name: '" + hook_name + "'");
         }
+    } else {
+        error("Left hand side of hook assignment must be an identifier");
     }
 }
 
