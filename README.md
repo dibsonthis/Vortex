@@ -235,3 +235,37 @@ Logging in
 Logging out
 */
 ```
+
+### Decorators
+
+```go
+const Timer = (func) => {
+    return (...args) => {
+        const start = clock()
+        var value = func(...args)
+        const duration = clock() - start
+        print(f"Duration (${func.info().name}): ", duration, "\n")
+        return value
+    }
+}
+
+@Timer
+const somefunc = () => {
+    var i = 0
+    for (0..100) {
+        for (0..100) {
+            i += 1
+        }
+    }
+    print(i, "\n")
+}
+
+somefunc()
+
+/*
+Output:
+
+10000.000000
+Duration (somefunc): 0.002987
+*/
+```
