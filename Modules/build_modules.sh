@@ -21,36 +21,53 @@ fi
 CONFIG=""
 
 if [ "$FILE" = "sdl" ]; then
-    sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2-2.0.0.dylib" "$FILE/lib/libSDL2-2.0.0.dylib"
-    sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2_image-2.0.0.dylib" "$FILE/lib/libSDL2_image-2.0.0.dylib"
-    sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2_ttf-2.0.0.dylib" "$FILE/lib/libSDL2_ttf-2.0.0.dylib"
-    sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2_mixer-2.0.0.dylib" "$FILE/lib/libSDL2_mixer-2.0.0.dylib"
-    CONFIG="-L/usr/local/share/vortex/modules/sdl/lib -I/usr/local/share/vortex/modules/sdl/include -D_THREAD_SAFE -framework GLUT -framework OpenGL"
+    # sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2-2.0.0.dylib" "$FILE/lib/libSDL2-2.0.0.dylib"
+    # sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2_image-2.0.0.dylib" "$FILE/lib/libSDL2_image-2.0.0.dylib"
+    # sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2_ttf-2.0.0.dylib" "$FILE/lib/libSDL2_ttf-2.0.0.dylib"
+    # sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2_mixer-2.0.0.dylib" "$FILE/lib/libSDL2_mixer-2.0.0.dylib"
+    # CONFIG="-L/usr/local/share/vortex/modules/sdl/lib -I/usr/local/share/vortex/modules/sdl/include -D_THREAD_SAFE -framework GLUT -framework OpenGL"
+    CONFIG="-D_THREAD_SAFE -framework GLUT -framework OpenGL"
 elif [ "$FILE" = "requests" ]; then
-    sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libcrypto.3.dylib" "$FILE/lib/libcrypto.3.dylib"
-    sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libcrypto.dylib" "$FILE/lib/libcrypto.dylib"
-    sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libssl.3.dylib" "$FILE/lib/libssl.3.dylib"
-    sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libssl.dylib" "$FILE/lib/libssl.dylib"
-    sudo install_name_tool -change "/usr/local/lib/libcrypto.3.dylib" "/usr/local/share/vortex/modules/requests/lib/libcrypto.3.dylib" "$FILE/lib/libssl.dylib"
-    CONFIG="-framework CoreFoundation -framework Security -L/usr/local/share/vortex/modules/requests/lib -I/usr/local/share/vortex/modules/requests/include"
+    # sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libcrypto.3.dylib" "$FILE/lib/libcrypto.3.dylib"
+    # sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libcrypto.dylib" "$FILE/lib/libcrypto.dylib"
+    # sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libssl.3.dylib" "$FILE/lib/libssl.3.dylib"
+    # sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libssl.dylib" "$FILE/lib/libssl.dylib"
+    # sudo install_name_tool -change "/usr/local/lib/libcrypto.3.dylib" "/usr/local/share/vortex/modules/requests/lib/libcrypto.3.dylib" "$FILE/lib/libssl.dylib"
+    # CONFIG="-framework CoreFoundation -framework Security -L/usr/local/share/vortex/modules/requests/lib -I/usr/local/share/vortex/modules/requests/include"
+    CONFIG="-framework CoreFoundation -framework Security"
 elif [ "$FILE" = "sqlite" ]; then
     CONFIG="-lsqlite3"
 else
     CONFIG=$CONFIG
 fi
 
+# clang++ \
+# -dynamiclib \
+# -Ofast \
+# -Wno-everything \
+# -I$FILE/include \
+# -L$FILE/lib \
+# $CONFIG \
+# $LIBS \
+# -std=c++20 \
+# -stdlib=libc++ \
+# "$PWD"/$FILE/$FILE.cpp \
+# -o "$PWD"/$FILE/bin/$FILE \
+# -Wl,-rpath "$PWD"/$FILE/lib
+
 clang++ \
 -dynamiclib \
+-shared \
 -Ofast \
 -Wno-everything \
--I$FILE/include \
--L$FILE/lib \
 $CONFIG \
 $LIBS \
+-Iinclude \
+-Llib \
 -std=c++20 \
 -stdlib=libc++ \
-"$PWD"/$FILE/$FILE.cpp \
+"$PWD"/$FILE/$FILE.cpp  \
 -o "$PWD"/$FILE/bin/$FILE \
--Wl,-rpath "$PWD"/$FILE/lib
+-Wl,-rpath,@loader_path/../lib
 
 done
