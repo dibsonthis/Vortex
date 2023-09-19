@@ -69,7 +69,15 @@ Value none_val() {
 std::string toString(Value value) {
     switch(value.type) {
         case Number: {
-            return std::to_string(value.get_number());
+            double number = value.get_number();
+            if (std::floor(number) == number) {
+                return std::to_string((long long)number);
+            }
+            char buff[100];
+            snprintf(buff, sizeof(buff), "%.8g", number);
+            std::string buffAsStdStr = buff;
+            return buffAsStdStr;
+            //return std::to_string(number);
         }
         case String: {
             return(value.get_string());

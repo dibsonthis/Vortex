@@ -1,3 +1,2 @@
-const d = "name"
-
-println({d.string(): 10})
+println(2)
+println(2.5848)
