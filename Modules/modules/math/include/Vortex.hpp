@@ -314,10 +314,17 @@ static void runtimeError(VM& vm, std::string message, ...) {
         CallFrame* frame = &vm.frames[i];
         auto& function = frame->function;
         size_t instruction = frame->ip - function->chunk.code.data() - 1;
+        if (function->name == "error") {
+            continue;
+        }
         fprintf(stderr, "[line %d] in ", 
                 function->chunk.lines[instruction]);
         if (function->name == "") {
-            fprintf(stderr, "script\n");
+            std::string name = frame->name;
+            if (name == "") {
+                name = "script";
+            }
+            fprintf(stderr, "%s", (name + "\n").c_str());
         } else {
             fprintf(stderr, "%s()\n", function->name.c_str());
         }

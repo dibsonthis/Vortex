@@ -77,6 +77,7 @@ bool is_falsey(Value& value);
 Value copy(Value& value);
 
 static Value print_builtin(std::vector<Value>& args);
+static Value println_builtin(std::vector<Value>& args);
 static Value clock_builtin(std::vector<Value>& args);
 static Value dis_builtin(std::vector<Value>& args);
 static Value to_string_builtin(std::vector<Value>& args);

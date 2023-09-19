@@ -18,6 +18,7 @@ struct Compiler {
     bool in_loop = false;
     bool in_function = false;
     bool in_object = false;
+    int nested_object_count = 0;
     //std::vector<int> closed_vars;
     std::vector<ClosedVar> closed_vars;
     std::shared_ptr<Compiler> prev;

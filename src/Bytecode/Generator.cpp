@@ -296,7 +296,10 @@ void gen_const(Chunk& chunk, node_ptr node) {
 
 void gen_id(Chunk& chunk, node_ptr node, int global_flag) {
     if (node->_Node.ID().value == "this") {
-        if (!current->in_object) {
+        // if (!current->in_object) {
+        //     error("Cannot use 'this' in outer scope");
+        // }
+        if (current->nested_object_count == 0) {
             error("Cannot use 'this' in outer scope");
         }
         add_code(chunk, OP_LOAD_THIS, node->line);
@@ -651,6 +654,7 @@ void gen_function(Chunk& chunk, node_ptr node) {
     current->root = false;
     current->prev = prev_compiler;
     current->in_object = prev_compiler->in_object;
+    current->nested_object_count = prev_compiler->nested_object_count;
 
     current->in_function = true;
 
@@ -863,7 +867,8 @@ void gen_typed_object(Chunk& chunk, node_ptr node) {
 }
 
 void gen_object(Chunk& chunk, node_ptr node) {
-    current->in_object = true;
+    //current->in_object = true;
+    current->nested_object_count++;
     ObjectNode& object_node = node->_Node.Object();
     std::vector<node_ptr> elements;
     if (object_node.elements.size() == 0) {
@@ -881,12 +886,14 @@ void gen_object(Chunk& chunk, node_ptr node) {
         if (elem->type != NodeType::OP || elem->_Node.Op().value != ":") {
             error("Object properties must be in shape (name: value)");
         }
-        add_constant_code(chunk, string_val(elem->_Node.Op().left->_Node.ID().value), node->line);
+        // add_constant_code(chunk, string_val(elem->_Node.Op().left->_Node.ID().value), node->line);
+        generate(elem->_Node.Op().left, chunk);
         generate(elem->_Node.Op().right, chunk);
     }
 
     add_opcode(chunk, OP_MAKE_OBJECT, elements.size(), node->line);
-    current->in_object = false;
+    //current->in_object = false;
+    current->nested_object_count--;
 }
 
 void gen_import(Chunk& chunk, node_ptr node) {
@@ -934,7 +941,10 @@ void gen_import(Chunk& chunk, node_ptr node) {
         add_opcode(chunk, OP_IMPORT, 0, node->line);
     } else if (node->_Node.Import().module->type == NodeType::LIST && node->_Node.Import().module->_Node.List().elements.size() == 0) {
         // import [] : x
-        if (current->in_function || current->in_object) {
+        // if (current->in_function || current->in_object) {
+        //     error("Cannot import [] outside of global scope");
+        // }
+        if (current->in_function || current->nested_object_count > 0) {
             error("Cannot import [] outside of global scope");
         }
         add_constant_code(chunk, none_val(), node->line);

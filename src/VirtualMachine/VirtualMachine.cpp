@@ -28,10 +28,12 @@ static void runtimeError(VM& vm, std::string message, ...) {
         CallFrame* frame = &vm.frames[i];
         auto& function = frame->function;
         size_t instruction = frame->ip - function->chunk.code.data() - 1;
+        if (function->name == "error") {
+            continue;
+        }
         fprintf(stderr, "[line %d] in ", 
                 function->chunk.lines[instruction]);
         if (function->name == "") {
-            //fprintf(stderr, "script\n");
             std::string name = frame->name;
             if (name == "") {
                 name = "script";
@@ -74,6 +76,7 @@ static EvaluateResult run(VM& vm) {
 
     // Define native functions
     define_native(vm, "print", print_builtin);
+    define_native(vm, "println", println_builtin);
     define_native(vm, "clock", clock_builtin);
     define_native(vm, "string", to_string_builtin);
     define_native(vm, "number", to_number_builtin);
@@ -367,6 +370,10 @@ static EvaluateResult run(VM& vm) {
                 for (int i = 0; i < size; i++) {
                     Value prop_value = pop(vm);
                     Value prop_name = pop(vm);
+                    if (!prop_name.is_string()) {
+                        runtimeError(vm, "Object keys must evaluate to strings");
+                        return EVALUATE_RUNTIME_ERROR;
+                    }
                     object_obj->values[prop_name.get_string()] = prop_value;
                 }
                 push(vm, object);
@@ -1516,6 +1523,14 @@ static Value print_builtin(std::vector<Value>& args) {
     for (Value& arg : args) {
         printValue(arg);
     }
+    return none_val();
+}
+
+static Value println_builtin(std::vector<Value>& args) {
+    for (Value& arg : args) {
+        printValue(arg);
+    }
+    std::cout << '\n';
     return none_val();
 }
 
