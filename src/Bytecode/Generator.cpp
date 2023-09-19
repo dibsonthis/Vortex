@@ -886,8 +886,11 @@ void gen_object(Chunk& chunk, node_ptr node) {
         if (elem->type != NodeType::OP || elem->_Node.Op().value != ":") {
             error("Object properties must be in shape (name: value)");
         }
-        // add_constant_code(chunk, string_val(elem->_Node.Op().left->_Node.ID().value), node->line);
-        generate(elem->_Node.Op().left, chunk);
+        if (elem->_Node.Op().left->type == NodeType::ID) {
+            add_constant_code(chunk, string_val(elem->_Node.Op().left->_Node.ID().value), node->line);
+        } else {
+            generate(elem->_Node.Op().left, chunk);
+        }
         generate(elem->_Node.Op().right, chunk);
     }
 
