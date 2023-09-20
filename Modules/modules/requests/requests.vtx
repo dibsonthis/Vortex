@@ -1,3 +1,17 @@
-const lib = load_lib("./bin/requests", ["_get"])
+const lib = load_lib("./bin/requests", ["_get", "_post"])
 
-const get = (url, endpoint) => lib._get(url, endpoint)
+import [split] : string
+
+const get = (url) => {
+	const split_url = url.replaceAll("//", "||").split("/")
+	const _url = split_url.first().replaceAll("||", "//")
+	const _endpoint = "/" + split_url.remove(0).join("/")
+	return lib._get(_url, _endpoint)
+}
+
+const post = (url, payload) => {
+	const split_url = url.replaceAll("//", "||").split("/")
+	const _url = split_url.first().replaceAll("||", "//")
+	const _endpoint = "/" + split_url.remove(0).join("/")
+	return lib._post(_url, _endpoint, payload)
+}

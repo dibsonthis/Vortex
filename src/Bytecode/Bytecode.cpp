@@ -87,8 +87,12 @@ std::string toString(Value value) {
         }
         case List: {
             std::string repr = "[ ";
-            for (Value& v : *value.get_list()) {
-                repr += toString(v) + " ";
+            for (int i = 0; i < value.get_list()->size(); i++) {
+                Value& v = value.get_list()->at(i);
+                repr += toString(v);
+                if (i < value.get_list()->size()-1) {
+                    repr += ", ";
+                }
             }
             repr += "]";
             return repr;
