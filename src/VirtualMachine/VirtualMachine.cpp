@@ -1420,7 +1420,7 @@ static int call_function(VM& vm, Value& function, int param_num, CallFrame*& fra
 
         if (param_num < function_obj->arity) {
             // We have defaults we want to inject
-            int default_index = 0;
+            int default_index = param_num - positional_args;
             for (int i = param_num; i < function_obj->arity; i++) {
                 Meta meta = function_obj->chunk.constants[i].meta;
                 function_obj->chunk.constants[i] = function_obj->default_values[default_index];

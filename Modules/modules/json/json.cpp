@@ -27,7 +27,7 @@ std::string toString(Value value, bool quote_strings = false) {
             return (value.get_boolean() ? "true" : "false");
         }
         case List: {
-            std::string repr = "[ ";
+            std::string repr = "[";
             for (int i = 0; i < value.get_list()->size(); i++) {
                 Value& v = value.get_list()->at(i);
                 repr += toString(v, quote_strings);

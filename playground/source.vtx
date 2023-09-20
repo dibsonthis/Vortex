@@ -1,5 +1,11 @@
 const f = (a, b, c = 30) => {
-    println(b, c, c, a)
+    println(a, b, c)
 }
+
+// num_args: 1
+// pos_args: 0
+// arity: 3
+// defaults: 3
+// default_values: [10, 20, 30]
 
 f("a", "b")
