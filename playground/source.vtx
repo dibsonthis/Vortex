@@ -1,2 +1,5 @@
-println(2)
-println(2.5848)
+const f = (a, b, c = 30) => {
+    println(b, c, c, a)
+}
+
+f("a", "b")

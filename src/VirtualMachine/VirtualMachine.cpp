@@ -383,7 +383,7 @@ static EvaluateResult run(VM& vm) {
                 int count = READ_INT();
                 Value function = pop(vm);
                 for (int i = 0; i < count; i++) {
-                    function.get_function()->default_values.push_back(pop(vm));
+                    function.get_function()->default_values.insert(function.get_function()->default_values.begin(), pop(vm));
                 }
                 push(vm, function);
                 break;

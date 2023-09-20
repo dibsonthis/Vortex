@@ -73,3 +73,26 @@ extern "C" Value __frame__(std::vector<Value>& args) {
 
     return obj;
 }
+
+extern "C" Value __system__(std::vector<Value>& args) {
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args) {
+        error("Function '__system__' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value command = args[0];
+    Value vm = args[1];
+
+    if (!command.is_string()) {
+        error("Function 'system' expects argument 'command' to be a string");
+    }
+    
+    if (!vm.is_pointer()) {
+        error("Function 'system' expects argument 'vm' to be a pointer");
+    }
+
+    system(command.get_string().c_str());
+
+    return none_val();
+}
