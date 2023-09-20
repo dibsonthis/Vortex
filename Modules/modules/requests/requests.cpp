@@ -14,7 +14,6 @@ std::string toString(Value value, bool quote_strings = false) {
             snprintf(buff, sizeof(buff), "%.8g", number);
             std::string buffAsStdStr = buff;
             return buffAsStdStr;
-            //return std::to_string(number);
         }
         case ValueType::String: {
             if (quote_strings) {
@@ -82,7 +81,7 @@ std::string toString(Value value, bool quote_strings = false) {
 }
 
 extern "C" Value _get(std::vector<Value>& args) {
-    int num_required_args = 2;
+    int num_required_args = 3;
 
     if (args.size() != num_required_args) {
         error("Function 'get' expects " + std::to_string(num_required_args) + " argument(s)");
@@ -90,6 +89,7 @@ extern "C" Value _get(std::vector<Value>& args) {
 
     Value url = args[0];
     Value endpoint = args[1];
+    Value headers = args[2];
 
     if (!url.is_string()) {
         error("Function 'get' expects argument 'url' to be a string");
@@ -99,10 +99,19 @@ extern "C" Value _get(std::vector<Value>& args) {
         error("Function 'get' expects argument 'endpoint' to be a string");
     }
 
+    if (!headers.is_object()) {
+        error("Function 'get' expects argument 'headers' to be a object");
+    }
+
+    httplib::Headers _headers;
+    for (auto& prop : headers.get_object()->values) {
+        _headers.insert({prop.first, toString(prop.second)});
+    }
+
     httplib::Client cli(url.get_string());
     cli.enable_server_certificate_verification(false);
 
-    auto res = cli.Get(endpoint.get_string());
+    auto res = cli.Get(endpoint.get_string(), _headers);
 
     Value response = object_val();
 
@@ -128,37 +137,52 @@ extern "C" Value _get(std::vector<Value>& args) {
 }
 
 extern "C" Value _post(std::vector<Value>& args) {
-    int num_required_args = 3;
+    int num_required_args = 4;
 
     if (args.size() != num_required_args) {
-        error("Function 'get' expects " + std::to_string(num_required_args) + " argument(s)");
+        error("Function 'post' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value url = args[0];
     Value endpoint = args[1];
     Value payload = args[2];
+    Value headers = args[3];
 
     if (!url.is_string()) {
-        error("Function 'get' expects argument 'url' to be a string");
+        error("Function 'post' expects argument 'url' to be a string");
     }
 
     if (!endpoint.is_string()) {
-        error("Function 'get' expects argument 'endpoint' to be a string");
+        error("Function 'post' expects argument 'endpoint' to be a string");
     }
 
-    if (!payload.is_object()) {
-        error("Function 'get' expects argument 'payload' to be a object");
+    if (!payload.is_object() && !payload.is_string()) {
+        error("Function 'post' expects argument 'payload' to be an object or string");
+    }
+
+    if (!headers.is_object()) {
+        error("Function 'post' expects argument 'headers' to be an object");
     }
 
     httplib::Client cli(url.get_string());
     cli.enable_server_certificate_verification(false);
 
-    httplib::MultipartFormDataItems items;
-    for (auto& prop : payload.get_object()->values) {
-        items.push_back({prop.first, toString(prop.second), "", ""});
+    httplib::Headers _headers;
+    for (auto& prop : headers.get_object()->values) {
+        _headers.insert({prop.first, toString(prop.second)});
     }
 
-    auto res = cli.Post(endpoint.get_string(), items);
+    httplib::Result res = httplib::Result(nullptr, httplib::Error());
+
+    if (payload.is_object()) {
+        httplib::MultipartFormDataItems items;
+        for (auto& prop : payload.get_object()->values) {
+            items.push_back({prop.first, toString(prop.second), "", ""});
+        }
+        res = cli.Post(endpoint.get_string(), _headers, items);
+    } else {
+        res = cli.Post(endpoint.get_string(), _headers, payload.get_string(), "");
+    }
 
     Value response = object_val();
 
@@ -183,45 +207,313 @@ extern "C" Value _post(std::vector<Value>& args) {
     return response;
 }
 
-// VortexObj post(std::string name, std::vector<VortexObj> args) {
+extern "C" Value _put(std::vector<Value>& args) {
+    int num_required_args = 4;
 
-//     if (args.size() != 3) {
-//         error_and_exit("Function '" + name + "' expects 3 arguments");
-//     }
+    if (args.size() != num_required_args) {
+        error("Function 'put' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
 
-//     if (args[0]->type != NodeType::STRING || args[1]->type != NodeType::STRING || (args[2]->type != NodeType::OBJECT && args[2]->type != NodeType::STRING)) {
-//         error_and_exit("Function '" + name + "' expects 2 string arguments and 1 object/string argument");
-//     }
+    Value url = args[0];
+    Value endpoint = args[1];
+    Value payload = args[2];
+    Value headers = args[3];
 
-//     httplib::Client cli(args[0]->_Node.String().value);
-//     cli.enable_server_certificate_verification(false);
+    if (!url.is_string()) {
+        error("Function 'put' expects argument 'url' to be a string");
+    }
 
-//     httplib::MultipartFormDataItems items;
-//     items.push_back({"data", args[2]->type == NodeType::STRING ? args[2]->_Node.String().value : to_string(args[2]), "", ""});
-//     auto res = cli.Post(args[1]->_Node.String().value, items);
+    if (!endpoint.is_string()) {
+        error("Function 'put' expects argument 'endpoint' to be a string");
+    }
 
-//     VortexObj response = new_vortex_obj(NodeType::OBJECT);
+    if (!payload.is_object() && !payload.is_string()) {
+        error("Function 'put' expects argument 'payload' to be an object or string");
+    }
 
-//     if (!res) {
-//         response->_Node.Object().properties["version"] = new_string_node("");
-//         response->_Node.Object().properties["status"] = new_number_node(-1);
-//         response->_Node.Object().properties["body"] = new_string_node("");
-//         response->_Node.Object().properties["location"] = new_string_node("");
-//         response->_Node.Object().properties["headers"] = new_vortex_obj(NodeType::LIST);
-//         return response;
-//     }
+    if (!headers.is_object()) {
+        error("Function 'put' expects argument 'headers' to be an object");
+    }
 
-//     response->_Node.Object().properties["version"] = new_string_node(res->version);
-//     response->_Node.Object().properties["status"] = new_number_node(res->status);
-//     response->_Node.Object().properties["body"] = new_string_node(res->body);
-//     response->_Node.Object().properties["location"] = new_string_node(res->location);
-//     response->_Node.Object().properties["headers"] = new_vortex_obj(NodeType::LIST);
-//     for (auto& elem : res->headers) {
-//         response->_Node.Object().properties["headers"]->_Node.List().elements.push_back(new_string_node(elem.first));
-//     }
+    httplib::Client cli(url.get_string());
+    cli.enable_server_certificate_verification(false);
 
-//     return response;
-// }
+    httplib::Headers _headers;
+    for (auto& prop : headers.get_object()->values) {
+        _headers.insert({prop.first, toString(prop.second)});
+    }
+
+    httplib::Result res = httplib::Result(nullptr, httplib::Error());
+
+    if (payload.is_object()) {
+        httplib::MultipartFormDataItems items;
+        for (auto& prop : payload.get_object()->values) {
+            items.push_back({prop.first, toString(prop.second), "", ""});
+        }
+        res = cli.Put(endpoint.get_string(), _headers, items);
+    } else {
+        res = cli.Put(endpoint.get_string(), _headers, payload.get_string(), "");
+    }
+
+    Value response = object_val();
+
+    if (!res) {
+        response.get_object()->values["version"] = string_val("");
+        response.get_object()->values["status"] = number_val(-1);
+        response.get_object()->values["body"] = string_val("");
+        response.get_object()->values["location"] = string_val("");
+        response.get_object()->values["headers"] = list_val();
+        return response;
+    }
+
+    response.get_object()->values["version"] = string_val(res->version);
+    response.get_object()->values["status"] = number_val(res->status);
+    response.get_object()->values["body"] = string_val(res->body);
+    response.get_object()->values["location"] = string_val(res->location);
+    response.get_object()->values["headers"] = list_val();
+    for (auto& elem : res->headers) {
+        response.get_object()->values["headers"].get_list()->push_back(string_val(elem.first));
+    }
+
+    return response;
+}
+
+extern "C" Value _patch(std::vector<Value>& args) {
+    int num_required_args = 4;
+
+    if (args.size() != num_required_args) {
+        error("Function 'patch' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value url = args[0];
+    Value endpoint = args[1];
+    Value payload = args[2];
+    Value headers = args[3];
+
+    if (!url.is_string()) {
+        error("Function 'patch' expects argument 'url' to be a string");
+    }
+
+    if (!endpoint.is_string()) {
+        error("Function 'patch' expects argument 'endpoint' to be a string");
+    }
+
+    if (!payload.is_object() && !payload.is_string()) {
+        error("Function 'patch' expects argument 'payload' to be an object or string");
+    }
+
+    if (!headers.is_object()) {
+        error("Function 'patch' expects argument 'headers' to be an object");
+    }
+
+    httplib::Client cli(url.get_string());
+    cli.enable_server_certificate_verification(false);
+
+    httplib::Headers _headers;
+    for (auto& prop : headers.get_object()->values) {
+        _headers.insert({prop.first, toString(prop.second)});
+    }
+
+    std::string _payload;
+
+    if (payload.is_string()) {
+        _payload = payload.get_string();
+    } else {
+        _payload = toString(payload, true);
+    }
+
+    httplib::Result res = cli.Patch(endpoint.get_string(), _headers, _payload, "");
+
+    Value response = object_val();
+
+    if (!res) {
+        response.get_object()->values["version"] = string_val("");
+        response.get_object()->values["status"] = number_val(-1);
+        response.get_object()->values["body"] = string_val("");
+        response.get_object()->values["location"] = string_val("");
+        response.get_object()->values["headers"] = list_val();
+        return response;
+    }
+
+    response.get_object()->values["version"] = string_val(res->version);
+    response.get_object()->values["status"] = number_val(res->status);
+    response.get_object()->values["body"] = string_val(res->body);
+    response.get_object()->values["location"] = string_val(res->location);
+    response.get_object()->values["headers"] = list_val();
+    for (auto& elem : res->headers) {
+        response.get_object()->values["headers"].get_list()->push_back(string_val(elem.first));
+    }
+
+    return response;
+}
+
+extern "C" Value _delete(std::vector<Value>& args) {
+    int num_required_args = 3;
+
+    if (args.size() != num_required_args) {
+        error("Function 'delete' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value url = args[0];
+    Value endpoint = args[1];
+    Value headers = args[2];
+
+    if (!url.is_string()) {
+        error("Function 'delete' expects argument 'url' to be a string");
+    }
+
+    if (!endpoint.is_string()) {
+        error("Function 'delete' expects argument 'endpoint' to be a string");
+    }
+
+    if (!headers.is_object()) {
+        error("Function 'delete' expects argument 'headers' to be a object");
+    }
+
+    httplib::Headers _headers;
+    for (auto& prop : headers.get_object()->values) {
+        _headers.insert({prop.first, toString(prop.second)});
+    }
+
+    httplib::Client cli(url.get_string());
+    cli.enable_server_certificate_verification(false);
+
+    auto res = cli.Delete(endpoint.get_string(), _headers);
+
+    Value response = object_val();
+
+    if (!res) {
+        response.get_object()->values["version"] = string_val("");
+        response.get_object()->values["status"] = number_val(-1);
+        response.get_object()->values["body"] = string_val("");
+        response.get_object()->values["location"] = string_val("");
+        response.get_object()->values["headers"] = list_val();
+        return response;
+    }
+
+    response.get_object()->values["version"] = string_val(res->version);
+    response.get_object()->values["status"] = number_val(res->status);
+    response.get_object()->values["body"] = string_val(res->body);
+    response.get_object()->values["location"] = string_val(res->location);
+    response.get_object()->values["headers"] = list_val();
+    for (auto& elem : res->headers) {
+        response.get_object()->values["headers"].get_list()->push_back(string_val(elem.first));
+    }
+
+    return response;
+}
+
+extern "C" Value _options(std::vector<Value>& args) {
+    int num_required_args = 3;
+
+    if (args.size() != num_required_args) {
+        error("Function 'options' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value url = args[0];
+    Value endpoint = args[1];
+    Value headers = args[2];
+
+    if (!url.is_string()) {
+        error("Function 'options' expects argument 'url' to be a string");
+    }
+
+    if (!endpoint.is_string()) {
+        error("Function 'options' expects argument 'endpoint' to be a string");
+    }
+
+    if (!headers.is_object()) {
+        error("Function 'options' expects argument 'headers' to be a object");
+    }
+
+    httplib::Headers _headers;
+    for (auto& prop : headers.get_object()->values) {
+        _headers.insert({prop.first, toString(prop.second)});
+    }
+
+    httplib::Client cli(url.get_string());
+    cli.enable_server_certificate_verification(false);
+
+    auto res = cli.Options(endpoint.get_string(), _headers);
+
+    Value response = object_val();
+
+    if (!res) {
+        response.get_object()->values["version"] = string_val("");
+        response.get_object()->values["status"] = number_val(-1);
+        response.get_object()->values["body"] = string_val("");
+        response.get_object()->values["location"] = string_val("");
+        response.get_object()->values["headers"] = list_val();
+        return response;
+    }
+
+    response.get_object()->values["version"] = string_val(res->version);
+    response.get_object()->values["status"] = number_val(res->status);
+    response.get_object()->values["body"] = string_val(res->body);
+    response.get_object()->values["location"] = string_val(res->location);
+    response.get_object()->values["headers"] = list_val();
+    for (auto& elem : res->headers) {
+        response.get_object()->values["headers"].get_list()->push_back(string_val(elem.first));
+    }
+
+    return response;
+}
+
+extern "C" Value _head(std::vector<Value>& args) {
+    int num_required_args = 3;
+
+    if (args.size() != num_required_args) {
+        error("Function 'head' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value url = args[0];
+    Value endpoint = args[1];
+    Value headers = args[2];
+
+    if (!url.is_string()) {
+        error("Function 'head' expects argument 'url' to be a string");
+    }
+
+    if (!endpoint.is_string()) {
+        error("Function 'head' expects argument 'endpoint' to be a string");
+    }
+
+    if (!headers.is_object()) {
+        error("Function 'head' expects argument 'headers' to be a object");
+    }
+
+    httplib::Headers _headers;
+    for (auto& prop : headers.get_object()->values) {
+        _headers.insert({prop.first, toString(prop.second)});
+    }
+
+    httplib::Client cli(url.get_string());
+    cli.enable_server_certificate_verification(false);
+
+    auto res = cli.Head(endpoint.get_string(), _headers);
+
+    Value response = object_val();
+
+    if (!res) {
+        response.get_object()->values["version"] = string_val("");
+        response.get_object()->values["status"] = number_val(-1);
+        response.get_object()->values["body"] = string_val("");
+        response.get_object()->values["location"] = string_val("");
+        response.get_object()->values["headers"] = list_val();
+        return response;
+    }
+
+    response.get_object()->values["version"] = string_val(res->version);
+    response.get_object()->values["status"] = number_val(res->status);
+    response.get_object()->values["body"] = string_val(res->body);
+    response.get_object()->values["location"] = string_val(res->location);
+    response.get_object()->values["headers"] = list_val();
+    for (auto& elem : res->headers) {
+        response.get_object()->values["headers"].get_list()->push_back(string_val(elem.first));
+    }
+
+    return response;
+}
 
 // VortexObj server(std::string name, std::vector<VortexObj> args) {
 
