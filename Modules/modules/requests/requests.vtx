@@ -1,6 +1,6 @@
 const lib = load_lib("./bin/requests", ["_get", "_post", "_put", "_delete", "_patch", "_options", "_head"])
 
-import [split] : string
+import [split, replaceAll, first, join] : string
 
 const get = (url, headers = {}) => {
 	const split_url = url.replaceAll("//", "||").split("/")
