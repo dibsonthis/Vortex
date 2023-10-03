@@ -6,11 +6,12 @@
 
 #define value_ptr std::shared_ptr<Value>
 
-uint8_t* int_to_bytes(int& integer);
+uint8_t *int_to_bytes(int &integer);
 
 int bytes_to_int(uint8_t a, uint8_t b, uint8_t c, uint8_t d);
 
-enum OpCode {
+enum OpCode
+{
     OP_RETURN,
     OP_YIELD,
     OP_LOAD_CONST,
@@ -73,7 +74,8 @@ enum OpCode {
     OP_HOOK_ONCHANGE
 };
 
-enum ValueType {
+enum ValueType
+{
     Number,
     String,
     Boolean,
@@ -89,24 +91,28 @@ enum ValueType {
 struct Value;
 struct Closure;
 
-struct Chunk {
+struct Chunk
+{
     std::vector<uint8_t> code;
     std::vector<int> lines;
     std::vector<Value> constants;
     std::vector<std::string> variables;
 };
 
-struct ClosedVar {
+struct ClosedVar
+{
     std::string name;
     int index;
     bool is_local;
 };
 
-struct FunctionObj {
+struct FunctionObj
+{
     std::string name;
     int arity;
     int defaults;
     Chunk chunk;
+    std::vector<int> instruction_offsets;
     std::vector<ClosedVar> closed_var_indexes;
     std::vector<std::shared_ptr<Closure>> closed_vars;
     std::vector<Value> default_values;
@@ -118,162 +124,189 @@ struct FunctionObj {
     bool is_type_generator = false;
 };
 
-struct TypeObj {
+struct TypeObj
+{
     std::string name;
     std::unordered_map<std::string, Value> types;
     std::unordered_map<std::string, Value> defaults;
 };
 
-struct ObjectObj {
+struct ObjectObj
+{
     std::shared_ptr<TypeObj> type;
     std::unordered_map<std::string, Value> values;
     std::string type_name;
 };
 
-struct PointerObj {
-    void* value;
+struct PointerObj
+{
+    void *value;
 };
 
-typedef Value (*NativeFunction)(std::vector<Value>& args);
+typedef Value (*NativeFunction)(std::vector<Value> &args);
 
-struct NativeFunctionObj {
+struct NativeFunctionObj
+{
     std::string name;
     NativeFunction function = nullptr;
 };
 
-struct Meta {
+struct Meta
+{
     bool unpack = false;
     bool packer = false;
     bool is_const = false;
     bool temp_non_const = false;
 };
 
-struct ValueHooks {
+struct ValueHooks
+{
     std::shared_ptr<Value> onChangeHook = nullptr;
 };
 
-struct Value {
+struct Value
+{
     ValueType type;
     Meta meta;
     ValueHooks hooks;
-    std::variant
-    <
-        double, 
-        std::string, 
-        bool, 
+    std::variant<
+        double,
+        std::string,
+        bool,
         std::shared_ptr<std::vector<Value>>,
         std::shared_ptr<FunctionObj>,
         std::shared_ptr<TypeObj>,
         std::shared_ptr<ObjectObj>,
         std::shared_ptr<NativeFunctionObj>,
-        std::shared_ptr<PointerObj>
-    > value;
+        std::shared_ptr<PointerObj>>
+        value;
 
     Value() : type(None) {}
-    Value(ValueType type) : type(type) {
+    Value(ValueType type) : type(type)
+    {
         switch (type)
         {
-            case Number:
-                value = 0.0f;
-                break;
-            case String:
-                value = "";
-                break;
-            case Boolean:
-                value = false;
-                break;
-            case List:
-                value = std::make_shared<std::vector<Value>>();
-                break;
-            case Type:
-                value = std::make_shared<TypeObj>();
-                break;
-            case Object:
-                value = std::make_shared<ObjectObj>();
-                break;
-            case Function:
-                value = std::make_shared<FunctionObj>();
-                break;
-            case Native:
-                value = std::make_shared<NativeFunctionObj>();
-                break;
-            case Pointer:
-                value = std::make_shared<PointerObj>();
-                break;
-            default:    
-                break;
+        case Number:
+            value = 0.0f;
+            break;
+        case String:
+            value = "";
+            break;
+        case Boolean:
+            value = false;
+            break;
+        case List:
+            value = std::make_shared<std::vector<Value>>();
+            break;
+        case Type:
+            value = std::make_shared<TypeObj>();
+            break;
+        case Object:
+            value = std::make_shared<ObjectObj>();
+            break;
+        case Function:
+            value = std::make_shared<FunctionObj>();
+            break;
+        case Native:
+            value = std::make_shared<NativeFunctionObj>();
+            break;
+        case Pointer:
+            value = std::make_shared<PointerObj>();
+            break;
+        default:
+            break;
         }
     }
 
-    double& get_number() {
+    double &get_number()
+    {
         return std::get<double>(this->value);
     }
-    std::string& get_string() {
+    std::string &get_string()
+    {
         return std::get<std::string>(this->value);
     }
-    bool& get_boolean() {
+    bool &get_boolean()
+    {
         return std::get<bool>(this->value);
     }
 
-    std::shared_ptr<std::vector<Value>>& get_list() {
+    std::shared_ptr<std::vector<Value>> &get_list()
+    {
         return std::get<std::shared_ptr<std::vector<Value>>>(this->value);
     }
 
-    std::shared_ptr<TypeObj>& get_type() {
+    std::shared_ptr<TypeObj> &get_type()
+    {
         return std::get<std::shared_ptr<TypeObj>>(this->value);
     }
 
-    std::shared_ptr<ObjectObj>& get_object() {
+    std::shared_ptr<ObjectObj> &get_object()
+    {
         return std::get<std::shared_ptr<ObjectObj>>(this->value);
     }
 
-    std::shared_ptr<FunctionObj>& get_function() {
+    std::shared_ptr<FunctionObj> &get_function()
+    {
         return std::get<std::shared_ptr<FunctionObj>>(this->value);
     }
 
-    std::shared_ptr<NativeFunctionObj>& get_native() {
+    std::shared_ptr<NativeFunctionObj> &get_native()
+    {
         return std::get<std::shared_ptr<NativeFunctionObj>>(this->value);
     }
 
-    std::shared_ptr<PointerObj>& get_pointer() {
+    std::shared_ptr<PointerObj> &get_pointer()
+    {
         return std::get<std::shared_ptr<PointerObj>>(this->value);
     }
 
-    bool is_number() {
+    bool is_number()
+    {
         return type == Number;
     }
-    bool is_string() {
+    bool is_string()
+    {
         return type == String;
     }
-    bool is_boolean() {
+    bool is_boolean()
+    {
         return type == Boolean;
     }
-    bool is_list() {
+    bool is_list()
+    {
         return type == List;
     }
-    bool is_type() {
+    bool is_type()
+    {
         return type == Type;
     }
-    bool is_object() {
+    bool is_object()
+    {
         return type == Object;
     }
-    bool is_function() {
+    bool is_function()
+    {
         return type == Function;
     }
-    bool is_native() {
+    bool is_native()
+    {
         return type == Native;
     }
-    bool is_pointer() {
+    bool is_pointer()
+    {
         return type == Pointer;
     }
-    bool is_none() {
+    bool is_none()
+    {
         return type == None;
     }
 };
 
-struct Closure {
-  Value* location;
-  Value closed;
+struct Closure
+{
+    Value *location;
+    Value closed;
 };
 
 Value new_val();
@@ -291,23 +324,27 @@ Value none_val();
 void printValue(Value value);
 std::string toString(Value value);
 
-void add_code(Chunk& chunk, uint8_t code, int line = 0);
+void add_code(Chunk &chunk, uint8_t code, int line = 0);
 
-void add_opcode(Chunk& chunk, uint8_t op, int operand, int line = 0);
+void add_opcode(Chunk &chunk, uint8_t op, int operand, int line = 0);
 
-int add_constant(Chunk& chunk, Value value);
+int add_constant(Chunk &chunk, Value value);
 
-void add_constant_code(Chunk& chunk, Value value, int line = 0);
+void add_constant_code(Chunk &chunk, Value value, int line = 0);
 
-void add_bytes(Chunk& chunk, Value value, uint8_t op, int line = 0);
+void add_bytes(Chunk &chunk, Value value, uint8_t op, int line = 0);
 
-void patch_bytes(Chunk& chunk, int offset, uint8_t* bytes);
+void patch_bytes(Chunk &chunk, int offset, uint8_t *bytes);
 
 static int simple_instruction(std::string name, int offset);
 
-static int constant_instruction(std::string name, Chunk& chunk, int offset);
-static int op_code_instruction(std::string name, Chunk& chunk, int offset);
+static int constant_instruction(std::string name, Chunk &chunk, int offset);
+static int op_code_instruction(std::string name, Chunk &chunk, int offset);
 
-int disassemble_instruction(Chunk& chunk, int offset);
+int disassemble_instruction(Chunk &chunk, int offset);
 
-void disassemble_chunk(Chunk& chunk, std::string name);
+void disassemble_chunk(Chunk &chunk, std::string name);
+
+int advance(Chunk &chunk, int offset);
+
+std::vector<int> instruction_offsets(Chunk &chunk);

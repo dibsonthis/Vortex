@@ -17,7 +17,7 @@ enum CompType
 
 CompType type = CompType::INTERP;
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     if (type == CompType::DEV)
     {
@@ -45,11 +45,13 @@ int main(int argc, char** argv)
         main_frame.sp = 0;
         main_frame.ip = main->chunk.code.data();
         main_frame.frame_start = 0;
-        vm.frames.push_back(main_frame);
 
         generate_bytecode(parser.nodes, main_frame.function->chunk);
         add_code(main_frame.function->chunk, OP_EXIT);
         disassemble_chunk(main_frame.function->chunk, "Test");
+        auto offsets = instruction_offsets(main_frame.function->chunk);
+        main_frame.function->instruction_offsets = offsets;
+        vm.frames.push_back(main_frame);
         evaluate(vm);
 
         // Interpreter interpreter(typechecker.nodes, parser.file_name);
@@ -72,7 +74,8 @@ int main(int argc, char** argv)
 
         if (argc > 1)
         {
-            for (int i = 1; i < argc; i++) {
+            for (int i = 1; i < argc; i++)
+            {
                 args.push_back(argv[i]);
             }
         }
@@ -95,7 +98,7 @@ int main(int argc, char** argv)
 
         // Interpreter interpreter(typechecker.nodes, parser.file_name);
         // interpreter.evaluate();
-        
+
         // exit(0);
 
         Parser parser(lexer.nodes, lexer.file_name);
@@ -117,15 +120,13 @@ int main(int argc, char** argv)
         main_frame.sp = 0;
         main_frame.ip = main->chunk.code.data();
         main_frame.frame_start = 0;
-        vm.frames.push_back(main_frame);
 
         generate_bytecode(parser.nodes, main_frame.function->chunk);
+        auto offsets = instruction_offsets(main_frame.function->chunk);
+        main_frame.function->instruction_offsets = offsets;
+        vm.frames.push_back(main_frame);
         add_code(main_frame.function->chunk, OP_EXIT);
-        //disassemble_chunk(main_frame.function->chunk, "Test");
         evaluate(vm);
-
-        // Interpreter interpreter(typechecker.nodes, parser.file_name);
-        // interpreter.evaluate();
 
         exit(0);
     }

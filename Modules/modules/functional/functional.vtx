@@ -172,7 +172,7 @@ const indexOf = (list, value) => {
         }
     }
 
-    return -1
+    return (-1)
 }
 
 const chain = (value, func) => {
