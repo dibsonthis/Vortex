@@ -310,6 +310,8 @@ int disassemble_instruction(Chunk &chunk, int offset)
         return op_code_instruction("OP_HOOK_ONCHANGE", chunk, offset);
     case OP_MAKE_CONST:
         return simple_instruction("OP_MAKE_CONST", offset);
+    case OP_MAKE_NON_CONST:
+        return simple_instruction("OP_MAKE_NON_CONST", offset);
     case OP_TYPE_DEFAULTS:
         return op_code_instruction("OP_TYPE_DEFAULTS", chunk, offset);
     case OP_JUMP_IF_FALSE:
@@ -450,6 +452,8 @@ int advance(Chunk &chunk, int offset)
     case OP_HOOK_ONCHANGE:
         return offset + 5;
     case OP_MAKE_CONST:
+        return offset + 1;
+    case OP_MAKE_NON_CONST:
         return offset + 1;
     case OP_TYPE_DEFAULTS:
         return offset + 5;

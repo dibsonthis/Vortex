@@ -317,6 +317,7 @@ void gen_var(Chunk &chunk, node_ptr node)
         }
     }
     declareVariable(node->_Node.VariableDeclaration().name);
+    add_code(chunk, OP_MAKE_NON_CONST, node->line);
 }
 
 void gen_const(Chunk &chunk, node_ptr node)

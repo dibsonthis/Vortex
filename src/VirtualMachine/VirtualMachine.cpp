@@ -279,6 +279,7 @@ static EvaluateResult run(VM &vm)
                 break;
             }
             vm.stack[index + frame->frame_start] = vm.stack.back();
+            vm.stack[index + frame->frame_start].meta.is_const = false;
             break;
         }
         case OP_SET_FORCE:
@@ -483,6 +484,11 @@ static EvaluateResult run(VM &vm)
         case OP_MAKE_CONST:
         {
             vm.stack.back().meta.is_const = true;
+            break;
+        }
+        case OP_MAKE_NON_CONST:
+        {
+            vm.stack.back().meta.is_const = false;
             break;
         }
         case OP_TYPE_DEFAULTS:
