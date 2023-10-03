@@ -1,212 +1,58 @@
 import io
-import [split, chars] : string
-import [find] : functional
+import json
+import [] : functional
 
-const alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".chars()
-const digit = "0123456789".chars()
-const single_operators = "+-*/=!<>.,;:[](){}%@^&|".chars()
-const keywords = ["return", "yield", "break", "continue", "type", "const", "var", "if", "for", "while", "and", "or", "import"]
+const word = "snake"
+const data = json.parse(io.readf(f"data/${word}.json"))
+const last = data[data.length()-1]
 
-const syntax_error = (source_name, line, col, message) => {
-    println(f"Syntax error: ${source_name} [Line ${line}, Col ${col}]: ${message}")
-    exit(1)
-}
+var guesses = []
 
-const is_alpha = (c) => {
-    return alpha.find((a) => a == c) != None
-}
+const max_guesses = 5
+var guess_count = 1
 
-const is_digit = (c) => {
-    return digit.find((d) => d == c) != None
-}
+var match = false
+var best_guess = None
 
-const is_single_op = (c) => {
-    return single_operators.find((o) => o == c) != None
-}
+println(f"\nYour hint word is ${last}")
 
-type Token = (tokenType = "None", value = None, line = 1, col = 1) => {
-    var token = {
-        type: tokenType,
-        line: line,
-        col: col
+while (guess_count <= max_guesses) {
+    if (best_guess != None) {
+        println(f"Your current best guess is ${data[best_guess]} (${best_guess + 1})")
+        println(f"Guesses: ${guesses}")
     }
-    
-    if (value != None) {
-        token.value = value
-    }
-
-    return token
-}
-
-const keyword_token = (id) => {
-    if (keywords.find((keyword) => keyword == id) != None) {
-        return Token("Keyword", id)
+    print(f"\nEnter guess (${guess_count}/${max_guesses}): ")
+    const guess = io.input()
+    var index = data.indexOf(guess)
+    guess_count += 1
+    if (index == -1) {
+        guesses.append({f"${guess}": None})
     } else {
-        return Token("Id", id)
+        guesses.append({f"${guess}": index + 1})
+    }
+
+    if (index < 500 and index >= 0) {
+        if (best_guess == None) {
+            best_guess = index
+        } else {
+            if (index < best_guess) {
+                best_guess = index
+            }
+        }
+
+        println(f"\nYour guess is number ${index + 1}")
+    } else {
+        println("\nGuess not in top 500")
+    }
+
+    if (guess == word) {
+        match = true
+        break
     }
 }
 
-const _tokenize = (source, tokens, source_name = "<script>") => {
-    var line = 1
-    var col = 0
-
-    const advance = (n) => {
-        col += 1
-        return n + 1
-    }
-
-    const back = (n) => {
-        col -= 1
-        return n - 1
-    }
-
-    for (0..source.length(), index) {
-        col += 1
-        const char = source[index]
-
-        if (char == "\n") {
-            line += 1
-            col = 0
-        }
-    
-        if (char.is_digit()) {
-            const curr_col = col
-            var digit = ""
-            var num_dots = 0
-            digit += char
-            index = advance(index)
-            while (source[index].is_digit() or source[index] == ".") {
-                if (source[index] == ".") {
-                    num_dots += 1
-                }
-                digit += source[index]
-                index = advance(index)
-            }
-            if (num_dots > 1) {
-                syntax_error(source_name, line, col, "Number of dots exceeds 1")
-            }
-            index = back(index)
-            var number_token = Token("Number", digit.number(), line, curr_col)
-            tokens.append(number_token)
-        }
-    
-        else if (char.is_alpha()) {
-            const curr_col = col
-            var id = ""
-            id += char
-            index = advance(index)
-            while (source[index].is_alpha() or source[index].is_digit() or source[index] == "_") {
-                id += source[index]
-                index = advance(index)
-            }
-            index = back(index)
-
-            var id_token;
-
-            if (id == "true" or id == "false") {
-                id_token = Token("Boolean", id == "true", line, curr_col)
-            } else {
-                id_token = keyword_token(id)
-                id_token.line = line
-                id_token.col = curr_col
-            }
-
-            tokens.append(id_token)
-        }
-    
-        else if (char == "\"") {
-            const curr_col = col
-            var str = ""
-            index = advance(index) // "
-            while (true) {
-                if (source[index] == None) {
-                    syntax_error(source_name, line, col, "Reached EOF, missing '\"'")
-                }
-                if (source[index] == "\"") {
-                    if (source[index-1] != "\\") {
-                        break
-                    }
-                }
-                str += source[index]
-                index = advance(index)
-            }
-            var str_token = Token("String", str, line, curr_col)
-            tokens.append(str_token)
-        }
-
-        else if (char == "/" and source[index+1] == "/") {
-            // line comment
-            while (true) {
-                if (source[index] == "\n" or source[index] == None) {
-                    line += 1
-                    col = 0
-                    break
-                }
-                index = advance(index)
-            }
-        }
-
-        else if (char == "/" and source[index+1] == "*") {
-            // line comment
-            while (true) {
-                if (source[index] == "\n") {
-                    line += 1
-                    col = 0
-                }
-                if (source[index] == "*" and source[index+1] == "/") {
-                    index = advance(index)
-                    index = advance(index)
-                    break
-                }
-                index = advance(index)
-            }
-        }
-
-        else if (char == "+" and source[index+1] == "=") {
-            tokens.append(Token("Op", char + source[index+1], line, col))
-            index = advance(index)
-        }
-        else if (char == "-" and source[index+1] == "=") {
-            tokens.append(Token("Op", char + source[index+1], line, col))
-            index = advance(index)
-        }
-        else if (char == "<" and source[index+1] == "=") {
-            tokens.append(Token("Op", char + source[index+1], line, col))
-            index = advance(index)
-        }
-        else if (char == ">" and source[index+1] == "=") {
-            tokens.append(Token("Op", char + source[index+1], line, col))
-            index = advance(index)
-        }
-        else if (char == "!" and source[index+1] == "=") {
-            tokens.append(Token("Op", char + source[index+1], line, col))
-            index = advance(index)
-        }
-        else if (char == "=" and source[index+1] == "=") {
-            tokens.append(Token("Op", char + source[index+1], line, col))
-            index = advance(index)
-        }
-        else if (char == "=" and source[index+1] == ">") {
-            tokens.append(Token("Op", char + source[index+1], line, col))
-            index = advance(index)
-        }
-    
-        else if (char.is_single_op()) {
-            tokens.append(Token("Op", char, line, col))
-        }
-    }
-
-    return tokens
+if (match) {
+    println("\nCongratulations, you guessed correctly!")
+} else {
+    println("\nYou lose...")
 }
-
-type Lexer = (file_path) => {
-    return {
-        tokens: [],
-        file_path: file_path,
-        source: io.readf(file_path),
-        tokenize: () => _tokenize(this.source, this.tokens, file_path)
-    }
-}
-
-const lexer = Lexer("source.vtx")
-lexer.tokenize()

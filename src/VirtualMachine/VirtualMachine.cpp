@@ -725,7 +725,6 @@ static EvaluateResult run(VM &vm)
                 }
                 else if (_instruction == OP_LOOP)
                 {
-
                     count--;
                     if (count == 0)
                     {
@@ -736,6 +735,11 @@ static EvaluateResult run(VM &vm)
             READ_BYTE();
             int stack_size_start = READ_INT();
             int to_pop = vm.stack.size() - stack_size_start;
+
+            // instruction_index++;
+            // instruction = frame->function->instruction_offsets[instruction_index];
+            // _instruction = frame->function->chunk.code[instruction];
+
             for (int i = 0; i < to_pop; i++)
             {
                 pop(vm);
@@ -748,12 +752,11 @@ static EvaluateResult run(VM &vm)
                 int diff = frame->function->instruction_offsets[instruction_index + 1] - instruction;
                 frame->ip += diff;
             }
-            // READ_BYTE();
             break;
         }
         case OP_CONTINUE:
         {
-            int count = 0;
+            int count = 1;
             int current_offset = (int)(size_t)(frame->ip - &frame->function->chunk.code[0]);
             int instruction_index = std::find(frame->function->instruction_offsets.begin(), frame->function->instruction_offsets.end(), current_offset) - frame->function->instruction_offsets.begin();
             int instruction = frame->function->instruction_offsets[instruction_index];
@@ -778,9 +781,14 @@ static EvaluateResult run(VM &vm)
                     }
                 }
             }
+
             READ_BYTE();
             int stack_size_start = READ_INT();
             int to_pop = vm.stack.size() - stack_size_start;
+
+            instruction_index++;
+            instruction = frame->function->instruction_offsets[instruction_index];
+            _instruction = frame->function->chunk.code[instruction];
 
             for (int i = 0; i < to_pop; i++)
             {
@@ -793,6 +801,7 @@ static EvaluateResult run(VM &vm)
                 {
                     break;
                 }
+
                 instruction_index++;
                 instruction = frame->function->instruction_offsets[instruction_index];
                 _instruction = frame->function->chunk.code[instruction];
