@@ -521,6 +521,7 @@ static EvaluateResult run(VM &vm)
             closure_obj->generator_init = function->generator_init;
             closure_obj->generator_done = function->generator_done;
             closure_obj->is_type_generator = function->is_type_generator;
+            closure_obj->instruction_offsets = function->instruction_offsets;
             closure_obj->closed_vars = std::vector<std::shared_ptr<Closure>>();
             for (auto &var : closure_obj->closed_var_indexes)
             {
