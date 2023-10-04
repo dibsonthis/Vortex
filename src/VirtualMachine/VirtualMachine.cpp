@@ -1168,7 +1168,6 @@ static EvaluateResult run(VM &vm)
 
                 if (mod.is_none())
                 {
-
                     Lexer lexer(path.get_string());
                     lexer.tokenize();
 
@@ -1212,6 +1211,15 @@ static EvaluateResult run(VM &vm)
                     if (import_vm.status != 0)
                     {
                         exit(import_vm.status);
+                    }
+
+                    // Bring through globals in import
+                    for (auto &global : import_vm.globals)
+                    {
+                        if (global.first != "__vm__")
+                        {
+                            vm.globals[global.first] = global.second;
+                        }
                     }
 
                     std::filesystem::current_path(current_path);
@@ -1270,6 +1278,15 @@ static EvaluateResult run(VM &vm)
                     if (import_vm.status != 0)
                     {
                         exit(import_vm.status);
+                    }
+
+                    // Bring through globals in import
+                    for (auto &global : import_vm.globals)
+                    {
+                        if (global.first != "__vm__")
+                        {
+                            vm.globals[global.first] = global.second;
+                        }
                     }
 
                     std::filesystem::current_path(current_path);
@@ -1342,6 +1359,15 @@ static EvaluateResult run(VM &vm)
                 if (import_vm.status != 0)
                 {
                     exit(import_vm.status);
+                }
+
+                // Bring through globals in import
+                for (auto &global : import_vm.globals)
+                {
+                    if (global.first != "__vm__")
+                    {
+                        vm.globals[global.first] = global.second;
+                    }
                 }
 
                 std::filesystem::current_path(current_path);

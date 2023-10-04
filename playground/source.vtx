@@ -1,13 +1,4 @@
-const NodeType = {
-    Id: "Id",
-    String: "String",
-    Number: "Number",
-    Boolean: "Boolean",
-    Object: "Object",
-    List: "List",
-    Function: "Function",
-    Op: "Op",
-    ConstDeclaration: "ConstDeclaration"
-}
+import sys : "/Users/adib/Dev/Personal/Vortex/Modules/modules/sys/sys"
 
-println(NodeType)
+const x = 10
+println(sys.stack())

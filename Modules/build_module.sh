@@ -50,7 +50,7 @@ fi
 clang++ \
 -dynamiclib \
 -shared \
--Ofast \
+-g \
 -Wno-everything \
 $CONFIG \
 $LIBS \

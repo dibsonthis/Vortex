@@ -40,6 +40,7 @@ struct FunctionObj {
     int arity;
     int defaults;
     Chunk chunk;
+    std::vector<int> instruction_offsets;
     std::vector<ClosedVar> closed_var_indexes;
     std::vector<std::shared_ptr<Closure>> closed_vars;
     std::vector<Value> default_values;
