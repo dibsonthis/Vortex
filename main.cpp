@@ -88,10 +88,11 @@ int main(int argc, char **argv)
         // parser.remove_op_node(";");
         // auto ast = parser.nodes;
 
-        // auto parent_path = std::filesystem::path(path).parent_path();
-        // if (parent_path != "") {
-        //     std::filesystem::current_path(parent_path);
-        // }
+        auto parent_path = std::filesystem::path(path).parent_path();
+        if (parent_path != "")
+        {
+            std::filesystem::current_path(parent_path);
+        }
 
         // Typechecker typechecker(parser.nodes, parser.file_name);
         // typechecker.typecheck();

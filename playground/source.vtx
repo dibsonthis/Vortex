@@ -1,5 +1,13 @@
-const x = 10
-var z = 100
-z = x
-z = 200
-println(z, x)
+const NodeType = {
+    Id: "Id",
+    String: "String",
+    Number: "Number",
+    Boolean: "Boolean",
+    Object: "Object",
+    List: "List",
+    Function: "Function",
+    Op: "Op",
+    ConstDeclaration: "ConstDeclaration"
+}
+
+println(NodeType)
