@@ -2185,7 +2185,7 @@ static Value info_builtin(std::vector<Value> &args)
 {
     if (args.size() != 1)
     {
-        error("Function 'name' expects 1 argument");
+        error("Function 'info' expects 1 argument");
     }
 
     Value value = args[0];
@@ -2208,6 +2208,12 @@ static Value info_builtin(std::vector<Value> &args)
         obj->values["generator"] = boolean_val(func->is_generator);
         obj->values["init"] = boolean_val(func->generator_init);
         obj->values["done"] = boolean_val(func->generator_done);
+        return info;
+    }
+    case Native:
+    {
+        auto &func = value.get_native();
+        obj->values["name"] = string_val(func->name);
         return info;
     }
     case Object:

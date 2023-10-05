@@ -70,7 +70,9 @@ struct PointerObj {
 
 typedef Value (*NativeFunction)(std::vector<Value>& args);
 
-struct NativeFunctionObj {
+struct NativeFunctionObj
+{
+    std::string name;
     NativeFunction function = nullptr;
 };
 

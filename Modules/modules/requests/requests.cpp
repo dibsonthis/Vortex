@@ -3,87 +3,110 @@
 #include "include/Vortex.hpp"
 #include "include/httplib.h"
 
-std::string toString(Value value, bool quote_strings = false) {
-    switch(value.type) {
-        case ValueType::Number: {
-            double number = value.get_number();
-            if (std::floor(number) == number) {
-                return std::to_string((long long)number);
+std::string toString(Value value, bool quote_strings = false)
+{
+    switch (value.type)
+    {
+    case ValueType::Number:
+    {
+        double number = value.get_number();
+        if (std::floor(number) == number)
+        {
+            return std::to_string((long long)number);
+        }
+        char buff[100];
+        snprintf(buff, sizeof(buff), "%.8g", number);
+        std::string buffAsStdStr = buff;
+        return buffAsStdStr;
+    }
+    case ValueType::String:
+    {
+        if (quote_strings)
+        {
+            return "\"" + value.get_string() + "\"";
+        }
+        return (value.get_string());
+    }
+    case ValueType::Boolean:
+    {
+        return (value.get_boolean() ? "true" : "false");
+    }
+    case ValueType::List:
+    {
+        std::string repr = "[";
+        for (int i = 0; i < value.get_list()->size(); i++)
+        {
+            Value &v = value.get_list()->at(i);
+            repr += toString(v, quote_strings);
+            if (i < value.get_list()->size() - 1)
+            {
+                repr += ", ";
             }
-            char buff[100];
-            snprintf(buff, sizeof(buff), "%.8g", number);
-            std::string buffAsStdStr = buff;
-            return buffAsStdStr;
         }
-        case ValueType::String: {
-            if (quote_strings) {
-                return "\"" + value.get_string() + "\"";
+        repr += "]";
+        return repr;
+    }
+    case ValueType::Type:
+    {
+        return "Type: " + value.get_type()->name;
+    }
+    case ValueType::Object:
+    {
+        auto &obj = value.get_object();
+        std::string repr;
+        if (obj->type)
+        {
+            repr += value.get_object()->type->name + " ";
+        }
+        repr += "{ ";
+        int i = 0;
+        int size = obj->values.size();
+        for (auto &prop : obj->values)
+        {
+            std::string key = prop.first;
+            if (quote_strings)
+            {
+                key = "\"" + key + "\"";
             }
-            return(value.get_string());
-        }
-        case ValueType::Boolean: {
-            return (value.get_boolean() ? "true" : "false");
-        }
-        case ValueType::List: {
-            std::string repr = "[";
-            for (int i = 0; i < value.get_list()->size(); i++) {
-                Value& v = value.get_list()->at(i);
-                repr += toString(v, quote_strings);
-                if (i < value.get_list()->size()-1) {
-                    repr += ", ";
-                }
+            repr += key + ": " + toString(prop.second, quote_strings);
+            i++;
+            if (i < size)
+            {
+                repr += ", ";
             }
-            repr += "]";
-            return repr;
         }
-        case ValueType::Type: {
-            return "Type: " + value.get_type()->name;
-        }
-        case ValueType::Object: {
-            auto& obj = value.get_object();
-            std::string repr;
-            if (obj->type) {
-                repr += value.get_object()->type->name + " ";
-            }
-            repr += "{ ";
-            int i = 0;
-            int size = obj->values.size();
-            for (auto& prop : obj->values) {
-                std::string key = prop.first;
-                if (quote_strings) {
-                    key = "\"" + key + "\"";
-                }
-                repr += key + ": " + toString(prop.second, quote_strings);
-                i++;
-                if (i < size) {
-                    repr += ", ";
-                }
-            }
-            repr += " }";
-            return repr;
-        }
-        case ValueType::Function: {
-            return "Function: " + value.get_function()->name;
-        }
-        case ValueType::Native: {
-            return "<Native Function>";
-        }
-        case ValueType::Pointer: {
-            return "<Pointer>";
-        }
-        case ValueType::None: {
-            return "None";
-        }
-        default: {
-            return "Undefined";
-        }
+        repr += " }";
+        return repr;
+    }
+    case ValueType::Function:
+    {
+        return "Function: " + value.get_function()->name;
+    }
+    case ValueType::Native:
+    {
+        return "Native Function: " + value.get_native()->name;
+    }
+    case ValueType::Pointer:
+    {
+        return "<Pointer>";
+    }
+    case ValueType::None:
+    {
+        return "None";
+    }
+    default:
+    {
+        return "Undefined";
+    }
     }
 }
 
-extern "C" Value _get(std::vector<Value>& args) {
+extern "C" Value _get(std::vector<Value> &args)
+{
     int num_required_args = 3;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'get' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
@@ -91,20 +114,24 @@ extern "C" Value _get(std::vector<Value>& args) {
     Value endpoint = args[1];
     Value headers = args[2];
 
-    if (!url.is_string()) {
+    if (!url.is_string())
+    {
         error("Function 'get' expects argument 'url' to be a string");
     }
 
-    if (!endpoint.is_string()) {
+    if (!endpoint.is_string())
+    {
         error("Function 'get' expects argument 'endpoint' to be a string");
     }
 
-    if (!headers.is_object()) {
+    if (!headers.is_object())
+    {
         error("Function 'get' expects argument 'headers' to be a object");
     }
 
     httplib::Headers _headers;
-    for (auto& prop : headers.get_object()->values) {
+    for (auto &prop : headers.get_object()->values)
+    {
         _headers.insert({prop.first, toString(prop.second)});
     }
 
@@ -115,7 +142,8 @@ extern "C" Value _get(std::vector<Value>& args) {
 
     Value response = object_val();
 
-    if (!res) {
+    if (!res)
+    {
         response.get_object()->values["version"] = string_val("");
         response.get_object()->values["status"] = number_val(-1);
         response.get_object()->values["body"] = string_val("");
@@ -129,17 +157,20 @@ extern "C" Value _get(std::vector<Value>& args) {
     response.get_object()->values["body"] = string_val(res->body);
     response.get_object()->values["location"] = string_val(res->location);
     response.get_object()->values["headers"] = list_val();
-    for (auto& elem : res->headers) {
+    for (auto &elem : res->headers)
+    {
         response.get_object()->values["headers"].get_list()->push_back(string_val(elem.first));
     }
 
     return response;
 }
 
-extern "C" Value _post(std::vector<Value>& args) {
+extern "C" Value _post(std::vector<Value> &args)
+{
     int num_required_args = 4;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'post' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
@@ -148,19 +179,23 @@ extern "C" Value _post(std::vector<Value>& args) {
     Value payload = args[2];
     Value headers = args[3];
 
-    if (!url.is_string()) {
+    if (!url.is_string())
+    {
         error("Function 'post' expects argument 'url' to be a string");
     }
 
-    if (!endpoint.is_string()) {
+    if (!endpoint.is_string())
+    {
         error("Function 'post' expects argument 'endpoint' to be a string");
     }
 
-    if (!payload.is_object() && !payload.is_string()) {
+    if (!payload.is_object() && !payload.is_string())
+    {
         error("Function 'post' expects argument 'payload' to be an object or string");
     }
 
-    if (!headers.is_object()) {
+    if (!headers.is_object())
+    {
         error("Function 'post' expects argument 'headers' to be an object");
     }
 
@@ -168,25 +203,31 @@ extern "C" Value _post(std::vector<Value>& args) {
     cli.enable_server_certificate_verification(false);
 
     httplib::Headers _headers;
-    for (auto& prop : headers.get_object()->values) {
+    for (auto &prop : headers.get_object()->values)
+    {
         _headers.insert({prop.first, toString(prop.second)});
     }
 
     httplib::Result res = httplib::Result(nullptr, httplib::Error());
 
-    if (payload.is_object()) {
+    if (payload.is_object())
+    {
         httplib::MultipartFormDataItems items;
-        for (auto& prop : payload.get_object()->values) {
+        for (auto &prop : payload.get_object()->values)
+        {
             items.push_back({prop.first, toString(prop.second), "", ""});
         }
         res = cli.Post(endpoint.get_string(), _headers, items);
-    } else {
+    }
+    else
+    {
         res = cli.Post(endpoint.get_string(), _headers, payload.get_string(), "");
     }
 
     Value response = object_val();
 
-    if (!res) {
+    if (!res)
+    {
         response.get_object()->values["version"] = string_val("");
         response.get_object()->values["status"] = number_val(-1);
         response.get_object()->values["body"] = string_val("");
@@ -200,17 +241,20 @@ extern "C" Value _post(std::vector<Value>& args) {
     response.get_object()->values["body"] = string_val(res->body);
     response.get_object()->values["location"] = string_val(res->location);
     response.get_object()->values["headers"] = list_val();
-    for (auto& elem : res->headers) {
+    for (auto &elem : res->headers)
+    {
         response.get_object()->values["headers"].get_list()->push_back(string_val(elem.first));
     }
 
     return response;
 }
 
-extern "C" Value _put(std::vector<Value>& args) {
+extern "C" Value _put(std::vector<Value> &args)
+{
     int num_required_args = 4;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'put' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
@@ -219,19 +263,23 @@ extern "C" Value _put(std::vector<Value>& args) {
     Value payload = args[2];
     Value headers = args[3];
 
-    if (!url.is_string()) {
+    if (!url.is_string())
+    {
         error("Function 'put' expects argument 'url' to be a string");
     }
 
-    if (!endpoint.is_string()) {
+    if (!endpoint.is_string())
+    {
         error("Function 'put' expects argument 'endpoint' to be a string");
     }
 
-    if (!payload.is_object() && !payload.is_string()) {
+    if (!payload.is_object() && !payload.is_string())
+    {
         error("Function 'put' expects argument 'payload' to be an object or string");
     }
 
-    if (!headers.is_object()) {
+    if (!headers.is_object())
+    {
         error("Function 'put' expects argument 'headers' to be an object");
     }
 
@@ -239,25 +287,31 @@ extern "C" Value _put(std::vector<Value>& args) {
     cli.enable_server_certificate_verification(false);
 
     httplib::Headers _headers;
-    for (auto& prop : headers.get_object()->values) {
+    for (auto &prop : headers.get_object()->values)
+    {
         _headers.insert({prop.first, toString(prop.second)});
     }
 
     httplib::Result res = httplib::Result(nullptr, httplib::Error());
 
-    if (payload.is_object()) {
+    if (payload.is_object())
+    {
         httplib::MultipartFormDataItems items;
-        for (auto& prop : payload.get_object()->values) {
+        for (auto &prop : payload.get_object()->values)
+        {
             items.push_back({prop.first, toString(prop.second), "", ""});
         }
         res = cli.Put(endpoint.get_string(), _headers, items);
-    } else {
+    }
+    else
+    {
         res = cli.Put(endpoint.get_string(), _headers, payload.get_string(), "");
     }
 
     Value response = object_val();
 
-    if (!res) {
+    if (!res)
+    {
         response.get_object()->values["version"] = string_val("");
         response.get_object()->values["status"] = number_val(-1);
         response.get_object()->values["body"] = string_val("");
@@ -271,17 +325,20 @@ extern "C" Value _put(std::vector<Value>& args) {
     response.get_object()->values["body"] = string_val(res->body);
     response.get_object()->values["location"] = string_val(res->location);
     response.get_object()->values["headers"] = list_val();
-    for (auto& elem : res->headers) {
+    for (auto &elem : res->headers)
+    {
         response.get_object()->values["headers"].get_list()->push_back(string_val(elem.first));
     }
 
     return response;
 }
 
-extern "C" Value _patch(std::vector<Value>& args) {
+extern "C" Value _patch(std::vector<Value> &args)
+{
     int num_required_args = 4;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'patch' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
@@ -290,19 +347,23 @@ extern "C" Value _patch(std::vector<Value>& args) {
     Value payload = args[2];
     Value headers = args[3];
 
-    if (!url.is_string()) {
+    if (!url.is_string())
+    {
         error("Function 'patch' expects argument 'url' to be a string");
     }
 
-    if (!endpoint.is_string()) {
+    if (!endpoint.is_string())
+    {
         error("Function 'patch' expects argument 'endpoint' to be a string");
     }
 
-    if (!payload.is_object() && !payload.is_string()) {
+    if (!payload.is_object() && !payload.is_string())
+    {
         error("Function 'patch' expects argument 'payload' to be an object or string");
     }
 
-    if (!headers.is_object()) {
+    if (!headers.is_object())
+    {
         error("Function 'patch' expects argument 'headers' to be an object");
     }
 
@@ -310,15 +371,19 @@ extern "C" Value _patch(std::vector<Value>& args) {
     cli.enable_server_certificate_verification(false);
 
     httplib::Headers _headers;
-    for (auto& prop : headers.get_object()->values) {
+    for (auto &prop : headers.get_object()->values)
+    {
         _headers.insert({prop.first, toString(prop.second)});
     }
 
     std::string _payload;
 
-    if (payload.is_string()) {
+    if (payload.is_string())
+    {
         _payload = payload.get_string();
-    } else {
+    }
+    else
+    {
         _payload = toString(payload, true);
     }
 
@@ -326,7 +391,8 @@ extern "C" Value _patch(std::vector<Value>& args) {
 
     Value response = object_val();
 
-    if (!res) {
+    if (!res)
+    {
         response.get_object()->values["version"] = string_val("");
         response.get_object()->values["status"] = number_val(-1);
         response.get_object()->values["body"] = string_val("");
@@ -340,17 +406,20 @@ extern "C" Value _patch(std::vector<Value>& args) {
     response.get_object()->values["body"] = string_val(res->body);
     response.get_object()->values["location"] = string_val(res->location);
     response.get_object()->values["headers"] = list_val();
-    for (auto& elem : res->headers) {
+    for (auto &elem : res->headers)
+    {
         response.get_object()->values["headers"].get_list()->push_back(string_val(elem.first));
     }
 
     return response;
 }
 
-extern "C" Value _delete(std::vector<Value>& args) {
+extern "C" Value _delete(std::vector<Value> &args)
+{
     int num_required_args = 3;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'delete' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
@@ -358,20 +427,24 @@ extern "C" Value _delete(std::vector<Value>& args) {
     Value endpoint = args[1];
     Value headers = args[2];
 
-    if (!url.is_string()) {
+    if (!url.is_string())
+    {
         error("Function 'delete' expects argument 'url' to be a string");
     }
 
-    if (!endpoint.is_string()) {
+    if (!endpoint.is_string())
+    {
         error("Function 'delete' expects argument 'endpoint' to be a string");
     }
 
-    if (!headers.is_object()) {
+    if (!headers.is_object())
+    {
         error("Function 'delete' expects argument 'headers' to be a object");
     }
 
     httplib::Headers _headers;
-    for (auto& prop : headers.get_object()->values) {
+    for (auto &prop : headers.get_object()->values)
+    {
         _headers.insert({prop.first, toString(prop.second)});
     }
 
@@ -382,7 +455,8 @@ extern "C" Value _delete(std::vector<Value>& args) {
 
     Value response = object_val();
 
-    if (!res) {
+    if (!res)
+    {
         response.get_object()->values["version"] = string_val("");
         response.get_object()->values["status"] = number_val(-1);
         response.get_object()->values["body"] = string_val("");
@@ -396,17 +470,20 @@ extern "C" Value _delete(std::vector<Value>& args) {
     response.get_object()->values["body"] = string_val(res->body);
     response.get_object()->values["location"] = string_val(res->location);
     response.get_object()->values["headers"] = list_val();
-    for (auto& elem : res->headers) {
+    for (auto &elem : res->headers)
+    {
         response.get_object()->values["headers"].get_list()->push_back(string_val(elem.first));
     }
 
     return response;
 }
 
-extern "C" Value _options(std::vector<Value>& args) {
+extern "C" Value _options(std::vector<Value> &args)
+{
     int num_required_args = 3;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'options' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
@@ -414,20 +491,24 @@ extern "C" Value _options(std::vector<Value>& args) {
     Value endpoint = args[1];
     Value headers = args[2];
 
-    if (!url.is_string()) {
+    if (!url.is_string())
+    {
         error("Function 'options' expects argument 'url' to be a string");
     }
 
-    if (!endpoint.is_string()) {
+    if (!endpoint.is_string())
+    {
         error("Function 'options' expects argument 'endpoint' to be a string");
     }
 
-    if (!headers.is_object()) {
+    if (!headers.is_object())
+    {
         error("Function 'options' expects argument 'headers' to be a object");
     }
 
     httplib::Headers _headers;
-    for (auto& prop : headers.get_object()->values) {
+    for (auto &prop : headers.get_object()->values)
+    {
         _headers.insert({prop.first, toString(prop.second)});
     }
 
@@ -438,7 +519,8 @@ extern "C" Value _options(std::vector<Value>& args) {
 
     Value response = object_val();
 
-    if (!res) {
+    if (!res)
+    {
         response.get_object()->values["version"] = string_val("");
         response.get_object()->values["status"] = number_val(-1);
         response.get_object()->values["body"] = string_val("");
@@ -452,17 +534,20 @@ extern "C" Value _options(std::vector<Value>& args) {
     response.get_object()->values["body"] = string_val(res->body);
     response.get_object()->values["location"] = string_val(res->location);
     response.get_object()->values["headers"] = list_val();
-    for (auto& elem : res->headers) {
+    for (auto &elem : res->headers)
+    {
         response.get_object()->values["headers"].get_list()->push_back(string_val(elem.first));
     }
 
     return response;
 }
 
-extern "C" Value _head(std::vector<Value>& args) {
+extern "C" Value _head(std::vector<Value> &args)
+{
     int num_required_args = 3;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'head' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
@@ -470,20 +555,24 @@ extern "C" Value _head(std::vector<Value>& args) {
     Value endpoint = args[1];
     Value headers = args[2];
 
-    if (!url.is_string()) {
+    if (!url.is_string())
+    {
         error("Function 'head' expects argument 'url' to be a string");
     }
 
-    if (!endpoint.is_string()) {
+    if (!endpoint.is_string())
+    {
         error("Function 'head' expects argument 'endpoint' to be a string");
     }
 
-    if (!headers.is_object()) {
+    if (!headers.is_object())
+    {
         error("Function 'head' expects argument 'headers' to be a object");
     }
 
     httplib::Headers _headers;
-    for (auto& prop : headers.get_object()->values) {
+    for (auto &prop : headers.get_object()->values)
+    {
         _headers.insert({prop.first, toString(prop.second)});
     }
 
@@ -494,7 +583,8 @@ extern "C" Value _head(std::vector<Value>& args) {
 
     Value response = object_val();
 
-    if (!res) {
+    if (!res)
+    {
         response.get_object()->values["version"] = string_val("");
         response.get_object()->values["status"] = number_val(-1);
         response.get_object()->values["body"] = string_val("");
@@ -508,7 +598,8 @@ extern "C" Value _head(std::vector<Value>& args) {
     response.get_object()->values["body"] = string_val(res->body);
     response.get_object()->values["location"] = string_val(res->location);
     response.get_object()->values["headers"] = list_val();
-    for (auto& elem : res->headers) {
+    for (auto &elem : res->headers)
+    {
         response.get_object()->values["headers"].get_list()->push_back(string_val(elem.first));
     }
 
@@ -757,7 +848,7 @@ extern "C" Value _head(std::vector<Value>& args) {
 //             }
 //             func_call->_Node.FunctionCall().name = v_callback->_Node.Function().name;
 //             VortexObj result = interp.eval_func_call(func_call, v_callback);
-            
+
 //             if (result->type == NodeType::ERROR) {
 //                 throw std::runtime_error(result->_Node.Error().message);
 //             }
@@ -818,7 +909,7 @@ extern "C" Value _head(std::vector<Value>& args) {
 
 //         func_call->_Node.FunctionCall().name = v_callback->_Node.Function().name;
 //         VortexObj result = interp.eval_func_call(func_call, v_callback);
-        
+
 //         if (result->type == NodeType::ERROR) {
 //             throw std::runtime_error(result->_Node.Error().message);
 //         }
@@ -921,7 +1012,7 @@ extern "C" Value _head(std::vector<Value>& args) {
 //             req_object->_Node.Object().properties["route_params"] = new_vortex_obj(NodeType::OBJECT);
 //             req_object->_Node.Object().properties["data"] = new_vortex_obj(NodeType::OBJECT);
 
-//             if (req.params.size() > 0) {   
+//             if (req.params.size() > 0) {
 //                 for (auto& param : req.params) {
 //                     req_object->_Node.Object().properties["data"]->_Node.Object().properties[param.first] = new_string_node(param.second);
 //                 }

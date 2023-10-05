@@ -152,7 +152,7 @@ std::string toString(Value value)
     }
     case Native:
     {
-        return "<Native Function>";
+        return "Native Function: " + value.get_native()->name;
     }
     case Pointer:
     {
