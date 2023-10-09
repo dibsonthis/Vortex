@@ -58,9 +58,11 @@ struct TypeObj {
     std::unordered_map<std::string, Value> defaults;
 };
 
-struct ObjectObj {
+struct ObjectObj
+{
     std::shared_ptr<TypeObj> type;
     std::unordered_map<std::string, Value> values;
+    std::vector<std::string> keys;
     std::string type_name;
 };
 

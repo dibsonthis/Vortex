@@ -442,6 +442,7 @@ static EvaluateResult run(VM &vm)
             {
                 Value prop_value = pop(vm);
                 Value prop_name = pop(vm);
+                object_obj->keys.insert(object_obj->keys.begin(), prop_name.get_string());
                 if (!prop_name.is_string())
                 {
                     runtimeError(vm, "Object keys must evaluate to strings");
@@ -2223,9 +2224,17 @@ static Value info_builtin(std::vector<Value> &args)
         obj->values["typename"] = string_val(object->type_name);
         obj->values["keys"] = list_val();
         obj->values["values"] = list_val();
+        for (std::string &key : object->keys)
+        {
+            obj->values["keys"].get_list()->push_back(string_val(key));
+        }
         for (auto &prop : object->values)
         {
-            obj->values["keys"].get_list()->push_back(string_val(prop.first));
+            std::string key = prop.first;
+            if (std::find(object->keys.begin(), object->keys.end(), key) == object->keys.end())
+            {
+                obj->values["keys"].get_list()->push_back(string_val(key));
+            }
             obj->values["values"].get_list()->push_back(prop.second);
         }
         return info;
