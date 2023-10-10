@@ -134,9 +134,9 @@ std::string toString(Value value)
         repr += "{ ";
         int i = 0;
         int size = obj->values.size();
-        for (auto &prop : obj->values)
+        for (std::string &key : obj->keys)
         {
-            repr += prop.first + ": " + toString(prop.second);
+            repr += key + ": " + toString(obj->values[key]);
             i++;
             if (i < size)
             {

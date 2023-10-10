@@ -58,14 +58,13 @@ std::string toString(Value value, bool quote_strings = false)
         repr += "{ ";
         int i = 0;
         int size = obj->values.size();
-        for (auto &prop : obj->values)
+        for (std::string &key : obj->keys)
         {
-            std::string key = prop.first;
             if (quote_strings)
             {
                 key = "\"" + key + "\"";
             }
-            repr += key + ": " + toString(prop.second, quote_strings);
+            repr += key + ": " + toString(obj->values[key], quote_strings);
             i++;
             if (i < size)
             {
@@ -86,28 +85,28 @@ std::string toString(Value value, bool quote_strings = false)
     }
 }
 
-Value json_type_to_vtx_type(nlohmann::json_abi_v3_11_2::json json_obj)
+Value json_type_to_vtx_type(nlohmann::json_abi_v3_11_2::ordered_json json_obj)
 {
 
     auto type = json_obj.type();
 
-    if (type == nlohmann::json::value_t::string)
+    if (type == nlohmann::ordered_json::value_t::string)
     {
         return string_val(json_obj);
     }
-    if (type == nlohmann::json::value_t::boolean)
+    if (type == nlohmann::ordered_json::value_t::boolean)
     {
         return boolean_val(json_obj);
     }
-    if (type == nlohmann::json::value_t::number_integer || type == nlohmann::json::value_t::number_unsigned || type == nlohmann::json::value_t::number_float)
+    if (type == nlohmann::ordered_json::value_t::number_integer || type == nlohmann::ordered_json::value_t::number_unsigned || type == nlohmann::ordered_json::value_t::number_float)
     {
         return number_val(json_obj);
     }
-    if (type == nlohmann::json::value_t::null)
+    if (type == nlohmann::ordered_json::value_t::null)
     {
         return none_val();
     }
-    if (type == nlohmann::json::value_t::array)
+    if (type == nlohmann::ordered_json::value_t::array)
     {
         Value list = list_val();
         for (auto val : json_obj)
@@ -116,12 +115,13 @@ Value json_type_to_vtx_type(nlohmann::json_abi_v3_11_2::json json_obj)
         }
         return list;
     }
-    if (type == nlohmann::json::value_t::object)
+    if (type == nlohmann::ordered_json::value_t::object)
     {
         Value object = object_val();
         for (auto val : json_obj.items())
         {
             object.get_object()->values[val.key()] = json_type_to_vtx_type(val.value());
+            object.get_object()->keys.push_back(val.key());
         }
         return object;
     }
@@ -149,7 +149,7 @@ extern "C" Value parse(std::vector<Value> &args)
 
     try
     {
-        auto json = nlohmann::json::parse(json_body);
+        auto json = nlohmann::ordered_json::parse(json_body);
         // If it's a list
         if (json.type() == nlohmann::json::value_t::array)
         {
@@ -168,6 +168,7 @@ extern "C" Value parse(std::vector<Value> &args)
             auto value = prop.value();
             auto key = prop.key();
             json_obj.get_object()->values[key] = json_type_to_vtx_type(value);
+            json_obj.get_object()->keys.push_back(key);
         }
         return json_obj;
     }

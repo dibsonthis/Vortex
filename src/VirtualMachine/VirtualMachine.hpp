@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 
 #include "../utils/utils.hpp"
 #include "../Lexer/Lexer.hpp"
@@ -89,6 +90,7 @@ static Value to_number_builtin(std::vector<Value> &args);
 static Value insert_builtin(std::vector<Value> &args);
 static Value append_builtin(std::vector<Value> &args);
 static Value remove_builtin(std::vector<Value> &args);
+static Value remove_prop_builtin(std::vector<Value> &args);
 static Value length_builtin(std::vector<Value> &args);
 static Value load_lib_builtin(std::vector<Value> &args);
 static Value copy_builtin(std::vector<Value> &args);

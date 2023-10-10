@@ -95,6 +95,7 @@ static EvaluateResult run(VM &vm)
     define_native(vm, "insert", insert_builtin);
     define_native(vm, "append", append_builtin);
     define_native(vm, "remove", remove_builtin);
+    define_native(vm, "remove_prop", remove_prop_builtin);
     define_native(vm, "dis", dis_builtin);
     define_native(vm, "length", length_builtin);
     define_native(vm, "info", info_builtin);
@@ -351,7 +352,13 @@ static EvaluateResult run(VM &vm)
                     container.get_object()->values[accessor.get_string()] = obj.get_object()->values["current"];
                     break;
                 }
-                container.get_object()->values[accessor.get_string()] = value;
+                std::string &accessor_string = accessor.get_string();
+                auto &keys = container.get_object()->keys;
+                container.get_object()->values[accessor_string] = value;
+                if (std::find(keys.begin(), keys.end(), accessor_string) == keys.end())
+                {
+                    keys.push_back(accessor_string);
+                }
             }
             else if (container.is_list())
             {
@@ -2094,6 +2101,36 @@ static Value remove_builtin(std::vector<Value> &args)
     return list;
 }
 
+static Value remove_prop_builtin(std::vector<Value> &args)
+{
+    int arg_count = 2;
+    if (args.size() != arg_count)
+    {
+        error("Function 'remove_prop' expects " + std::to_string(arg_count) + " argument(s)");
+    }
+
+    Value obj = args[0];
+    Value name = args[1];
+
+    if (!obj.is_object())
+    {
+        error("Function 'remove_prop' expects argument 'object' to be an object");
+    }
+
+    if (!name.is_string())
+    {
+        error("Function 'remove_prop' expects argument 'name' to be a string");
+    }
+
+    std::string &_name = name.get_string();
+    auto &_obj = obj.get_object();
+
+    _obj->values.erase(_name);
+    _obj->keys.erase(std::remove(_obj->keys.begin(), _obj->keys.end(), _name), _obj->keys.end());
+
+    return obj;
+}
+
 static Value length_builtin(std::vector<Value> &args)
 {
     if (args.size() != 1)
@@ -2233,7 +2270,7 @@ static Value info_builtin(std::vector<Value> &args)
             std::string key = prop.first;
             if (std::find(object->keys.begin(), object->keys.end(), key) == object->keys.end())
             {
-                obj->values["keys"].get_list()->push_back(string_val(key));
+                obj->values["keys"].get_list()->insert(obj->values["keys"].get_list()->begin(), string_val(key));
             }
             obj->values["values"].get_list()->push_back(prop.second);
         }
