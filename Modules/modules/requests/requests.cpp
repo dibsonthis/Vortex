@@ -141,6 +141,7 @@ extern "C" Value _get(std::vector<Value> &args)
     auto res = cli.Get(endpoint.get_string(), _headers);
 
     Value response = object_val();
+    response.get_object()->keys = {"version", "status", "body", "location", "headers"};
 
     if (!res)
     {
@@ -225,6 +226,7 @@ extern "C" Value _post(std::vector<Value> &args)
     }
 
     Value response = object_val();
+    response.get_object()->keys = {"version", "status", "body", "location", "headers"};
 
     if (!res)
     {
@@ -309,6 +311,7 @@ extern "C" Value _put(std::vector<Value> &args)
     }
 
     Value response = object_val();
+    response.get_object()->keys = {"version", "status", "body", "location", "headers"};
 
     if (!res)
     {
@@ -390,6 +393,7 @@ extern "C" Value _patch(std::vector<Value> &args)
     httplib::Result res = cli.Patch(endpoint.get_string(), _headers, _payload, "");
 
     Value response = object_val();
+    response.get_object()->keys = {"version", "status", "body", "location", "headers"};
 
     if (!res)
     {
@@ -454,6 +458,7 @@ extern "C" Value _delete(std::vector<Value> &args)
     auto res = cli.Delete(endpoint.get_string(), _headers);
 
     Value response = object_val();
+    response.get_object()->keys = {"version", "status", "body", "location", "headers"};
 
     if (!res)
     {
@@ -518,6 +523,7 @@ extern "C" Value _options(std::vector<Value> &args)
     auto res = cli.Options(endpoint.get_string(), _headers);
 
     Value response = object_val();
+    response.get_object()->keys = {"version", "status", "body", "location", "headers"};
 
     if (!res)
     {
@@ -582,6 +588,7 @@ extern "C" Value _head(std::vector<Value> &args)
     auto res = cli.Head(endpoint.get_string(), _headers);
 
     Value response = object_val();
+    response.get_object()->keys = {"version", "status", "body", "location", "headers"};
 
     if (!res)
     {

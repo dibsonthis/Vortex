@@ -35,6 +35,14 @@ elif [ "$FILE" = "requests" ]; then
     # sudo install_name_tool -change "/usr/local/lib/libcrypto.3.dylib" "/usr/local/share/vortex/modules/requests/lib/libcrypto.3.dylib" "$FILE/lib/libssl.dylib"
     # CONFIG="-framework CoreFoundation -framework Security -L/usr/local/share/vortex/modules/requests/lib -I/usr/local/share/vortex/modules/requests/include"
     CONFIG="-framework CoreFoundation -framework Security"
+elif [ "$FILE" = "imgui" ]; then
+    # sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libcrypto.3.dylib" "modules/$1/lib/libcrypto.3.dylib"
+    # sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libcrypto.dylib" "modules/$1/lib/libcrypto.dylib"
+    # sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libssl.3.dylib" "modules/$1/lib/libssl.3.dylib"
+    # sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libssl.dylib" "modules/$1/lib/libssl.dylib"
+    # sudo install_name_tool -change "/usr/local/lib/libcrypto.3.dylib" "/usr/local/share/vortex/modules/requests/lib/libcrypto.3.dylib" "modules/$1/lib/libssl.dylib"
+    # CONFIG="-framework CoreFoundation -framework Security -L/usr/local/share/vortex/modules/requests/lib -I/usr/local/share/vortex/modules/requests/include"
+    CONFIG="-D_THREAD_SAFE -framework GLUT -framework OpenGL $FILE/include/imgui/*.cpp"
 elif [ "$FILE" = "sqlite" ]; then
     CONFIG="-lsqlite3"
 else
@@ -62,12 +70,12 @@ clang++ \
 -Wno-everything \
 $CONFIG \
 $LIBS \
--Iinclude \
--Llib \
+-I$FILE/include \
+-L$FILE/lib \
 -std=c++20 \
 -stdlib=libc++ \
-"$PWD"/$FILE/$FILE.cpp  \
--o "$PWD"/$FILE/bin/$FILE \
+$FILE/$FILE.cpp  \
+-o $FILE/bin/$FILE \
 -Wl,-rpath,@loader_path/../lib
 
 done

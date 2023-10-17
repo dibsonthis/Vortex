@@ -2,10 +2,11 @@
 
 
 LIBS=""
+RPATH="@loader_path/../lib"
 if [ -z "$(ls -A modules/$1/lib)" ]; then
    LIBS=""
 else
-    LIBS="modules/$1/lib/lib*"
+    LIBS="lib/lib*"
 fi
 
 CONFIG=""
@@ -25,6 +26,16 @@ elif [ "$1" = "requests" ]; then
     # sudo install_name_tool -change "/usr/local/lib/libcrypto.3.dylib" "/usr/local/share/vortex/modules/requests/lib/libcrypto.3.dylib" "modules/$1/lib/libssl.dylib"
     # CONFIG="-framework CoreFoundation -framework Security -L/usr/local/share/vortex/modules/requests/lib -I/usr/local/share/vortex/modules/requests/include"
     CONFIG="-framework CoreFoundation -framework Security"
+elif [ "$1" = "imgui" ]; then
+    # sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libcrypto.3.dylib" "modules/$1/lib/libcrypto.3.dylib"
+    # sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libcrypto.dylib" "modules/$1/lib/libcrypto.dylib"
+    # sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libssl.3.dylib" "modules/$1/lib/libssl.3.dylib"
+    # sudo install_name_tool -id "/usr/local/share/vortex/modules/requests/lib/libssl.dylib" "modules/$1/lib/libssl.dylib"
+    # sudo install_name_tool -change "/usr/local/lib/libcrypto.3.dylib" "/usr/local/share/vortex/modules/requests/lib/libcrypto.3.dylib" "modules/$1/lib/libssl.dylib"
+    # CONFIG="-framework CoreFoundation -framework Security -L/usr/local/share/vortex/modules/requests/lib -I/usr/local/share/vortex/modules/requests/include"
+    CONFIG="-D_THREAD_SAFE -framework GLUT -framework OpenGL include/imgui/*.cpp"
+    LIBS="../sdl/lib/lib*"
+    RPATH="@loader_path/../../sdl/lib"
 elif [ "$1" = "sqlite" ]; then
     CONFIG="-lsqlite3"
 else
@@ -47,6 +58,8 @@ fi
 # -Wl,-rpath,@loader_path/../libs
 # # -Wl,-rpath "$PWD"/modules/"$1"/lib
 
+cd "$PWD"/modules/"$1"
+
 clang++ \
 -dynamiclib \
 -shared \
@@ -58,6 +71,6 @@ $LIBS \
 -Llib \
 -std=c++20 \
 -stdlib=libc++ \
-"$PWD"/modules/"$1"/"$1".cpp  \
--o "$PWD"/modules/"$1"/bin/"$1" \
--Wl,-rpath,@loader_path/../lib
+"$1".cpp  \
+-o bin/"$1" \
+-Wl,-rpath,$RPATH

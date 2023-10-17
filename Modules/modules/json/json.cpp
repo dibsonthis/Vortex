@@ -60,11 +60,13 @@ std::string toString(Value value, bool quote_strings = false)
         int size = obj->values.size();
         for (std::string &key : obj->keys)
         {
+            auto k = key;
+
             if (quote_strings)
             {
                 key = "\"" + key + "\"";
             }
-            repr += key + ": " + toString(obj->values[key], quote_strings);
+            repr += key + ": " + toString(obj->values[k], quote_strings);
             i++;
             if (i < size)
             {

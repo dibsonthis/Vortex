@@ -1,4 +1,22 @@
-import sys : "/Users/adib/Dev/Personal/Vortex/Modules/modules/sys/sys"
+import imgui : "/Users/adib/Dev/Personal/Vortex/Modules/modules/imgui/imgui"
+import sdl : "/Users/adib/Dev/Personal/Vortex/Modules/modules/sdl/sdl"
 
-const x = 10
-println(sys.stack())
+var init = sdl.initSDL()
+
+if (init != 0) {
+	print("Error initializing SDL\n")
+	exit(1)
+} else {
+	print("Initialized SDL\n")
+}
+
+const window = sdl.createWindow("Test", 300, 100, 600, 400)
+const renderer = sdl.createRenderer(window)
+
+const imgui_status = imgui.check_version()
+const imgui_context = imgui.create_context()
+const imgui_io = imgui.get_io()
+const imgui_init = imgui.init_for_sdl(window, renderer)
+const imgui_render_init = imgui.sdl_render_init(renderer)
+
+println(imgui_status, imgui_context, imgui_io, imgui_init, imgui_render_init)

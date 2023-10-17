@@ -2235,6 +2235,7 @@ static Value info_builtin(std::vector<Value> &args)
     {
     case Function:
     {
+        obj->keys = {"name", "arity", "params", "generator", "init", "done"};
         auto &func = value.get_function();
         obj->values["name"] = string_val(func->name);
         obj->values["arity"] = number_val(func->arity);
@@ -2250,12 +2251,14 @@ static Value info_builtin(std::vector<Value> &args)
     }
     case Native:
     {
+        obj->keys = {"name"};
         auto &func = value.get_native();
         obj->values["name"] = string_val(func->name);
         return info;
     }
     case Object:
     {
+        obj->keys = {"type", "typename", "keys", "values"};
         auto &object = value.get_object();
         obj->values["type"] = object->type == nullptr ? none_val() : string_val(object->type->name);
         obj->values["typename"] = string_val(object->type_name);

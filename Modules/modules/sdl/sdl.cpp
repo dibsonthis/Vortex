@@ -6,10 +6,12 @@
 #include "include/SDL2/SDL_Image.h"
 #include "include/SDL2/SDL_ttf.h"
 
-extern "C" Value initSDL(std::vector<Value>& args) {
+extern "C" Value initSDL(std::vector<Value> &args)
+{
     int num_required_args = 0;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'initSDL' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
@@ -21,10 +23,12 @@ extern "C" Value initSDL(std::vector<Value>& args) {
     return number_val(init);
 }
 
-extern "C" Value createWindow(std::vector<Value>& args) {
+extern "C" Value createWindow(std::vector<Value> &args)
+{
     int num_required_args = 6;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'createWindow' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
@@ -35,36 +39,42 @@ extern "C" Value createWindow(std::vector<Value>& args) {
     Value height = args[4];
     Value flags = args[5];
 
-    if (!windowName.is_string()) {
+    if (!windowName.is_string())
+    {
         error("Function 'createWindow' expects arg 'windowName' to be a string");
     }
 
-    if (!xPos.is_number()) {
+    if (!xPos.is_number())
+    {
         error("Function 'createWindow' expects arg 'xPos' to be a number");
     }
 
-    if (!yPos.is_number()) {
+    if (!yPos.is_number())
+    {
         error("Function 'createWindow' expects arg 'yPos' to be a number");
     }
 
-    if (!width.is_number()) {
+    if (!width.is_number())
+    {
         error("Function 'createWindow' expects arg 'width' to be a number");
     }
 
-    if (!height.is_number()) {
+    if (!height.is_number())
+    {
         error("Function 'createWindow' expects arg 'height' to be a number");
     }
 
-    if (!flags.is_number()) {
+    if (!flags.is_number())
+    {
         error("Function 'createWindow' expects arg 'flags' to be a number");
     }
 
-    SDL_Window* window = SDL_CreateWindow(windowName.get_string().c_str(), 
-                                      (int)xPos.get_number(), 
-                                      (int)yPos.get_number(), 
-                                      (int)width.get_number(),
-                                      (int)height.get_number(), 
-                                      SDL_WINDOW_SHOWN | (int)flags.get_number());
+    SDL_Window *window = SDL_CreateWindow(windowName.get_string().c_str(),
+                                          (int)xPos.get_number(),
+                                          (int)yPos.get_number(),
+                                          (int)width.get_number(),
+                                          (int)height.get_number(),
+                                          SDL_WINDOW_SHOWN | (int)flags.get_number());
 
     SDL_SetWindowResizable(window, SDL_TRUE);
 
@@ -72,7 +82,8 @@ extern "C" Value createWindow(std::vector<Value>& args) {
     windowPointer.get_pointer()->value = window;
 
     auto sdl_error = std::string(SDL_GetError());
-    if (sdl_error != "") {
+    if (sdl_error != "")
+    {
         error("SDL Error (createWindow): " + sdl_error);
     }
 
@@ -80,33 +91,38 @@ extern "C" Value createWindow(std::vector<Value>& args) {
     return windowPointer;
 }
 
-extern "C" Value createRenderer(std::vector<Value>& args) {
+extern "C" Value createRenderer(std::vector<Value> &args)
+{
     int num_required_args = 2;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'createRenderer' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value window = args[0];
     Value index = args[1];
 
-    if (!window.is_pointer()) {
+    if (!window.is_pointer())
+    {
         error("Function 'createRenderer' expects arg 'window' to be a pointer");
     }
 
-    if (!index.is_number()) {
+    if (!index.is_number())
+    {
         error("Function 'createRenderer' expects arg 'index' to be a number");
     }
 
-    SDL_Window* windowPtr = (SDL_Window*)window.get_pointer()->value;
+    SDL_Window *windowPtr = (SDL_Window *)window.get_pointer()->value;
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(windowPtr, (int)index.get_number(), SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    SDL_Renderer *renderer = SDL_CreateRenderer(windowPtr, (int)index.get_number(), SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
     Value rendererPointer = pointer_val();
     rendererPointer.get_pointer()->value = renderer;
 
     auto sdl_error = std::string(SDL_GetError());
-    if (sdl_error != "") {
+    if (sdl_error != "")
+    {
         error("SDL Error (createRenderer): " + sdl_error);
     }
 
@@ -114,13 +130,14 @@ extern "C" Value createRenderer(std::vector<Value>& args) {
     return rendererPointer;
 }
 
-extern "C" Value pollEvent(std::vector<Value>& args) {
+extern "C" Value pollEvent(std::vector<Value> &args)
+{
 
     SDL_Event e;
     int status = SDL_PollEvent(&e);
 
     Value event = object_val();
-    auto& event_obj = event.get_object();
+    auto &event_obj = event.get_object();
     event_obj->values["type"] = number_val(e.type);
     // Button
     event_obj->values["button"] = object_val();
@@ -154,72 +171,84 @@ extern "C" Value pollEvent(std::vector<Value>& args) {
     return eventStruct;
 }
 
-extern "C" Value renderClear(std::vector<Value>& args) {
+extern "C" Value renderClear(std::vector<Value> &args)
+{
     int num_required_args = 1;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'renderClear' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value renderer = args[0];
 
-    if (!renderer.is_pointer()) {
+    if (!renderer.is_pointer())
+    {
         error("Function 'renderClear' expects arg 'renderer' to be a pointer");
     }
 
-    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer.get_pointer()->value;
+    SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
 
     int status = SDL_RenderClear(rendererPtr);
 
-    if (status != 0) {
+    if (status != 0)
+    {
         error("SDL Error (renderClear): " + std::string(SDL_GetError()) + "\n");
     }
 
     return none_val();
 }
 
-extern "C" Value renderPresent(std::vector<Value>& args) {
+extern "C" Value renderPresent(std::vector<Value> &args)
+{
     int num_required_args = 1;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'renderPresent' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value renderer = args[0];
 
-    if (!renderer.is_pointer()) {
+    if (!renderer.is_pointer())
+    {
         error("Function 'renderPresent' expects arg 'renderer' to be a pointer");
     }
 
-    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer.get_pointer()->value;
+    SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
 
     SDL_RenderPresent(rendererPtr);
 
     return none_val();
 }
 
-extern "C" Value getKeyName(std::vector<Value>& args) {
+extern "C" Value getKeyName(std::vector<Value> &args)
+{
     int num_required_args = 1;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'getKeyName' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value keyCode = args[0];
 
-    if (!keyCode.is_number()) {
+    if (!keyCode.is_number())
+    {
         error("Function 'getKeyName' expects arg 'keyCode' to be a number");
     }
 
-    const char* key_name = SDL_GetKeyName(keyCode.get_number());
+    const char *key_name = SDL_GetKeyName(keyCode.get_number());
     Value name_node = string_val(std::string(key_name));
     return name_node;
 }
 
-extern "C" Value setRenderDrawColor(std::vector<Value>& args) {
+extern "C" Value setRenderDrawColor(std::vector<Value> &args)
+{
     int num_required_args = 5;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'setRenderDrawColor' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
@@ -229,35 +258,41 @@ extern "C" Value setRenderDrawColor(std::vector<Value>& args) {
     Value b = args[3];
     Value a = args[4];
 
-    if (!renderer.is_pointer()) {
+    if (!renderer.is_pointer())
+    {
         error("Function 'setRenderDrawColor' expects arg 'renderer' to be a pointer");
     }
 
-    if (!(r.is_number() && g.is_number() && b.is_number() && a.is_number())) {
+    if (!(r.is_number() && g.is_number() && b.is_number() && a.is_number()))
+    {
         error("Function 'setRenderDrawColor' expects args 'r', 'g', 'b', 'a' to be numbers");
     }
 
-    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer.get_pointer()->value;
+    SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
 
     int status = SDL_SetRenderDrawColor(rendererPtr, r.get_number(), g.get_number(), b.get_number(), a.get_number());
 
-    if (status != 0) {
+    if (status != 0)
+    {
         error("SDL Error (setRenderDrawColor): " + std::string(SDL_GetError()) + "\n");
     }
 
     return none_val();
 }
 
-extern "C" Value delay(std::vector<Value>& args) {
+extern "C" Value delay(std::vector<Value> &args)
+{
     int num_required_args = 1;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'delay' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value ms = args[0];
 
-    if (!ms.is_number()) {
+    if (!ms.is_number())
+    {
         error("Function 'delay' expects arg 'ms' to be a number");
     }
 
@@ -266,10 +301,12 @@ extern "C" Value delay(std::vector<Value>& args) {
     return none_val();
 }
 
-extern "C" Value drawPoint(std::vector<Value>& args) {
+extern "C" Value drawPoint(std::vector<Value> &args)
+{
     int num_required_args = 3;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'drawPoint' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
@@ -277,29 +314,34 @@ extern "C" Value drawPoint(std::vector<Value>& args) {
     Value xPos = args[1];
     Value yPos = args[2];
 
-    if (!renderer.is_pointer()) {
+    if (!renderer.is_pointer())
+    {
         error("Function 'drawPoint' expects arg 'renderer' to be a pointer");
     }
 
-    if (!(xPos.is_number() && yPos.is_number())) {
+    if (!(xPos.is_number() && yPos.is_number()))
+    {
         error("Function 'drawPoint' expects args 'xPos', 'yPos' to be numbers");
     }
 
-    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer.get_pointer()->value;
+    SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
 
     int draw = SDL_RenderDrawPoint(rendererPtr, xPos.get_number(), yPos.get_number());
 
-    if (draw != 0) {
+    if (draw != 0)
+    {
         error("Function 'drawPoint' failed");
     }
 
     return none_val();
 }
 
-extern "C" Value drawLine(std::vector<Value>& args) {
+extern "C" Value drawLine(std::vector<Value> &args)
+{
     int num_required_args = 5;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'drawLine' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
@@ -309,29 +351,34 @@ extern "C" Value drawLine(std::vector<Value>& args) {
     Value x2 = args[3];
     Value y2 = args[4];
 
-    if (!renderer.is_pointer()) {
+    if (!renderer.is_pointer())
+    {
         error("Function 'drawLine' expects arg 'renderer' to be a pointer");
     }
 
-    if (!(x1.is_number() && y1.is_number() && x2.is_number() && y2.is_number())) {
+    if (!(x1.is_number() && y1.is_number() && x2.is_number() && y2.is_number()))
+    {
         error("Function 'drawLine' expects args 'x1', 'y1', 'x2', 'y2' to be numbers");
     }
 
-    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer.get_pointer()->value;
+    SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
 
     int draw = SDL_RenderDrawLineF(rendererPtr, x1.get_number(), y1.get_number(), x2.get_number(), y2.get_number());
 
-    if (draw != 0) {
+    if (draw != 0)
+    {
         error("Function 'drawLine' failed");
     }
 
     return none_val();
 }
 
-extern "C" Value drawRect(std::vector<Value>& args) {
+extern "C" Value drawRect(std::vector<Value> &args)
+{
     int num_required_args = 5;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'drawRect' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
@@ -341,15 +388,17 @@ extern "C" Value drawRect(std::vector<Value>& args) {
     Value w = args[3];
     Value h = args[4];
 
-    if (!renderer.is_pointer()) {
+    if (!renderer.is_pointer())
+    {
         error("Function 'drawRect' expects arg 'renderer' to be a pointer");
     }
 
-    if (!(x.is_number() && y.is_number() && w.is_number() && h.is_number())) {
+    if (!(x.is_number() && y.is_number() && w.is_number() && h.is_number()))
+    {
         error("Function 'drawRect' expects args 'x', 'y', 'w', 'h' to be numbers");
     }
 
-    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer.get_pointer()->value;
+    SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
 
     SDL_FRect rect;
     rect.x = x.get_number();
@@ -360,17 +409,20 @@ extern "C" Value drawRect(std::vector<Value>& args) {
     int draw = SDL_RenderDrawRectF(rendererPtr, &rect);
     int fill = SDL_RenderFillRectF(rendererPtr, &rect);
 
-    if (draw != 0 || fill != 0) {
+    if (draw != 0 || fill != 0)
+    {
         error("Function 'drawRect' failed");
     }
 
     return none_val();
 }
 
-extern "C" Value drawGeometry(std::vector<Value>& args) {
+extern "C" Value drawGeometry(std::vector<Value> &args)
+{
     int num_required_args = 3;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'drawGeometry' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
@@ -378,28 +430,33 @@ extern "C" Value drawGeometry(std::vector<Value>& args) {
     Value vertices = args[1];
     Value texture = args[2];
 
-    if (!renderer.is_pointer()) {
+    if (!renderer.is_pointer())
+    {
         error("Function 'drawGeometry' expects arg 'renderer' to be a pointer");
     }
 
-    if (!texture.is_pointer() && !texture.is_none()) {
+    if (!texture.is_pointer() && !texture.is_none())
+    {
         error("Function 'drawGeometry' expects arg 'texture' to be a pointer or none");
     }
 
-    if (!vertices.is_list()) {
+    if (!vertices.is_list())
+    {
         error("Function 'drawGeometry' expects arg 'vertices' to be a list");
     }
 
-    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer.get_pointer()->value;
-    SDL_Texture* texturePtr = NULL;
+    SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
+    SDL_Texture *texturePtr = NULL;
 
-    if (texture.is_pointer()) {
-        texturePtr = (SDL_Texture*)texture.get_pointer()->value;
+    if (texture.is_pointer())
+    {
+        texturePtr = (SDL_Texture *)texture.get_pointer()->value;
     }
 
     std::vector<SDL_Vertex> sdl_vertices;
 
-    for (Value& vertex : *vertices.get_list()) {
+    for (Value &vertex : *vertices.get_list())
+    {
         SDL_Vertex v;
         v.color.r = vertex.get_object()->values["color"].get_object()->values["r"].get_number();
         v.color.g = vertex.get_object()->values["color"].get_object()->values["g"].get_number();
@@ -414,35 +471,41 @@ extern "C" Value drawGeometry(std::vector<Value>& args) {
 
     int render = SDL_RenderGeometry(rendererPtr, texturePtr, sdl_vertices.data(), sdl_vertices.size(), NULL, 0);
 
-    if (render != 0) {
+    if (render != 0)
+    {
         error("SDL Error (drawGeometry): " + std::string(SDL_GetError()) + "\n");
     }
 
     return none_val();
 }
 
-extern "C" Value loadTexture(std::vector<Value>& args) {
+extern "C" Value loadTexture(std::vector<Value> &args)
+{
     int num_required_args = 2;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'loadTexture' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value renderer = args[0];
     Value filePath = args[1];
 
-    if (!renderer.is_pointer()) {
+    if (!renderer.is_pointer())
+    {
         error("Function 'loadTexture' expects arg 'renderer' to be a pointer");
     }
 
-    if (!filePath.is_string()) {
+    if (!filePath.is_string())
+    {
         error("Function 'loadTexture' expects arg 'filePath' to be a string");
     }
 
-    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer.get_pointer()->value;
-    SDL_Texture* texture = IMG_LoadTexture(rendererPtr, filePath.get_string().c_str());
-    
-    if (!texture) {
+    SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
+    SDL_Texture *texture = IMG_LoadTexture(rendererPtr, filePath.get_string().c_str());
+
+    if (!texture)
+    {
         error("SDL Error (loadTexture): " + std::string(SDL_GetError()) + "\n");
     }
 
@@ -452,10 +515,12 @@ extern "C" Value loadTexture(std::vector<Value>& args) {
     return texturePtr;
 }
 
-extern "C" Value loadText(std::vector<Value>& args) {
+extern "C" Value loadText(std::vector<Value> &args)
+{
     int num_required_args = 7;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'loadText' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
@@ -467,46 +532,52 @@ extern "C" Value loadText(std::vector<Value>& args) {
     Value b = args[5];
     Value text = args[6];
 
-    if (!renderer.is_pointer()) {
+    if (!renderer.is_pointer())
+    {
         error("Function 'loadText' expects arg 'renderer' to be a pointer");
     }
 
-    if (!fontPath.is_string()) {
+    if (!fontPath.is_string())
+    {
         error("Function 'loadText' expects arg 'fontPath' to be a string");
     }
 
-    if (!fontSize.is_number() && !r.is_number() && !g.is_number() && !b.is_number()) {
+    if (!fontSize.is_number() && !r.is_number() && !g.is_number() && !b.is_number())
+    {
         error("Function 'loadText' expects args 'fontPath', 'r', 'g', 'b' to be numbers");
     }
 
-    if (!text.is_string()) {
+    if (!text.is_string())
+    {
         error("Function 'loadText' expects arg 'text' to be a string");
     }
 
-    SDL_Renderer* rendererPtr = (SDL_Renderer*)renderer.get_pointer()->value;
-    
+    SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
+
     SDL_Color color = {
         r.get_number(),
         g.get_number(),
-        b.get_number() 
-    };
-    
-    TTF_Font* font = TTF_OpenFont(fontPath.get_string().c_str(), fontSize.get_number());
+        b.get_number()};
 
-    if (!font) {
+    TTF_Font *font = TTF_OpenFont(fontPath.get_string().c_str(), fontSize.get_number());
+
+    if (!font)
+    {
         error("SDL Error (loadText): " + std::string(SDL_GetError()) + "\n");
     }
 
-    SDL_Surface* surfaceMessage =
-    TTF_RenderText_Solid(font, text.get_string().c_str(), color); 
+    SDL_Surface *surfaceMessage =
+        TTF_RenderText_Solid(font, text.get_string().c_str(), color);
 
-    if (!surfaceMessage) {
+    if (!surfaceMessage)
+    {
         error("SDL Error (loadText): " + std::string(SDL_GetError()) + "\n");
     }
 
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(rendererPtr, surfaceMessage);
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(rendererPtr, surfaceMessage);
 
-    if (!texture) {
+    if (!texture)
+    {
         error("SDL Error (loadText): " + std::string(SDL_GetError()) + "\n");
     }
 
@@ -519,20 +590,23 @@ extern "C" Value loadText(std::vector<Value>& args) {
     return texturePtr;
 }
 
-extern "C" Value getWindowSize(std::vector<Value>& args) {
+extern "C" Value getWindowSize(std::vector<Value> &args)
+{
     int num_required_args = 1;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'getWindowSize' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value window = args[0];
 
-    if (!window.is_pointer()) {
+    if (!window.is_pointer())
+    {
         error("Function 'getWindowSize' expects arg 'window' to be a pointer");
     }
 
-    SDL_Window* windowPtr = (SDL_Window*)window.get_pointer()->value;
+    SDL_Window *windowPtr = (SDL_Window *)window.get_pointer()->value;
 
     int w, h;
 
@@ -545,16 +619,19 @@ extern "C" Value getWindowSize(std::vector<Value>& args) {
     return sizeObj;
 }
 
-extern "C" Value showCursor(std::vector<Value>& args) {
+extern "C" Value showCursor(std::vector<Value> &args)
+{
     int num_required_args = 3;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'showCursor' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value flag = args[0];
 
-    if (!flag.is_number()) {
+    if (!flag.is_number())
+    {
         error("Function 'showCursor' expects arg 'flag' to be a number");
     }
 
@@ -686,7 +763,7 @@ extern "C" Value showCursor(std::vector<Value>& args) {
 //     SDL_Point center;
 //     int rotX = rot_x->_Node.Number().value;
 //     int rotY = rot_y->_Node.Number().value;
-    
+
 //     if (rotX == -1) {
 //         center.x = dest_rect.w / 2;
 //     } else {

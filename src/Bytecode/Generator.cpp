@@ -650,7 +650,17 @@ void gen_dot(Chunk &chunk, node_ptr node)
     {
         for (int i = node->_Node.Op().right->_Node.FunctionCall().args.size() - 1; i >= 0; i--)
         {
-            generate(node->_Node.Op().right->_Node.FunctionCall().args[i], chunk);
+            // generate(node->_Node.Op().right->_Node.FunctionCall().args[i], chunk);
+            node_ptr &arg = node->_Node.Op().right->_Node.FunctionCall().args[i];
+            if (arg->type == NodeType::OP && arg->_Node.Op().value == "...")
+            {
+                generate(arg->_Node.Op().right, chunk);
+                add_code(chunk, OP_UNPACK, arg->line);
+            }
+            else
+            {
+                generate(arg, chunk);
+            }
         }
         generate(node->_Node.Op().left, chunk);
         add_constant_code(chunk, string_val(node->_Node.Op().right->_Node.FunctionCall().name), node->line);
