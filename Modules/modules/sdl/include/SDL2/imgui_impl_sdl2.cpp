@@ -564,6 +564,134 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event *event)
     return false;
 }
 
+bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event &event)
+{
+    ImGuiIO &io = ImGui::GetIO();
+    ImGui_ImplSDL2_Data *bd = ImGui_ImplSDL2_GetBackendData();
+
+    switch (event.type)
+    {
+    case SDL_MOUSEMOTION:
+    {
+        ImVec2 mouse_pos((float)event.motion.x, (float)event.motion.y);
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            int window_x, window_y;
+            SDL_GetWindowPosition(SDL_GetWindowFromID(event.motion.windowID), &window_x, &window_y);
+            mouse_pos.x += window_x;
+            mouse_pos.y += window_y;
+        }
+        io.AddMouseSourceEvent(event.motion.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
+        io.AddMousePosEvent(mouse_pos.x, mouse_pos.y);
+        return true;
+    }
+    case SDL_MOUSEWHEEL:
+    {
+        // IMGUI_DEBUG_LOG("wheel %.2f %.2f, precise %.2f %.2f\n", (float)event.wheel.x, (float)event.wheel.y, event.wheel.preciseX, event.wheel.preciseY);
+#if SDL_VERSION_ATLEAST(2, 0, 18) // If this fails to compile on Emscripten: update to latest Emscripten!
+        float wheel_x = -event.wheel.x;
+        float wheel_y = event.wheel.y;
+#else
+        float wheel_x = -(float)event.wheel.x;
+        float wheel_y = (float)event.wheel.y;
+#endif
+#ifdef __EMSCRIPTEN__
+        wheel_x /= 100.0f;
+#endif
+        io.AddMouseSourceEvent(event.wheel.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
+        io.AddMouseWheelEvent(wheel_x, wheel_y);
+        return true;
+    }
+    case SDL_MOUSEBUTTONDOWN:
+    case SDL_MOUSEBUTTONUP:
+    {
+        int mouse_button = -1;
+        if (event.button.button == SDL_BUTTON_LEFT)
+        {
+            mouse_button = 0;
+        }
+        if (event.button.button == SDL_BUTTON_RIGHT)
+        {
+            mouse_button = 1;
+        }
+        if (event.button.button == SDL_BUTTON_MIDDLE)
+        {
+            mouse_button = 2;
+        }
+        if (event.button.button == SDL_BUTTON_X1)
+        {
+            mouse_button = 3;
+        }
+        if (event.button.button == SDL_BUTTON_X2)
+        {
+            mouse_button = 4;
+        }
+        if (mouse_button == -1)
+            break;
+        io.AddMouseSourceEvent(event.button.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
+        io.AddMouseButtonEvent(mouse_button, (event.type == SDL_MOUSEBUTTONDOWN));
+        bd->MouseButtonsDown = (event.type == SDL_MOUSEBUTTONDOWN) ? (bd->MouseButtonsDown | (1 << mouse_button)) : (bd->MouseButtonsDown & ~(1 << mouse_button));
+        return true;
+    }
+    case SDL_TEXTINPUT:
+    {
+        io.AddInputCharactersUTF8(event.text.text);
+        return true;
+    }
+    case SDL_KEYDOWN:
+    case SDL_KEYUP:
+    {
+        ImGui_ImplSDL2_UpdateKeyModifiers((SDL_Keymod)event.key.keysym.mod);
+        ImGuiKey key = ImGui_ImplSDL2_KeycodeToImGuiKey(event.key.keysym.sym);
+        io.AddKeyEvent(key, (event.type == SDL_KEYDOWN));
+        io.SetKeyEventNativeData(key, event.key.keysym.sym, event.key.keysym.scancode, event.key.keysym.scancode); // To support legacy indexing (<1.87 user code). Legacy backend uses SDLK_*** as indices to IsKeyXXX() functions.
+        return true;
+    }
+#if SDL_HAS_DISPLAY_EVENT
+    case SDL_DISPLAYEVENT:
+    {
+        // 2.0.26 has SDL_DISPLAYEVENT_CONNECTED/SDL_DISPLAYEVENT_DISCONNECTED/SDL_DISPLAYEVENT_ORIENTATION,
+        // so change of DPI/Scaling are not reflected in this event. (SDL3 has it)
+        bd->WantUpdateMonitors = true;
+        return true;
+    }
+#endif
+    case SDL_WINDOWEVENT:
+    {
+        // - When capturing mouse, SDL will send a bunch of conflicting LEAVE/ENTER event on every mouse move, but the final ENTER tends to be right.
+        // - However we won't get a correct LEAVE event for a captured window.
+        // - In some cases, when detaching a window from main viewport SDL may send SDL_WINDOWEVENT_ENTER one frame too late,
+        //   causing SDL_WINDOWEVENT_LEAVE on previous frame to interrupt drag operation by clear mouse position. This is why
+        //   we delay process the SDL_WINDOWEVENT_LEAVE events by one frame. See issue #5012 for details.
+        Uint8 window_event = event.window.event;
+        if (window_event == SDL_WINDOWEVENT_ENTER)
+        {
+            bd->MouseWindowID = event.window.windowID;
+            bd->PendingMouseLeaveFrame = 0;
+        }
+        if (window_event == SDL_WINDOWEVENT_LEAVE)
+            bd->PendingMouseLeaveFrame = ImGui::GetFrameCount() + 1;
+        if (window_event == SDL_WINDOWEVENT_FOCUS_GAINED)
+            io.AddFocusEvent(true);
+        else if (window_event == SDL_WINDOWEVENT_FOCUS_LOST)
+            io.AddFocusEvent(false);
+        if (window_event == SDL_WINDOWEVENT_CLOSE || window_event == SDL_WINDOWEVENT_MOVED || window_event == SDL_WINDOWEVENT_RESIZED)
+            if (ImGuiViewport *viewport = ImGui::FindViewportByPlatformHandle((void *)SDL_GetWindowFromID(event.window.windowID)))
+            {
+                if (window_event == SDL_WINDOWEVENT_CLOSE)
+                    viewport->PlatformRequestClose = true;
+                if (window_event == SDL_WINDOWEVENT_MOVED)
+                    viewport->PlatformRequestMove = true;
+                if (window_event == SDL_WINDOWEVENT_RESIZED)
+                    viewport->PlatformRequestResize = true;
+                return true;
+            }
+        return true;
+    }
+    }
+    return false;
+}
+
 static bool ImGui_ImplSDL2_Init(SDL_Window *window, SDL_Renderer *renderer, void *sdl_gl_context)
 {
     ImGuiIO &io = ImGui::GetIO();

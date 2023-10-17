@@ -5,6 +5,9 @@
 #include "include/SDL2/SDL.h"
 #include "include/SDL2/SDL_Image.h"
 #include "include/SDL2/SDL_ttf.h"
+#include "include/SDL2/imgui.h"
+#include "include/SDL2/imgui_impl_sdl2.h"
+#include "include/SDL2/imgui_impl_sdlrenderer2.h"
 
 extern "C" Value initSDL(std::vector<Value> &args)
 {
@@ -132,39 +135,68 @@ extern "C" Value createRenderer(std::vector<Value> &args)
 
 extern "C" Value pollEvent(std::vector<Value> &args)
 {
+    // auto e = std::make_shared<SDL_Event>();
+    // int status = SDL_PollEvent(e.get());
 
-    SDL_Event e;
+    SDL_Event e = SDL_Event();
     int status = SDL_PollEvent(&e);
 
     Value event = object_val();
     auto &event_obj = event.get_object();
+
+    event_obj->keys = {"type", "button", "motion", "key", "window"};
+
     event_obj->values["type"] = number_val(e.type);
     // Button
     event_obj->values["button"] = object_val();
+    event_obj->values["button"].get_object()->keys = {"button", "clicks", "x", "y", "which"};
     event_obj->values["button"].get_object()->values["button"] = number_val(e.button.button);
     event_obj->values["button"].get_object()->values["clicks"] = number_val(e.button.clicks);
     event_obj->values["button"].get_object()->values["x"] = number_val(e.button.x);
     event_obj->values["button"].get_object()->values["y"] = number_val(e.button.y);
+    event_obj->values["button"].get_object()->values["which"] = number_val(e.button.which);
+    event_obj->values["button"].get_object()->values["windowID"] = number_val(e.button.windowID);
     // Motion
     event_obj->values["motion"] = object_val();
+    event_obj->values["motion"].get_object()->keys = {"x", "y", "which", "windowID"};
     event_obj->values["motion"].get_object()->values["x"] = number_val(e.motion.x);
-    event_obj->values["motion"].get_object()->values["y"] = number_val(e.button.y);
+    event_obj->values["motion"].get_object()->values["y"] = number_val(e.motion.y);
+    event_obj->values["motion"].get_object()->values["which"] = number_val(e.motion.which);
+    event_obj->values["motion"].get_object()->values["windowID"] = number_val(e.motion.windowID);
+    // Wheel
+    event_obj->values["wheel"] = object_val();
+    event_obj->values["wheel"].get_object()->keys = {"x", "y", "preciseX", "preciseY", "which", "windowID"};
+    event_obj->values["wheel"].get_object()->values["x"] = number_val(e.wheel.x);
+    event_obj->values["wheel"].get_object()->values["y"] = number_val(e.wheel.y);
+    event_obj->values["wheel"].get_object()->values["preciseX"] = number_val(e.wheel.preciseX);
+    event_obj->values["wheel"].get_object()->values["preciseY"] = number_val(e.wheel.preciseY);
+    event_obj->values["wheel"].get_object()->values["which"] = number_val(e.wheel.which);
+    event_obj->values["wheel"].get_object()->values["windowID"] = number_val(e.wheel.windowID);
     // Keyboard
     event_obj->values["key"] = object_val();
+    event_obj->values["key"].get_object()->keys = {"type", "state", "repeat", "keysm"};
     event_obj->values["key"].get_object()->values["type"] = number_val(e.key.type);
     event_obj->values["key"].get_object()->values["state"] = number_val(e.key.state);
     event_obj->values["key"].get_object()->values["repeat"] = number_val(e.key.repeat);
     event_obj->values["key"].get_object()->values["keysm"] = object_val();
+    event_obj->values["key"].get_object()->values["keysm"].get_object()->keys = {"mod", "scancode", "sym"};
     event_obj->values["key"].get_object()->values["keysm"].get_object()->values["mod"] = number_val(e.key.keysym.mod);
     event_obj->values["key"].get_object()->values["keysm"].get_object()->values["scancode"] = number_val(e.key.keysym.scancode);
     event_obj->values["key"].get_object()->values["keysm"].get_object()->values["sym"] = number_val(e.key.keysym.sym);
+    // Text
+    event_obj->values["text"] = object_val();
+    event_obj->values["text"].get_object()->keys = {"text"};
+    event_obj->values["text"].get_object()->values["text"] = string_val(std::string(e.text.text));
     // Window
     event_obj->values["window"] = object_val();
+    event_obj->values["window"].get_object()->keys = {"event", "data1", "data2", "windowID"};
     event_obj->values["window"].get_object()->values["event"] = number_val(e.window.event);
     event_obj->values["window"].get_object()->values["data1"] = number_val(e.window.data1);
     event_obj->values["window"].get_object()->values["data2"] = number_val(e.window.data2);
+    event_obj->values["window"].get_object()->values["windowID"] = number_val(e.window.windowID);
 
     Value eventStruct = object_val();
+    eventStruct.get_object()->keys = {"status", "event", "event_ptr"};
     eventStruct.get_object()->values["status"] = number_val(status);
     eventStruct.get_object()->values["event"] = event;
 
@@ -921,3 +953,376 @@ extern "C" Value showCursor(std::vector<Value> &args)
 
 //     return new_vortex_obj(NodeType::NONE);
 // }
+
+extern "C" Value imgui_check_version(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'check_version' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    bool result = IMGUI_CHECKVERSION();
+
+    return boolean_val(result);
+}
+
+extern "C" Value imgui_create_context(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'create_context' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    auto context = ImGui::CreateContext();
+    Value contextPointer = pointer_val();
+    contextPointer.get_pointer()->value = context;
+
+    return contextPointer;
+}
+
+extern "C" Value imgui_init_io(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'init_io' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+    auto &io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Mouse Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
+
+    return boolean_val(true);
+}
+
+extern "C" Value imgui_get_io(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'get_io' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    auto &io = ImGui::GetIO();
+
+    auto io_object = object_val();
+    io_object.get_object()->values["WantCaptureMouse"] = boolean_val(io.WantCaptureMouse);
+    io_object.get_object()->keys.push_back("WantCaptureMouse");
+    io_object.get_object()->values["WantCaptureKeyboard"] = boolean_val(io.WantCaptureKeyboard);
+    io_object.get_object()->keys.push_back("WantCaptureKeyboard");
+    io_object.get_object()->values["Framerate"] = number_val(io.Framerate);
+    io_object.get_object()->keys.push_back("Framerate");
+    io_object.get_object()->values["DisplayFramebufferScale"] = object_val();
+    io_object.get_object()->keys.push_back("DisplayFramebufferScale");
+    io_object.get_object()->values["DisplayFramebufferScale"].get_object()->values["x"] = number_val(io.DisplayFramebufferScale.x);
+    io_object.get_object()->values["DisplayFramebufferScale"].get_object()->values["y"] = number_val(io.DisplayFramebufferScale.y);
+    io_object.get_object()->values["DisplayFramebufferScale"].get_object()->keys = {"x", "y"};
+
+    return io_object;
+}
+
+extern "C" Value imgui_init_for_sdl(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'init_for_sdl' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value window = args[0];
+    Value renderer = args[1];
+
+    if (!renderer.is_pointer())
+    {
+        error("Function 'init_for_sdl' expects arg 'renderer' to be a pointer");
+    }
+
+    if (!window.is_pointer())
+    {
+        error("Function 'init_for_sdl' expects arg 'window' to be a pointer");
+    }
+
+    SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
+    SDL_Window *windowPtr = (SDL_Window *)window.get_pointer()->value;
+
+    bool result = ImGui_ImplSDL2_InitForSDLRenderer(windowPtr, rendererPtr);
+    return boolean_val(result);
+}
+
+extern "C" Value imgui_sdl_render_init(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'sdl_render_init' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value &renderer = args[0];
+
+    if (!renderer.is_pointer())
+    {
+        error("Function 'sdl_render_init' expects arg 'renderer' to be a pointer");
+    }
+
+    SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
+
+    bool result = ImGui_ImplSDLRenderer2_Init(rendererPtr);
+    return boolean_val(result);
+}
+
+extern "C" Value imgui_process_event(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'imgui_process_event' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value event = args[0];
+
+    if (!event.is_object())
+    {
+        error("Function 'init_for_sdl' expects arg 'event' to be an object");
+    }
+
+    auto &event_obj = event.get_object();
+
+    SDL_Event _event = SDL_Event();
+    _event.type = event_obj->values["type"].get_number();
+
+    _event.motion.x = event_obj->values["motion"].get_object()->values["x"].get_number();
+    _event.motion.y = event_obj->values["motion"].get_object()->values["y"].get_number();
+    _event.motion.windowID = event_obj->values["motion"].get_object()->values["windowID"].get_number();
+    _event.motion.which = event_obj->values["motion"].get_object()->values["which"].get_number();
+
+    _event.wheel.x = event_obj->values["wheel"].get_object()->values["x"].get_number();
+    _event.wheel.y = event_obj->values["wheel"].get_object()->values["y"].get_number();
+    _event.wheel.preciseX = event_obj->values["wheel"].get_object()->values["preciseX"].get_number();
+    _event.wheel.preciseY = event_obj->values["wheel"].get_object()->values["preciseY"].get_number();
+    _event.wheel.windowID = event_obj->values["wheel"].get_object()->values["windowID"].get_number();
+    _event.wheel.which = event_obj->values["wheel"].get_object()->values["which"].get_number();
+
+    _event.button.button = event_obj->values["button"].get_object()->values["button"].get_number();
+    _event.button.which = event_obj->values["button"].get_object()->values["which"].get_number();
+
+    strncpy(_event.text.text, event_obj->values["text"].get_object()->values["text"].get_string().c_str(), 32);
+
+    _event.key.keysym.mod = event_obj->values["key"].get_object()->values["keysm"].get_object()->values["mod"].get_number();
+    _event.key.keysym.sym = event_obj->values["key"].get_object()->values["keysm"].get_object()->values["sym"].get_number();
+    _event.key.keysym.scancode = (SDL_Scancode)event_obj->values["key"].get_object()->values["keysm"].get_object()->values["scancode"].get_number();
+
+    _event.window.event = event_obj->values["window"].get_object()->values["event"].get_number();
+    _event.window.windowID = event_obj->values["window"].get_object()->values["windowID"].get_number();
+
+    bool result = ImGui_ImplSDL2_ProcessEvent(_event);
+
+    return boolean_val(result);
+}
+
+extern "C" Value imgui_new_frame(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'new_frame' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    ImGui_ImplSDLRenderer2_NewFrame();
+    ImGui_ImplSDL2_NewFrame();
+    ImGui::NewFrame();
+
+    return boolean_val(true);
+}
+
+extern "C" Value imgui_render(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'render' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    ImGui::Render();
+
+    return boolean_val(true);
+}
+
+extern "C" Value imgui_get_draw_data(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'get_draw_data' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    ImDrawData *data = ImGui::GetDrawData();
+    auto draw_data_ptr = pointer_val();
+    draw_data_ptr.get_pointer()->value = data;
+
+    return draw_data_ptr;
+}
+
+extern "C" Value imgui_render_draw_data(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'render_draw_data' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value data_ptr = args[0];
+
+    if (!data_ptr.is_pointer())
+    {
+        error("Function 'render_draw_data' expects arg 'data' to be a pointer");
+    }
+
+    ImDrawData *data = (ImDrawData *)data_ptr.get_pointer()->value;
+
+    ImGui_ImplSDLRenderer2_RenderDrawData(data);
+
+    return boolean_val(true);
+}
+
+extern "C" Value imgui_show_demo_window(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'show_demo_window' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    ImGui::ShowDemoWindow();
+
+    return boolean_val(true);
+}
+
+extern "C" Value imgui_begin(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'begin' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value name = args[0];
+
+    if (!name.is_string())
+    {
+        error("Function 'begin' expects arg 'name' to be a string");
+    }
+
+    bool result = ImGui::Begin(name.get_string().c_str());
+
+    return boolean_val(result);
+}
+
+extern "C" Value imgui_end(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'end' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    ImGui::End();
+
+    return boolean_val(true);
+}
+
+extern "C" Value imgui_text(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'text' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value text = args[0];
+
+    if (!text.is_string())
+    {
+        error("Function 'text' expects arg 'text' to be a string");
+    }
+
+    ImGui::Text(text.get_string().c_str());
+
+    return boolean_val(true);
+}
+
+extern "C" Value imgui_button(std::vector<Value> &args)
+{
+    int num_required_args = 3;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'button' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value text = args[0];
+    Value x = args[1];
+    Value y = args[2];
+
+    if (!text.is_string())
+    {
+        error("Function 'button' expects arg 'text' to be a string");
+    }
+
+    if (!x.is_number())
+    {
+        error("Function 'button' expects arg 'x' to be a number");
+    }
+
+    if (!y.is_number())
+    {
+        error("Function 'button' expects arg 'y' to be a number");
+    }
+
+    bool result = ImGui::Button(text.get_string().c_str(), ImVec2(x.get_number(), y.get_number()));
+
+    return boolean_val(result);
+}
+
+extern "C" Value imgui_checkbox(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'checkbox' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value text = args[0];
+    Value checked = args[1];
+
+    if (!text.is_string())
+    {
+        error("Function 'checkbox' expects arg 'text' to be a string");
+    }
+
+    if (!checked.is_boolean())
+    {
+        error("Function 'checkbox' expects arg 'checked' to be a boolean");
+    }
+
+    bool result = ImGui::Checkbox(text.get_string().c_str(), checked.get_boolean());
+
+    return boolean_val(result);
+}

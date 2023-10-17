@@ -1,5 +1,6 @@
-import imgui : "/Users/adib/Dev/Personal/Vortex/Modules/modules/imgui/imgui"
 import sdl : "/Users/adib/Dev/Personal/Vortex/Modules/modules/sdl/sdl"
+
+const imgui = sdl.imgui
 
 var init = sdl.initSDL()
 
@@ -10,13 +11,61 @@ if (init != 0) {
 	print("Initialized SDL\n")
 }
 
-const window = sdl.createWindow("Test", 300, 100, 600, 400)
+const window = sdl.createWindow("Test", 300, 100, 800, 800)
 const renderer = sdl.createRenderer(window)
+
+var running = true
 
 const imgui_status = imgui.check_version()
 const imgui_context = imgui.create_context()
-const imgui_io = imgui.get_io()
+const imgui_io = imgui.init_io()
+const imgui_io_obj = imgui.get_io()
 const imgui_init = imgui.init_for_sdl(window, renderer)
 const imgui_render_init = imgui.sdl_render_init(renderer)
 
-println(imgui_status, imgui_context, imgui_io, imgui_init, imgui_render_init)
+const MOUSEWHEEL_Event = 1027
+
+while (running) {
+    var status;
+    while (status != 0) {
+        const poll = sdl.pollEvent()
+        status = poll.status
+        const event = poll.event
+
+        // imgui.process_event(event)
+
+        if (event.type == sdl.EventType.QUIT) {
+            running = false
+        }
+		if (event.type == sdl.EventType.MOUSEBUTTONDOWN) {
+            println(event)
+		}
+		if (event.type == sdl.EventType.MOUSEBUTTONUP) {
+		}
+		if (event.type == sdl.EventType.MOUSEMOTION) {
+		}
+		if (event.type == sdl.EventType.KEYDOWN) {
+		}
+		if (event.type == sdl.EventType.KEYUP) {
+		}
+        if (event.type == MOUSEWHEEL_Event) {
+            imgui.process_event(event)
+		}
+	}
+
+    imgui.new_frame()
+
+    imgui.show_demo_window()
+
+    imgui.render()
+
+	sdl.renderClear(renderer)
+
+    imgui.render_draw_data(imgui.get_draw_data())
+
+    sdl.setRenderDrawColor(renderer, 0, 0, 0, 255)
+
+	sdl.renderPresent(renderer)
+}
+
+println("Done")

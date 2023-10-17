@@ -1,8 +1,0 @@
-const lib = load_lib("./bin/imgui", 
-	["check_version", "create_context", "get_io", "init_for_sdl", "sdl_render_init"])
-
-const check_version = () => lib.check_version()
-const create_context = () => lib.create_context()
-const get_io = () => lib.get_io()
-const init_for_sdl = (window, renderer) => lib.init_for_sdl(window, renderer)
-const sdl_render_init = (renderer) => lib.sdl_render_init(renderer)
