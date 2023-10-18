@@ -4,7 +4,7 @@ const lib = load_lib("./bin/sdl",
 	"getKeyName", "setRenderDrawColor", "delay",
 	"drawPoint", "drawLine", "drawRect", "drawGeometry",
 	"loadTexture", "loadText", "getWindowSize",
-	"showCursor", 
+	"showCursor", "queryTexture", "destroyTexture", 
 	/* imgui */
 	"imgui_check_version", "imgui_create_context", "imgui_init_io", 
 	"imgui_init_for_sdl", "imgui_sdl_render_init", "imgui_get_io",
@@ -33,7 +33,7 @@ const imgui = {
 	show_demo_window: () => lib.imgui_show_demo_window(),
 	begin: (name) => lib.imgui_begin(name),
 	end: () => lib.imgui_end(),
-	text: (content) => lib.imgui_text(content),
+	text: (content, wrapped = true) => lib.imgui_text(content, wrapped),
 	button: (text, x = 5, y = 5) => lib.imgui_button(text, x, y),
 	checkbox: (text, checked) => lib.imgui_checkbox(text, checked),
 	slider_float: (text, number, min, max) => lib.imgui_slider_float(text, number, min, max),
@@ -49,7 +49,7 @@ const imgui = {
 	same_line: (offset_from_start_x = 0, spacing = -1) =>lib.imgui_same_line(offset_from_start_x, spacing),
 	set_cursor_pos_x: (local_x) => lib.imgui_set_cursor_pos_x(local_x),
 	set_cursor_pos_y: (local_y) => lib.imgui_set_cursor_pos_y(local_y),
-	image: (texture, width, height) => lib.imgui_image(texture, width, height)
+	image: (texture, width = -1, height = -1) => lib.imgui_image(texture, width, height)
 
 }
 
@@ -71,6 +71,8 @@ const loadTexture = (renderer, filePath) => lib.loadTexture(renderer, filePath)
 const loadText = (renderer, fontPath, fontSize, r, g, b, text) => lib.loadText(renderer, fontPath, fontSize, r, g, b, text)
 const getWindowSize = (window) => lib.getWindowSize(window)
 const showCursor = (flag) => lib.showCursor(flag)
+const queryTexture = (texture) => lib.queryTexture(texture)
+const destroyTexture = (texture) => lib.destroyTexture(texture)
 
 const pollEvent = () => {
 	const eventObj = lib.pollEvent()

@@ -548,6 +548,58 @@ extern "C" Value loadTexture(std::vector<Value> &args)
     return texturePtr;
 }
 
+extern "C" Value queryTexture(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'queryTexture' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value texture = args[0];
+
+    if (!texture.is_pointer())
+    {
+        error("Function 'queryTexture' expects arg 'texture' to be a pointer");
+    }
+
+    SDL_Texture *texturePtr = (SDL_Texture *)texture.get_pointer()->value;
+
+    SDL_Point size;
+    SDL_QueryTexture(texturePtr, NULL, NULL, &size.x, &size.y);
+
+    Value size_obj = object_val();
+    size_obj.get_object()->keys = {"x", "y"};
+    size_obj.get_object()->values["x"] = number_val(size.x);
+    size_obj.get_object()->values["y"] = number_val(size.y);
+
+    return size_obj;
+}
+
+extern "C" Value destroyTexture(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'destroyTexture' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value texture = args[0];
+
+    if (!texture.is_pointer())
+    {
+        error("Function 'destroyTexture' expects arg 'texture' to be a pointer");
+    }
+
+    SDL_Texture *texturePtr = (SDL_Texture *)texture.get_pointer()->value;
+
+    SDL_DestroyTexture(texturePtr);
+
+    return none_val();
+}
+
 extern "C" Value loadText(std::vector<Value> &args)
 {
     int num_required_args = 7;
@@ -1249,7 +1301,7 @@ extern "C" Value imgui_end(std::vector<Value> &args)
 
 extern "C" Value imgui_text(std::vector<Value> &args)
 {
-    int num_required_args = 1;
+    int num_required_args = 2;
 
     if (args.size() != num_required_args)
     {
@@ -1257,13 +1309,26 @@ extern "C" Value imgui_text(std::vector<Value> &args)
     }
 
     Value text = args[0];
+    Value wrapped = args[1];
 
     if (!text.is_string())
     {
         error("Function 'text' expects arg 'text' to be a string");
     }
 
-    ImGui::Text(text.get_string().c_str());
+    if (!wrapped.is_boolean())
+    {
+        error("Function 'text' expects arg 'wrapped' to be a boolean");
+    }
+
+    if (wrapped.get_boolean())
+    {
+        ImGui::TextWrapped(text.get_string().c_str());
+    }
+    else
+    {
+        ImGui::Text(text.get_string().c_str());
+    }
 
     return boolean_val(true);
 }
@@ -1680,7 +1745,23 @@ extern "C" Value imgui_image(std::vector<Value> &args)
 
     SDL_Texture *texturePtr = (SDL_Texture *)texture.get_pointer()->value;
 
-    ImGui::Image((ImTextureID)(intptr_t)texturePtr, ImVec2(width.get_number(), height.get_number()));
+    SDL_Point size;
+    SDL_QueryTexture(texturePtr, NULL, NULL, &size.x, &size.y);
+
+    auto &_width = width.get_number();
+    auto &_height = height.get_number();
+
+    if (_width == -1)
+    {
+        _width = size.x;
+    }
+
+    if (_height == -1)
+    {
+        _height = size.y;
+    }
+
+    ImGui::Image((ImTextureID)(intptr_t)texturePtr, ImVec2(_width, _height));
 
     return boolean_val(true);
 }
