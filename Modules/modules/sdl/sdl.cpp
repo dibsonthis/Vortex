@@ -8,6 +8,7 @@
 #include "include/SDL2/imgui.h"
 #include "include/SDL2/imgui_impl_sdl2.h"
 #include "include/SDL2/imgui_impl_sdlrenderer2.h"
+#include "include/SDL2/imgui_stdlib.h"
 
 extern "C" Value initSDL(std::vector<Value> &args)
 {
@@ -1325,4 +1326,326 @@ extern "C" Value imgui_checkbox(std::vector<Value> &args)
     bool result = ImGui::Checkbox(text.get_string().c_str(), checked.get_boolean());
 
     return boolean_val(result);
+}
+
+extern "C" Value imgui_slider_float(std::vector<Value> &args)
+{
+    int num_required_args = 4;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'slider_float' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value text = args[0];
+    Value number = args[1];
+    Value min = args[2];
+    Value max = args[3];
+
+    if (!text.is_string())
+    {
+        error("Function 'slider_float' expects arg 'text' to be a string");
+    }
+
+    if (!number.is_number())
+    {
+        error("Function 'slider_float' expects arg 'number' to be a number");
+    }
+
+    if (!min.is_number())
+    {
+        error("Function 'slider_float' expects arg 'min' to be a number");
+    }
+
+    if (!max.is_number())
+    {
+        error("Function 'slider_float' expects arg 'max' to be a number");
+    }
+
+    auto number_value = (float)number.get_number();
+
+    float result = ImGui::SliderFloatCustom(text.get_string().c_str(), &number_value, min.get_number(), max.get_number());
+
+    return number_val(result);
+}
+
+extern "C" Value imgui_begin_main_menu_bar(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'begin_main_menu_bar' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    bool result = ImGui::BeginMainMenuBar();
+
+    return boolean_val(result);
+}
+
+extern "C" Value imgui_end_main_menu_bar(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'end_main_menu_bar' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    ImGui::EndMainMenuBar();
+
+    return boolean_val(true);
+}
+
+extern "C" Value imgui_begin_menu(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'begin_menu' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value name = args[0];
+
+    if (!name.is_string())
+    {
+        error("Function 'begin_menu' expects arg 'name' to be a string");
+    }
+
+    bool result = ImGui::BeginMenu(name.get_string().c_str());
+
+    return boolean_val(result);
+}
+
+extern "C" Value imgui_end_menu(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'end_menu' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    ImGui::EndMenu();
+
+    return boolean_val(true);
+}
+
+extern "C" Value imgui_menu_item(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'menu_item' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value name = args[0];
+
+    if (!name.is_string())
+    {
+        error("Function 'menu_item' expects arg 'name' to be a string");
+    }
+
+    bool result = ImGui::MenuItem(name.get_string().c_str());
+
+    return boolean_val(result);
+}
+
+extern "C" Value imgui_begin_child(std::vector<Value> &args)
+{
+    int num_required_args = 3;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'begin_child' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value name = args[0];
+    Value x = args[1];
+    Value y = args[2];
+
+    if (!name.is_string())
+    {
+        error("Function 'begin_child' expects arg 'name' to be a string");
+    }
+
+    if (!x.is_number())
+    {
+        error("Function 'begin_child' expects arg 'x' to be a number");
+    }
+
+    if (!y.is_number())
+    {
+        error("Function 'begin_child' expects arg 'y' to be a number");
+    }
+
+    bool result = ImGui::BeginChild(name.get_string().c_str(), ImVec2(x.get_number(), y.get_number()));
+
+    return boolean_val(result);
+}
+
+extern "C" Value imgui_end_child(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'end_child' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    ImGui::EndChild();
+
+    return boolean_val(true);
+}
+
+extern "C" Value imgui_combo(std::vector<Value> &args)
+{
+    int num_required_args = 3;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'combo' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value text = args[0];
+    Value choice = args[1];
+    Value choices = args[2];
+
+    if (!text.is_string())
+    {
+        error("Function 'combo' expects arg 'text' to be a string");
+    }
+
+    if (!choice.is_number())
+    {
+        error("Function 'combo' expects arg 'choice' to be a number");
+    }
+
+    if (!choices.is_list())
+    {
+        error("Function 'combo' expects arg 'choices' to be a list");
+    }
+
+    auto choice_value = (int)choice.get_number();
+    std::string choices_string = "";
+
+    for (auto &choice : *choices.get_list())
+    {
+        if (choice.is_string())
+        {
+            choices_string += choice.get_string() + '\0';
+        }
+    }
+
+    choices_string += '\0';
+
+    ImGui::Combo(text.get_string().c_str(), &choice_value, choices_string.c_str());
+
+    return number_val(choice_value);
+}
+
+extern "C" Value imgui_input_text(std::vector<Value> &args)
+{
+    int num_required_args = 3;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'input_text' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value label = args[0];
+    Value text = args[1];
+    Value hint = args[2];
+
+    if (!label.is_string())
+    {
+        error("Function 'input_text' expects arg 'label' to be a string");
+    }
+
+    if (!text.is_string())
+    {
+        error("Function 'input_text' expects arg 'text' to be a string");
+    }
+
+    if (!hint.is_string())
+    {
+        error("Function 'input_text' expects arg 'hint' to be a string");
+    }
+
+    auto str = text.get_string();
+
+    ImGui::InputTextWithHint(label.get_string().c_str(), hint.get_string().c_str(), &str);
+
+    return string_val(str);
+}
+
+extern "C" Value imgui_same_line(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'same_line' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value offset_from_start_x = args[0];
+    Value spacing = args[1];
+
+    if (!offset_from_start_x.is_number())
+    {
+        error("Function 'same_line' expects arg 'offset_from_start_x' to be a number");
+    }
+
+    if (!spacing.is_number())
+    {
+        error("Function 'same_line' expects arg 'spacing' to be a number");
+    }
+
+    ImGui::SameLine(offset_from_start_x.get_number(), spacing.get_number());
+
+    return boolean_val(true);
+}
+
+extern "C" Value imgui_set_cursor_pos_x(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'set_cursor_pos_x' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value local_x = args[0];
+
+    if (!local_x.is_number())
+    {
+        error("Function 'set_cursor_pos' expects arg 'local_x' to be a number");
+    }
+
+    ImGui::SetCursorPosX(local_x.get_number());
+
+    return boolean_val(true);
+}
+
+extern "C" Value imgui_set_cursor_pos_y(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'set_cursor_pos_y' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value local_y = args[0];
+
+    if (!local_y.is_number())
+    {
+        error("Function 'set_cursor_pos' expects arg 'local_y' to be a number");
+    }
+
+    ImGui::SetCursorPosY(local_y.get_number());
+
+    return boolean_val(true);
 }

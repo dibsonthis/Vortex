@@ -11,7 +11,12 @@ const lib = load_lib("./bin/sdl",
 	"imgui_process_event", "imgui_new_frame", "imgui_render",
 	"imgui_get_draw_data", "imgui_render_draw_data", "imgui_show_demo_window",
 	"imgui_begin", "imgui_end", "imgui_text", "imgui_button", "imgui_button",
-	"imgui_checkbox"])
+	"imgui_checkbox", "imgui_slider_float",
+	"imgui_begin_main_menu_bar", "imgui_end_main_menu_bar",
+	"imgui_begin_menu", "imgui_end_menu", "imgui_menu_item",
+	"imgui_begin_child", "imgui_end_child",
+	"imgui_combo", "imgui_input_text", "imgui_same_line",
+	"imgui_set_cursor_pos_x", "imgui_set_cursor_pos_y"])
 
 const imgui = {
 	check_version: () => lib.imgui_check_version(),
@@ -31,6 +36,19 @@ const imgui = {
 	text: (content) => lib.imgui_text(content),
 	button: (text, x = 5, y = 5) => lib.imgui_button(text, x, y),
 	checkbox: (text, checked) => lib.imgui_checkbox(text, checked),
+	slider_float: (text, number, min, max) => lib.imgui_slider_float(text, number, min, max),
+	begin_main_menu_bar: () => lib.imgui_begin_main_menu_bar(),
+	end_main_menu_bar: () => lib.imgui_end_main_menu_bar(),
+	begin_menu: (name) => lib.imgui_begin_menu(name),
+	end_menu: () => lib.imgui_end_menu(),
+	menu_item: (name) => lib.imgui_menu_item(name),
+	begin_child: (name, x, y) => lib.imgui_begin_child(name, x, y),
+	end_child: () => lib.imgui_end_child(),
+	combo: (text, choice, choices) => lib.imgui_combo(text, choice, choices),
+	input_text: (label, text, hint = "") => lib.imgui_input_text(label, text, hint),
+	same_line: (offset_from_start_x = 0, spacing = -1) =>lib.imgui_same_line(offset_from_start_x, spacing),
+	set_cursor_pos_x: (local_x) => lib.imgui_set_cursor_pos_x(local_x),
+	set_cursor_pos_y: (local_y) => lib.imgui_set_cursor_pos_y(local_y),
 
 }
 
