@@ -1621,7 +1621,7 @@ extern "C" Value imgui_set_cursor_pos_x(std::vector<Value> &args)
 
     if (!local_x.is_number())
     {
-        error("Function 'set_cursor_pos' expects arg 'local_x' to be a number");
+        error("Function 'set_cursor_pos_x' expects arg 'local_x' to be a number");
     }
 
     ImGui::SetCursorPosX(local_x.get_number());
@@ -1642,10 +1642,45 @@ extern "C" Value imgui_set_cursor_pos_y(std::vector<Value> &args)
 
     if (!local_y.is_number())
     {
-        error("Function 'set_cursor_pos' expects arg 'local_y' to be a number");
+        error("Function 'set_cursor_pos_y' expects arg 'local_y' to be a number");
     }
 
     ImGui::SetCursorPosY(local_y.get_number());
+
+    return boolean_val(true);
+}
+
+extern "C" Value imgui_image(std::vector<Value> &args)
+{
+    int num_required_args = 3;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'image' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value texture = args[0];
+    Value width = args[1];
+    Value height = args[2];
+
+    if (!texture.is_pointer())
+    {
+        error("Function 'image' expects arg 'texture' to be a pointer");
+    }
+
+    if (!width.is_number())
+    {
+        error("Function 'image' expects arg 'width' to be a number");
+    }
+
+    if (!height.is_number())
+    {
+        error("Function 'image' expects arg 'height' to be a number");
+    }
+
+    SDL_Texture *texturePtr = (SDL_Texture *)texture.get_pointer()->value;
+
+    ImGui::Image((ImTextureID)(intptr_t)texturePtr, ImVec2(width.get_number(), height.get_number()));
 
     return boolean_val(true);
 }
