@@ -2303,30 +2303,64 @@ static Value load_lib_builtin(std::vector<Value> &args)
         error("Function 'load_lib' expects arg 'func_list' to be a list");
     }
 
-    void *handle = dlopen(path.get_string().c_str(), RTLD_LAZY);
-
-    if (!handle)
-    {
-        error("Cannot open library: " + std::string(dlerror()));
-    }
-
-    typedef void (*load_t)(VM &vm);
-
     Value lib_obj = object_val();
-    auto &obj = lib_obj.get_object();
 
-    for (auto &name : *func_list.get_list())
-    {
-        if (!name.is_string())
+    #if __APPLE__ || __linux__
+
+        void *handle = dlopen(path.get_string().c_str(), RTLD_LAZY);
+
+        if (!handle)
         {
-            error("Function names must be strings");
+            error("Cannot open library: " + std::string(dlerror()));
         }
 
-        NativeFunction fn = (NativeFunction)dlsym(handle, name.get_string().c_str());
-        Value native = native_val();
-        native.get_native()->function = fn;
-        obj->values[name.get_string()] = native;
-    }
+        typedef void (*load_t)(VM &vm);
+
+        auto &obj = lib_obj.get_object();
+
+        for (auto &name : *func_list.get_list())
+        {
+            if (!name.is_string())
+            {
+                error("Function names must be strings");
+            }
+
+            NativeFunction fn = (NativeFunction)dlsym(handle, name.get_string().c_str());
+            Value native = native_val();
+            native.get_native()->function = fn;
+            obj->values[name.get_string()] = native;
+        }
+
+    #else
+
+        typedef void (__cdecl *load_t)(VM &vm);
+        HINSTANCE hinstLib;
+        load_t loadFuncAddress;
+
+        std::string path_str = path.get_string() + ".exe";
+
+        hinstLib = LoadLibrary(TEXT(path_str.c_str())); 
+
+        if (hinstLib == NULL) {
+            error("Cannot open library: " + path_str);
+        }
+
+        auto &obj = lib_obj.get_object();
+
+        for (auto &name : *func_list.get_list())
+        {
+            if (!name.is_string())
+            {
+                error("Function names must be strings");
+            }
+
+            NativeFunction fn = (NativeFunction)GetProcAddress(hinstLib, name.get_string().c_str());
+            Value native = native_val();
+            native.get_native()->function = fn;
+            obj->values[name.get_string()] = native;
+        }
+
+    #endif
 
     return lib_obj;
 }

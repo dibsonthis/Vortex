@@ -229,7 +229,7 @@ node_ptr Typechecker::tc_function(node_ptr& node) {
                     break;
             }
 
-            if (evaluated_expr->type == NodeType::ERROR) {
+            if (evaluated_expr->type == NodeType::_ERROR) {
                 return throw_error(evaluated_expr->_Node.Error().message);
             }
 
@@ -483,13 +483,13 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
     if (node->_Node.FunctionCall().name == "print") {
         if (node->_Node.FunctionCall().args.size() == 1) {
             node_ptr evaluated_arg = tc_node(node->_Node.FunctionCall().args[0]);
-            if (evaluated_arg->type == NodeType::ERROR) {
+            if (evaluated_arg->type == NodeType::_ERROR) {
                 return throw_error(evaluated_arg->_Node.Error().message);
             }
         } else {
             for (node_ptr arg : node->_Node.FunctionCall().args) {
                 node_ptr evaluated_arg = tc_node(arg);
-                if (evaluated_arg->type == NodeType::ERROR) {
+                if (evaluated_arg->type == NodeType::_ERROR) {
                 return throw_error(evaluated_arg->_Node.Error().message);
             }
             }
@@ -501,13 +501,13 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
     if (node->_Node.FunctionCall().name == "println") {
         if (node->_Node.FunctionCall().args.size() == 1) {
             node_ptr evaluated_arg = tc_node(node->_Node.FunctionCall().args[0]);
-            if (evaluated_arg->type == NodeType::ERROR) {
+            if (evaluated_arg->type == NodeType::_ERROR) {
                 return throw_error(evaluated_arg->_Node.Error().message);
             }
         } else {
             for (node_ptr arg : node->_Node.FunctionCall().args) {
                 node_ptr evaluated_arg = tc_node(arg);
-                if (evaluated_arg->type == NodeType::ERROR) {
+                if (evaluated_arg->type == NodeType::_ERROR) {
                 return throw_error(evaluated_arg->_Node.Error().message);
             }
             }
@@ -637,7 +637,7 @@ node_ptr Typechecker::tc_func_call(node_ptr& node, node_ptr func = nullptr) {
             case NodeType::POINTER: return new_string_node("Pointer");
             case NodeType::LIB: return new_string_node("Library");
             case NodeType::ANY: return new_string_node("Any");
-            case NodeType::ERROR: return new_string_node("Error");
+            case NodeType::_ERROR: return new_string_node("Error");
             default: return new_string_node("None");
         }
     }

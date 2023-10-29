@@ -6,7 +6,7 @@ node_ptr Interpreter::eval_try_catch(node_ptr& node) {
     std::string error = "";
     for (node_ptr& expr : node->_Node.TryCatch().try_body->_Node.Object().elements) {
         node_ptr evaluated_expr = eval_node(expr);
-        if (evaluated_expr->type == NodeType::ERROR) {
+        if (evaluated_expr->type == NodeType::_ERROR) {
             error = evaluated_expr->_Node.Error().message;
             break;
         }

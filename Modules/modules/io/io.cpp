@@ -21,7 +21,7 @@ extern "C" Value open(std::vector<Value>& args) {
         error("Parameter 'openMode' must be a number");
     }
 
-    std::fstream* handle = new std::fstream(filePath.get_string(), (uint)openMode.get_number());
+    std::fstream* handle = new std::fstream(filePath.get_string(), (std::ios_base::openmode)(unsigned int)openMode.get_number());
     Value handlePtr = pointer_val();
     handlePtr.get_pointer()->value = std::move(handle);
     return handlePtr;

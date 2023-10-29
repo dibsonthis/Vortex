@@ -5,8 +5,10 @@
 #include <unordered_map>
 #include <string>
 #include <iostream>
+#include <variant>
+#include <cstdarg>
 
-enum class ValueType {
+enum ValueType {
     Number,
     String,
     Boolean,
@@ -107,35 +109,35 @@ struct Value {
         std::shared_ptr<PointerObj>
     > value;
 
-    Value() : type(ValueType::None) {}
+    Value() : type(None) {}
     Value(ValueType type) : type(type) {
         switch (type)
         {
-            case ValueType::Number:
+            case Number:
                 value = 0.0f;
                 break;
-            case ValueType::String:
+            case String:
                 value = "";
                 break;
-            case ValueType::Boolean:
+            case Boolean:
                 value = false;
                 break;
-            case ValueType::List:
+            case List:
                 value = std::make_shared<std::vector<Value>>();
                 break;
-            case ValueType::Type:
+            case Type:
                 value = std::make_shared<TypeObj>();
                 break;
-            case ValueType::Object:
+            case Object:
                 value = std::make_shared<ObjectObj>();
                 break;
-            case ValueType::Function:
+            case Function:
                 value = std::make_shared<FunctionObj>();
                 break;
-            case ValueType::Native:
+            case Native:
                 value = std::make_shared<NativeFunctionObj>();
                 break;
-            case ValueType::Pointer:
+            case Pointer:
                 value = std::make_shared<PointerObj>();
                 break;
             default:    
@@ -178,34 +180,34 @@ struct Value {
     }
 
     bool is_number() {
-        return type == ValueType::Number;
+        return type == Number;
     }
     bool is_string() {
-        return type == ValueType::String;
+        return type == String;
     }
     bool is_boolean() {
-        return type == ValueType::Boolean;
+        return type == Boolean;
     }
     bool is_list() {
-        return type == ValueType::List;
+        return type == List;
     }
     bool is_type() {
-        return type == ValueType::Type;
+        return type == Type;
     }
     bool is_object() {
-        return type == ValueType::Object;
+        return type == Object;
     }
     bool is_function() {
-        return type == ValueType::Function;
+        return type == Function;
     }
     bool is_native() {
-        return type == ValueType::Native;
+        return type == Native;
     }
     bool is_pointer() {
-        return type == ValueType::Pointer;
+        return type == Pointer;
     }
     bool is_none() {
-        return type == ValueType::None;
+        return type == None;
     }
 };
 
@@ -215,60 +217,60 @@ struct Closure {
 };
 
 Value new_val() {
-    return Value(ValueType::None);
+    return Value(None);
 }
 
 Value number_val(double value) {
-    Value val(ValueType::Number);
+    Value val(Number);
     val.value = value;
     return val;
 }
 
 Value string_val(std::string value) {
-    Value val(ValueType::String);
+    Value val(String);
     val.value = value;
     return val;
 }
 
 Value boolean_val(bool value) {
-    Value val(ValueType::Boolean);
+    Value val(Boolean);
     val.value = value;
     return val;
 }
 
 Value list_val() {
-    Value val(ValueType::List);
+    Value val(List);
     return val;
 }
 
 Value type_val(std::string name) {
-    Value val(ValueType::Type);
+    Value val(Type);
     val.get_type()->name = name;
     return val;
 }
 
 Value object_val() {
-    Value val(ValueType::Object);
+    Value val(Object);
     return val;
 }
 
 Value function_val() {
-    Value val(ValueType::Function);
+    Value val(Function);
     return val;
 }
 
 Value native_val() {
-    Value val(ValueType::Native);
+    Value val(Native);
     return val;
 }
 
 Value pointer_val() {
-    Value val(ValueType::Pointer);
+    Value val(Pointer);
     return val;
 }
 
 Value none_val() {
-    Value val(ValueType::None);
+    Value val(None);
     return val;
 }
 

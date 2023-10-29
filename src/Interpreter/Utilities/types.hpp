@@ -186,7 +186,7 @@ bool Interpreter::match_types(node_ptr& _type, node_ptr& _value) {
         func_call->_Node.FunctionCall().name = type->_Node.Function().name;
         func_call->_Node.FunctionCall().args.push_back(value);
         node_ptr res = eval_func_call(func_call, type);
-        if (res->type == NodeType::ERROR) {
+        if (res->type == NodeType::_ERROR) {
             return false;
         }
         if (res->type != NodeType::BOOLEAN) {

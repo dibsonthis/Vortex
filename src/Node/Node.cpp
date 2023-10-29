@@ -172,7 +172,7 @@ std::string node_repr(node_ptr node) {
         case NodeType::ANY: {
             return "Any";
         }
-        case NodeType::ERROR: {
+        case NodeType::_ERROR: {
             return "Error";
         }
         default: {

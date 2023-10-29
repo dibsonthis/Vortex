@@ -87,7 +87,7 @@ VortexObj list_dir(std::string name, std::vector<VortexObj> args) {
     VortexObj v_path = args[0];
 
     if (v_path->type != NodeType::STRING) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'filePath' must be a string";
         return error;
     }
@@ -127,7 +127,7 @@ VortexObj create_dir(std::string name, std::vector<VortexObj> args) {
     VortexObj v_path = args[0];
 
     if (v_path->type != NodeType::STRING) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'filePath' must be a string";
         return error;
     }
@@ -147,7 +147,7 @@ VortexObj create_dirs(std::string name, std::vector<VortexObj> args) {
     VortexObj v_path = args[0];
 
     if (v_path->type != NodeType::STRING) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'filePath' must be a string";
         return error;
     }
@@ -167,7 +167,7 @@ VortexObj remove(std::string name, std::vector<VortexObj> args) {
     VortexObj v_path = args[0];
 
     if (v_path->type != NodeType::STRING) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'filePath' must be a string";
         return error;
     }
@@ -187,7 +187,7 @@ VortexObj remove_all(std::string name, std::vector<VortexObj> args) {
     VortexObj v_path = args[0];
 
     if (v_path->type != NodeType::STRING) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'filePath' must be a string";
         return error;
     }

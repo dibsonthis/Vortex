@@ -365,7 +365,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func = nullptr) {
             case NodeType::POINTER: return new_string_node("Pointer");
             case NodeType::LIB: return new_string_node("Library");
             case NodeType::ANY: return new_string_node("Any");
-            case NodeType::ERROR: return new_string_node("Error");
+            case NodeType::_ERROR: return new_string_node("Error");
             default: return new_string_node("None");
         }
     }
@@ -649,7 +649,7 @@ node_ptr Interpreter::eval_func_call(node_ptr& node, node_ptr func = nullptr) {
         for (int i = 0; i < function->_Node.Function().body->_Node.Object().elements.size(); i++) {
             node_ptr expr = function->_Node.Function().body->_Node.Object().elements[i];
             node_ptr evaluated_expr = eval_node(expr);
-            if (evaluated_expr->type == NodeType::ERROR) {
+            if (evaluated_expr->type == NodeType::_ERROR) {
                 return throw_error(evaluated_expr->_Node.Error().message);
             }
             if (evaluated_expr->type == NodeType::RETURN) {
@@ -819,7 +819,7 @@ node_ptr Interpreter::eval_function_direct(node_ptr& func_call, node_ptr& functi
         for (int i = 0; i < function->_Node.Function().body->_Node.Object().elements.size(); i++) {
             node_ptr expr = function->_Node.Function().body->_Node.Object().elements[i];
             node_ptr evaluated_expr = eval_node(expr);
-            if (evaluated_expr->type == NodeType::ERROR) {
+            if (evaluated_expr->type == NodeType::_ERROR) {
                 return throw_error(evaluated_expr->_Node.Error().message);
             }
             if (evaluated_expr->type == NodeType::RETURN) {

@@ -265,7 +265,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 //     VortexObj value = args[0];
 
 //     if (value->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'value' must be a number";
 //         return error;
 //     }
@@ -285,7 +285,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 //     VortexObj value = args[0];
 
 //     if (value->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'value' must be a number";
 //         return error;
 //     }
@@ -305,7 +305,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 //     VortexObj value = args[0];
 
 //     if (value->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'value' must be a number";
 //         return error;
 //     }
@@ -326,13 +326,13 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 //     VortexObj value_b = args[0];
 
 //     if (value->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'value_a' must be a number";
 //         return error;
 //     }
 
 //     if (value_b->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'value_b' must be a number";
 //         return error;
 //     }
@@ -352,7 +352,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 //     VortexObj value = args[0];
 
 //     if (value->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'value' must be a number";
 //         return error;
 //     }
@@ -372,7 +372,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 //     VortexObj value = args[0];
 
 //     if (value->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'value' must be a number";
 //         return error;
 //     }
@@ -394,7 +394,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 //     VortexObj value = args[0];
 
 //     if (value->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'value' must be a number";
 //         return error;
 //     }
@@ -414,7 +414,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 //     VortexObj value = args[0];
 
 //     if (value->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'value' must be a number";
 //         return error;
 //     }
@@ -436,7 +436,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 //     VortexObj value = args[0];
 
 //     if (value->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'value' must be a number";
 //         return error;
 //     }
@@ -456,7 +456,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 //     VortexObj value = args[0];
 
 //     if (value->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'value' must be a number";
 //         return error;
 //     }
@@ -476,7 +476,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 //     VortexObj value = args[0];
 
 //     if (value->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'value' must be a number";
 //         return error;
 //     }
@@ -496,7 +496,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 //     VortexObj value = args[0];
 
 //     if (value->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'value' must be a number";
 //         return error;
 //     }
@@ -516,7 +516,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 //     VortexObj value = args[0];
 
 //     if (value->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'value' must be a number";
 //         return error;
 //     }
@@ -536,7 +536,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 //     VortexObj value = args[0];
 
 //     if (value->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'value' must be a number";
 //         return error;
 //     }

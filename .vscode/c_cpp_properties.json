@@ -17,13 +17,13 @@
     },
     {
       "name": "GCC",
-      "includePath": ["${workspaceFolder}/**", "C:/msys64/mingw64/include/c++/12.2.0"],
+      "includePath": ["${default}", "${workspaceFolder}/**", "C:/msys64/mingw64/include/c++/12.2.0", "C:/Program Files (x86)/Windows Kits/10/Include/10.0.17763.0/um"],
       "defines": ["_DEBUG", "UNICODE", "_UNICODE"],
       "windowsSdkVersion": "10.0.18362.0",
-      "compilerPath": "C:/msys64/mingw64/bin/g++.exe",
+      "compilerPath": "C:/msys64/mingw64/bin/clang++.exe",
       "cStandard": "c17",
       "cppStandard": "c++17",
-      "intelliSenseMode": "windows-gcc-x64",
+      "intelliSenseMode": "windows-clang-x64",
       "browse": {
         "path": ["${workspaceFolder}/**", "C:/msys64/mingw64/include/c++/12.2.0", "C:/Program Files (x86)/Windows Kits/10/Include/10.0.17763.0/um"]
       }

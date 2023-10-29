@@ -4,6 +4,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <memory>
+#include <variant>
 
 #define node_ptr std::shared_ptr<Node>
 
@@ -48,7 +49,7 @@ enum class NodeType {
 	ANY,
 	UNION,
 	TRY_CATCH,
-	ERROR,
+	_ERROR,
 	REF,
 	NOVALUE
 };
@@ -535,7 +536,7 @@ struct Node {
 				_Node = TryCatchNode();
 				break;
 			}
-			case NodeType::ERROR: {
+			case NodeType::_ERROR: {
 				_Node = ErrorNode();
 				break;
 			}
@@ -668,7 +669,7 @@ struct Node {
 				_Node = TryCatchNode();
 				break;
 			}
-			case NodeType::ERROR: {
+			case NodeType::_ERROR: {
 				_Node = ErrorNode();
 				break;
 			}

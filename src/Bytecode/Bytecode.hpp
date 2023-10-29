@@ -2,6 +2,7 @@
 #include <variant>
 #include <unordered_map>
 #include <iomanip>
+#include <cmath>
 #include "../Node/Node.hpp"
 
 #define value_ptr std::shared_ptr<Value>

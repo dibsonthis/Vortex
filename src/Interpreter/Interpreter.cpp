@@ -89,13 +89,13 @@ node_ptr Interpreter::throw_error(std::string message, node_ptr node)
     std::string error_message = "\nError in '" + current_scope->file_name + "' @ (" + std::to_string(line) + ", " + std::to_string(column) + "): " + message;
 
     if (global_interpreter->try_catch > 0) {
-        node_ptr error = new_node(NodeType::ERROR);
+        node_ptr error = new_node(NodeType::_ERROR);
         error->_Node.Error().message = error_message;
         global_interpreter->error = error_message;
         return error;
     } else {
         error_and_exit(message);
-        return new_node(NodeType::ERROR);
+        return new_node(NodeType::_ERROR);
     }
 }
 
@@ -357,7 +357,7 @@ node_ptr Interpreter::eval_node(node_ptr& node) {
 void Interpreter::evaluate() {
     while (current_node->type != NodeType::END_OF_FILE) {
         node_ptr evaluated_node = eval_node(current_node);
-        if (evaluated_node->type == NodeType::ERROR) {
+        if (evaluated_node->type == NodeType::_ERROR) {
             error_and_exit(evaluated_node->_Node.Error().message);
         }
         advance();

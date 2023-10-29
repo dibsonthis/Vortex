@@ -1460,7 +1460,7 @@ void Parser::parse_keywords(std::string end)
                 current_node->_Node = StringNode();
                 current_node->_Node.String().value = "Error";
                 current_node->TypeInfo.is_type = true;
-                // current_node->type = NodeType::ERROR;
+                // current_node->type = NodeType::_ERROR;
                 // current_node->_Node = ErrorNode();
                 // current_node->TypeInfo.is_type = true;
             }

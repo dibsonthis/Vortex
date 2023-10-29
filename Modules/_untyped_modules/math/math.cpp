@@ -18,7 +18,7 @@ VortexObj ceil(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -38,7 +38,7 @@ VortexObj floor(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -58,7 +58,7 @@ VortexObj abs(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -78,7 +78,7 @@ VortexObj sqrt(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -98,7 +98,7 @@ VortexObj trunc(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -128,13 +128,13 @@ VortexObj log(std::string name, std::vector<VortexObj> args) {
     VortexObj base = args[1];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
 
     if (base->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'base' must be a number";
         return error;
     }
@@ -155,13 +155,13 @@ VortexObj pow(std::string name, std::vector<VortexObj> args) {
     VortexObj exponent = args[1];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
 
     if (exponent->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'exponent' must be a number";
         return error;
     }
@@ -183,7 +183,7 @@ VortexObj acos(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -203,7 +203,7 @@ VortexObj asin(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -223,7 +223,7 @@ VortexObj atan(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -244,13 +244,13 @@ VortexObj atan2(std::string name, std::vector<VortexObj> args) {
     VortexObj value_b = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value_a' must be a number";
         return error;
     }
 
     if (value_b->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value_b' must be a number";
         return error;
     }
@@ -270,7 +270,7 @@ VortexObj sin(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -290,7 +290,7 @@ VortexObj cos(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -310,7 +310,7 @@ VortexObj tan(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -332,7 +332,7 @@ VortexObj deg(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -352,7 +352,7 @@ VortexObj rad(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -374,7 +374,7 @@ VortexObj acosh(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -394,7 +394,7 @@ VortexObj asinh(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -414,7 +414,7 @@ VortexObj atanh(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -434,7 +434,7 @@ VortexObj sinh(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -454,7 +454,7 @@ VortexObj cosh(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }
@@ -474,7 +474,7 @@ VortexObj tanh(std::string name, std::vector<VortexObj> args) {
     VortexObj value = args[0];
 
     if (value->type != NodeType::NUMBER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'value' must be a number";
         return error;
     }

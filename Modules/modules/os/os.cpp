@@ -21,7 +21,7 @@ extern "C" Value list_dir(std::vector<Value>& args) {
 
     for (const auto& entry : std::filesystem::directory_iterator(filePath.get_string(), ec)) {
         std::error_code ec;
-        std::string path = entry.path();
+        std::string path = entry.path().string();
         bool is_dir = std::filesystem::is_directory(path, ec);
 
         Value _path = string_val(path);

@@ -6,11 +6,11 @@ node_ptr Interpreter::eval_hook(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = node->_Node.Op().right;
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 

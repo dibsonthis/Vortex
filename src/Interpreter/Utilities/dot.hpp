@@ -14,11 +14,11 @@ node_ptr Interpreter::eval_dot(node_ptr& node) {
         right->Meta.tags.push_back(tag);
     }
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 

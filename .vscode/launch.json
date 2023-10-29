@@ -3,7 +3,7 @@
   "configurations": [
 
     {
-      "name": "C/C++: g++.exe build and debug active file",
+      "name": "C/C++: clang++.exe build and debug active file",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}\\bin\\build\\dev\\main.exe",
@@ -13,7 +13,7 @@
       "environment": [],
       "externalConsole": true,
       "MIMode": "gdb",
-      "miDebuggerPath": "C:\\msys64\\mingw64\\bin\\gdb.exe",
+      "miDebuggerPath": "clang++.exe",
       "setupCommands": [
         {
           "description": "Enable pretty-printing for gdb",
@@ -21,7 +21,7 @@
           "ignoreFailures": true
         }
       ],
-      "preLaunchTask": "C/C++: g++.exe build and debug active file"
+      "preLaunchTask": "C/C++: clang++.exe build and debug active file"
     },
     {
       "name": "C/C++: g++.exe build interpreter",

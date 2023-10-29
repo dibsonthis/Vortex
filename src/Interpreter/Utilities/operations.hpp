@@ -19,7 +19,7 @@ node_ptr Interpreter::eval_pos_neg(node_ptr& node) {
 node_ptr Interpreter::eval_not(node_ptr& node) {
     node_ptr value = eval_node(node->_Node.Op().right);
 
-    if (value->type == NodeType::ERROR) {
+    if (value->type == NodeType::_ERROR) {
         return throw_error(value->_Node.Error().message);
     }
 
@@ -34,11 +34,11 @@ node_ptr Interpreter::eval_add(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -69,11 +69,11 @@ node_ptr Interpreter::eval_sub(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -123,11 +123,11 @@ node_ptr Interpreter::eval_mul(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -147,11 +147,11 @@ node_ptr Interpreter::eval_div(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -171,11 +171,11 @@ node_ptr Interpreter::eval_pow(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -194,11 +194,11 @@ node_ptr Interpreter::eval_mod(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -218,11 +218,11 @@ node_ptr Interpreter::eval_eq_eq(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -265,11 +265,11 @@ node_ptr Interpreter::eval_not_eq(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -312,11 +312,11 @@ node_ptr Interpreter::eval_lt_eq(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -336,11 +336,11 @@ node_ptr Interpreter::eval_gt_eq(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -360,11 +360,11 @@ node_ptr Interpreter::eval_lt(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -384,11 +384,11 @@ node_ptr Interpreter::eval_gt(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -407,7 +407,7 @@ node_ptr Interpreter::eval_gt(node_ptr& node) {
 node_ptr Interpreter::eval_and(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
@@ -427,7 +427,7 @@ node_ptr Interpreter::eval_and(node_ptr& node) {
 
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -442,11 +442,11 @@ node_ptr Interpreter::eval_bit_and(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -466,11 +466,11 @@ node_ptr Interpreter::eval_bit_or(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -490,7 +490,7 @@ node_ptr Interpreter::eval_or(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
     node_ptr left_bool = left;
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
@@ -508,7 +508,7 @@ node_ptr Interpreter::eval_or(node_ptr& node) {
 
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -522,7 +522,7 @@ node_ptr Interpreter::eval_or(node_ptr& node) {
 node_ptr Interpreter::eval_null_op(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
@@ -536,7 +536,7 @@ node_ptr Interpreter::eval_null_op(node_ptr& node) {
 
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -588,7 +588,7 @@ node_ptr Interpreter::eval_minus_eq(node_ptr& node) {
 node_ptr Interpreter::eval_as(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
@@ -695,13 +695,13 @@ node_ptr Interpreter::eval_as(node_ptr& node) {
 node_ptr Interpreter::eval_is(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -723,13 +723,13 @@ node_ptr Interpreter::eval_is(node_ptr& node) {
 node_ptr Interpreter::eval_in(node_ptr& node) {
     node_ptr left = eval_node(node->_Node.Op().left);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
     node_ptr right = eval_node(node->_Node.Op().right);
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 

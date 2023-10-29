@@ -654,13 +654,13 @@ extern "C" Value _head(std::vector<Value> &args)
 //     VortexObj private_key_path = args[1];
 
 //     if (cert_path->type != NodeType::STRING) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'cert_path' must be a string";
 //         return error;
 //     }
 
 //     if (private_key_path->type != NodeType::STRING) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'private_key_path' must be a string";
 //         return error;
 //     }
@@ -700,25 +700,25 @@ extern "C" Value _head(std::vector<Value> &args)
 //     VortexObj v_ssl = args[3];
 
 //     if (v_server->type != NodeType::POINTER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'server' must be a pointer";
 //         return error;
 //     }
 
 //     if (v_host->type != NodeType::STRING) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'host' must be a string";
 //         return error;
 //     }
 
 //     if (v_port->type != NodeType::NUMBER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'port' must be a number";
 //         return error;
 //     }
 
 //     if (v_ssl->type != NodeType::BOOLEAN) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'ssl' must be a boolean";
 //         return error;
 //     }
@@ -789,37 +789,37 @@ extern "C" Value _head(std::vector<Value> &args)
 //     VortexObj v_ssl = args[4];
 
 //     if (v_server->type != NodeType::POINTER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'server' must be a pointer";
 //         return error;
 //     }
 
 //     if (v_route->type != NodeType::STRING) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'route' must be a string";
 //         return error;
 //     }
 
 //     if (v_route->_Node.String().value.size() == 0 || v_route->_Node.String().value[0] != '/') {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'route' must begin with '/'";
 //         return error;
 //     }
 
 //     if (v_callback->type != NodeType::FUNC) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'callback' must be a function";
 //         return error;
 //     }
 
 //     if (v_content_type->type != NodeType::STRING) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'content_type' must be a string";
 //         return error;
 //     }
 
 //     if (v_ssl->type != NodeType::BOOLEAN) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'ssl' must be a boolean";
 //         return error;
 //     }
@@ -856,7 +856,7 @@ extern "C" Value _head(std::vector<Value> &args)
 //             func_call->_Node.FunctionCall().name = v_callback->_Node.Function().name;
 //             VortexObj result = interp.eval_func_call(func_call, v_callback);
 
-//             if (result->type == NodeType::ERROR) {
+//             if (result->type == NodeType::_ERROR) {
 //                 throw std::runtime_error(result->_Node.Error().message);
 //             }
 
@@ -917,7 +917,7 @@ extern "C" Value _head(std::vector<Value> &args)
 //         func_call->_Node.FunctionCall().name = v_callback->_Node.Function().name;
 //         VortexObj result = interp.eval_func_call(func_call, v_callback);
 
-//         if (result->type == NodeType::ERROR) {
+//         if (result->type == NodeType::_ERROR) {
 //             throw std::runtime_error(result->_Node.Error().message);
 //         }
 
@@ -966,43 +966,43 @@ extern "C" Value _head(std::vector<Value> &args)
 //     VortexObj v_ssl = args[4];
 
 //     if (v_server->type != NodeType::POINTER) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'server' must be a pointer";
 //         return error;
 //     }
 
 //     if (v_route->type != NodeType::STRING) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'route' must be a string";
 //         return error;
 //     }
 
 //     if (v_route->_Node.String().value.size() == 0 || v_route->_Node.String().value[0] != '/') {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'route' must begin with '/'";
 //         return error;
 //     }
 
 //     if (v_callback->type != NodeType::FUNC) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'callback' must be a function";
 //         return error;
 //     }
 
 //     if (v_callback->_Node.Function().params.size() != 1) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'callback' must have one parameter";
 //         return error;
 //     }
 
 //     if (v_content_type->type != NodeType::STRING) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'content_type' must be a string";
 //         return error;
 //     }
 
 //     if (v_ssl->type != NodeType::BOOLEAN) {
-//         VortexObj error = new_vortex_obj(NodeType::ERROR);
+//         VortexObj error = new_vortex_obj(NodeType::_ERROR);
 //         error->_Node.Error().message = "Parameter 'ssl' must be a boolean";
 //         return error;
 //     }
@@ -1038,7 +1038,7 @@ extern "C" Value _head(std::vector<Value> &args)
 
 //             VortexObj result = interp.eval_func_call(func_call, v_callback);
 
-//             if (result->type == NodeType::ERROR) {
+//             if (result->type == NodeType::_ERROR) {
 //                 throw std::runtime_error(result->_Node.Error().message);
 //             }
 
@@ -1117,7 +1117,7 @@ extern "C" Value _head(std::vector<Value> &args)
 //             return;
 //         }
 
-//         if (result->type == NodeType::ERROR) {
+//         if (result->type == NodeType::_ERROR) {
 //             throw std::runtime_error(result->_Node.Error().message);
 //         }
 

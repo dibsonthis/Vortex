@@ -1124,13 +1124,13 @@ void gen_import(Chunk &chunk, node_ptr node)
 #if __apple__ || __linux__
     replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
 #else
-    replaceAll(path, "@modules", "C:/Program Files/Vortex/modules/" + target_name);
+    replaceAll(path, "@modules", "C:/Program Files/vortex/modules/" + target_name);
 #endif
 #else
 #if defined(__APPLE__) || defined(__linux__)
     replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
 #else
-    replaceAll(path, "@modules", "C:/Program Files/Vortex/modules/" + target_name);
+    replaceAll(path, "@modules", "C:/Program Files/vortex/modules/" + target_name);
 #endif
 #endif
 

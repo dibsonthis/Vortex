@@ -19,7 +19,7 @@ node_ptr Typechecker::tc_pos_neg(node_ptr& node) {
 node_ptr Typechecker::tc_not(node_ptr& node) {
     node_ptr value = tc_node(node->_Node.Op().right);
 
-    if (value->type == NodeType::ERROR) {
+    if (value->type == NodeType::_ERROR) {
         return throw_error(value->_Node.Error().message);
     }
 
@@ -34,11 +34,11 @@ node_ptr Typechecker::tc_add(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -69,11 +69,11 @@ node_ptr Typechecker::tc_sub(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -123,11 +123,11 @@ node_ptr Typechecker::tc_mul(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -147,11 +147,11 @@ node_ptr Typechecker::tc_div(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -176,11 +176,11 @@ node_ptr Typechecker::tc_pow(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -200,11 +200,11 @@ node_ptr Typechecker::tc_mod(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -224,11 +224,11 @@ node_ptr Typechecker::tc_eq_eq(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -271,11 +271,11 @@ node_ptr Typechecker::tc_not_eq(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -318,11 +318,11 @@ node_ptr Typechecker::tc_lt_eq(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -342,11 +342,11 @@ node_ptr Typechecker::tc_gt_eq(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -366,11 +366,11 @@ node_ptr Typechecker::tc_lt(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -390,11 +390,11 @@ node_ptr Typechecker::tc_gt(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -413,7 +413,7 @@ node_ptr Typechecker::tc_gt(node_ptr& node) {
 node_ptr Typechecker::tc_and(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
@@ -433,7 +433,7 @@ node_ptr Typechecker::tc_and(node_ptr& node) {
 
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -448,11 +448,11 @@ node_ptr Typechecker::tc_bit_and(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -472,11 +472,11 @@ node_ptr Typechecker::tc_bit_or(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -496,7 +496,7 @@ node_ptr Typechecker::tc_or(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
     node_ptr left_bool = left;
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
@@ -514,7 +514,7 @@ node_ptr Typechecker::tc_or(node_ptr& node) {
 
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -528,7 +528,7 @@ node_ptr Typechecker::tc_or(node_ptr& node) {
 node_ptr Typechecker::tc_null_op(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
@@ -542,7 +542,7 @@ node_ptr Typechecker::tc_null_op(node_ptr& node) {
 
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -594,7 +594,7 @@ node_ptr Typechecker::tc_minus_eq(node_ptr& node) {
 node_ptr Typechecker::tc_as(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
@@ -676,7 +676,7 @@ node_ptr Typechecker::tc_as(node_ptr& node) {
 
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -724,7 +724,7 @@ node_ptr Typechecker::tc_as(node_ptr& node) {
 node_ptr Typechecker::tc_is(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
@@ -732,7 +732,7 @@ node_ptr Typechecker::tc_is(node_ptr& node) {
 
     right = tc_node(right);
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
@@ -754,13 +754,13 @@ node_ptr Typechecker::tc_is(node_ptr& node) {
 node_ptr Typechecker::tc_in(node_ptr& node) {
     node_ptr left = tc_node(node->_Node.Op().left);
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
     node_ptr right = tc_node(node->_Node.Op().right);
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 

@@ -35,7 +35,7 @@ VortexObj connect(std::string name, std::vector<VortexObj> args) {
     VortexObj v_path = args[0];
 
     if (v_path->type != NodeType::STRING) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'filePath' must be a string";
         return error;
     }
@@ -89,13 +89,13 @@ VortexObj execute(std::string name, std::vector<VortexObj> args) {
     VortexObj v_stmnt = args[1];
 
     if (v_db->type != NodeType::POINTER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'dbPtr' must be a string";
         return error;
     }
 
     if (v_stmnt->type != NodeType::STRING) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'statement' must be a string";
         return error;
     }
@@ -130,7 +130,7 @@ VortexObj close(std::string name, std::vector<VortexObj> args) {
     VortexObj v_db = args[0];
 
     if (v_db->type != NodeType::POINTER) {
-        VortexObj error = new_vortex_obj(NodeType::ERROR);
+        VortexObj error = new_vortex_obj(NodeType::_ERROR);
         error->_Node.Error().message = "Parameter 'dbPtr' must be a string";
         return error;
     }

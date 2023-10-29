@@ -167,7 +167,7 @@ std::string Typechecker::printable(node_ptr& node, std::vector<node_ptr> bases) 
         case NodeType::NOVALUE: {
             return "NoValue";
         }
-        case NodeType::ERROR: {
+        case NodeType::_ERROR: {
             return "Error";
         }
         case NodeType::ID: {

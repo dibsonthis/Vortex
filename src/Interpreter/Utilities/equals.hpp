@@ -11,11 +11,11 @@ node_ptr Interpreter::eval_eq(node_ptr& node) {
         right = eval_node(right->_Node.Ref().value);
     }
 
-    if (left->type == NodeType::ERROR) {
+    if (left->type == NodeType::_ERROR) {
         return throw_error(left->_Node.Error().message);
     }
 
-    if (right->type == NodeType::ERROR) {
+    if (right->type == NodeType::_ERROR) {
         return throw_error(right->_Node.Error().message);
     }
 
