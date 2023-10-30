@@ -8,7 +8,7 @@ std::string toString(Value value, bool quote_strings = false)
 {
     switch (value.type)
     {
-    case Number:
+    case ValueType::Number:
     {
         double number = value.get_number();
         if (std::floor(number) == number)
@@ -20,7 +20,7 @@ std::string toString(Value value, bool quote_strings = false)
         std::string buffAsStdStr = buff;
         return buffAsStdStr;
     }
-    case String:
+    case ValueType::String:
     {
         if (quote_strings)
         {
@@ -28,11 +28,11 @@ std::string toString(Value value, bool quote_strings = false)
         }
         return (value.get_string());
     }
-    case Boolean:
+    case ValueType::Boolean:
     {
         return (value.get_boolean() ? "true" : "false");
     }
-    case List:
+    case ValueType::List:
     {
         std::string repr = "[";
         for (int i = 0; i < value.get_list()->size(); i++)
@@ -47,7 +47,7 @@ std::string toString(Value value, bool quote_strings = false)
         repr += "]";
         return repr;
     }
-    case Object:
+    case ValueType::Object:
     {
         auto &obj = value.get_object();
         std::string repr;
@@ -76,7 +76,7 @@ std::string toString(Value value, bool quote_strings = false)
         repr += " }";
         return repr;
     }
-    case None:
+    case ValueType::None:
     {
         return "null";
     }

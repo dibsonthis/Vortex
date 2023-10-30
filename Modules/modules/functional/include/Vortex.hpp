@@ -8,7 +8,7 @@
 #include <variant>
 #include <cstdarg>
 
-enum ValueType
+enum class ValueType
 {
     Number,
     String,
@@ -116,36 +116,36 @@ struct Value
         std::shared_ptr<PointerObj>>
         value;
 
-    Value() : type(None) {}
+    Value() : type(ValueType::None) {}
     Value(ValueType type) : type(type)
     {
         switch (type)
         {
-        case Number:
+        case ValueType::Number:
             value = 0.0f;
             break;
-        case String:
+        case ValueType::String:
             value = "";
             break;
-        case Boolean:
+        case ValueType::Boolean:
             value = false;
             break;
-        case List:
+        case ValueType::List:
             value = std::make_shared<std::vector<Value>>();
             break;
-        case Type:
+        case ValueType::Type:
             value = std::make_shared<TypeObj>();
             break;
-        case Object:
+        case ValueType::Object:
             value = std::make_shared<ObjectObj>();
             break;
-        case Function:
+        case ValueType::Function:
             value = std::make_shared<FunctionObj>();
             break;
-        case Native:
+        case ValueType::Native:
             value = std::make_shared<NativeFunctionObj>();
             break;
-        case Pointer:
+        case ValueType::Pointer:
             value = std::make_shared<PointerObj>();
             break;
         default:
@@ -198,43 +198,43 @@ struct Value
 
     bool is_number()
     {
-        return type == Number;
+        return type == ValueType::Number;
     }
     bool is_string()
     {
-        return type == String;
+        return type == ValueType::String;
     }
     bool is_boolean()
     {
-        return type == Boolean;
+        return type == ValueType::Boolean;
     }
     bool is_list()
     {
-        return type == List;
+        return type == ValueType::List;
     }
     bool is_type()
     {
-        return type == Type;
+        return type == ValueType::Type;
     }
     bool is_object()
     {
-        return type == Object;
+        return type == ValueType::Object;
     }
     bool is_function()
     {
-        return type == Function;
+        return type == ValueType::Function;
     }
     bool is_native()
     {
-        return type == Native;
+        return type == ValueType::Native;
     }
     bool is_pointer()
     {
-        return type == Pointer;
+        return type == ValueType::Pointer;
     }
     bool is_none()
     {
-        return type == None;
+        return type == ValueType::None;
     }
 };
 
@@ -246,70 +246,70 @@ struct Closure
 
 Value new_val()
 {
-    return Value(None);
+    return Value(ValueType::None);
 }
 
 Value number_val(double value)
 {
-    Value val(Number);
+    Value val(ValueType::Number);
     val.value = value;
     return val;
 }
 
 Value string_val(std::string value)
 {
-    Value val(String);
+    Value val(ValueType::String);
     val.value = value;
     return val;
 }
 
 Value boolean_val(bool value)
 {
-    Value val(Boolean);
+    Value val(ValueType::Boolean);
     val.value = value;
     return val;
 }
 
 Value list_val()
 {
-    Value val(List);
+    Value val(ValueType::List);
     return val;
 }
 
 Value type_val(std::string name)
 {
-    Value val(Type);
+    Value val(ValueType::Type);
     val.get_type()->name = name;
     return val;
 }
 
 Value object_val()
 {
-    Value val(Object);
+    Value val(ValueType::Object);
     return val;
 }
 
 Value function_val()
 {
-    Value val(Function);
+    Value val(ValueType::Function);
     return val;
 }
 
 Value native_val()
 {
-    Value val(Native);
+    Value val(ValueType::Native);
     return val;
 }
 
 Value pointer_val()
 {
-    Value val(Pointer);
+    Value val(ValueType::Pointer);
     return val;
 }
 
 Value none_val()
 {
-    Value val(None);
+    Value val(ValueType::None);
     return val;
 }
 
