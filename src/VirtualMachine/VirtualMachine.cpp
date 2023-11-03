@@ -1305,6 +1305,7 @@ static EvaluateResult run(VM &vm)
                     {
                         auto &var = import_vm.frames[0].function->chunk.variables[i];
                         obj->values[var] = import_vm.stack[i];
+                        obj->keys.push_back(var);
                     }
 
                     push(vm, import_obj);
@@ -2305,62 +2306,65 @@ static Value load_lib_builtin(std::vector<Value> &args)
 
     Value lib_obj = object_val();
 
-    #if __APPLE__ || __linux__
+#if __APPLE__ || __linux__
 
-        void *handle = dlopen(path.get_string().c_str(), RTLD_LAZY);
+    void *handle = dlopen(path.get_string().c_str(), RTLD_LAZY);
 
-        if (!handle)
+    if (!handle)
+    {
+        error("Cannot open library: " + std::string(dlerror()));
+    }
+
+    typedef void (*load_t)(VM &vm);
+
+    auto &obj = lib_obj.get_object();
+
+    for (auto &name : *func_list.get_list())
+    {
+        if (!name.is_string())
         {
-            error("Cannot open library: " + std::string(dlerror()));
+            error("Function names must be strings");
         }
 
-        typedef void (*load_t)(VM &vm);
+        NativeFunction fn = (NativeFunction)dlsym(handle, name.get_string().c_str());
+        Value native = native_val();
+        native.get_native()->function = fn;
+        obj->values[name.get_string()] = native;
+        obj->keys.push_back(name.get_string());
+    }
 
-        auto &obj = lib_obj.get_object();
+#else
 
-        for (auto &name : *func_list.get_list())
+    typedef void(__cdecl * load_t)(VM & vm);
+    HINSTANCE hinstLib;
+    load_t loadFuncAddress;
+
+    std::string path_str = path.get_string() + ".exe";
+
+    hinstLib = LoadLibrary(TEXT(path_str.c_str()));
+
+    if (hinstLib == NULL)
+    {
+        error("Cannot open library: " + path_str);
+    }
+
+    auto &obj = lib_obj.get_object();
+
+    for (auto &name : *func_list.get_list())
+    {
+        if (!name.is_string())
         {
-            if (!name.is_string())
-            {
-                error("Function names must be strings");
-            }
-
-            NativeFunction fn = (NativeFunction)dlsym(handle, name.get_string().c_str());
-            Value native = native_val();
-            native.get_native()->function = fn;
-            obj->values[name.get_string()] = native;
+            error("Function names must be strings");
         }
 
-    #else
+        NativeFunction fn = (NativeFunction)GetProcAddress(hinstLib, name.get_string().c_str());
+        Value native = native_val();
+        native.get_native()->function = fn;
+        obj->values[name.get_string()] = native;
+        obj->keys.push_back(name.get_string());
+    }
 
-        typedef void (__cdecl *load_t)(VM &vm);
-        HINSTANCE hinstLib;
-        load_t loadFuncAddress;
-
-        std::string path_str = path.get_string() + ".exe";
-
-        hinstLib = LoadLibrary(TEXT(path_str.c_str())); 
-
-        if (hinstLib == NULL) {
-            error("Cannot open library: " + path_str);
-        }
-
-        auto &obj = lib_obj.get_object();
-
-        for (auto &name : *func_list.get_list())
-        {
-            if (!name.is_string())
-            {
-                error("Function names must be strings");
-            }
-
-            NativeFunction fn = (NativeFunction)GetProcAddress(hinstLib, name.get_string().c_str());
-            Value native = native_val();
-            native.get_native()->function = fn;
-            obj->values[name.get_string()] = native;
-        }
-
-    #endif
+#endif
 
     return lib_obj;
 }
