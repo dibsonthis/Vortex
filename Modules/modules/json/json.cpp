@@ -57,8 +57,8 @@ std::string toString(Value value, bool quote_strings = false)
         }
         repr += "{ ";
         int i = 0;
-        int size = obj->values.size();
-        for (std::string &key : obj->keys)
+        int size = obj->keys.size();
+        for (std::string key : obj->keys)
         {
             auto k = key;
 
@@ -67,11 +67,13 @@ std::string toString(Value value, bool quote_strings = false)
                 key = "\"" + key + "\"";
             }
             repr += key + ": " + toString(obj->values[k], quote_strings);
-            i++;
-            if (i < size)
+
+            if (i < size - 1)
             {
+                std::cout << k << "\n";
                 repr += ", ";
             }
+            i++;
         }
         repr += " }";
         return repr;
