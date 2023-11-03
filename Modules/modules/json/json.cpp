@@ -70,7 +70,6 @@ std::string toString(Value value, bool quote_strings = false)
 
             if (i < size - 1)
             {
-                std::cout << k << "\n";
                 repr += ", ";
             }
             i++;
