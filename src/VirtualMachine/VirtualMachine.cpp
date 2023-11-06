@@ -243,7 +243,7 @@ static EvaluateResult run(VM &vm)
                 Value new_value = pop(vm);
 
                 Value obj = object_val();
-                obj.get_object()->keys = [ "old", "current" ];
+                obj.get_object()->keys = {"old", "current"};
                 obj.get_object()->values["old"] = value;
                 obj.get_object()->values["current"] = new_value;
 
@@ -317,7 +317,7 @@ static EvaluateResult run(VM &vm)
                 if (current.hooks.onChangeHook)
                 {
                     Value obj = object_val();
-                    obj.get_object()->keys = [ "old", "current" ];
+                    obj.get_object()->keys = {"old", "current"};
                     obj.get_object()->values["old"] = current;
                     obj.get_object()->values["current"] = value;
 
@@ -608,7 +608,7 @@ static EvaluateResult run(VM &vm)
                 Value new_value = pop(vm);
 
                 Value obj = object_val();
-                obj.get_object()->keys = [ "old", "current" ];
+                obj.get_object()->keys = {"old", "current"};
                 obj.get_object()->values["old"] = value;
                 obj.get_object()->values["current"] = new_value;
 
