@@ -243,6 +243,7 @@ static EvaluateResult run(VM &vm)
                 Value new_value = pop(vm);
 
                 Value obj = object_val();
+                obj.get_object()->keys = [ "old", "current" ];
                 obj.get_object()->values["old"] = value;
                 obj.get_object()->values["current"] = new_value;
 
@@ -316,6 +317,7 @@ static EvaluateResult run(VM &vm)
                 if (current.hooks.onChangeHook)
                 {
                     Value obj = object_val();
+                    obj.get_object()->keys = [ "old", "current" ];
                     obj.get_object()->values["old"] = current;
                     obj.get_object()->values["current"] = value;
 
@@ -606,6 +608,7 @@ static EvaluateResult run(VM &vm)
                 Value new_value = pop(vm);
 
                 Value obj = object_val();
+                obj.get_object()->keys = [ "old", "current" ];
                 obj.get_object()->values["old"] = value;
                 obj.get_object()->values["current"] = new_value;
 
@@ -2405,6 +2408,10 @@ Value copy(Value &value)
         Value new_object = object_val();
         new_object.get_object()->type = value.get_object()->type;
         new_object.get_object()->type_name = value.get_object()->type_name;
+        for (std::string key : value.get_object()->keys)
+        {
+            new_object.get_object()->keys.push_back(key);
+        }
         for (auto prop : value.get_object()->values)
         {
             new_object.get_object()->values[prop.first] = copy(prop.second);
