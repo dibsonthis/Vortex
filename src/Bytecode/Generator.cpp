@@ -800,6 +800,7 @@ void gen_function(Chunk &chunk, node_ptr node)
     function->name = node->_Node.Function().name;
     function->arity = node->_Node.Function().params.size();
     function->chunk = Chunk();
+    chunk.import_path = chunk.import_path;
 
     Value function_value = function_val();
     function_value.value = function;
@@ -1122,15 +1123,43 @@ void gen_import(Chunk &chunk, node_ptr node)
 
 #if GCC_COMPILER
 #if __apple__ || __linux__
-    replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
+    if (chunk.import_path != "")
+    {
+        replaceAll(path, "@modules", "/" + chunk.import_path + "/" + target_name);
+    }
+    else
+    {
+        replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
+    }
 #else
-    replaceAll(path, "@modules", "C:/Program Files/vortex/modules/" + target_name);
+    if (chunk.import_path != "")
+    {
+        replaceAll(path, "@modules", "/" + chunk.import_path + "/" + target_name);
+    }
+    else
+    {
+        replaceAll(path, "@modules", "C:/Program Files/vortex/modules/" + target_name);
+    }
 #endif
 #else
 #if defined(__APPLE__) || defined(__linux__)
-    replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
+    if (chunk.import_path != "")
+    {
+        replaceAll(path, "@modules", "/" + chunk.import_path + "/" + target_name);
+    }
+    else
+    {
+        replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
+    }
 #else
-    replaceAll(path, "@modules", "C:/Program Files/vortex/modules/" + target_name);
+    if (chunk.import_path != "")
+    {
+        replaceAll(path, "@modules", "/" + chunk.import_path + "/" + target_name);
+    }
+    else
+    {
+        replaceAll(path, "@modules", "C:/Program Files/vortex/modules/" + target_name);
+    }
 #endif
 #endif
 

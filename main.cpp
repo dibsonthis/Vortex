@@ -31,9 +31,6 @@ int main(int argc, char **argv)
         parser.remove_op_node(";");
         auto ast = parser.nodes;
 
-        // Typechecker typechecker(parser.nodes, parser.file_name);
-        // typechecker.typecheck();
-
         VM vm;
         std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
         main->name = "";
@@ -54,9 +51,6 @@ int main(int argc, char **argv)
         vm.frames.push_back(main_frame);
         evaluate(vm);
 
-        // Interpreter interpreter(typechecker.nodes, parser.file_name);
-        // interpreter.evaluate();
-
         std::cin.get();
         exit(0);
     }
@@ -71,6 +65,7 @@ int main(int argc, char **argv)
 
         std::string path = argv[1];
         std::vector<std::string> args;
+        std::string import_path;
 
         if (argc > 1)
         {
@@ -80,13 +75,25 @@ int main(int argc, char **argv)
             }
         }
 
+        for (int i = 0; i < args.size(); i++)
+        {
+            std::string arg = args[i];
+            if (arg == "-m" || arg == "-modules")
+            {
+                if (i == args.size() - 1)
+                {
+                    std::cout << "Invalid module path";
+                    return 1;
+                }
+                else
+                {
+                    import_path = args[i + 1];
+                }
+            }
+        }
+
         Lexer lexer(path);
         lexer.tokenize();
-
-        // Parser parser(lexer.nodes, lexer.file_name);
-        // parser.parse(0, "_");
-        // parser.remove_op_node(";");
-        // auto ast = parser.nodes;
 
         auto parent_path = std::filesystem::path(path).parent_path();
         if (parent_path != "")
@@ -94,27 +101,17 @@ int main(int argc, char **argv)
             std::filesystem::current_path(parent_path);
         }
 
-        // Typechecker typechecker(parser.nodes, parser.file_name);
-        // typechecker.typecheck();
-
-        // Interpreter interpreter(typechecker.nodes, parser.file_name);
-        // interpreter.evaluate();
-
-        // exit(0);
-
         Parser parser(lexer.nodes, lexer.file_name);
         parser.parse(0, "_");
         parser.remove_op_node(";");
         auto ast = parser.nodes;
-
-        // Typechecker typechecker(parser.nodes, parser.file_name);
-        // typechecker.typecheck();
 
         VM vm;
         std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
         main->name = "";
         main->arity = 0;
         main->chunk = Chunk();
+        main->chunk.import_path = import_path;
         CallFrame main_frame;
         main_frame.name = path;
         main_frame.function = main;
