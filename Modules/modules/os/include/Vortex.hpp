@@ -31,6 +31,7 @@ struct Chunk
     std::vector<int> lines;
     std::vector<Value> constants;
     std::vector<std::string> variables;
+    std::string import_path;
 };
 
 struct ClosedVar
