@@ -800,7 +800,7 @@ void gen_function(Chunk &chunk, node_ptr node)
     function->name = node->_Node.Function().name;
     function->arity = node->_Node.Function().params.size();
     function->chunk = Chunk();
-    chunk.import_path = chunk.import_path;
+    function->chunk.import_path = chunk.import_path;
 
     Value function_value = function_val();
     function_value.value = function;

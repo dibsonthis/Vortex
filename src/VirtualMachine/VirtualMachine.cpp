@@ -252,6 +252,7 @@ static EvaluateResult run(VM &vm)
                 main->name = "";
                 main->arity = 0;
                 main->chunk = Chunk();
+                main->chunk.import_path = frame->function->chunk.import_path;
                 CallFrame main_frame;
                 main_frame.name = frame->name;
                 main_frame.function = main;
@@ -326,6 +327,7 @@ static EvaluateResult run(VM &vm)
                     main->name = "";
                     main->arity = 0;
                     main->chunk = Chunk();
+                    main->chunk.import_path = frame->function->chunk.import_path;
                     CallFrame main_frame;
                     main_frame.name = frame->name;
                     main_frame.function = main;
@@ -617,6 +619,7 @@ static EvaluateResult run(VM &vm)
                 main->name = "";
                 main->arity = 0;
                 main->chunk = Chunk();
+                main->chunk.import_path = frame->function->chunk.import_path;
                 CallFrame main_frame;
                 main_frame.name = frame->name;
                 main_frame.function = main;
@@ -1206,6 +1209,7 @@ static EvaluateResult run(VM &vm)
                     main->name = "";
                     main->arity = 0;
                     main->chunk = Chunk();
+                    main->chunk.import_path = frame->function->chunk.import_path;
                     CallFrame main_frame;
                     main_frame.name = frame->name;
                     main_frame.function = main;
@@ -1273,6 +1277,7 @@ static EvaluateResult run(VM &vm)
                     main->name = "";
                     main->arity = 0;
                     main->chunk = Chunk();
+                    main->chunk.import_path = frame->function->chunk.import_path;
                     CallFrame main_frame;
                     main_frame.name = frame->name;
                     main_frame.function = main;
@@ -1355,6 +1360,7 @@ static EvaluateResult run(VM &vm)
                 main->name = "";
                 main->arity = 0;
                 main->chunk = Chunk();
+                main->chunk.import_path = frame->function->chunk.import_path;
                 CallFrame main_frame;
                 main_frame.name = frame->name;
                 main_frame.function = main;
