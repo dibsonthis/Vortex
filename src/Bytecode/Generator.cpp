@@ -1125,7 +1125,7 @@ void gen_import(Chunk &chunk, node_ptr node)
 #if __apple__ || __linux__
     if (chunk.import_path != "")
     {
-        replaceAll(path, "@modules", "/" + chunk.import_path + "/" + target_name);
+        replaceAll(path, "@modules", chunk.import_path + "/" + target_name);
     }
     else
     {
@@ -1134,7 +1134,7 @@ void gen_import(Chunk &chunk, node_ptr node)
 #else
     if (chunk.import_path != "")
     {
-        replaceAll(path, "@modules", "/" + chunk.import_path + "/" + target_name);
+        replaceAll(path, "@modules", chunk.import_path + "/" + target_name);
     }
     else
     {
@@ -1145,7 +1145,7 @@ void gen_import(Chunk &chunk, node_ptr node)
 #if defined(__APPLE__) || defined(__linux__)
     if (chunk.import_path != "")
     {
-        replaceAll(path, "@modules", "/" + chunk.import_path + "/" + target_name);
+        replaceAll(path, "@modules", chunk.import_path + "/" + target_name);
     }
     else
     {
@@ -1154,7 +1154,7 @@ void gen_import(Chunk &chunk, node_ptr node)
 #else
     if (chunk.import_path != "")
     {
-        replaceAll(path, "@modules", "/" + chunk.import_path + "/" + target_name);
+        replaceAll(path, "@modules", chunk.import_path + "/" + target_name);
     }
     else
     {

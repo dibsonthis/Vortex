@@ -1,0 +1,3 @@
+const lib = load_lib("./bin/functools", ["rename_"])
+
+const rename = (function, name) => lib.rename_(function, name)

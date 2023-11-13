@@ -1,0 +1,7 @@
+const lib = load_lib("./bin/sys", ["__error__", "__stack__", "__globals__", "__frame__", "__system__"])
+
+const error = (message) => lib.__error__(message, __vm__)
+const stack = () => lib.__stack__(__vm__)
+const globals = () => lib.__globals__(__vm__)
+const frame = () => lib.__frame__(__vm__)
+const system = (command) => lib.__system__(command, __vm__)

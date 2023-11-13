@@ -1,0 +1,183 @@
+import sys
+
+const map = (list, func) => {
+    var new = []
+    const arity = func.info().arity
+    if (arity == 1) {
+        for (list, index, value) {
+            new.append(func(value))
+        }
+    } else if (arity == 2) {
+        for (list, index, value) {
+            new.append(func(value, index))
+        }
+    } else if (arity == 3) {
+        for (list, index, value) {
+            new.append(func(value, index, list))
+        }
+    } else {
+        print("Function 'map' expects a function with an arity of either 1, 2 or 3\n")
+        exit(1)
+    }
+
+    return new
+}
+
+const flatmap = (list, func) => {
+    var new = []
+    const arity = func.info().arity
+    if (arity == 1) {
+        for (list, index, value) {
+            var val = func(value)
+            if (type(val) == "List") {
+                for (val, i, v) {
+                    new.append(v)
+                }
+            } else {
+                new.append(val)
+            }
+        }
+    } else if (arity == 2) {
+        for (list, index, value) {
+            var val = func(value, index)
+            if (type(val) == "List") {
+                for (val, i, v) {
+                    new.append(v)
+                }
+            } else {
+                new.append(val)
+            }
+        }
+    } else if (arity == 3) {
+        for (list, index, value) {
+            var val = func(value, index, list)
+            if (type(val) == "List") {
+                for (val, i, v) {
+                    new.append(v)
+                }
+            } else {
+                new.append(val)
+            }
+        }
+    } else {
+        print("Function 'flatmap' expects a function with an arity of either 1, 2 or 3\n")
+        exit(1)
+    }
+
+    return new
+}
+
+const filter = (list, func) => {
+    var new = []
+    const arity = func.info().arity
+    if (arity == 1) {
+        for (list, index, value) {
+            if (func(value)) {
+                new.append(value)
+            }
+        }
+    } else if (arity == 2) {
+        for (list, index, value) {
+            if (func(value, index)) {
+                new.append(value)
+            }
+        }
+    } else if (arity == 3) {
+        for (list, index, value) {
+            if (func(value, index, list)) {
+                new.append(value)
+            }
+        }
+    } else {
+        print("Function 'filter' expects a function with an arity of either 1, 2 or 3\n")
+        exit(1)
+    }
+
+    return new
+}
+
+const reduce = (list, func) => {
+    var res
+    const arity = func.info().arity
+    if (arity != 2) {
+        print("Function 'reduce' expects a function with an arity of 2\n")
+        exit(1)
+    }
+
+    if (list.length() < 2) {
+        return list
+    }
+
+    for (0..(list.length()-1), index) {
+        if (index == 0) {
+            res = func(list[index], list[index+1])
+        } else {
+            res = func(res, list[index+1])
+        }
+    }
+
+    return res
+}
+
+const find = (list, func) => {
+    const arity = func.info().arity
+    if (arity == 1) {
+        for (list, index, value) {
+            if (func(value)) {
+                return value
+            }
+        }
+    } else if (arity == 2) {
+        for (list, index, value) {
+            if (func(value, index)) {
+                return value
+            }
+        }
+    } else if (arity == 3) {
+        for (list, index, value) {
+            if (func(value, index, list)) {
+                return value
+            }
+        }
+    } else {
+        print("Function 'find' expects a function with an arity of either 1, 2 or 3\n")
+        exit(1)
+    }
+}
+
+const forEach = (list, func) => {
+    const arity = func.info().arity
+    if (arity == 1) {
+        for (list, index, value) {
+            func(value)
+        }
+    } else if (arity == 2) {
+        for (list, index, value) {
+            func(value, index)
+        }
+    } else if (arity == 3) {
+        for (list, index, value) {
+            func(value, index, list)
+        }
+    } else {
+        print("Function 'forEach' expects a function with an arity of either 1, 2 or 3\n")
+        exit(1)
+    }
+}
+
+const indexOf = (list, value) => {
+    for (list, index, v) {
+        if (v == value) {
+            return index
+        }
+    }
+
+    return (-1)
+}
+
+const chain = (value, func) => {
+    if (func.type() != "Function") {
+        sys.error("Function 'chain' expects parameter 'func' to be a function")
+    }
+    return func(value)
+}
