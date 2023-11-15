@@ -8,6 +8,30 @@ It heavily relies on side effects, and as such it would fall under the Dysfuncti
 
 Vortex is a dynamically typed programming language that comes with C interoperability out of the box.
 
+## Start Using Vortex Now
+
+If you want to start using Vortex straight away, we've pre-compiled the intepreter and standard library modules for an easy to use seamless experience. Running the below will create a self contained scaffold in the current directory that includes everything you need to run Vortex programs, namely:
+
+- The Vortex interpreter
+- Vortex standard library modules
+- Vortex config file
+- Basic source directory scaffold
+- A run script to launch your application
+
+If you wish to make changes to the scaffolded directory, make sure to update the config file to point to the correct entry point.
+
+To run the program, simply call `./run` in the root directory. This will launch the intepreter with the provided entry point.
+
+**Please note, the precompiled version is currently only available on Mac.**
+
+To create an isolated self contained Vortex environment, simply cd into your desired directory and run the following code:
+
+```bash
+brew install dibsonthis/vortex-scaffold/vortex-scaffold;
+cp -r /opt/homebrew/Cellar/vortex-scaffold/1.0/* .;
+rm INSTALL_RECEIPT.json;
+```
+
 ## Features
 
 Alongside the standard functionality that most programming languages provide (eg. branching, loops, lists, objects etc.), Vortex also provides:
@@ -107,13 +131,7 @@ const res = PI * e + fib(20)
 
 Vortex's imports use relative paths to retrieve modules.
 
-## How to start using Vortex
-
-If you want to start using Vortex straight away, we've pre-compiled the intepreter and standard library modules for an easy to use seamless experience. Running the below will create a self contained scaffold in the current directory that includes everything you need to run Vortex programs:
-
-`brew install dibsonthis/vortex-scaffold/vortex-scaffold;
-cp -r /opt/homebrew/Cellar/vortex-scaffold/1.0/* .;
-rm INSTALL_RECEIPT.json;`
+## How to compile and use Vortex
 
 Clone the repo.
 
