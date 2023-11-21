@@ -1,4 +1,4 @@
-!/bin/sh
+#!/bin/sh
 
 LIBS=""
 
@@ -24,7 +24,7 @@ fi
 CONFIG=""
 
 if [ "$FILE" = "sdl" ]; then
-    CONFIG="-D_THREAD_SAFE -framework GLUT -framework OpenGL $FILE/include/SDL2/*.cpp -lSDL2_image"
+    CONFIG="-D_THREAD_SAFE -framework GLUT -framework OpenGL $FILE/include/SDL2/*.cpp -lSDL_image"
 elif [ "$FILE" = "requests" ]; then
     CONFIG="-framework CoreFoundation -framework Security"
 elif [ "$FILE" = "sqlite" ]; then
@@ -53,7 +53,7 @@ done
 
 cp -r Modules/modules bin/build/modules/mac
 
-cd bin/build/modules/mac
+pushd bin/build/modules/mac
 
 for FILE in *;
 do
@@ -62,3 +62,5 @@ rm -r $FILE/include
 rm "$FILE/$FILE.cpp"
 
 done
+
+popd
