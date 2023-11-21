@@ -55,16 +55,10 @@ popd
 
 cp -r Modules/modules bin/build/modules/mac
 
-pushd "bin/build/modules/mac"
-
-echo $PWD
-
-for _FILE in *;
+for _FILE in bin/build/modules/mac/*;
 do
 
 rm -r $_FILE/include
 rm "$_FILE/$_FILE.cpp"
 
 done
-
-popd
