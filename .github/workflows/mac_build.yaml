@@ -42,5 +42,5 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ steps.upload-artifacts.outputs.artifact }}
-        path: ${{ steps.upload-artifacts.outputs.artifact }}
+        name: ${{ steps.modules.outputs.artifact }}
+        path: ${{ steps.modules.outputs.artifact }}
