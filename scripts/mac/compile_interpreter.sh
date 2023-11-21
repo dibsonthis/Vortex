@@ -10,7 +10,6 @@ clang++ \
 src/Node/Node.cpp \
 src/Lexer/Lexer.cpp \
 src/Parser/Parser.cpp \
-src/Interpreter/Interpreter.cpp \
 src/Typechecker/Typechecker.cpp \
 src/Bytecode/Bytecode.cpp \
 src/Bytecode/Generator.cpp \
