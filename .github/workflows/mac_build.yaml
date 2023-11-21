@@ -3,27 +3,44 @@ name: Mac Build
 on: workflow_dispatch
 
 jobs:
-  build:
+  interpreter:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
-
-    # - name: Set up C++ compiler
-    #   uses: actions/setup-cpp@v2
-    #   with:
-    #     compiler: 'clang'
+      uses: actions/checkout@v3
 
     - name: Compile Interpreter
       run: scripts/mac/compile_interpreter.sh
 
-    # - name: Create Zip Archive
-    #   run: |
-    #     zip -r executable.zip bin/build/interp/mac/vortex
-
     - name: Upload Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: interpreter
         path: bin/build/interp/mac/vortex
+  modules:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Compile Modules
+      run: scripts/mac/compile_modules.sh
+
+    - name: List modules
+      run: |
+        for module in bin/build/modules/mac/*; do
+          if [ -d "$module" ]; then
+            echo "Uploading $module as artifact"
+            name=$(basename "$module")
+            cp -r "$module" "$GITHUB_WORKSPACE/$name"
+            echo "::set-output name=artifact::$GITHUB_WORKSPACE/$name"
+          fi
+        done
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ steps.upload-artifacts.outputs.artifact }}
+        path: ${{ steps.upload-artifacts.outputs.artifact }}
