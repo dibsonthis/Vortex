@@ -59,14 +59,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: [interpreter, modules]
     steps:
-
     - name: Create release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref_name }}
-        run: |
-          cp bin/build/interp/mac/vortex bin/build/modules/mac
-          gh release create "$tag" bin/build/modules/mac/* \
-              --repo="$GITHUB_REPOSITORY" \
-              --title="Vortex-Mac-${tag#v}" \
-              --generate-notes
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ github.ref_name }}
+      run: |
+        cp bin/build/interp/mac/vortex bin/build/modules/mac
+        gh release create "$tag" bin/build/modules/mac/* \
+            --repo="$GITHUB_REPOSITORY" \
+            --title="Vortex-Mac-${tag#v}" \
+            --generate-notes
