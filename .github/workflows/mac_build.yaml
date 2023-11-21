@@ -4,7 +4,7 @@ on: workflow_dispatch
 
 jobs:
   interpreter:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
     - name: Checkout repository
@@ -19,7 +19,7 @@ jobs:
         name: interpreter
         path: bin/build/interp/mac/vortex
   modules:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
     - name: Checkout repository
@@ -29,6 +29,7 @@ jobs:
       run: scripts/mac/compile_modules.sh
 
     - name: List modules
+      id: modules
       run: |
         for module in bin/build/modules/mac/*; do
           if [ -d "$module" ]; then
