@@ -1,11 +1,14 @@
-#!/bin/sh
+!/bin/sh
 
 LIBS=""
 
-cd modules
+rm -r ../../bin/build/modules/mac
+mkdir -p ../../bin/build/modules/mac
+cd ../../Modules/modules
 for FILE in *; 
 do
 
+rm -r $FILE/bin
 mkdir $FILE/bin
 mkdir $FILE/lib
 mkdir $FILE/include
@@ -44,5 +47,17 @@ $LIBS \
 $FILE/$FILE.cpp  \
 -o $FILE/bin/$FILE \
 -Wl,-rpath,@loader_path/../lib
+
+done
+
+cp -r . ../../bin/build/modules/mac
+
+cd ../../bin/build/modules/mac
+
+for FILE in *;
+do
+
+rm -r $FILE/include
+rm "$FILE/$FILE.cpp"
 
 done

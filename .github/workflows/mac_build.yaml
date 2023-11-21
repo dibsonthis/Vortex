@@ -1,0 +1,29 @@
+name: Mac Build
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up C++ compiler
+      uses: actions/setup-cpp@v2
+      with:
+        compiler: 'clang'
+
+    - name: Build
+      run: scripts/mac/compile_interpreter.sh
+
+    # - name: Create Zip Archive
+    #   run: |
+    #     zip -r executable.zip bin/build/interp/mac/vortex
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: interpreter
+        path: bin/build/interp/mac/vortex
