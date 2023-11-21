@@ -2,9 +2,9 @@
 
 LIBS=""
 
-rm -r ../../bin/build/modules/mac
-mkdir -p ../../bin/build/modules/mac
-cd ../../Modules/modules
+rm -r bin/build/modules/mac
+mkdir -p bin/build/modules/mac
+cd Modules/modules
 for FILE in *; 
 do
 
@@ -50,7 +50,7 @@ $FILE/$FILE.cpp  \
 
 done
 
-cp -r . ../../bin/build/modules/mac
+cp -r Modules/modules bin/build/modules/mac
 
 cd ../../bin/build/modules/mac
 
