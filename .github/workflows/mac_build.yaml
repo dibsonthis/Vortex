@@ -10,10 +10,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Set up C++ compiler
-      uses: actions/setup-cpp@v2
-      with:
-        compiler: 'clang'
+    # - name: Set up C++ compiler
+    #   uses: actions/setup-cpp@v2
+    #   with:
+    #     compiler: 'clang'
 
     - name: Build
       run: scripts/mac/compile_interpreter.sh
