@@ -4,8 +4,8 @@ LIBS=""
 
 rm -r bin/build/modules/mac
 mkdir -p bin/build/modules/mac
-# pushd Modules/modules
-for FILE in Modules/modules; 
+cd Modules/modules
+for FILE in *; 
 do
 
 rm -r $FILE/bin
@@ -51,14 +51,18 @@ $FILE/$FILE.cpp  \
 
 done
 
-# popd
+cd ../..
 
 cp -r Modules/modules bin/build/modules/mac
 
-for _FILE in bin/build/modules/mac/*;
+cd bin/build/modules/mac
+
+for _FILE in *;
 do
 
 rm -r $_FILE/include
 rm "$_FILE/$_FILE.cpp"
 
 done
+
+cd ../../../..
