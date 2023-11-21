@@ -44,4 +44,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: modules
-        path: bin/build/modules/*
+        path: bin/build/modules/mac/**/*
