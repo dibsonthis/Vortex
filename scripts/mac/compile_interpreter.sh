@@ -1,7 +1,7 @@
 #!/bin/sh
 
 rm -r bin/build/interp/mac
-mkdir -p bin/build/interp/mac/vortex
+mkdir -p bin/build/interp/mac
 
 clang++ \
 -Ofast \

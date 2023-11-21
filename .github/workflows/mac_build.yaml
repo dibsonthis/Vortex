@@ -15,7 +15,7 @@ jobs:
     #   with:
     #     compiler: 'clang'
 
-    - name: Build
+    - name: Compile Interpreter
       run: scripts/mac/compile_interpreter.sh
 
     # - name: Create Zip Archive
