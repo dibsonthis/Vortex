@@ -3,7 +3,7 @@ name: Mac Build
 on: workflow_dispatch
 
 jobs:
-  interpreter:
+  compile:
     runs-on: macos-13
 
     steps:
@@ -18,12 +18,6 @@ jobs:
       with:
         name: interpreter
         path: bin/build/interp/mac/vortex
-  modules:
-    runs-on: macos-13
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
 
     - name: Download SDL stuff
       run: | 
@@ -55,10 +49,6 @@ jobs:
         name: modules
         path: bin/build/modules/mac/**/*
 
-  release:
-    runs-on: ubuntu-latest
-    needs: [interpreter, modules]
-    steps:
     - name: Create release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -68,4 +58,4 @@ jobs:
         gh release create "$tag" bin/build/modules/mac/* \
             --repo="$GITHUB_REPOSITORY" \
             --title="Vortex-Mac-${tag#v}" \
-            --generate-notes
+            --generate-notes   
