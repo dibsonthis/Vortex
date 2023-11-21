@@ -34,6 +34,7 @@ else
 fi
 
 clang++ \
+-fPIC \
 -dynamiclib \
 -shared \
 -Ofast \
@@ -52,7 +53,7 @@ done
 
 cp -r Modules/modules bin/build/modules/mac
 
-cd ../../bin/build/modules/mac
+cd bin/build/modules/mac
 
 for FILE in *;
 do

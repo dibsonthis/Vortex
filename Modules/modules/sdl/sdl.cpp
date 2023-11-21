@@ -1,6 +1,13 @@
 #include "include/Vortex.hpp"
+
+#if defined(__APPLE__)
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
+#else
+#include <GL/gl.h>
+#include <GL/glu.h>
+#endif
+
 #include <GLUT/glut.h>
 #include "include/SDL2/SDL.h"
 #include "include/SDL2/SDL_Image.h"
