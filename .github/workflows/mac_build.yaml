@@ -27,9 +27,24 @@ jobs:
 
     - name: Download SDL stuff
       run: | 
+        brew install sdl2;
         brew install sdl2_image;
         brew install sdl2_ttf;
         brew install sdl2_mixer;
+
+        rm -r Modules/modules/sdl/lib/*
+
+        cp /usr/local/Cellar/sdl2/*/lib/*.dylib Modules/modules/sdl/lib
+        cp /usr/local/Cellar/sdl2/*/lib/*.a Modules/modules/sdl/lib
+
+        cp /usr/local/Cellar/sdl2_image/*/lib/*.dylib Modules/modules/sdl/lib
+        cp /usr/local/Cellar/sdl2_image/*/lib/*.a Modules/modules/sdl/lib
+
+        cp /usr/local/Cellar/sdl2_ttf/*/lib/*.dylib Modules/modules/sdl/lib
+        cp /usr/local/Cellar/sdl2_ttf/*/lib/*.a Modules/modules/sdl/lib
+
+        cp /usr/local/Cellar/sdl2_mixer/*/lib/*.dylib Modules/modules/sdl/lib
+        cp /usr/local/Cellar/sdl2_mixer/*/lib/*.a Modules/modules/sdl/lib
 
     - name: Compile Modules
       run: scripts/mac/compile_modules.sh
