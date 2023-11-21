@@ -4,7 +4,7 @@ on: workflow_dispatch
 
 jobs:
   interpreter:
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
     - name: Checkout repository
@@ -19,17 +19,17 @@ jobs:
         name: interpreter
         path: bin/build/interp/mac/vortex
   modules:
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Download SDL stuff
-      run: | 
-        brew install sdl2;
-        brew install sdl2_image;
-        brew install sdl2_ttf;
+    # - name: Download SDL stuff
+    #   run: | 
+    #     brew install sdl2;
+    #     brew install sdl2_image;
+    #     brew install sdl2_ttf;
 
     - name: Compile Modules
       run: scripts/mac/compile_modules.sh
