@@ -27,9 +27,9 @@ jobs:
 
     - name: Download SDL stuff
       run: | 
-      brew install sdl2;
-      brew install sdl2_image;
-      brew install sdl2_ttf;
+        brew install sdl2;
+        brew install sdl2_image;
+        brew install sdl2_ttf;
 
     - name: Compile Modules
       run: scripts/mac/compile_modules.sh
