@@ -4,7 +4,7 @@ LIBS=""
 
 rm -r bin/build/modules/mac
 mkdir -p bin/build/modules/mac
-cd Modules/modules
+pushd Modules/modules
 for FILE in *; 
 do
 
@@ -50,6 +50,8 @@ $FILE/$FILE.cpp  \
 -Wl,-rpath,@loader_path/../lib
 
 done
+
+popd
 
 cp -r Modules/modules bin/build/modules/mac
 
