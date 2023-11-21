@@ -1,4 +1,4 @@
-#!/bin/sh
+!/bin/sh
 
 LIBS=""
 
@@ -55,13 +55,15 @@ popd
 
 cp -r Modules/modules bin/build/modules/mac
 
-pushd bin/build/modules/mac
+pushd "bin/build/modules/mac"
 
-for FILE in *;
+echo $PWD
+
+for _FILE in *;
 do
 
-rm -r $FILE/include
-rm "$FILE/$FILE.cpp"
+rm -r $_FILE/include
+rm "$_FILE/$_FILE.cpp"
 
 done
 
