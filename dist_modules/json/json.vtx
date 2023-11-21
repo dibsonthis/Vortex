@@ -1,4 +1,0 @@
-const lib = load_lib("./bin/json", ["parse", "serialize"])
-
-const parse = (jsonStr) => lib.parse(jsonStr)
-const serialize = (jsonObj) => lib.serialize(jsonObj)
