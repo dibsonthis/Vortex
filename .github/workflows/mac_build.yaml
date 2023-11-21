@@ -25,20 +25,14 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    - name: Download SDL stuff
+      run: | 
+      brew install sdl2;
+      brew install sdl2_image;
+      brew install sdl2_ttf;
+
     - name: Compile Modules
       run: scripts/mac/compile_modules.sh
-
-    # - name: List modules
-    #   id: modules
-    #   run: |
-    #     for module in bin/build/modules/mac/*; do
-    #       if [ -d "$module" ]; then
-    #         echo "Uploading $module as artifact"
-    #         name=$(basename "$module")
-    #         cp -r "$module" "$GITHUB_WORKSPACE/$name"
-    #         echo "::set-output name=artifact::$GITHUB_WORKSPACE/$name"
-    #       fi
-    #     done
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
