@@ -1,10 +1,10 @@
-#!/bin/sh
+!/bin/sh
 
 LIBS=""
 
 rm -r bin/build/modules/mac
 mkdir -p bin/build/modules/mac
-cd Modules/modules
+pushd Modules/modules
 for FILE in *; 
 do
 
@@ -51,11 +51,14 @@ $FILE/$FILE.cpp  \
 
 done
 
-cd ../..
+popd
 
-cp -r Modules/modules bin/build/modules/mac
+cp -r Modules/modules/* bin/build/modules/mac
 
-cd bin/build/modules/mac
+pushd bin/build/modules/mac
+
+echo $PWD
+ls $PWD
 
 for _FILE in *;
 do
@@ -65,4 +68,4 @@ rm "$_FILE/$_FILE.cpp"
 
 done
 
-cd ../../../..
+popd
