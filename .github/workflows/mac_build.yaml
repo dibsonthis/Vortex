@@ -5,6 +5,7 @@ on:
     inputs:
       tag:
         description: 'tag'
+        default: '1.0'
         required: true
         type: string
 
@@ -70,7 +71,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh release create "$tag" dist/* \
+        gh release create ${{ inputs.tag }} dist/* \
             --repo="$GITHUB_REPOSITORY" \
             --title="Vortex-Mac-${tag#v}" \
             --generate-notes \
