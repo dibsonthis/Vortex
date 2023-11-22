@@ -49,13 +49,24 @@ jobs:
         name: modules
         path: bin/build/modules/mac/**/*
 
+    - name: Create dist folder
+      run: |
+        mkdir -p dist/modules
+        cp bin/build/interp/mac/vortex dist
+        pushd bin/build/modules/mac
+        for module in *; 
+        do 
+        zip ${module}.zip $module;
+        mv ${module}.zip dist/modules
+        done
+        popd
+
     - name: Create release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ github.ref_name }}
       run: |
-        cp bin/build/interp/mac/vortex bin/build/modules/mac
-        gh release create "$tag" bin/build/modules/mac/* \
+        gh release create "$tag" dist/* \
             --repo="$GITHUB_REPOSITORY" \
             --title="Vortex-Mac-${tag#v}" \
             --generate-notes   

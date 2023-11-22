@@ -57,8 +57,6 @@ cp -r Modules/modules/* bin/build/modules/mac
 
 pushd bin/build/modules/mac
 
-echo $PWD
-
 for _FILE in *;
 do
 
