@@ -51,13 +51,13 @@ jobs:
 
     - name: Create dist folder
       run: |
-        mkdir -p dist/modules
+        mkdir -p dist
         cp bin/build/interp/mac/vortex dist
         for module in bin/build/modules/mac/*; 
         do
         m=$(basename $module)
         zip -r -y ${m}.zip bin/build/modules/mac/${m};
-        mv ${m}.zip dist/modules
+        mv ${m}.zip dist
         done
 
     - name: Create release
