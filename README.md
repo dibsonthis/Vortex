@@ -27,9 +27,7 @@ To run the program, simply call `./run` in the root directory. This will launch 
 To create an isolated self contained Vortex environment, simply cd into your desired directory and run the following code:
 
 ```bash
-brew install dibsonthis/vortex-scaffold/vortex-scaffold;
-cp -r /opt/homebrew/Cellar/vortex-scaffold/1.0/* .;
-rm INSTALL_RECEIPT.json;
+curl https://raw.githubusercontent.com/dibsonthis/vortex-dist/main/mac/scaffold | bash
 ```
 
 ## Features
