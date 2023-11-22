@@ -68,4 +68,5 @@ jobs:
         gh release create "$tag" dist/* \
             --repo="$GITHUB_REPOSITORY" \
             --title="Vortex-Mac-${tag#v}" \
-            --generate-notes   
+            --generate-notes \
+            --latest
