@@ -56,7 +56,7 @@ jobs:
         for module in bin/build/modules/mac/*; 
         do
         m=$(basename $module)
-        zip ${m}.zip $m;
+        zip -r ${m}.zip $m;
         mv ${m}.zip dist/modules
         done
 
