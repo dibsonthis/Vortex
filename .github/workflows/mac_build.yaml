@@ -62,8 +62,8 @@ jobs:
         for module in bin/build/modules/mac/*; 
         do
         m=$(basename $module)
-        zip -r -y -j ${m}.zip bin/build/modules/mac/${m};
-        mv ${m}.zip dist
+        zip -r -y $(basename m).zip bin/build/modules/mac/${m};
+        mv $(basename m).zip dist
         done
 
     - name: Create release
