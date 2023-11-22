@@ -1,6 +1,13 @@
 name: Mac Build
 
-on: workflow_dispatch
+on: 
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'tag'
+        required: true
+        default: 'warning'
+        type: string
 
 jobs:
   compile:
@@ -63,7 +70,6 @@ jobs:
     - name: Create release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        tag: ${{ github.ref_name }}
       run: |
         gh release create "$tag" dist/* \
             --repo="$GITHUB_REPOSITORY" \
