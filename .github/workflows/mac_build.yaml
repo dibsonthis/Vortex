@@ -53,13 +53,12 @@ jobs:
       run: |
         mkdir -p dist/modules
         cp bin/build/interp/mac/vortex dist
-        pushd bin/build/modules/mac
-        for module in *; 
-        do 
-        zip ${module}.zip $module;
-        mv ${module}.zip dist/modules
+        for module in bin/build/modules/mac/*; 
+        do
+        m=$(basename $module)
+        zip ${m}.zip $m;
+        mv ${m}.zip dist/modules
         done
-        popd
 
     - name: Create release
       env:
