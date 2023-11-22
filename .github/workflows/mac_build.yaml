@@ -3,10 +3,9 @@ name: Mac Build
 on: 
   workflow_dispatch:
     inputs:
-      logLevel:
+      tag:
         description: 'tag'
         required: true
-        default: 'warning'
         type: string
 
 jobs:
