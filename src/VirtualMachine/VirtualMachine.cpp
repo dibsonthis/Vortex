@@ -1239,7 +1239,7 @@ static EvaluateResult run(VM &vm)
 
                     std::filesystem::current_path(current_path);
 
-                    for (int i = 0; i < import_vm.frames[0].function->chunk.variables.size(); i++)
+                    for (int i = 0; i < import_vm.frames[0].function->chunk.public_variables.size(); i++)
                     {
                         auto &var = import_vm.frames[0].function->chunk.variables[i];
                         define_global(vm, var, import_vm.stack[i]);
@@ -1309,7 +1309,7 @@ static EvaluateResult run(VM &vm)
 
                     Value import_obj = object_val();
                     auto &obj = import_obj.get_object();
-                    for (int i = 0; i < import_vm.frames[0].function->chunk.variables.size(); i++)
+                    for (int i = 0; i < import_vm.frames[0].function->chunk.public_variables.size(); i++)
                     {
                         auto &var = import_vm.frames[0].function->chunk.variables[i];
                         obj->values[var] = import_vm.stack[i];
@@ -1393,7 +1393,7 @@ static EvaluateResult run(VM &vm)
                 for (auto &name : names)
                 {
                     bool found = false;
-                    for (int i = 0; i < import_vm.frames[0].function->chunk.variables.size(); i++)
+                    for (int i = 0; i < import_vm.frames[0].function->chunk.public_variables.size(); i++)
                     {
                         if (name == import_vm.frames[0].function->chunk.variables[i])
                         {

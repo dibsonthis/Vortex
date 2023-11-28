@@ -1,0 +1,21 @@
+import io
+import [] : string
+
+const split_input = ["100", "200", "", "300"]
+
+const totals = []
+
+var total = 0
+
+for (split_input, index, value) {
+    if (value == "") {
+        totals.append(total)
+        total = 0
+    } else {
+        total += number(value)
+    }
+}
+
+totals.append(total)
+
+const answer = totals

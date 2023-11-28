@@ -505,18 +505,18 @@ void gen_for_loop(Chunk &chunk, node_ptr node)
         begin_scope();
 
         add_constant_code(chunk, number_val(0));
-        declareVariable(node->_Node.ForLoop().index_name->_Node.ID().value);
+        declareVariable(node->_Node.ForLoop().index_name->_Node.ID().value, false, true);
 
         if (node->_Node.ForLoop().value_name)
         {
             generate(node->_Node.ForLoop().start, chunk);
-            declareVariable(node->_Node.ForLoop().value_name->_Node.ID().value);
+            declareVariable(node->_Node.ForLoop().value_name->_Node.ID().value, false, true);
         }
 
         generate(node->_Node.ForLoop().end, chunk);
         generate(node->_Node.ForLoop().start, chunk);
         add_code(chunk, OP_SUBTRACT, node->line);
-        declareVariable("___size___");
+        declareVariable("___size___", false, true);
 
         int loop_start = chunk.code.size() - 1;
 
@@ -565,22 +565,22 @@ void gen_for_loop(Chunk &chunk, node_ptr node)
         begin_scope();
 
         add_constant_code(chunk, number_val(0));
-        declareVariable(node->_Node.ForLoop().index_name->_Node.ID().value);
+        declareVariable(node->_Node.ForLoop().index_name->_Node.ID().value, false, true);
 
         generate(node->_Node.ForLoop().iterator, chunk);
-        declareVariable("___iter___");
+        declareVariable("___iter___", false, true);
 
         if (node->_Node.ForLoop().value_name)
         {
             add_opcode(chunk, OP_LOAD, resolve_variable("___iter___"), node->line);
             add_constant_code(chunk, number_val(0));
             add_opcode(chunk, OP_ACCESSOR, 0, node->line);
-            declareVariable(node->_Node.ForLoop().value_name->_Node.ID().value);
+            declareVariable(node->_Node.ForLoop().value_name->_Node.ID().value, false, true);
         }
 
         add_opcode(chunk, OP_LOAD, resolve_variable("___iter___"), node->line);
         add_code(chunk, OP_LEN, node->line);
-        declareVariable("___size___");
+        declareVariable("___size___", false, true);
 
         add_opcode(chunk, OP_LOAD, resolve_variable("___size___"));
         add_constant_code(chunk, number_val(0), node->line);
@@ -1569,7 +1569,18 @@ void generate_bytecode(std::vector<node_ptr> &nodes, Chunk &chunk)
 
     for (Variable &var : current->variables)
     {
-        chunk.variables.push_back(var.name);
+        if (!var.is_internal)
+        {
+            if (std::find(chunk.public_variables.begin(), chunk.public_variables.end(), var.name) == chunk.public_variables.end())
+            {
+                chunk.public_variables.push_back(var.name);
+            }
+        }
+
+        if (std::find(chunk.variables.begin(), chunk.variables.end(), var.name) == chunk.variables.end())
+        {
+            chunk.variables.push_back(var.name);
+        }
     }
 }
 
@@ -1591,17 +1602,31 @@ static void end_scope(Chunk &chunk)
     }
 }
 
-static void addVariable(std::string name, bool is_const)
+static void addVariable(std::string name, bool is_const, bool is_internal)
 {
     current->variableCount++;
     Variable variable;
     variable.name = name;
     variable.depth = current->scopeDepth;
     variable.is_const = is_const;
+    variable.is_internal = is_internal;
+
     current->variables.push_back(variable);
 }
 
-static void declareVariable(std::string name, bool is_const)
+static void removeVariable(std::string name)
+{
+    current->variableCount--;
+    for (int i = 0; i < current->variables.size(); i++)
+    {
+        if (current->variables[i].name == name)
+        {
+            current->variables.erase(current->variables.begin() + i);
+        }
+    }
+}
+
+static void declareVariable(std::string name, bool is_const, bool is_internal)
 {
 
     for (int i = current->variableCount - 1; i >= 0; i--)
@@ -1618,7 +1643,7 @@ static void declareVariable(std::string name, bool is_const)
         }
     }
 
-    addVariable(name, is_const);
+    addVariable(name, is_const, is_internal);
 }
 
 static int resolve_variable(std::string name)

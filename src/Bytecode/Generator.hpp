@@ -8,6 +8,7 @@ struct Variable
     std::string name;
     int depth = 0;
     bool is_const = false;
+    bool is_internal = false;
 };
 
 struct Compiler
@@ -74,9 +75,10 @@ void generate_bytecode(std::vector<node_ptr> &nodes, Chunk &chunk);
 static void begin_scope();
 static void end_scope(Chunk &chunk);
 
-static void addVariable(std::string name, bool is_const);
+static void addVariable(std::string name, bool is_const, bool is_internal = false);
+static void removeVariable(std::string name);
 
-static void declareVariable(std::string name, bool is_const = false);
+static void declareVariable(std::string name, bool is_const = false, bool is_internal = false);
 
 static int resolve_variable(std::string name);
 static int resolve_closure(std::string name);
