@@ -1241,7 +1241,7 @@ static EvaluateResult run(VM &vm)
 
                     for (int i = 0; i < import_vm.frames[0].function->chunk.public_variables.size(); i++)
                     {
-                        auto &var = import_vm.frames[0].function->chunk.variables[i];
+                        auto &var = import_vm.frames[0].function->chunk.public_variables[i];
                         define_global(vm, var, import_vm.stack[i]);
                     }
 
@@ -1311,7 +1311,7 @@ static EvaluateResult run(VM &vm)
                     auto &obj = import_obj.get_object();
                     for (int i = 0; i < import_vm.frames[0].function->chunk.public_variables.size(); i++)
                     {
-                        auto &var = import_vm.frames[0].function->chunk.variables[i];
+                        auto &var = import_vm.frames[0].function->chunk.public_variables[i];
                         obj->values[var] = import_vm.stack[i];
                         obj->keys.push_back(var);
                     }
@@ -1395,7 +1395,7 @@ static EvaluateResult run(VM &vm)
                     bool found = false;
                     for (int i = 0; i < import_vm.frames[0].function->chunk.public_variables.size(); i++)
                     {
-                        if (name == import_vm.frames[0].function->chunk.variables[i])
+                        if (name == import_vm.frames[0].function->chunk.public_variables[i])
                         {
                             push(vm, import_vm.stack[i]);
                             found = true;
