@@ -1596,8 +1596,13 @@ static void end_scope(Chunk &chunk)
     while (current->variableCount > 0 && current->variables[current->variableCount - 1].depth > current->scopeDepth)
     {
         add_code(chunk, OP_POP);
+        std::string var = chunk.variables.back();
+        chunk.variables.pop_back();
+        if (chunk.public_variables.back() == var)
+        {
+            chunk.public_variables.pop_back();
+        }
         current->variables.erase(current->variables.begin() + current->variableCount - 1);
-        // chunk.variables.pop_back();
         current->variableCount--;
     }
 }
@@ -1612,18 +1617,6 @@ static void addVariable(std::string name, bool is_const, bool is_internal)
     variable.is_internal = is_internal;
 
     current->variables.push_back(variable);
-}
-
-static void removeVariable(std::string name)
-{
-    current->variableCount--;
-    for (int i = 0; i < current->variables.size(); i++)
-    {
-        if (current->variables[i].name == name)
-        {
-            current->variables.erase(current->variables.begin() + i);
-        }
-    }
 }
 
 static void declareVariable(std::string name, bool is_const, bool is_internal)

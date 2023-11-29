@@ -12,8 +12,6 @@ macBuild()
     "$PWD"/src/Node/Node.cpp \
     "$PWD"/src/Lexer/Lexer.cpp \
     "$PWD"/src/Parser/Parser.cpp \
-    "$PWD"/src/Interpreter/Interpreter.cpp \
-    "$PWD"/src/Typechecker/Typechecker.cpp \
     "$PWD"/src/Bytecode/Bytecode.cpp \
     "$PWD"/src/Bytecode/Generator.cpp \
     "$PWD"/src/VirtualMachine/VirtualMachine.cpp \
@@ -47,8 +45,6 @@ linBuild()
     "$PWD"/src/Node/Node.cpp \
     "$PWD"/src/Lexer/Lexer.cpp \
     "$PWD"/src/Parser/Parser.cpp \
-    "$PWD"/src/Interpreter/Interpreter.cpp \
-    "$PWD"/src/Typechecker/Typechecker.cpp \
     "$PWD"/src/Bytecode/Bytecode.cpp \
     "$PWD"/src/Bytecode/Generator.cpp \
     "$PWD"/src/VirtualMachine/VirtualMachine.cpp \

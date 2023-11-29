@@ -1,21 +1,60 @@
 import io
 import [] : string
+import [] : functional
 
-const split_input = ["100", "200", "", "300"]
+const last = (ls) => ls[ls.length()-1]
 
-const totals = []
+const pop = (stack) => {
+    const value = stack.last()
+    stack.remove(stack.length()-1)
+    return value
+}
 
-var total = 0
+const input = io.readf("input.txt").split("\n\n")
+var crate_setup = input[0]
+const instructions = input[1]
 
-for (split_input, index, value) {
-    if (value == "") {
-        totals.append(total)
-        total = 0
-    } else {
-        total += number(value)
+crate_setup = crate_setup.split("\n").map((e) => e.replaceAll("    ", " ").split(" "))
+
+const number_of_stacks = crate_setup[0].length()
+
+var stacks = []
+
+for (0..number_of_stacks) {
+    stacks.append([])
+}
+
+for (crate_setup, i, row) {
+    if (i < number_of_stacks) {
+        for (row, j, v) {
+            if (v != "") {
+                stacks[j].append(v[1])
+            }
+        }
     }
 }
 
-totals.append(total)
+const instruction_codes = 
+    instructions
+    .split("\n")
+    .map((e) => e
+            .replaceAll("move ", "")
+            .replaceAll(" from", "")
+            .replaceAll(" to", "")
+            .split(" "))
 
-const answer = totals
+for (instruction_codes, index, code) {
+    const count = code[0].number()
+    const from_index = code[1].number()-1
+    const to_index = code[2].number()-1
+
+    for (0..count) {
+        const value = stacks[from_index].pop()
+        println(value)
+        stacks[to_index].append(value)
+    }
+}
+
+println(stacks)
+
+const answer = () => stacks

@@ -76,8 +76,6 @@ static void begin_scope();
 static void end_scope(Chunk &chunk);
 
 static void addVariable(std::string name, bool is_const, bool is_internal = false);
-static void removeVariable(std::string name);
-
 static void declareVariable(std::string name, bool is_const = false, bool is_internal = false);
 
 static int resolve_variable(std::string name);

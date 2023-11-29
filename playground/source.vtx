@@ -1,3 +1,19 @@
 import day1 : "test"
 
 println(day1)
+
+// const instruction_codes = []
+// const stacks = []
+// const pop = (stack) => 1
+
+// for (instruction_codes, index, code) {
+//     const count = code[0].number()
+//     const from_index = code[1].number()-1
+//     const to_index = code[2].number()-1
+
+//     for (0..count) {
+//         const value = stacks[from_index].pop()
+//         println(value)
+//         stacks[to_index].append(value)
+//     }
+// }
