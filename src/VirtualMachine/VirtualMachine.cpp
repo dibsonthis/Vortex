@@ -2094,7 +2094,7 @@ static Value remove_builtin(std::vector<Value> &args)
     int pos_num = pos.get_number();
     auto &ls = list.get_list();
 
-    if (pos_num < 0 || pos_num >= ls->size() - 1)
+    if (pos_num < 0 || pos_num >= ls->size())
     {
         return list;
     }
