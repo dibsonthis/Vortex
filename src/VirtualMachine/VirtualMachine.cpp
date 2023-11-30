@@ -269,6 +269,9 @@ static EvaluateResult run(VM &vm)
                 add_opcode(main->chunk, OP_CALL, 1, 0);
                 add_code(main->chunk, OP_EXIT, 0);
 
+                auto offsets = instruction_offsets(main_frame.function->chunk);
+                main_frame.function->instruction_offsets = offsets;
+
                 auto status = evaluate(func_vm);
 
                 if (status != 0)
@@ -343,6 +346,9 @@ static EvaluateResult run(VM &vm)
                     add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
                     add_opcode(main->chunk, OP_CALL, 1, 0);
                     add_code(main->chunk, OP_EXIT, 0);
+
+                    auto offsets = instruction_offsets(main_frame.function->chunk);
+                    main_frame.function->instruction_offsets = offsets;
 
                     auto status = evaluate(func_vm);
 
@@ -635,6 +641,9 @@ static EvaluateResult run(VM &vm)
                 add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
                 add_opcode(main->chunk, OP_CALL, 1, 0);
                 add_code(main->chunk, OP_EXIT, 0);
+
+                auto offsets = instruction_offsets(main_frame.function->chunk);
+                main_frame.function->instruction_offsets = offsets;
 
                 auto status = evaluate(func_vm);
 
@@ -1221,6 +1230,8 @@ static EvaluateResult run(VM &vm)
                     reset();
                     generate_bytecode(parser.nodes, main_frame.function->chunk);
                     add_code(main_frame.function->chunk, OP_EXIT);
+                    auto offsets = instruction_offsets(main_frame.function->chunk);
+                    main_frame.function->instruction_offsets = offsets;
                     evaluate(import_vm);
 
                     if (import_vm.status != 0)
@@ -1289,6 +1300,8 @@ static EvaluateResult run(VM &vm)
                     reset();
                     generate_bytecode(parser.nodes, main_frame.function->chunk);
                     add_code(main_frame.function->chunk, OP_EXIT);
+                    auto offsets = instruction_offsets(main_frame.function->chunk);
+                    main_frame.function->instruction_offsets = offsets;
                     evaluate(import_vm);
 
                     if (import_vm.status != 0)
@@ -1372,6 +1385,8 @@ static EvaluateResult run(VM &vm)
                 reset();
                 generate_bytecode(parser.nodes, main_frame.function->chunk);
                 add_code(main_frame.function->chunk, OP_EXIT);
+                auto offsets = instruction_offsets(main_frame.function->chunk);
+                main_frame.function->instruction_offsets = offsets;
                 evaluate(import_vm);
 
                 if (import_vm.status != 0)
