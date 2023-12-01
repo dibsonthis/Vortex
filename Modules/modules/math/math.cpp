@@ -1,16 +1,19 @@
 #include <cmath>
 #include "include/Vortex.hpp"
 
-extern "C" Value ceil_(std::vector<Value>& args) {
+extern "C" Value ceil_(std::vector<Value> &args)
+{
     int num_required_args = 1;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'ceil' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
 
-    if (!value.is_number()) {
+    if (!value.is_number())
+    {
         error("Parameter 'value' must be a number");
     }
 
@@ -18,16 +21,19 @@ extern "C" Value ceil_(std::vector<Value>& args) {
     return number_val(new_value);
 }
 
-extern "C" Value floor_(std::vector<Value>& args) {
+extern "C" Value floor_(std::vector<Value> &args)
+{
     int num_required_args = 1;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'floor' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
 
-    if (!value.is_number()) {
+    if (!value.is_number())
+    {
         error("Parameter 'value' must be a number");
     }
 
@@ -35,16 +41,19 @@ extern "C" Value floor_(std::vector<Value>& args) {
     return number_val(new_value);
 }
 
-extern "C" Value abs_(std::vector<Value>& args) {
+extern "C" Value abs_(std::vector<Value> &args)
+{
     int num_required_args = 1;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'abs' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
 
-    if (!value.is_number()) {
+    if (!value.is_number())
+    {
         error("Parameter 'value' must be a number");
     }
 
@@ -52,16 +61,19 @@ extern "C" Value abs_(std::vector<Value>& args) {
     return number_val(new_value);
 }
 
-extern "C" Value sqrt_(std::vector<Value>& args) {
+extern "C" Value sqrt_(std::vector<Value> &args)
+{
     int num_required_args = 1;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'sqrt' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
 
-    if (!value.is_number()) {
+    if (!value.is_number())
+    {
         error("Parameter 'value' must be a number");
     }
 
@@ -69,48 +81,60 @@ extern "C" Value sqrt_(std::vector<Value>& args) {
     return number_val(new_value);
 }
 
-extern "C" Value trunc_(std::vector<Value>& args) {
+extern "C" Value trunc_(std::vector<Value> &args)
+{
     int num_required_args = 1;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'trunc' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
 
-    if (!value.is_number()) {
+    if (!value.is_number())
+    {
         error("Parameter 'value' must be a number");
     }
 
     double num = value.get_number();
     double new_value;
 
-    if (num > 0) {
+    if (num > 0)
+    {
         new_value = std::floor(num);
-    } else if (num < 0) {
+    }
+    else if (num < 0)
+    {
         new_value = std::ceil(num);
-    } else {
+    }
+    else
+    {
         new_value = 0;
     }
 
     return number_val(new_value);
 }
 
-extern "C" Value log_(std::vector<Value>& args) {
+extern "C" Value log_(std::vector<Value> &args)
+{
     int num_required_args = 2;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'log' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
     Value base = args[1];
 
-    if (!value.is_number()) {
+    if (!value.is_number())
+    {
         error("Parameter 'value' must be a number");
     }
 
-    if (!base.is_number()) {
+    if (!base.is_number())
+    {
         error("Parameter 'base' must be a number");
     }
 
@@ -119,21 +143,25 @@ extern "C" Value log_(std::vector<Value>& args) {
     return number_val(new_value);
 }
 
-extern "C" Value pow_(std::vector<Value>& args) {
+extern "C" Value pow_(std::vector<Value> &args)
+{
     int num_required_args = 2;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'pow' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
     Value exponent = args[1];
 
-    if (!value.is_number()) {
+    if (!value.is_number())
+    {
         error("Parameter 'value' must be a number");
     }
 
-    if (!exponent.is_number()) {
+    if (!exponent.is_number())
+    {
         error("Parameter 'exponent' must be a number");
     }
 
@@ -144,16 +172,19 @@ extern "C" Value pow_(std::vector<Value>& args) {
 
 /* Trig Functions */
 
-extern "C" Value tan_(std::vector<Value>& args) {
+extern "C" Value tan_(std::vector<Value> &args)
+{
     int num_required_args = 1;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'tan' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
 
-    if (!value.is_number()) {
+    if (!value.is_number())
+    {
         error("Parameter 'value' must be a number");
     }
 
@@ -161,16 +192,19 @@ extern "C" Value tan_(std::vector<Value>& args) {
     return number_val(new_value);
 }
 
-extern "C" Value sin_(std::vector<Value>& args) {
+extern "C" Value sin_(std::vector<Value> &args)
+{
     int num_required_args = 1;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'sin' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
 
-    if (!value.is_number()) {
+    if (!value.is_number())
+    {
         error("Parameter 'value' must be a number");
     }
 
@@ -178,16 +212,19 @@ extern "C" Value sin_(std::vector<Value>& args) {
     return number_val(new_value);
 }
 
-extern "C" Value cos_(std::vector<Value>& args) {
+extern "C" Value cos_(std::vector<Value> &args)
+{
     int num_required_args = 1;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'cos' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
 
-    if (!value.is_number()) {
+    if (!value.is_number())
+    {
         error("Parameter 'value' must be a number");
     }
 
@@ -195,30 +232,34 @@ extern "C" Value cos_(std::vector<Value>& args) {
     return number_val(new_value);
 }
 
-extern "C" Value multMat4(std::vector<Value>& args) {
+extern "C" Value multMat4(std::vector<Value> &args)
+{
     int num_required_args = 2;
 
-    if (args.size() != num_required_args) {
+    if (args.size() != num_required_args)
+    {
         error("Function 'multMat4' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value vec = args[0];
     Value mat = args[1];
 
-    if (!vec.is_object()) {
+    if (!vec.is_object())
+    {
         error("Parameter 'vec' must be an object");
     }
 
-    auto& in = vec.get_object();
+    auto &in = vec.get_object();
 
-    if (!mat.is_list()) {
+    if (!mat.is_list())
+    {
         error("Parameter 'mat' must be an object");
     }
 
-    auto& list = mat.get_list();
+    auto &list = mat.get_list();
 
     Value vecOut = object_val();
-    auto& out = vecOut.get_object();
+    auto &out = vecOut.get_object();
     out->values["x"] = number_val(
         in->values["x"].get_number() * list->at(0).get_list()->at(0).get_number() +
         in->values["y"].get_number() * list->at(1).get_list()->at(0).get_number() +
@@ -243,11 +284,16 @@ extern "C" Value multMat4(std::vector<Value>& args) {
         in->values["z"].get_number() * list->at(2).get_list()->at(3).get_number() +
         list->at(3).get_list()->at(3).get_number();
 
-    if (w != 0) {
+    if (w != 0)
+    {
         out->values["x"] = number_val(out->values["x"].get_number() / w);
         out->values["y"] = number_val(out->values["y"].get_number() / w);
         out->values["z"] = number_val(out->values["z"].get_number() / w);
     }
+
+    vecOut.get_object()->keys = { "x",
+                                  "y",
+                                  "z" }
 
     return vecOut;
 }
@@ -255,7 +301,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 // /* Trig Functions */
 
 // VortexObj acos_(std::string name, std::vector<VortexObj> args) {
-    
+
 //     int num_required_args = 1;
 
 //     if (args.size() != num_required_args) {
@@ -275,7 +321,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 // }
 
 // VortexObj asin(std::string name, std::vector<VortexObj> args) {
-    
+
 //     int num_required_args = 1;
 
 //     if (args.size() != num_required_args) {
@@ -295,7 +341,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 // }
 
 // VortexObj atan(std::string name, std::vector<VortexObj> args) {
-    
+
 //     int num_required_args = 1;
 
 //     if (args.size() != num_required_args) {
@@ -315,7 +361,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 // }
 
 // VortexObj atan2(std::string name, std::vector<VortexObj> args) {
-    
+
 //     int num_required_args = 2;
 
 //     if (args.size() != num_required_args) {
@@ -342,7 +388,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 // }
 
 // VortexObj sin(std::string name, std::vector<VortexObj> args) {
-    
+
 //     int num_required_args = 1;
 
 //     if (args.size() != num_required_args) {
@@ -362,7 +408,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 // }
 
 // VortexObj cos(std::string name, std::vector<VortexObj> args) {
-    
+
 //     int num_required_args = 1;
 
 //     if (args.size() != num_required_args) {
@@ -384,7 +430,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 // /* Angular Conversion */
 
 // VortexObj deg(std::string name, std::vector<VortexObj> args) {
-    
+
 //     int num_required_args = 1;
 
 //     if (args.size() != num_required_args) {
@@ -404,7 +450,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 // }
 
 // VortexObj rad(std::string name, std::vector<VortexObj> args) {
-    
+
 //     int num_required_args = 1;
 
 //     if (args.size() != num_required_args) {
@@ -426,7 +472,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 // /* Hyperbolic Functions */
 
 // VortexObj acosh(std::string name, std::vector<VortexObj> args) {
-    
+
 //     int num_required_args = 1;
 
 //     if (args.size() != num_required_args) {
@@ -446,7 +492,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 // }
 
 // VortexObj asinh(std::string name, std::vector<VortexObj> args) {
-    
+
 //     int num_required_args = 1;
 
 //     if (args.size() != num_required_args) {
@@ -466,7 +512,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 // }
 
 // VortexObj atanh(std::string name, std::vector<VortexObj> args) {
-    
+
 //     int num_required_args = 1;
 
 //     if (args.size() != num_required_args) {
@@ -486,7 +532,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 // }
 
 // VortexObj sinh(std::string name, std::vector<VortexObj> args) {
-    
+
 //     int num_required_args = 1;
 
 //     if (args.size() != num_required_args) {
@@ -506,7 +552,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 // }
 
 // VortexObj cosh(std::string name, std::vector<VortexObj> args) {
-    
+
 //     int num_required_args = 1;
 
 //     if (args.size() != num_required_args) {
@@ -526,7 +572,7 @@ extern "C" Value multMat4(std::vector<Value>& args) {
 // }
 
 // VortexObj tanh(std::string name, std::vector<VortexObj> args) {
-    
+
 //     int num_required_args = 1;
 
 //     if (args.size() != num_required_args) {

@@ -81,6 +81,7 @@ extern "C" Value __globals__(std::vector<Value> &args)
     for (auto value : _vm->globals)
     {
         object.get_object()->values[value.first] = value.second;
+        object.get_object()->keys.push_back(value.first);
     }
 
     return object;
@@ -109,7 +110,7 @@ extern "C" Value __frame__(std::vector<Value> &args)
     CallFrame frame = _vm->frames[_vm->frames.size() - 2];
     obj.get_object()->values["name"] = string_val(frame.function->name);
     obj.get_object()->values["level"] = number_val(_vm->frames.size() - 1);
-
+    obj.get_object()->keys = {"name", "level"};
     return obj;
 }
 
