@@ -1,3 +1,59 @@
-import day1 : "test"
+// import day1 : "test"
 
-println(day1)
+// println(day1)
+
+// continue and break don't pop for loop structures out of stack
+
+/* Breaks */
+
+// for (ls, i) {
+//     if (i >= 2) {
+//         continue
+//     }
+// }
+
+
+// for (ls, i) {
+//     for (ls, j) {
+//         if (j >= 2) {
+//             continue
+//         }
+//         println(i, j)
+//     }
+// }
+
+/* Produces wrong answer (does not clean up stack) -- Fixed */
+
+// for (ls, i) {
+//     for (ls, j) {
+//         if (i > 2) {
+//             break
+//         }
+//         println(i, j)
+//     }
+// }
+
+const ls = 1..20
+
+// for (ls, i) {
+//     for (ls, j) {
+//         if (j >= 2) {
+//             continue
+//         }
+//         println(i, j)
+//     }
+// }
+
+for (ls, i) {
+    if (true) {
+        continue
+    }
+
+    for (1..10, j) {
+        println(j)
+    }
+}
+
+const answer = 12345
+
+println(answer)

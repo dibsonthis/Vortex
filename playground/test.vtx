@@ -1,5 +1,84 @@
-const x = 10
+import io
+import [] : string
+import [] : functional
 
-while (true) {
-    break
+const input = io.readf("input.txt").split("\n")
+
+var tree = {}
+var dir_hist = []
+var curr_dir_name = ""
+var curr_dir = tree
+var dirs_dict = {}
+
+for (input, index, line) {
+    if (line.startsWith("$ cd")) {
+        const dir = line.split(" ").last()
+        if (dir == "..") {
+            dir_hist.remove(dir_hist.length()-1)
+            curr_dir_name = dir_hist.last()
+        } else {
+            dir_hist.append(dir)
+            if (dirs_dict[dir] == None) {
+                dirs_dict[dir] = { content: [], dirs: copy(dir_hist), size: None }
+            }
+        }
+        curr_dir_name = dir_hist.last()
+    }
+    if (line.startsWith("$ ls")) {
+        var content = []
+        index += 1
+        var row = input[index]
+        while (true) {
+            if (row == None) {
+                break
+            }
+
+            if (row.startsWith("$")) {
+                break
+            }
+            content.append(row)
+            index += 1
+            row = input[index]
+        }
+        index -= 1
+        for (content, _, c) {
+            dirs_dict[curr_dir_name].content.append(c)
+        }
+        // println(curr_dir_name, dirs_dict[curr_dir_name])
+    }
 }
+
+const calculate_dir_size = (dir_name) => {
+    const content = dirs_dict[dir_name].content
+    var size = 0
+    for (content, index, e) {
+        if (e.startsWith("dir")) {
+            const d_name = e.split(" ").last()
+            if (dirs_dict[d_name].size != None) {
+                size += dirs_dict[d_name].size
+            } else {
+                size += calculate_dir_size(d_name)
+            }
+        } else {
+            const file_size = e.split(" ").first().number()
+            size += file_size
+        }
+    }
+
+    dirs_dict[dir_name].size = size
+
+    return size
+}
+
+var adequate_dirs = {}
+
+for (dirs_dict.info().keys, index, key) {
+    const size = calculate_dir_size(key)
+    if (size <= 100000) {
+        adequate_dirs[key] = size
+    }
+}
+
+println(adequate_dirs)
+
+const answer = () => adequate_dirs.info().values.reduce((a, b) => a + b)

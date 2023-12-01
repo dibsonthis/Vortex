@@ -765,22 +765,48 @@ static EvaluateResult run(VM &vm)
             int stack_size_start = READ_INT();
             int to_pop = vm.stack.size() - stack_size_start;
 
-            // instruction_index++;
-            // instruction = frame->function->instruction_offsets[instruction_index];
-            // _instruction = frame->function->chunk.code[instruction];
-
             for (int i = 0; i < to_pop; i++)
             {
                 pop(vm);
             }
-            while (_instruction != OP_LOOP_END)
+            // We need to go all the way down to OP_JUMP_BACK, but make sure to
+            // skip any loops along the way
+
+            count = 1;
+
+            while (true)
             {
+
                 instruction_index++;
                 instruction = frame->function->instruction_offsets[instruction_index];
                 _instruction = frame->function->chunk.code[instruction];
                 int diff = frame->function->instruction_offsets[instruction_index + 1] - instruction;
                 frame->ip += diff;
+
+                if (_instruction == OP_LOOP)
+                {
+                    count++;
+                }
+                if (_instruction == OP_JUMP_BACK)
+                {
+                    count--;
+                }
+
+                if (count == 0)
+                {
+                    break;
+                }
             }
+
+            // while (_instruction != OP_JUMP_BACK)
+            // {
+            //     instruction_index++;
+            //     instruction = frame->function->instruction_offsets[instruction_index];
+            //     _instruction = frame->function->chunk.code[instruction];
+            //     int diff = frame->function->instruction_offsets[instruction_index + 1] - instruction;
+            //     frame->ip += diff;
+            // }
+
             break;
         }
         case OP_CONTINUE:
@@ -815,27 +841,42 @@ static EvaluateResult run(VM &vm)
             int stack_size_start = READ_INT();
             int to_pop = vm.stack.size() - stack_size_start;
 
-            instruction_index++;
-            instruction = frame->function->instruction_offsets[instruction_index];
-            _instruction = frame->function->chunk.code[instruction];
-
             for (int i = 0; i < to_pop; i++)
             {
                 pop(vm);
             }
 
-            while (_instruction != OP_JUMP_BACK)
-            {
-                if (_instruction == OP_ITER)
-                {
-                    break;
-                }
+            // We need to go all the way down to OP_JUMP_BACK, but make sure to
+            // skip any loops along the way
 
+            count = 1;
+
+            while (true)
+            {
                 instruction_index++;
                 instruction = frame->function->instruction_offsets[instruction_index];
                 _instruction = frame->function->chunk.code[instruction];
                 int diff = frame->function->instruction_offsets[instruction_index + 1] - instruction;
                 frame->ip += diff;
+
+                if (_instruction == OP_LOOP)
+                {
+                    count++;
+                }
+                if (_instruction == OP_JUMP_BACK)
+                {
+                    count--;
+                }
+
+                if (_instruction == OP_ITER && count == 1)
+                {
+                    break;
+                }
+
+                if (count == 0)
+                {
+                    break;
+                }
             }
 
             break;

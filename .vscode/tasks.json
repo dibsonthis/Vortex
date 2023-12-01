@@ -61,7 +61,7 @@
             "command": "/usr/bin/clang++",
             "args": [
                 "-g",
-                "-O3",
+                // "-O3",
                 "-std=c++20",
                 "-stdlib=libc++",
                 "${fileDirname}/src/Node/Node.cpp",

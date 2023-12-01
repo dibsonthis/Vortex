@@ -480,10 +480,12 @@ void gen_while_loop(Chunk &chunk, node_ptr node)
     int jump_instruction = chunk.code.size() + 1;
     add_opcode(chunk, OP_POP_JUMP_IF_FALSE, 0, node->line);
     begin_scope();
-    current->in_loop = true;
+    // current->in_loop = true;
+    current->nested_loop_count++;
     generate_bytecode(node->_Node.WhileLoop().body->_Node.Object().elements, chunk);
     end_scope(chunk);
-    current->in_loop = false;
+    // current->in_loop = false;
+    current->nested_loop_count--;
     add_opcode(chunk, OP_JUMP_BACK, chunk.code.size() - start_index + 4, node->line);
     int offset = chunk.code.size() - jump_instruction - 4;
     uint8_t *bytes = int_to_bytes(offset);
@@ -493,7 +495,8 @@ void gen_while_loop(Chunk &chunk, node_ptr node)
 
 void gen_for_loop(Chunk &chunk, node_ptr node)
 {
-    current->in_loop = true;
+    // current->in_loop = true;
+    current->nested_loop_count++;
     if (!node->_Node.ForLoop().iterator)
     {
         if (!node->_Node.ForLoop().index_name)
@@ -629,7 +632,8 @@ void gen_for_loop(Chunk &chunk, node_ptr node)
         end_scope(chunk);
     }
     add_code(chunk, OP_LOOP_END, node->line);
-    current->in_loop = false;
+    // current->in_loop = false;
+    current->nested_loop_count--;
 }
 
 void gen_accessor(Chunk &chunk, node_ptr node)
@@ -729,7 +733,8 @@ void gen_hook(Chunk &chunk, node_ptr node)
 
 void gen_break(Chunk &chunk, node_ptr node)
 {
-    if (!current->in_loop)
+    // if (!current->in_loop)
+    if (current->nested_loop_count == 0)
     {
         error("Cannot use 'break' outside of a loop");
     }
@@ -739,7 +744,8 @@ void gen_break(Chunk &chunk, node_ptr node)
 
 void gen_continue(Chunk &chunk, node_ptr node)
 {
-    if (!current->in_loop)
+    // if (!current->in_loop)
+    if (current->nested_loop_count == 0)
     {
         error("Cannot use 'continue' outside of a loop");
     }
@@ -749,7 +755,8 @@ void gen_continue(Chunk &chunk, node_ptr node)
 
 void gen_return(Chunk &chunk, node_ptr node)
 {
-    if (!current->in_function)
+    // if (!current->in_function)
+    if (current->nested_function_count == 0)
     {
         error("Cannot use 'return' at the top level");
     }
@@ -767,7 +774,8 @@ void gen_return(Chunk &chunk, node_ptr node)
 
 void gen_yield(Chunk &chunk, node_ptr node)
 {
-    if (!current->in_function)
+    // if (!current->in_function)
+    if (current->nested_function_count == 0)
     {
         error("Cannot use 'yield' at the top level");
     }
@@ -793,8 +801,11 @@ void gen_function(Chunk &chunk, node_ptr node)
     current->prev = prev_compiler;
     current->in_object = prev_compiler->in_object;
     current->nested_object_count = prev_compiler->nested_object_count;
+    current->nested_function_count = prev_compiler->nested_function_count;
+    current->nested_loop_count = prev_compiler->nested_loop_count;
 
-    current->in_function = true;
+    // current->in_function = true;
+    current->nested_function_count++;
 
     std::shared_ptr<FunctionObj> function = std::make_shared<FunctionObj>();
     function->name = node->_Node.Function().name;
@@ -864,7 +875,8 @@ void gen_function(Chunk &chunk, node_ptr node)
         add_code(function->chunk, OP_RETURN, node->line);
     }
 
-    current->in_function = false;
+    // current->in_function = false;
+    current->nested_function_count++;
     function->closed_var_indexes = current->closed_vars;
 
     current = prev_compiler;
@@ -1178,7 +1190,7 @@ void gen_import(Chunk &chunk, node_ptr node)
         // if (current->in_function || current->in_object) {
         //     error("Cannot import [] outside of global scope");
         // }
-        if (current->in_function || current->nested_object_count > 0)
+        if (current->nested_function_count > 0 || current->nested_object_count > 0)
         {
             error("Cannot import [] outside of global scope");
         }
@@ -1598,7 +1610,7 @@ static void end_scope(Chunk &chunk)
         add_code(chunk, OP_POP);
         std::string var = chunk.variables.back();
         chunk.variables.pop_back();
-        if (chunk.public_variables.back() == var)
+        if (!chunk.public_variables.empty() && chunk.public_variables.back() == var)
         {
             chunk.public_variables.pop_back();
         }
