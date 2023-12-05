@@ -291,9 +291,9 @@ extern "C" Value multMat4(std::vector<Value> &args)
         out->values["z"] = number_val(out->values["z"].get_number() / w);
     }
 
-    vecOut.get_object()->keys = { "x",
-                                  "y",
-                                  "z" }
+    vecOut.get_object()->keys = {"x",
+                                 "y",
+                                 "z"};
 
     return vecOut;
 }
