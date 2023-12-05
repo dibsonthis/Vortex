@@ -48,7 +48,7 @@ $LIBS \
 $FILE/$FILE.cpp  \
 -o $FILE/bin/$FILE \
 -arch arm64 \
--arch x86_64 \
+# -arch x86_64 \
 -Wl,-rpath,@loader_path/../lib
 
 done
