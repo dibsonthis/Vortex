@@ -54,6 +54,10 @@ extern "C" Value trim(std::vector<Value>& args) {
     }
 
     Value& text = args[0];
+
+    if (!text.is_string()) {
+        error("Function 'chars' expects argument 'text' to be a string");
+    }
     
     Value new_string = string_val(text.get_string());
 
