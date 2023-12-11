@@ -1,26 +1,31 @@
-import sys
+import [error] : sys
 
 const map = (list, func) => {
     var new = []
     const arity = func.info().arity
+
     if (arity == 1) {
         for (list, index, value) {
             new.append(func(value))
         }
-    } else if (arity == 2) {
+        return new
+    } 
+    
+    if (arity == 2) {
         for (list, index, value) {
             new.append(func(value, index))
         }
-    } else if (arity == 3) {
+        return new
+    } 
+    
+    if (arity == 3) {
         for (list, index, value) {
             new.append(func(value, index, list))
         }
-    } else {
-        print("Function 'map' expects a function with an arity of either 1, 2 or 3\n")
-        exit(1)
+        return new
     }
-
-    return new
+    
+    error("Function 'map' expects a function with an arity of either 1, 2 or 3")
 }
 
 const flatmap = (list, func) => {
@@ -60,8 +65,7 @@ const flatmap = (list, func) => {
             }
         }
     } else {
-        print("Function 'flatmap' expects a function with an arity of either 1, 2 or 3\n")
-        exit(1)
+        error("Function 'flatmap' expects a function with an arity of either 1, 2 or 3")
     }
 
     return new
@@ -89,8 +93,7 @@ const filter = (list, func) => {
             }
         }
     } else {
-        print("Function 'filter' expects a function with an arity of either 1, 2 or 3\n")
-        exit(1)
+        error("Function 'filter' expects a function with an arity of either 1, 2 or 3")
     }
 
     return new
@@ -100,8 +103,7 @@ const reduce = (list, func) => {
     var res
     const arity = func.info().arity
     if (arity != 2) {
-        print("Function 'reduce' expects a function with an arity of 2\n")
-        exit(1)
+        error("Function 'reduce' expects a function with an arity of 2\n")
     }
 
     if (list.length() < 2) {
@@ -140,8 +142,7 @@ const find = (list, func) => {
             }
         }
     } else {
-        print("Function 'find' expects a function with an arity of either 1, 2 or 3\n")
-        exit(1)
+        error("Function 'find' expects a function with an arity of either 1, 2 or 3")
     }
 }
 
@@ -160,8 +161,7 @@ const forEach = (list, func) => {
             func(value, index, list)
         }
     } else {
-        print("Function 'forEach' expects a function with an arity of either 1, 2 or 3\n")
-        exit(1)
+        error("Function 'forEach' expects a function with an arity of either 1, 2 or 3")
     }
 }
 
@@ -177,7 +177,129 @@ const indexOf = (list, value) => {
 
 const chain = (value, func) => {
     if (func.type() != "Function") {
-        sys.error("Function 'chain' expects parameter 'func' to be a function")
+        error("Function 'chain' expects parameter 'func' to be a function")
     }
     return func(value)
+}
+
+const obj_map = (obj, fn) => {
+    
+    const arity = fn.info().arity
+    const keys = obj.info().keys
+
+    var new = {}
+
+    if (arity == 1) {
+        for (keys, i, key) {
+            new[key] = fn(key)
+        }
+        return new
+    }
+    if (arity == 2) {
+        for (keys, i, key) {
+            new[key] = fn(key, obj[key])
+        }
+        return new
+    }
+    if (arity == 3) {
+        for (keys, i, key) {
+            new[key] = fn(key, obj[key], i)
+        }
+        return new
+    }
+
+    error("Function 'obj_map' expects a function with an arity of either 1, 2 or 3")
+}
+
+const obj_filter = (obj, fn) => {
+    
+    const arity = fn.info().arity
+    const keys = obj.info().keys
+
+    var new = {}
+
+    if (arity == 1) {
+        for (keys, i, key) {
+            if (fn(key)) {
+                new[key] = obj[key]
+            }
+        }
+        return new
+    }
+    if (arity == 2) {
+        for (keys, i, key) {
+            if (fn(key, obj[key])) {
+                new[key] = obj[key]
+            }
+        }
+        return new
+    }
+    if (arity == 3) {
+        for (keys, i, key) {
+            if (fn(key, obj[key], i)) {
+                new[key] = obj[key]
+            }
+        }
+        return new
+    }
+
+    error("Function 'obj_filter' expects a function with an arity of either 1, 2 or 3")
+}
+
+const obj_transform = (obj, fn) => {
+    
+    const arity = fn.info().arity
+    const keys = obj.info().keys
+
+    var new = {}
+
+    if (arity == 1) {
+        for (keys, i, key) {
+            const res = fn(key)
+            new[f"${res[0]}"] = res[1]
+        }
+        return new
+    }
+    if (arity == 2) {
+        for (keys, i, key) {
+            const res = fn(key, obj[key])
+            new[f"${res[0]}"] = res[1]
+        }
+        return new
+    }
+    if (arity == 3) {
+        for (keys, i, key) {
+            const res = fn(key, obj[key], i)
+            new[f"${res[0]}"] = res[1]
+        }
+        return new
+    }
+
+    error("Function 'obj_transform' expects a function with an arity of either 1, 2 or 3")
+}
+
+const list_to_obj = (ls, fn) => {
+    const arity = fn.info().arity
+    var new = {}
+
+    if (arity == 1) {
+        for (ls, i, v) {
+            new[f"${v}"] = fn(v)
+        }
+        return new
+    }
+    if (arity == 2) {
+        for (ls, i, v) {
+            new[f"${v}"] = fn(v, i)
+        }
+        return new
+    }
+    if (arity == 1) {
+        for (ls, i, v) {
+            new[f"${v}"] = fn(v, i, ls)
+        }
+        return new
+    }
+
+    error("Function 'list_to_obj' expects a function with an arity of either 1, 2 or 3")
 }
