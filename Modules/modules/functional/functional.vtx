@@ -303,3 +303,16 @@ const list_to_obj = (ls, fn) => {
 
     error("Function 'list_to_obj' expects a function with an arity of either 1, 2 or 3")
 }
+
+const range = (start, end) => {
+    if (start <= end) {
+        return start..end
+    }
+
+    var ls = []
+    for (end+1..start+1, i, v) {
+        ls.insert(v, 0)
+    }
+
+    return ls
+}

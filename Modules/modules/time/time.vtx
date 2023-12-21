@@ -32,3 +32,8 @@ const datetimeObject = () => {
 }
 
 const sleep = (ms) => lib.sleep(ms)
+
+const delay = (ms, func) => {
+    lib.sleep(ms)
+    return func()
+}
