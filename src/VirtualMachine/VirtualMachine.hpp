@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <future>
 
 #include "../utils/utils.hpp"
 #include "../Lexer/Lexer.hpp"
@@ -99,3 +100,7 @@ static Value info_builtin(std::vector<Value> &args);
 static Value type_builtin(std::vector<Value> &args);
 static Value exit_builtin(std::vector<Value> &args);
 static Value error_builtin(std::vector<Value> &args);
+
+static Value future_builtin(std::vector<Value> &args);
+static Value get_future_builtin(std::vector<Value> &args);
+static Value check_future_builtin(std::vector<Value> &args);

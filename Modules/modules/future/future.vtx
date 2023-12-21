@@ -25,30 +25,3 @@ type Future = (func) => {
         }
     }
 }
-
-// var request = None
-// if (true) {
-//     const g = 100
-//     request = Future(() => {
-//         println(g)
-//     })
-// }
-
-
-// while (true) {
-//     if (request.is_ready()) {
-//         println(request.get())
-//         break
-//     }
-// }
-
-var request = None
-
-if (true) {
-    const g = 100
-    request = () => println(g)
-}
-
-println(g)
-
-// request()

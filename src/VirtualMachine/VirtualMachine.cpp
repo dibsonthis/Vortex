@@ -102,6 +102,9 @@ static EvaluateResult run(VM &vm)
     define_native(vm, "type", type_builtin);
     define_native(vm, "copy", copy_builtin);
     define_native(vm, "sort", sort_builtin);
+    define_native(vm, "__future__", future_builtin);
+    define_native(vm, "__get_future__", get_future_builtin);
+    define_native(vm, "__check_future__", check_future_builtin);
     define_native(vm, "exit", exit_builtin);
     define_native(vm, "__error__", error_builtin);
     define_native(vm, "load_lib", load_lib_builtin);
@@ -1514,7 +1517,6 @@ static EvaluateResult run(VM &vm)
             if (v1.is_string() && v2.is_string())
             {
                 Value value = string_val(v1.get_string() + v2.get_string());
-                vm.objects.push_back(&value);
                 push(vm, value);
                 break;
             }
@@ -2544,6 +2546,9 @@ static Value sort_builtin(std::vector<Value> &args)
     add_opcode(main->chunk, OP_CALL, 2, 0);
     add_code(main->chunk, OP_EXIT, 0);
 
+    auto offsets = instruction_offsets(main_frame.function->chunk);
+    main_frame.function->instruction_offsets = offsets;
+
     std::sort(new_list.get_list()->begin(), new_list.get_list()->end(),
               [&func_vm, &function](const Value &lhs, const Value &rhs)
               {
@@ -2613,4 +2618,124 @@ static Value error_builtin(std::vector<Value> &args)
     exit(0);
 
     return message;
+}
+
+static Value future_builtin(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function '__future__' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value func = args[0];
+    Value vm = args[1];
+
+    if (!func.is_function())
+    {
+        error("Function '__future__' expects argument 'function' to be a Function");
+    }
+
+    if (!vm.is_pointer())
+    {
+        error("Function '__future__' expects argument 'vm' to be a Pointer");
+    }
+
+    if (func.get_function()->arity != 0)
+    {
+        error("Function '__future__' expects argument 'function' to be a Function with 0 parameters");
+    }
+
+    VM *_vm = (VM *)(vm.get_pointer()->value);
+
+    auto _future = std::async(std::launch::async, [vm = std::move(_vm), func = std::move(func)]() mutable
+                              {
+        VM func_vm;
+        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+        main->name = "";
+        main->arity = 0;
+        main->chunk = Chunk();
+        CallFrame main_frame;
+        main_frame.function = main;
+        main_frame.sp = 0;
+        main_frame.ip = main->chunk.code.data();
+        main_frame.frame_start = 0;
+        func_vm.frames.push_back(main_frame);
+
+        add_constant(main->chunk, func);
+        add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 0, 0);
+
+        add_code(main->chunk, OP_EXIT, 0);
+
+        auto offsets = instruction_offsets(main_frame.function->chunk);
+        main_frame.function->instruction_offsets = offsets;
+
+        evaluate(func_vm);
+
+        return func_vm.stack.back(); })
+                       .share();
+
+    auto f = new std::shared_future<Value>(_future);
+
+    auto future_ref = pointer_val();
+    auto future = (void *)(f);
+    future_ref.get_pointer()->value = future;
+    return future_ref;
+}
+
+static Value get_future_builtin(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function '__get_future__' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value future_ptr = args[0];
+
+    if (!future_ptr.is_pointer())
+    {
+        error("Function '__get_future__' expects argument 'function' to be a Pointer");
+    }
+
+    auto future = (std::shared_future<Value> *)(future_ptr.get_pointer()->value);
+
+    if (future->valid())
+    {
+        Value value = future->get();
+        delete future;
+        return value;
+    }
+
+    return none_val();
+}
+
+static Value check_future_builtin(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function '__check_future__' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value future_ptr = args[0];
+
+    if (!future_ptr.is_pointer())
+    {
+        error("Function '__check_future__' expects argument 'function' to be a Pointer");
+    }
+
+    auto future = (std::shared_future<Value> *)(future_ptr.get_pointer()->value);
+
+    if (future->valid())
+    {
+        auto is_ready = future->wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+        return boolean_val(is_ready);
+    }
+
+    return boolean_val(false);
 }
