@@ -1,7 +1,7 @@
-type Future = (func) => {
+type Future = (func, default = None) => {
     const future = __future__(func, __vm__)
     return {
-        value: None,
+        value: default,
         ready: false,
         finished: false,
         is_ready: () => {
