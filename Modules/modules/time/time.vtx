@@ -30,3 +30,5 @@ const datetimeObject = () => {
         year: datetime[4]
     }
 }
+
+const sleep = (ms) => lib.sleep(ms)
