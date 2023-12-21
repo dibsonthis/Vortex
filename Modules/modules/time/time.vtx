@@ -1,4 +1,4 @@
-const lib = load_lib("./bin/time", ["datetime"])
+const lib = load_lib("./bin/time", ["datetime", "sleep"])
 
 const datetime = () => lib.datetime()
 const datetimeObject = () => {
