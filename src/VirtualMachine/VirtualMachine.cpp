@@ -328,6 +328,13 @@ static EvaluateResult run(VM &vm)
                     obj.get_object()->values["old"] = current;
                     obj.get_object()->values["current"] = value;
 
+                    // store onChangeHook here
+                    auto hook = obj.get_object()->values["old"].hooks.onChangeHook;
+                    obj.get_object()->values["old"].hooks.onChangeHook = nullptr;
+
+                    auto value_hook = obj.get_object()->values["current"].hooks.onChangeHook;
+                    obj.get_object()->values["current"].hooks.onChangeHook = nullptr;
+
                     VM func_vm;
                     std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
                     main->name = "";
@@ -342,7 +349,7 @@ static EvaluateResult run(VM &vm)
                     main_frame.frame_start = 0;
                     func_vm.frames.push_back(main_frame);
 
-                    add_constant(main->chunk, *current.hooks.onChangeHook);
+                    add_constant(main->chunk, *hook);
                     add_constant(main->chunk, obj);
 
                     add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
@@ -354,6 +361,9 @@ static EvaluateResult run(VM &vm)
                     main_frame.function->instruction_offsets = offsets;
 
                     auto status = evaluate(func_vm);
+
+                    obj.get_object()->values["old"].hooks.onChangeHook = hook;
+                    obj.get_object()->values["current"].hooks.onChangeHook = value_hook;
 
                     if (status != 0)
                     {
