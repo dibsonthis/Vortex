@@ -171,7 +171,7 @@ std::string toString(Value value)
 
 void printValue(Value value)
 {
-    std::cout << toString(value);
+    std::cout << toString(value) << std::flush;
 }
 
 void add_code(Chunk &chunk, uint8_t code, int line)

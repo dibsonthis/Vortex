@@ -22,6 +22,12 @@ type Future = (func, default = None) => {
             }
 
             return this.value
+        },
+        wait_for: () => {
+            this.value = __get_future__(future)
+            this.finished = true
+            this.ready = true
+            return this.value
         }
     }
 }
