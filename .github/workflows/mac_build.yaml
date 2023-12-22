@@ -28,6 +28,7 @@ jobs:
 
     - name: Download SDL stuff
       run: | 
+        cd ${{ github.workspace }}
         # Install necessary dependencies
         brew install cmake
 
@@ -46,6 +47,8 @@ jobs:
         make
         sudo make install
 
+        cd ${{ github.workspace }}
+
         # Clone the SDL2_image repository
         git clone https://github.com/libsdl-org/SDL_image.git
         cd SDL_image
@@ -60,6 +63,8 @@ jobs:
         # Build and install SDL2_image
         make
         sudo make install
+
+        cd ${{ github.workspace }}
 
         # Clone the SDL2_mixer repository
         git clone https://github.com/libsdl-org/SDL_mixer.git
@@ -76,6 +81,8 @@ jobs:
         make
         sudo make install
 
+        cd ${{ github.workspace }}
+
         # Clone the SDL2_ttf repository
         git clone https://github.com/libsdl-org/SDL_ttf.git
         cd SDL_ttf
@@ -90,6 +97,8 @@ jobs:
         # Build and install SDL2_ttf
         make
         sudo make install
+
+        cd ${{ github.workspace }}
 
         rm -r Modules/modules/sdl/lib/*
 
