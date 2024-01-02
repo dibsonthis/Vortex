@@ -26,93 +26,93 @@ jobs:
         name: interpreter
         path: bin/build/interp/mac/vortex
 
-    - name: Download SDL stuff
-      run: | 
-        cd ${{ github.workspace }}
-        # Install necessary dependencies
-        brew install cmake
+    # - name: Download SDL stuff
+    #   run: | 
+    #     cd ${{ github.workspace }}
+    #     # Install necessary dependencies
+    #     brew install cmake
 
-        # Clone the SDL2 repository
-        git clone https://github.com/libsdl-org/SDL.git
-        cd SDL
+    #     # Clone the SDL2 repository
+    #     git clone https://github.com/libsdl-org/SDL.git
+    #     cd SDL
 
-        # Create a build directory
-        mkdir build
-        cd build
+    #     # Create a build directory
+    #     mkdir build
+    #     cd build
 
-        # Configure the build for both Intel and ARM
-        cmake -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" ..
+    #     # Configure the build for both Intel and ARM
+    #     cmake -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" ..
 
-        # Build and install SDL2
-        make
-        sudo make install
+    #     # Build and install SDL2
+    #     make
+    #     sudo make install
 
-        cd ${{ github.workspace }}
+    #     cd ${{ github.workspace }}
 
-        # Clone the SDL2_image repository
-        git clone https://github.com/libsdl-org/SDL_image.git
-        cd SDL_image
+    #     # Clone the SDL2_image repository
+    #     git clone https://github.com/libsdl-org/SDL_image.git
+    #     cd SDL_image
 
-        # Create a build directory
-        mkdir build
-        cd build
+    #     # Create a build directory
+    #     mkdir build
+    #     cd build
 
-        # Configure the build for both Intel and ARM, linking to the previously installed SDL2
-        cmake -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DSDL2_CONFIG_EXECUTABLE=/usr/local/bin/sdl2-config ..
+    #     # Configure the build for both Intel and ARM, linking to the previously installed SDL2
+    #     cmake -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DSDL2_CONFIG_EXECUTABLE=/usr/local/bin/sdl2-config ..
 
-        # Build and install SDL2_image
-        make
-        sudo make install
+    #     # Build and install SDL2_image
+    #     make
+    #     sudo make install
 
-        cd ${{ github.workspace }}
+    #     cd ${{ github.workspace }}
 
-        # Clone the SDL2_mixer repository
-        git clone https://github.com/libsdl-org/SDL_mixer.git
-        cd SDL_mixer
+    #     # Clone the SDL2_mixer repository
+    #     git clone https://github.com/libsdl-org/SDL_mixer.git
+    #     cd SDL_mixer
 
-        # Create a build directory
-        mkdir build
-        cd build
+    #     # Create a build directory
+    #     mkdir build
+    #     cd build
 
-        # Configure the build for both Intel and ARM, linking to the previously installed SDL2
-        cmake -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DSDL2_CONFIG_EXECUTABLE=/usr/local/bin/sdl2-config ..
+    #     # Configure the build for both Intel and ARM, linking to the previously installed SDL2
+    #     cmake -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DSDL2_CONFIG_EXECUTABLE=/usr/local/bin/sdl2-config ..
 
-        # Build and install SDL2_mixer
-        make
-        sudo make install
+    #     # Build and install SDL2_mixer
+    #     make
+    #     sudo make install
 
-        cd ${{ github.workspace }}
+    #     cd ${{ github.workspace }}
 
-        # Clone the SDL2_ttf repository
-        git clone https://github.com/libsdl-org/SDL_ttf.git
-        cd SDL_ttf
+    #     # Clone the SDL2_ttf repository
+    #     git clone https://github.com/libsdl-org/SDL_ttf.git
+    #     cd SDL_ttf
 
-        # Create a build directory
-        mkdir build
-        cd build
+    #     # Create a build directory
+    #     mkdir build
+    #     cd build
 
-        # Configure the build for both Intel and ARM, linking to the previously installed SDL2 and SDL2_ttf
-        cmake -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DSDL2_CONFIG_EXECUTABLE=/usr/local/bin/sdl2-config -DSDL2_TTF_CONFIG_EXECUTABLE=/usr/local/bin/sdl2-config ..
+    #     # Configure the build for both Intel and ARM, linking to the previously installed SDL2 and SDL2_ttf
+    #     cmake -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DSDL2_CONFIG_EXECUTABLE=/usr/local/bin/sdl2-config -DSDL2_TTF_CONFIG_EXECUTABLE=/usr/local/bin/sdl2-config ..
 
-        # Build and install SDL2_ttf
-        make
-        sudo make install
+    #     # Build and install SDL2_ttf
+    #     make
+    #     sudo make install
 
-        cd ${{ github.workspace }}
+    #     cd ${{ github.workspace }}
 
-        rm -r Modules/modules/sdl/lib/*
+    #     rm -r Modules/modules/sdl/lib/*
 
-        cp /usr/local/sdl2/*/lib/*.dylib Modules/modules/sdl/lib
-        cp /usr/local/sdl2/*/lib/*.a Modules/modules/sdl/lib
+    #     cp /usr/local/sdl2/*/lib/*.dylib Modules/modules/sdl/lib
+    #     cp /usr/local/sdl2/*/lib/*.a Modules/modules/sdl/lib
 
-        cp /usr/local/sdl2_image/*/lib/*.dylib Modules/modules/sdl/lib
-        cp /usr/local/sdl2_image/*/lib/*.a Modules/modules/sdl/lib
+    #     cp /usr/local/sdl2_image/*/lib/*.dylib Modules/modules/sdl/lib
+    #     cp /usr/local/sdl2_image/*/lib/*.a Modules/modules/sdl/lib
 
-        cp /usr/local/sdl2_ttf/*/lib/*.dylib Modules/modules/sdl/lib
-        cp /usr/local/sdl2_ttf/*/lib/*.a Modules/modules/sdl/lib
+    #     cp /usr/local/sdl2_ttf/*/lib/*.dylib Modules/modules/sdl/lib
+    #     cp /usr/local/sdl2_ttf/*/lib/*.a Modules/modules/sdl/lib
 
-        cp /usr/local/sdl2_mixer/*/lib/*.dylib Modules/modules/sdl/lib
-        cp /usr/local/sdl2_mixer/*/lib/*.a Modules/modules/sdl/lib
+    #     cp /usr/local/sdl2_mixer/*/lib/*.dylib Modules/modules/sdl/lib
+    #     cp /usr/local/sdl2_mixer/*/lib/*.a Modules/modules/sdl/lib
 
     # - name: Download SDL stuff
     #   run: | 

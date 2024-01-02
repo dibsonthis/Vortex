@@ -25,6 +25,8 @@ enum class ValueType
 struct Value;
 struct Closure;
 
+std::string toString(Value value);
+
 struct Chunk
 {
     std::vector<uint8_t> code;
@@ -238,154 +240,185 @@ struct Value
     {
         return type == ValueType::None;
     }
-};
-
-struct Closure
-{
-    Value *location;
-    Value closed;
-};
-
-Value new_val()
-{
-    return Value(ValueType::None);
-}
-
-Value number_val(double value)
-{
-    Value val(ValueType::Number);
-    val.value = value;
-    return val;
-}
-
-Value string_val(std::string value)
-{
-    Value val(ValueType::String);
-    val.value = value;
-    return val;
-}
-
-Value boolean_val(bool value)
-{
-    Value val(ValueType::Boolean);
-    val.value = value;
-    return val;
-}
-
-Value list_val()
-{
-    Value val(ValueType::List);
-    return val;
-}
-
-Value type_val(std::string name)
-{
-    Value val(ValueType::Type);
-    val.get_type()->name = name;
-    return val;
-}
-
-Value object_val()
-{
-    Value val(ValueType::Object);
-    return val;
-}
-
-Value function_val()
-{
-    Value val(ValueType::Function);
-    return val;
-}
-
-Value native_val()
-{
-    Value val(ValueType::Native);
-    return val;
-}
-
-Value pointer_val()
-{
-    Value val(ValueType::Pointer);
-    return val;
-}
-
-Value none_val()
-{
-    Value val(ValueType::None);
-    return val;
-}
-
-void error(std::string message)
-{
-    std::cout << message << "\n";
-    exit(1);
-}
-
-struct CallFrame
-{
-    std::string name;
-    std::shared_ptr<FunctionObj> function;
-    uint8_t *ip;
-    int frame_start;
-    int sp;
-    int instruction_index;
-    std::vector<Value> gen_stack;
-};
-struct VM
-{
-    std::vector<Value> stack;
-    Value *sp;
-    /* Possibly change to array with specified MAX_DEPTH */
-    std::vector<CallFrame> frames;
-    std::unordered_map<std::string, std::shared_ptr<CallFrame>> gen_frames;
-    std::vector<Value *> objects;
-    std::unordered_map<std::string, Value> globals;
-    int status = 0;
-    std::vector<std::shared_ptr<Closure>> closed_values;
-    int coro_count = 0;
-
-    VM()
+    std::string type_repr()
     {
-        stack.reserve(100000);
-    }
-};
-
-static void runtimeError(VM &vm, std::string message, ...)
-{
-
-    vm.status = 1;
-
-    CallFrame frame = vm.frames.back();
-
-    va_list args;
-    va_start(args, message);
-    vfprintf(stderr, message.c_str(), args);
-    va_end(args);
-    fputs("\n", stderr);
-
-    for (int i = vm.frames.size() - 1; i >= 0; i--)
-    {
-        CallFrame *frame = &vm.frames[i];
-        auto &function = frame->function;
-        size_t instruction = frame->ip - function->chunk.code.data() - 1;
-        if (function->name == "error")
+        switch (type)
         {
-            continue;
+        case ValueType::Number:
+            return "Number";
+        case ValueType::String:
+            return "String";
+        case ValueType::Boolean:
+            return "Boolean";
+        case ValueType::List:
+            return "List";
+        case ValueType::Object:
+            return "Object";
+        case ValueType::Function:
+            return "Function";
+        case ValueType::Native:
+            return "Native";
+        case ValueType::Pointer:
+            return "Pointer";
+        case ValueType::Type:
+            return "Type";
+        case ValueType::None:
+            return "None";
+        default:
+            return "Unknown";
         }
-        fprintf(stderr, "[line %d] in ",
-                function->chunk.lines[instruction]);
-        if (function->name == "")
+    }
+    std::string value_repr()
+    {
+        return toString(*this);
+    }
+
+    struct Closure
+    {
+        Value *location;
+        Value closed;
+    };
+
+    Value new_val()
+    {
+        return Value(ValueType::None);
+    }
+
+    Value number_val(double value)
+    {
+        Value val(ValueType::Number);
+        val.value = value;
+        return val;
+    }
+
+    Value string_val(std::string value)
+    {
+        Value val(ValueType::String);
+        val.value = value;
+        return val;
+    }
+
+    Value boolean_val(bool value)
+    {
+        Value val(ValueType::Boolean);
+        val.value = value;
+        return val;
+    }
+
+    Value list_val()
+    {
+        Value val(ValueType::List);
+        return val;
+    }
+
+    Value type_val(std::string name)
+    {
+        Value val(ValueType::Type);
+        val.get_type()->name = name;
+        return val;
+    }
+
+    Value object_val()
+    {
+        Value val(ValueType::Object);
+        return val;
+    }
+
+    Value function_val()
+    {
+        Value val(ValueType::Function);
+        return val;
+    }
+
+    Value native_val()
+    {
+        Value val(ValueType::Native);
+        return val;
+    }
+
+    Value pointer_val()
+    {
+        Value val(ValueType::Pointer);
+        return val;
+    }
+
+    Value none_val()
+    {
+        Value val(ValueType::None);
+        return val;
+    }
+
+    void error(std::string message)
+    {
+        std::cout << message << "\n";
+        exit(1);
+    }
+
+    struct CallFrame
+    {
+        std::string name;
+        std::shared_ptr<FunctionObj> function;
+        uint8_t *ip;
+        int frame_start;
+        int sp;
+        int instruction_index;
+        std::vector<Value> gen_stack;
+    };
+    struct VM
+    {
+        std::vector<Value> stack;
+        Value *sp;
+        /* Possibly change to array with specified MAX_DEPTH */
+        std::vector<CallFrame> frames;
+        std::unordered_map<std::string, std::shared_ptr<CallFrame>> gen_frames;
+        std::vector<Value *> objects;
+        std::unordered_map<std::string, Value> globals;
+        int status = 0;
+        std::vector<std::shared_ptr<Closure>> closed_values;
+        int coro_count = 0;
+
+        VM()
         {
-            std::string name = frame->name;
-            if (name == "")
+            stack.reserve(100000);
+        }
+    };
+
+    static void runtimeError(VM &vm, std::string message, ...)
+    {
+
+        vm.status = 1;
+
+        CallFrame frame = vm.frames.back();
+
+        va_list args;
+        va_start(args, message);
+        vfprintf(stderr, message.c_str(), args);
+        va_end(args);
+        fputs("\n", stderr);
+
+        for (int i = vm.frames.size() - 1; i >= 0; i--)
+        {
+            CallFrame *frame = &vm.frames[i];
+            auto &function = frame->function;
+            size_t instruction = frame->ip - function->chunk.code.data() - 1;
+            if (function->name == "error")
             {
-                name = "script";
+                continue;
             }
-            fprintf(stderr, "%s", (name + "\n").c_str());
-        }
-        else
-        {
-            fprintf(stderr, "%s()\n", function->name.c_str());
+            fprintf(stderr, "[line %d] in ",
+                    function->chunk.lines[instruction]);
+            if (function->name == "")
+            {
+                std::string name = frame->name;
+                if (name == "")
+                {
+                    name = "script";
+                }
+                fprintf(stderr, "%s", (name + "\n").c_str());
+            }
+            else
+            {
+                fprintf(stderr, "%s()\n", function->name.c_str());
+            }
         }
     }
-}

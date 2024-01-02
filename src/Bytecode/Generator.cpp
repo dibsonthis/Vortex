@@ -167,6 +167,20 @@ void gen_gt(Chunk &chunk, node_ptr node)
     add_code(chunk, OP_GT, node->line);
 }
 
+void gen_bitwise_or(Chunk &chunk, node_ptr node)
+{
+    generate(node->_Node.Op().left, chunk);
+    generate(node->_Node.Op().right, chunk);
+    add_code(chunk, OP_OR, node->line);
+}
+
+void gen_bitwise_and(Chunk &chunk, node_ptr node)
+{
+    generate(node->_Node.Op().left, chunk);
+    generate(node->_Node.Op().right, chunk);
+    add_code(chunk, OP_AND, node->line);
+}
+
 void gen_eq(Chunk &chunk, node_ptr node)
 {
     node_ptr left = node->_Node.Op().left;
@@ -1422,12 +1436,14 @@ void generate(node_ptr node, Chunk &chunk)
         }
         if (node->_Node.Op().value == "&")
         {
-            gen_and(chunk, node);
+            // gen_and(chunk, node);
+            gen_bitwise_and(chunk, node);
             return;
         }
         if (node->_Node.Op().value == "|")
         {
-            gen_or(chunk, node);
+            // gen_or(chunk, node);
+            gen_bitwise_or(chunk, node);
             return;
         }
         if (node->_Node.Op().value == "-=")

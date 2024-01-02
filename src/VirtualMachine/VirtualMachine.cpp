@@ -316,7 +316,7 @@ static EvaluateResult run(VM &vm)
             {
                 if (!accessor.is_string())
                 {
-                    runtimeError(vm, "Object accessor must be a string");
+                    runtimeError(vm, "Object accessor must be a string - accessor used: " + accessor.value_repr() + " (" + accessor.type_repr() + ")");
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 Value current = container.get_object()->values[accessor.get_string()];
@@ -387,7 +387,7 @@ static EvaluateResult run(VM &vm)
             {
                 if (!accessor.is_number())
                 {
-                    runtimeError(vm, "List accessor must be a number");
+                    runtimeError(vm, "List accessor must be a number - accessor used: " + accessor.value_repr() + " (" + accessor.type_repr() + ")");
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 auto &list = *container.get_list();
@@ -409,12 +409,12 @@ static EvaluateResult run(VM &vm)
             {
                 if (!accessor.is_number())
                 {
-                    runtimeError(vm, "String accessor must be a number");
+                    runtimeError(vm, "String accessor must be a number - accessor used: " + accessor.value_repr() + " (" + accessor.type_repr() + ")");
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 if (!value.is_string())
                 {
-                    runtimeError(vm, "String values must be of type string");
+                    runtimeError(vm, "String values must be of type string - value used: " + value.value_repr() + " (" + value.type_repr() + ")");
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 auto &string = container.get_string();
@@ -435,7 +435,7 @@ static EvaluateResult run(VM &vm)
             }
             else
             {
-                runtimeError(vm, "Object is not accessible");
+                runtimeError(vm, "Object is not accessible: " + container.value_repr() + " (" + container.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             push(vm, value);
@@ -472,12 +472,12 @@ static EvaluateResult run(VM &vm)
             {
                 Value prop_value = pop(vm);
                 Value prop_name = pop(vm);
-                object_obj->keys.insert(object_obj->keys.begin(), prop_name.get_string());
                 if (!prop_name.is_string())
                 {
-                    runtimeError(vm, "Object keys must evaluate to strings");
+                    runtimeError(vm, "Object keys must evaluate to strings - key used: " + prop_name.value_repr() + " (" + prop_name.type_repr() + ")");
                     return EVALUATE_RUNTIME_ERROR;
                 }
+                object_obj->keys.insert(object_obj->keys.begin(), prop_name.get_string());
                 object_obj->values[prop_name.get_string()] = prop_value;
             }
             push(vm, object);
@@ -919,7 +919,7 @@ static EvaluateResult run(VM &vm)
                     push(vm, _container);
                     break;
                 }
-                runtimeError(vm, "Object is not accessable");
+                runtimeError(vm, "Object is not accessible: " + _container.value_repr() + " (" + _container.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
 
@@ -933,7 +933,7 @@ static EvaluateResult run(VM &vm)
                 }
                 if (!_index.is_number())
                 {
-                    runtimeError(vm, "Accessor must be a number");
+                    runtimeError(vm, "Accessor must be a number - accessor used: " + _index.value_repr() + " (" + _index.type_repr() + ")");
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 int index = _index.get_number();
@@ -952,7 +952,7 @@ static EvaluateResult run(VM &vm)
             {
                 if (!_index.is_string())
                 {
-                    runtimeError(vm, "Accessor must be a string");
+                    runtimeError(vm, "Accessor must be a string - accessor used: " + _index.value_repr() + " (" + _index.type_repr() + ")");
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 std::string &index = _index.get_string();
@@ -977,7 +977,7 @@ static EvaluateResult run(VM &vm)
                 }
                 if (!_index.is_number())
                 {
-                    runtimeError(vm, "Accessor must be a number");
+                    runtimeError(vm, "Accessor must be a number - accessor used: " + _index.value_repr() + " (" + _index.type_repr() + ")");
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 int index = _index.get_number();
@@ -1005,7 +1005,7 @@ static EvaluateResult run(VM &vm)
             Value list = pop(vm);
             if (!list.is_list())
             {
-                runtimeError(vm, "Operand must be a list");
+                runtimeError(vm, "Operand must be a list - value: " + list.value_repr() + " (" + list.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(list.get_list()->size());
@@ -1017,7 +1017,7 @@ static EvaluateResult run(VM &vm)
             Value &list = vm.stack.back();
             if (!list.is_list())
             {
-                runtimeError(vm, "Operand must be a list");
+                runtimeError(vm, "Operand must be a list - value: " + list.value_repr() + " (" + list.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             list.meta.unpack = true;
@@ -1072,7 +1072,7 @@ static EvaluateResult run(VM &vm)
 
             if (!function.is_function())
             {
-                runtimeError(vm, "Object is not callable");
+                runtimeError(vm, "Object is not callable: " + function.value_repr() + " (" + function.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
 
@@ -1136,7 +1136,7 @@ static EvaluateResult run(VM &vm)
 
             if (!function.is_function())
             {
-                runtimeError(vm, "Object is not callable");
+                runtimeError(vm, "Object is not callable: " + function.value_repr() + " (" + function.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
 
@@ -1495,7 +1495,7 @@ static EvaluateResult run(VM &vm)
             Value constant = pop(vm);
             if (!constant.is_number())
             {
-                runtimeError(vm, "Operand must be a number");
+                runtimeError(vm, "Operand must be a number: " + constant.value_repr() + " (" + constant.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(-constant.get_number());
@@ -1513,7 +1513,7 @@ static EvaluateResult run(VM &vm)
             }
             if (!constant.is_boolean())
             {
-                runtimeError(vm, "Operand must be a boolean");
+                runtimeError(vm, "Operand must be a boolean: " + constant.value_repr() + " (" + constant.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = boolean_val(!constant.get_boolean());
@@ -1532,7 +1532,7 @@ static EvaluateResult run(VM &vm)
             }
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '+' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(v1.get_number() + v2.get_number());
@@ -1545,7 +1545,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '-' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(v1.get_number() - v2.get_number());
@@ -1558,7 +1558,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '*' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(v1.get_number() * v2.get_number());
@@ -1571,7 +1571,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '/' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(v1.get_number() / v2.get_number());
@@ -1584,7 +1584,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '%' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(fmod(v1.get_number(), v2.get_number()));
@@ -1597,7 +1597,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '^' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(pow(v1.get_number(), v2.get_number()));
@@ -1610,7 +1610,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '&' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val((int)v1.get_number() & (int)v2.get_number());
@@ -1623,7 +1623,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '|' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val((int)v1.get_number() | (int)v2.get_number());
@@ -1652,7 +1652,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '<=' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = boolean_val(v1.get_number() <= v2.get_number());
@@ -1665,7 +1665,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '>=' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = boolean_val(v1.get_number() >= v2.get_number());
@@ -1678,7 +1678,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '<' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = boolean_val(v1.get_number() < v2.get_number());
@@ -1691,7 +1691,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '>' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = boolean_val(v1.get_number() > v2.get_number());
@@ -1704,7 +1704,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '..' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = list_val();

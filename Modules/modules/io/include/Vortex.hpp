@@ -238,7 +238,129 @@ struct Value
     {
         return type == ValueType::None;
     }
+    std::string type_repr()
+    {
+        switch (type)
+        {
+        case ValueType::Number:
+            return "Number";
+        case ValueType::String:
+            return "String";
+        case ValueType::Boolean:
+            return "Boolean";
+        case ValueType::List:
+            return "List";
+        case ValueType::Object:
+            return "Object";
+        case ValueType::Function:
+            return "Function";
+        case ValueType::Native:
+            return "Native";
+        case ValueType::Pointer:
+            return "Pointer";
+        case ValueType::Type:
+            return "Type";
+        case ValueType::None:
+            return "None";
+        default:
+            return "Unknown";
+        }
+    }
+    std::string value_repr()
+    {
+        return toString(*this);
+    }
 };
+
+std::string toString(Value value)
+{
+    switch (value.type)
+    {
+    case ValueType::Number:
+    {
+        double number = value.get_number();
+        if (std::floor(number) == number)
+        {
+            return std::to_string((long long)number);
+        }
+        char buff[100];
+        snprintf(buff, sizeof(buff), "%.8g", number);
+        std::string buffAsStdStr = buff;
+        return buffAsStdStr;
+        // return std::to_string(number);
+    }
+    case ValueType::String:
+    {
+        return (value.get_string());
+    }
+    case ValueType::Boolean:
+    {
+        return (value.get_boolean() ? "true" : "false");
+    }
+    case ValueType::List:
+    {
+        std::string repr = "[";
+        for (int i = 0; i < value.get_list()->size(); i++)
+        {
+            Value &v = value.get_list()->at(i);
+            repr += toString(v);
+            if (i < value.get_list()->size() - 1)
+            {
+                repr += ", ";
+            }
+        }
+        repr += "]";
+        return repr;
+    }
+    case ValueType::Type:
+    {
+        return "Type: " + value.get_type()->name;
+    }
+    case ValueType::Object:
+    {
+        auto &obj = value.get_object();
+        std::string repr;
+        if (obj->type)
+        {
+            repr += value.get_object()->type->name + " ";
+        }
+        repr += "{ ";
+        int i = 0;
+        int size = obj->values.size();
+        for (std::string &key : obj->keys)
+        {
+            repr += key + ": " + toString(obj->values[key]);
+            i++;
+            if (i < size)
+            {
+                repr += ", ";
+            }
+        }
+        repr += " }";
+        return repr;
+    }
+    case ValueType::Function:
+    {
+        return "Function: " + value.get_function()->name;
+    }
+    case ValueType::Native:
+    {
+        return "Native Function: " + value.get_native()->name;
+    }
+    case ValueType::Pointer:
+    {
+        return "<Pointer>";
+    }
+    case ValueType::None:
+    {
+        return "None";
+    }
+    default:
+    {
+        return "Undefined";
+    }
+    }
+}
 
 struct Closure
 {
