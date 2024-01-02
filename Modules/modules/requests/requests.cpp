@@ -3,7 +3,7 @@
 #include "include/Vortex.hpp"
 #include "include/httplib.h"
 
-std::string toString(Value value, bool quote_strings = false)
+std::string valueToString(Value value, bool quote_strings = false)
 {
     switch (value.type)
     {
@@ -37,7 +37,7 @@ std::string toString(Value value, bool quote_strings = false)
         for (int i = 0; i < value.get_list()->size(); i++)
         {
             Value &v = value.get_list()->at(i);
-            repr += toString(v, quote_strings);
+            repr += valueToString(v, quote_strings);
             if (i < value.get_list()->size() - 1)
             {
                 repr += ", ";
@@ -68,7 +68,7 @@ std::string toString(Value value, bool quote_strings = false)
             {
                 key = "\"" + key + "\"";
             }
-            repr += key + ": " + toString(prop.second, quote_strings);
+            repr += key + ": " + valueToString(prop.second, quote_strings);
             i++;
             if (i < size)
             {
@@ -132,7 +132,7 @@ extern "C" Value _get(std::vector<Value> &args)
     httplib::Headers _headers;
     for (auto &prop : headers.get_object()->values)
     {
-        _headers.insert({prop.first, toString(prop.second)});
+        _headers.insert({prop.first, valueToString(prop.second)});
     }
 
     httplib::Client cli(url.get_string());
@@ -206,7 +206,7 @@ extern "C" Value _post(std::vector<Value> &args)
     httplib::Headers _headers;
     for (auto &prop : headers.get_object()->values)
     {
-        _headers.insert({prop.first, toString(prop.second)});
+        _headers.insert({prop.first, valueToString(prop.second)});
     }
 
     httplib::Result res = httplib::Result(nullptr, httplib::Error());
@@ -216,7 +216,7 @@ extern "C" Value _post(std::vector<Value> &args)
         httplib::MultipartFormDataItems items;
         for (auto &prop : payload.get_object()->values)
         {
-            items.push_back({prop.first, toString(prop.second), "", ""});
+            items.push_back({prop.first, valueToString(prop.second), "", ""});
         }
         res = cli.Post(endpoint.get_string(), _headers, items);
     }
@@ -291,7 +291,7 @@ extern "C" Value _put(std::vector<Value> &args)
     httplib::Headers _headers;
     for (auto &prop : headers.get_object()->values)
     {
-        _headers.insert({prop.first, toString(prop.second)});
+        _headers.insert({prop.first, valueToString(prop.second)});
     }
 
     httplib::Result res = httplib::Result(nullptr, httplib::Error());
@@ -301,7 +301,7 @@ extern "C" Value _put(std::vector<Value> &args)
         httplib::MultipartFormDataItems items;
         for (auto &prop : payload.get_object()->values)
         {
-            items.push_back({prop.first, toString(prop.second), "", ""});
+            items.push_back({prop.first, valueToString(prop.second), "", ""});
         }
         res = cli.Put(endpoint.get_string(), _headers, items);
     }
@@ -376,7 +376,7 @@ extern "C" Value _patch(std::vector<Value> &args)
     httplib::Headers _headers;
     for (auto &prop : headers.get_object()->values)
     {
-        _headers.insert({prop.first, toString(prop.second)});
+        _headers.insert({prop.first, valueToString(prop.second)});
     }
 
     std::string _payload;
@@ -387,7 +387,7 @@ extern "C" Value _patch(std::vector<Value> &args)
     }
     else
     {
-        _payload = toString(payload, true);
+        _payload = valueToString(payload, true);
     }
 
     httplib::Result res = cli.Patch(endpoint.get_string(), _headers, _payload, "");
@@ -449,7 +449,7 @@ extern "C" Value _delete(std::vector<Value> &args)
     httplib::Headers _headers;
     for (auto &prop : headers.get_object()->values)
     {
-        _headers.insert({prop.first, toString(prop.second)});
+        _headers.insert({prop.first, valueToString(prop.second)});
     }
 
     httplib::Client cli(url.get_string());
@@ -514,7 +514,7 @@ extern "C" Value _options(std::vector<Value> &args)
     httplib::Headers _headers;
     for (auto &prop : headers.get_object()->values)
     {
-        _headers.insert({prop.first, toString(prop.second)});
+        _headers.insert({prop.first, valueToString(prop.second)});
     }
 
     httplib::Client cli(url.get_string());
@@ -579,7 +579,7 @@ extern "C" Value _head(std::vector<Value> &args)
     httplib::Headers _headers;
     for (auto &prop : headers.get_object()->values)
     {
-        _headers.insert({prop.first, toString(prop.second)});
+        _headers.insert({prop.first, valueToString(prop.second)});
     }
 
     httplib::Client cli(url.get_string());

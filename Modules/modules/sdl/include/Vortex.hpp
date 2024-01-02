@@ -25,6 +25,8 @@ enum class ValueType
 struct Value;
 struct Closure;
 
+std::string toString(Value value);
+
 struct Chunk
 {
     std::vector<uint8_t> code;
