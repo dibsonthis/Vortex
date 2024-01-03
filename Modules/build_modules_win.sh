@@ -23,7 +23,7 @@ CONFIG=""
 if [ "$FILE" = "sdl" ]; then
     CONFIG="-D_THREAD_SAFE -framework GLUT -framework OpenGL $FILE/include/SDL2/*.cpp"
 elif [ "$FILE" = "requests" ]; then
-    CONFIG="-framework CoreFoundation -framework Security"
+    CONFIG=""
 elif [ "$FILE" = "sqlite" ]; then
     CONFIG="-lsqlite3"
 else
