@@ -883,11 +883,13 @@ static EvaluateResult run(VM &vm)
 
                 if (_instruction == OP_ITER && count == 1)
                 {
+                    frame->ip -= diff;
                     break;
                 }
 
                 if (count == 0)
                 {
+                    frame->ip -= diff;
                     break;
                 }
             }
