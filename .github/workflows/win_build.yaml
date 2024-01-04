@@ -5,7 +5,7 @@ on:
     inputs:
       tag:
         description: 'tag'
-        default: '1.0'
+        default: '1.0-win'
         required: true
         type: string
 

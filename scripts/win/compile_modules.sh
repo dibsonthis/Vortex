@@ -50,6 +50,8 @@ $FILE/$FILE.cpp  \
 -o $FILE/bin/$FILE \
 $DIRECT_LIBS
 
+cp $FILE/lib/*.dll $FILE
+
 done
 
 popd
