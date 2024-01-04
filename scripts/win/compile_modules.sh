@@ -48,7 +48,8 @@ $LIBS \
 -stdlib=libc++ \
 $FILE/$FILE.cpp  \
 -o $FILE/bin/$FILE \
-$DIRECT_LIBS
+$DIRECT_LIBS \
+-stdlib=libstdc++
 
 cp $FILE/lib/*.dll $FILE
 
