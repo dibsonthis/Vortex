@@ -10,6 +10,7 @@ else
 fi
 
 CONFIG=""
+DIRECT_LIBS=""
 
 if [ "$1" = "sdl" ]; then
     # sudo install_name_tool -id "/usr/local/share/vortex/modules/sdl/lib/libSDL2-2.0.0.dylib" "modules/$1/lib/libSDL2-2.0.0.dylib"

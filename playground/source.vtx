@@ -1,4 +1,4 @@
-import sdl : "C:/dev/C++/Languages/Vortex/Vortex/Modules/modules/sdl/sdl"
+import sdl : "/Users/adib/Dev/Personal/Vortex/Modules/modules/sdl/sdl"
 
 var init = sdl.initSDL()
 
