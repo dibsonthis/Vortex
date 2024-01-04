@@ -1,1 +1,13 @@
-import sdl
+import sdl : "C:/dev/C++/Languages/Vortex/Vortex/Modules/modules/sdl/sdl"
+
+var init = sdl.initSDL()
+
+if (init != 0) {
+	print("Error initializing SDL\n")
+	exit(1)
+} else {
+	print("Initialized SDL\n")
+}
+
+const window = sdl.createWindow("Test", 300, 100, 800, 800)
+const renderer = sdl.createRenderer(window)

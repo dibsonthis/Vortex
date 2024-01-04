@@ -94,10 +94,10 @@ extern "C" Value createWindow(std::vector<Value> &args)
     windowPointer.get_pointer()->value = window;
 
     auto sdl_error = std::string(SDL_GetError());
-    if (sdl_error != "")
-    {
-        error("SDL Error (createWindow): " + sdl_error);
-    }
+    // if (sdl_error != "")
+    // {
+    //     error("SDL Error (createWindow): " + sdl_error);
+    // }
 
     std::cout << "Initalized window: " << window << "\n";
     return windowPointer;
@@ -133,10 +133,10 @@ extern "C" Value createRenderer(std::vector<Value> &args)
     rendererPointer.get_pointer()->value = renderer;
 
     auto sdl_error = std::string(SDL_GetError());
-    if (sdl_error != "")
-    {
-        error("SDL Error (createRenderer): " + sdl_error);
-    }
+    // if (sdl_error != "")
+    // {
+    //     error("SDL Error (createRenderer): " + sdl_error);
+    // }
 
     std::cout << "Initalized renderer: " << renderer << "\n";
     return rendererPointer;
