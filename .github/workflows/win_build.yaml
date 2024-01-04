@@ -19,6 +19,7 @@ jobs:
 
     - name: Compile Interpreter
       run: scripts/win/compile_interpreter.sh
+      shell: bash
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
@@ -28,6 +29,7 @@ jobs:
 
     - name: Compile Modules
       run: scripts/win/compile_modules.sh
+      shell: bash
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
