@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <iomanip>
 #include <cmath>
+#include <string>
 #include "../Node/Node.hpp"
 
 #define value_ptr std::shared_ptr<Value>
