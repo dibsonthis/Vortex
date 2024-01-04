@@ -1,4 +1,4 @@
-name: Mac Build
+name: Win Build
 
 on: 
   workflow_dispatch:
@@ -11,41 +11,41 @@ on:
 
 jobs:
   compile:
-    runs-on: macos-13
+    runs-on: windows-latest
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
 
     - name: Compile Interpreter
-      run: scripts/mac/compile_interpreter.sh
+      run: scripts/win/compile_interpreter.sh
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
       with:
         name: interpreter
-        path: bin/build/interp/mac/vortex
-        
+        path: bin/build/interp/win/vortex
+
     - name: Compile Modules
-      run: scripts/mac/compile_modules.sh
+      run: scripts/win/compile_modules.sh
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
       with:
         name: modules
-        path: bin/build/modules/mac/**/*
+        path: bin/build/modules/win/**/*
 
     - name: Create dist folder
       run: |
         mkdir -p dist
-        cp bin/build/interp/mac/vortex dist
-        for module in bin/build/modules/mac/*; 
+        cp bin/build/interp/win/vortex dist
+        for module in bin/build/modules/win/*; 
         do
         m=$(basename $module)
-        pushd bin/build/modules/mac
+        pushd bin/build/modules/win
         zip -r -y ${m}.zip ${m};
         popd
-        mv bin/build/modules/mac/${m}.zip dist
+        mv bin/build/modules/win/${m}.zip dist
         done
 
     - name: Create release
@@ -54,6 +54,6 @@ jobs:
       run: |
         gh release create ${{ inputs.tag }} dist/* \
             --repo="$GITHUB_REPOSITORY" \
-            --title="Vortex-Mac-${{ inputs.tag }}" \
+            --title="Vortex-Win-${{ inputs.tag }}" \
             --generate-notes \
             --latest
