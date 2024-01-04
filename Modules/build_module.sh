@@ -64,4 +64,6 @@ $LIBS \
 -stdlib=libc++ \
 "$1".cpp  \
 -o bin/"$1" \
+-arch arm64 \
+-arch x86_64 \
 -Wl,-rpath,$RPATH
