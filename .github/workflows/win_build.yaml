@@ -25,7 +25,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: interpreter
-        path: bin/build/interp/win/vortex
+        path: bin/build/interp/win/vortex.exe
 
     - name: Compile Modules
       run: scripts/win/compile_modules.sh

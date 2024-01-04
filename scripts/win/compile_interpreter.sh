@@ -15,4 +15,4 @@ src/Bytecode/Generator.cpp \
 src/VirtualMachine/VirtualMachine.cpp \
 src/utils/utils.cpp \
 main.cpp \
--o bin/build/interp/win/vortex
+-o bin/build/interp/win/vortex.exe
