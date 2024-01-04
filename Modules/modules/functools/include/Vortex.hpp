@@ -7,6 +7,7 @@
 #include <iostream>
 #include <variant>
 #include <cstdarg>
+#include <cmath>
 
 enum class ValueType
 {
@@ -25,12 +26,16 @@ enum class ValueType
 struct Value;
 struct Closure;
 
+std::string toString(Value value);
+
 struct Chunk
 {
     std::vector<uint8_t> code;
     std::vector<int> lines;
     std::vector<Value> constants;
     std::vector<std::string> variables;
+    std::vector<std::string> public_variables;
+    std::string import_path;
 };
 
 struct ClosedVar
@@ -235,6 +240,38 @@ struct Value
     bool is_none()
     {
         return type == ValueType::None;
+    }
+    std::string type_repr()
+    {
+        switch (type)
+        {
+        case ValueType::Number:
+            return "Number";
+        case ValueType::String:
+            return "String";
+        case ValueType::Boolean:
+            return "Boolean";
+        case ValueType::List:
+            return "List";
+        case ValueType::Object:
+            return "Object";
+        case ValueType::Function:
+            return "Function";
+        case ValueType::Native:
+            return "Native";
+        case ValueType::Pointer:
+            return "Pointer";
+        case ValueType::Type:
+            return "Type";
+        case ValueType::None:
+            return "None";
+        default:
+            return "Unknown";
+        }
+    }
+    std::string value_repr()
+    {
+        return toString(*this);
     }
 };
 

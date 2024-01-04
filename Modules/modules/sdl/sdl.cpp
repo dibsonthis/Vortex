@@ -1,7 +1,15 @@
 #include "include/Vortex.hpp"
+
+#if defined(__APPLE__)
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
-#include <GLUT/glut.h>
+#else
+#include <windows.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#endif
+
+#include "include/GL/glut.h"
 #include "include/SDL2/SDL.h"
 #include "include/SDL2/SDL_Image.h"
 #include "include/SDL2/SDL_ttf.h"

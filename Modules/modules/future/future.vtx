@@ -1,0 +1,33 @@
+type Future = (func, default = None) => {
+    const future = __future__(func, __vm__)
+    return {
+        value: default,
+        ready: false,
+        finished: false,
+        is_ready: () => {
+            if (!this.ready) {
+                this.ready = __check_future__(future)
+            }
+
+            return this.ready
+        },
+        get: () => {
+            if (!this.is_ready()) {
+                return this.value
+            }
+
+            if (!this.finished) {
+                this.value = __get_future__(future)
+                this.finished = true
+            }
+
+            return this.value
+        },
+        wait_for: () => {
+            this.value = __get_future__(future)
+            this.finished = true
+            this.ready = true
+            return this.value
+        }
+    }
+}

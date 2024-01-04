@@ -93,12 +93,16 @@ enum ValueType
 struct Value;
 struct Closure;
 
+std::string toString(Value value);
+
 struct Chunk
 {
     std::vector<uint8_t> code;
     std::vector<int> lines;
     std::vector<Value> constants;
     std::vector<std::string> variables;
+    std::vector<std::string> public_variables;
+    std::string import_path;
 };
 
 struct ClosedVar
@@ -166,6 +170,8 @@ struct ValueHooks
 {
     std::shared_ptr<Value> onChangeHook = nullptr;
 };
+
+std::string toString(Value value);
 
 struct Value
 {
@@ -304,6 +310,39 @@ struct Value
     {
         return type == None;
     }
+    std::string type_repr()
+    {
+        switch (type)
+        {
+        case Number:
+            return "Number";
+        case String:
+            return "String";
+        case Boolean:
+            return "Boolean";
+        case List:
+            return "List";
+        case Object:
+            return "Object";
+        case Function:
+            return "Function";
+        case Native:
+            return "Native";
+        case Pointer:
+            return "Pointer";
+        case Type:
+            return "Type";
+        case None:
+            return "None";
+        default:
+            return "Unknown";
+        }
+    }
+
+    std::string value_repr()
+    {
+        return toString(*this);
+    }
 };
 
 struct Closure
@@ -325,7 +364,6 @@ Value pointer_val();
 Value none_val();
 
 void printValue(Value value);
-std::string toString(Value value);
 
 void add_code(Chunk &chunk, uint8_t code, int line = 0);
 

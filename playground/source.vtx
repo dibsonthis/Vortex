@@ -1,3 +1,1 @@
-import io : "C:/Windows/System32/vortex/modules/io/io"
-
-println(io)
+import sdl

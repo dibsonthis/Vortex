@@ -102,6 +102,9 @@ static EvaluateResult run(VM &vm)
     define_native(vm, "type", type_builtin);
     define_native(vm, "copy", copy_builtin);
     define_native(vm, "sort", sort_builtin);
+    define_native(vm, "__future__", future_builtin);
+    define_native(vm, "__get_future__", get_future_builtin);
+    define_native(vm, "__check_future__", check_future_builtin);
     define_native(vm, "exit", exit_builtin);
     define_native(vm, "__error__", error_builtin);
     define_native(vm, "load_lib", load_lib_builtin);
@@ -243,6 +246,7 @@ static EvaluateResult run(VM &vm)
                 Value new_value = pop(vm);
 
                 Value obj = object_val();
+                obj.get_object()->keys = {"old", "current"};
                 obj.get_object()->values["old"] = value;
                 obj.get_object()->values["current"] = new_value;
 
@@ -251,6 +255,7 @@ static EvaluateResult run(VM &vm)
                 main->name = "";
                 main->arity = 0;
                 main->chunk = Chunk();
+                main->chunk.import_path = frame->function->chunk.import_path;
                 CallFrame main_frame;
                 main_frame.name = frame->name;
                 main_frame.function = main;
@@ -266,6 +271,9 @@ static EvaluateResult run(VM &vm)
                 add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
                 add_opcode(main->chunk, OP_CALL, 1, 0);
                 add_code(main->chunk, OP_EXIT, 0);
+
+                auto offsets = instruction_offsets(main_frame.function->chunk);
+                main_frame.function->instruction_offsets = offsets;
 
                 auto status = evaluate(func_vm);
 
@@ -308,7 +316,7 @@ static EvaluateResult run(VM &vm)
             {
                 if (!accessor.is_string())
                 {
-                    runtimeError(vm, "Object accessor must be a string");
+                    runtimeError(vm, "Object accessor must be a string - accessor used: " + accessor.value_repr() + " (" + accessor.type_repr() + ")");
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 Value current = container.get_object()->values[accessor.get_string()];
@@ -316,14 +324,23 @@ static EvaluateResult run(VM &vm)
                 if (current.hooks.onChangeHook)
                 {
                     Value obj = object_val();
+                    obj.get_object()->keys = {"old", "current"};
                     obj.get_object()->values["old"] = current;
                     obj.get_object()->values["current"] = value;
+
+                    // store onChangeHook here
+                    auto hook = obj.get_object()->values["old"].hooks.onChangeHook;
+                    obj.get_object()->values["old"].hooks.onChangeHook = nullptr;
+
+                    auto value_hook = obj.get_object()->values["current"].hooks.onChangeHook;
+                    obj.get_object()->values["current"].hooks.onChangeHook = nullptr;
 
                     VM func_vm;
                     std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
                     main->name = "";
                     main->arity = 0;
                     main->chunk = Chunk();
+                    main->chunk.import_path = frame->function->chunk.import_path;
                     CallFrame main_frame;
                     main_frame.name = frame->name;
                     main_frame.function = main;
@@ -332,7 +349,7 @@ static EvaluateResult run(VM &vm)
                     main_frame.frame_start = 0;
                     func_vm.frames.push_back(main_frame);
 
-                    add_constant(main->chunk, *current.hooks.onChangeHook);
+                    add_constant(main->chunk, *hook);
                     add_constant(main->chunk, obj);
 
                     add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
@@ -340,7 +357,13 @@ static EvaluateResult run(VM &vm)
                     add_opcode(main->chunk, OP_CALL, 1, 0);
                     add_code(main->chunk, OP_EXIT, 0);
 
+                    auto offsets = instruction_offsets(main_frame.function->chunk);
+                    main_frame.function->instruction_offsets = offsets;
+
                     auto status = evaluate(func_vm);
+
+                    obj.get_object()->values["old"].hooks.onChangeHook = hook;
+                    obj.get_object()->values["current"].hooks.onChangeHook = value_hook;
 
                     if (status != 0)
                     {
@@ -364,7 +387,7 @@ static EvaluateResult run(VM &vm)
             {
                 if (!accessor.is_number())
                 {
-                    runtimeError(vm, "List accessor must be a number");
+                    runtimeError(vm, "List accessor must be a number - accessor used: " + accessor.value_repr() + " (" + accessor.type_repr() + ")");
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 auto &list = *container.get_list();
@@ -386,12 +409,12 @@ static EvaluateResult run(VM &vm)
             {
                 if (!accessor.is_number())
                 {
-                    runtimeError(vm, "String accessor must be a number");
+                    runtimeError(vm, "String accessor must be a number - accessor used: " + accessor.value_repr() + " (" + accessor.type_repr() + ")");
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 if (!value.is_string())
                 {
-                    runtimeError(vm, "String values must be of type string");
+                    runtimeError(vm, "String values must be of type string - value used: " + value.value_repr() + " (" + value.type_repr() + ")");
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 auto &string = container.get_string();
@@ -412,7 +435,7 @@ static EvaluateResult run(VM &vm)
             }
             else
             {
-                runtimeError(vm, "Object is not accessible");
+                runtimeError(vm, "Object is not accessible: " + container.value_repr() + " (" + container.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             push(vm, value);
@@ -449,12 +472,12 @@ static EvaluateResult run(VM &vm)
             {
                 Value prop_value = pop(vm);
                 Value prop_name = pop(vm);
-                object_obj->keys.insert(object_obj->keys.begin(), prop_name.get_string());
                 if (!prop_name.is_string())
                 {
-                    runtimeError(vm, "Object keys must evaluate to strings");
+                    runtimeError(vm, "Object keys must evaluate to strings - key used: " + prop_name.value_repr() + " (" + prop_name.type_repr() + ")");
                     return EVALUATE_RUNTIME_ERROR;
                 }
+                object_obj->keys.insert(object_obj->keys.begin(), prop_name.get_string());
                 object_obj->values[prop_name.get_string()] = prop_value;
             }
             push(vm, object);
@@ -606,6 +629,7 @@ static EvaluateResult run(VM &vm)
                 Value new_value = pop(vm);
 
                 Value obj = object_val();
+                obj.get_object()->keys = {"old", "current"};
                 obj.get_object()->values["old"] = value;
                 obj.get_object()->values["current"] = new_value;
 
@@ -614,6 +638,7 @@ static EvaluateResult run(VM &vm)
                 main->name = "";
                 main->arity = 0;
                 main->chunk = Chunk();
+                main->chunk.import_path = frame->function->chunk.import_path;
                 CallFrame main_frame;
                 main_frame.name = frame->name;
                 main_frame.function = main;
@@ -629,6 +654,9 @@ static EvaluateResult run(VM &vm)
                 add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
                 add_opcode(main->chunk, OP_CALL, 1, 0);
                 add_code(main->chunk, OP_EXIT, 0);
+
+                auto offsets = instruction_offsets(main_frame.function->chunk);
+                main_frame.function->instruction_offsets = offsets;
 
                 auto status = evaluate(func_vm);
 
@@ -750,22 +778,48 @@ static EvaluateResult run(VM &vm)
             int stack_size_start = READ_INT();
             int to_pop = vm.stack.size() - stack_size_start;
 
-            // instruction_index++;
-            // instruction = frame->function->instruction_offsets[instruction_index];
-            // _instruction = frame->function->chunk.code[instruction];
-
             for (int i = 0; i < to_pop; i++)
             {
                 pop(vm);
             }
-            while (_instruction != OP_LOOP_END)
+            // We need to go all the way down to OP_JUMP_BACK, but make sure to
+            // skip any loops along the way
+
+            count = 1;
+
+            while (true)
             {
+
                 instruction_index++;
                 instruction = frame->function->instruction_offsets[instruction_index];
                 _instruction = frame->function->chunk.code[instruction];
                 int diff = frame->function->instruction_offsets[instruction_index + 1] - instruction;
                 frame->ip += diff;
+
+                if (_instruction == OP_LOOP)
+                {
+                    count++;
+                }
+                if (_instruction == OP_JUMP_BACK)
+                {
+                    count--;
+                }
+
+                if (count == 0)
+                {
+                    break;
+                }
             }
+
+            // while (_instruction != OP_JUMP_BACK)
+            // {
+            //     instruction_index++;
+            //     instruction = frame->function->instruction_offsets[instruction_index];
+            //     _instruction = frame->function->chunk.code[instruction];
+            //     int diff = frame->function->instruction_offsets[instruction_index + 1] - instruction;
+            //     frame->ip += diff;
+            // }
+
             break;
         }
         case OP_CONTINUE:
@@ -800,27 +854,44 @@ static EvaluateResult run(VM &vm)
             int stack_size_start = READ_INT();
             int to_pop = vm.stack.size() - stack_size_start;
 
-            instruction_index++;
-            instruction = frame->function->instruction_offsets[instruction_index];
-            _instruction = frame->function->chunk.code[instruction];
-
             for (int i = 0; i < to_pop; i++)
             {
                 pop(vm);
             }
 
-            while (_instruction != OP_JUMP_BACK)
-            {
-                if (_instruction == OP_ITER)
-                {
-                    break;
-                }
+            // We need to go all the way down to OP_JUMP_BACK, but make sure to
+            // skip any loops along the way
 
+            count = 1;
+
+            while (true)
+            {
                 instruction_index++;
                 instruction = frame->function->instruction_offsets[instruction_index];
                 _instruction = frame->function->chunk.code[instruction];
                 int diff = frame->function->instruction_offsets[instruction_index + 1] - instruction;
                 frame->ip += diff;
+
+                if (_instruction == OP_LOOP)
+                {
+                    count++;
+                }
+                if (_instruction == OP_JUMP_BACK)
+                {
+                    count--;
+                }
+
+                if (_instruction == OP_ITER && count == 1)
+                {
+                    frame->ip -= diff;
+                    break;
+                }
+
+                if (count == 0)
+                {
+                    frame->ip -= diff;
+                    break;
+                }
             }
 
             break;
@@ -850,7 +921,7 @@ static EvaluateResult run(VM &vm)
                     push(vm, _container);
                     break;
                 }
-                runtimeError(vm, "Object is not accessable");
+                runtimeError(vm, "Object is not accessible: " + _container.value_repr() + " (" + _container.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
 
@@ -864,7 +935,7 @@ static EvaluateResult run(VM &vm)
                 }
                 if (!_index.is_number())
                 {
-                    runtimeError(vm, "Accessor must be a number");
+                    runtimeError(vm, "Accessor must be a number - accessor used: " + _index.value_repr() + " (" + _index.type_repr() + ")");
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 int index = _index.get_number();
@@ -883,7 +954,7 @@ static EvaluateResult run(VM &vm)
             {
                 if (!_index.is_string())
                 {
-                    runtimeError(vm, "Accessor must be a string");
+                    runtimeError(vm, "Accessor must be a string - accessor used: " + _index.value_repr() + " (" + _index.type_repr() + ")");
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 std::string &index = _index.get_string();
@@ -908,7 +979,7 @@ static EvaluateResult run(VM &vm)
                 }
                 if (!_index.is_number())
                 {
-                    runtimeError(vm, "Accessor must be a number");
+                    runtimeError(vm, "Accessor must be a number - accessor used: " + _index.value_repr() + " (" + _index.type_repr() + ")");
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 int index = _index.get_number();
@@ -936,7 +1007,7 @@ static EvaluateResult run(VM &vm)
             Value list = pop(vm);
             if (!list.is_list())
             {
-                runtimeError(vm, "Operand must be a list");
+                runtimeError(vm, "Operand must be a list - value: " + list.value_repr() + " (" + list.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(list.get_list()->size());
@@ -948,7 +1019,7 @@ static EvaluateResult run(VM &vm)
             Value &list = vm.stack.back();
             if (!list.is_list())
             {
-                runtimeError(vm, "Operand must be a list");
+                runtimeError(vm, "Operand must be a list - value: " + list.value_repr() + " (" + list.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             list.meta.unpack = true;
@@ -1003,7 +1074,7 @@ static EvaluateResult run(VM &vm)
 
             if (!function.is_function())
             {
-                runtimeError(vm, "Object is not callable");
+                runtimeError(vm, "Object is not callable: " + function.value_repr() + " (" + function.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
 
@@ -1067,7 +1138,7 @@ static EvaluateResult run(VM &vm)
 
             if (!function.is_function())
             {
-                runtimeError(vm, "Object is not callable");
+                runtimeError(vm, "Object is not callable: " + function.value_repr() + " (" + function.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
 
@@ -1203,6 +1274,7 @@ static EvaluateResult run(VM &vm)
                     main->name = "";
                     main->arity = 0;
                     main->chunk = Chunk();
+                    main->chunk.import_path = frame->function->chunk.import_path;
                     CallFrame main_frame;
                     main_frame.name = frame->name;
                     main_frame.function = main;
@@ -1214,6 +1286,8 @@ static EvaluateResult run(VM &vm)
                     reset();
                     generate_bytecode(parser.nodes, main_frame.function->chunk);
                     add_code(main_frame.function->chunk, OP_EXIT);
+                    auto offsets = instruction_offsets(main_frame.function->chunk);
+                    main_frame.function->instruction_offsets = offsets;
                     evaluate(import_vm);
 
                     if (import_vm.status != 0)
@@ -1232,9 +1306,9 @@ static EvaluateResult run(VM &vm)
 
                     std::filesystem::current_path(current_path);
 
-                    for (int i = 0; i < import_vm.frames[0].function->chunk.variables.size(); i++)
+                    for (int i = 0; i < import_vm.frames[0].function->chunk.public_variables.size(); i++)
                     {
-                        auto &var = import_vm.frames[0].function->chunk.variables[i];
+                        auto &var = import_vm.frames[0].function->chunk.public_variables[i];
                         define_global(vm, var, import_vm.stack[i]);
                     }
 
@@ -1270,6 +1344,7 @@ static EvaluateResult run(VM &vm)
                     main->name = "";
                     main->arity = 0;
                     main->chunk = Chunk();
+                    main->chunk.import_path = frame->function->chunk.import_path;
                     CallFrame main_frame;
                     main_frame.name = frame->name;
                     main_frame.function = main;
@@ -1281,6 +1356,8 @@ static EvaluateResult run(VM &vm)
                     reset();
                     generate_bytecode(parser.nodes, main_frame.function->chunk);
                     add_code(main_frame.function->chunk, OP_EXIT);
+                    auto offsets = instruction_offsets(main_frame.function->chunk);
+                    main_frame.function->instruction_offsets = offsets;
                     evaluate(import_vm);
 
                     if (import_vm.status != 0)
@@ -1301,10 +1378,11 @@ static EvaluateResult run(VM &vm)
 
                     Value import_obj = object_val();
                     auto &obj = import_obj.get_object();
-                    for (int i = 0; i < import_vm.frames[0].function->chunk.variables.size(); i++)
+                    for (int i = 0; i < import_vm.frames[0].function->chunk.public_variables.size(); i++)
                     {
-                        auto &var = import_vm.frames[0].function->chunk.variables[i];
+                        auto &var = import_vm.frames[0].function->chunk.public_variables[i];
                         obj->values[var] = import_vm.stack[i];
+                        obj->keys.push_back(var);
                     }
 
                     push(vm, import_obj);
@@ -1351,6 +1429,7 @@ static EvaluateResult run(VM &vm)
                 main->name = "";
                 main->arity = 0;
                 main->chunk = Chunk();
+                main->chunk.import_path = frame->function->chunk.import_path;
                 CallFrame main_frame;
                 main_frame.name = frame->name;
                 main_frame.function = main;
@@ -1362,6 +1441,8 @@ static EvaluateResult run(VM &vm)
                 reset();
                 generate_bytecode(parser.nodes, main_frame.function->chunk);
                 add_code(main_frame.function->chunk, OP_EXIT);
+                auto offsets = instruction_offsets(main_frame.function->chunk);
+                main_frame.function->instruction_offsets = offsets;
                 evaluate(import_vm);
 
                 if (import_vm.status != 0)
@@ -1383,9 +1464,9 @@ static EvaluateResult run(VM &vm)
                 for (auto &name : names)
                 {
                     bool found = false;
-                    for (int i = 0; i < import_vm.frames[0].function->chunk.variables.size(); i++)
+                    for (int i = 0; i < import_vm.frames[0].function->chunk.public_variables.size(); i++)
                     {
-                        if (name == import_vm.frames[0].function->chunk.variables[i])
+                        if (name == import_vm.frames[0].function->chunk.public_variables[i])
                         {
                             push(vm, import_vm.stack[i]);
                             found = true;
@@ -1416,7 +1497,7 @@ static EvaluateResult run(VM &vm)
             Value constant = pop(vm);
             if (!constant.is_number())
             {
-                runtimeError(vm, "Operand must be a number");
+                runtimeError(vm, "Operand must be a number: " + constant.value_repr() + " (" + constant.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(-constant.get_number());
@@ -1434,7 +1515,7 @@ static EvaluateResult run(VM &vm)
             }
             if (!constant.is_boolean())
             {
-                runtimeError(vm, "Operand must be a boolean");
+                runtimeError(vm, "Operand must be a boolean: " + constant.value_repr() + " (" + constant.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = boolean_val(!constant.get_boolean());
@@ -1448,13 +1529,12 @@ static EvaluateResult run(VM &vm)
             if (v1.is_string() && v2.is_string())
             {
                 Value value = string_val(v1.get_string() + v2.get_string());
-                vm.objects.push_back(&value);
                 push(vm, value);
                 break;
             }
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '+' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(v1.get_number() + v2.get_number());
@@ -1467,7 +1547,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '-' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(v1.get_number() - v2.get_number());
@@ -1480,7 +1560,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '*' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(v1.get_number() * v2.get_number());
@@ -1493,7 +1573,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '/' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(v1.get_number() / v2.get_number());
@@ -1506,7 +1586,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '%' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(fmod(v1.get_number(), v2.get_number()));
@@ -1519,7 +1599,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '^' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(pow(v1.get_number(), v2.get_number()));
@@ -1532,7 +1612,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '&' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val((int)v1.get_number() & (int)v2.get_number());
@@ -1545,7 +1625,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '|' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val((int)v1.get_number() | (int)v2.get_number());
@@ -1574,7 +1654,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '<=' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = boolean_val(v1.get_number() <= v2.get_number());
@@ -1587,7 +1667,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '>=' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = boolean_val(v1.get_number() >= v2.get_number());
@@ -1600,7 +1680,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '<' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = boolean_val(v1.get_number() < v2.get_number());
@@ -1613,7 +1693,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '>' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = boolean_val(v1.get_number() > v2.get_number());
@@ -1626,7 +1706,7 @@ static EvaluateResult run(VM &vm)
             Value v1 = pop(vm);
             if (!v1.is_number() || !v2.is_number())
             {
-                runtimeError(vm, "Operands must be numbers");
+                runtimeError(vm, "Cannot perform operation '..' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = list_val();
@@ -2084,7 +2164,7 @@ static Value remove_builtin(std::vector<Value> &args)
     int pos_num = pos.get_number();
     auto &ls = list.get_list();
 
-    if (pos_num < 0 || pos_num >= ls->size() - 1)
+    if (pos_num < 0 || pos_num >= ls->size())
     {
         return list;
     }
@@ -2305,62 +2385,67 @@ static Value load_lib_builtin(std::vector<Value> &args)
 
     Value lib_obj = object_val();
 
-    #if __APPLE__ || __linux__
+#if __APPLE__ || __linux__
 
-        void *handle = dlopen(path.get_string().c_str(), RTLD_LAZY);
+    void *handle = dlopen(path.get_string().c_str(), RTLD_LAZY);
 
-        if (!handle)
+    if (!handle)
+    {
+        error("Cannot open library: " + std::string(dlerror()));
+    }
+
+    typedef void (*load_t)(VM &vm);
+
+    auto &obj = lib_obj.get_object();
+
+    for (auto &name : *func_list.get_list())
+    {
+        if (!name.is_string())
         {
-            error("Cannot open library: " + std::string(dlerror()));
+            error("Function names must be strings");
         }
 
-        typedef void (*load_t)(VM &vm);
+        NativeFunction fn = (NativeFunction)dlsym(handle, name.get_string().c_str());
+        Value native = native_val();
+        native.get_native()->function = fn;
+        obj->values[name.get_string()] = native;
+        obj->keys.push_back(name.get_string());
+    }
 
-        auto &obj = lib_obj.get_object();
+#else
 
-        for (auto &name : *func_list.get_list())
+    typedef void(__cdecl * load_t)(VM & vm);
+    HINSTANCE hinstLib;
+    load_t loadFuncAddress;
+
+    std::string path_str = path.get_string() + ".exe";
+
+    hinstLib = LoadLibrary(TEXT(path_str.c_str()));
+
+    if (hinstLib == NULL)
+    {
+        DWORD error_msg = GetLastError();
+        std::cout << error_msg << std::endl;
+        error("Cannot open library: " + path_str);
+    }
+
+    auto &obj = lib_obj.get_object();
+
+    for (auto &name : *func_list.get_list())
+    {
+        if (!name.is_string())
         {
-            if (!name.is_string())
-            {
-                error("Function names must be strings");
-            }
-
-            NativeFunction fn = (NativeFunction)dlsym(handle, name.get_string().c_str());
-            Value native = native_val();
-            native.get_native()->function = fn;
-            obj->values[name.get_string()] = native;
+            error("Function names must be strings");
         }
 
-    #else
+        NativeFunction fn = (NativeFunction)GetProcAddress(hinstLib, name.get_string().c_str());
+        Value native = native_val();
+        native.get_native()->function = fn;
+        obj->values[name.get_string()] = native;
+        obj->keys.push_back(name.get_string());
+    }
 
-        typedef void (__cdecl *load_t)(VM &vm);
-        HINSTANCE hinstLib;
-        load_t loadFuncAddress;
-
-        std::string path_str = path.get_string() + ".exe";
-
-        hinstLib = LoadLibrary(TEXT(path_str.c_str())); 
-
-        if (hinstLib == NULL) {
-            error("Cannot open library: " + path_str);
-        }
-
-        auto &obj = lib_obj.get_object();
-
-        for (auto &name : *func_list.get_list())
-        {
-            if (!name.is_string())
-            {
-                error("Function names must be strings");
-            }
-
-            NativeFunction fn = (NativeFunction)GetProcAddress(hinstLib, name.get_string().c_str());
-            Value native = native_val();
-            native.get_native()->function = fn;
-            obj->values[name.get_string()] = native;
-        }
-
-    #endif
+#endif
 
     return lib_obj;
 }
@@ -2401,6 +2486,10 @@ Value copy(Value &value)
         Value new_object = object_val();
         new_object.get_object()->type = value.get_object()->type;
         new_object.get_object()->type_name = value.get_object()->type_name;
+        for (std::string key : value.get_object()->keys)
+        {
+            new_object.get_object()->keys.push_back(key);
+        }
         for (auto prop : value.get_object()->values)
         {
             new_object.get_object()->values[prop.first] = copy(prop.second);
@@ -2471,6 +2560,9 @@ static Value sort_builtin(std::vector<Value> &args)
     add_opcode(main->chunk, OP_CALL, 2, 0);
     add_code(main->chunk, OP_EXIT, 0);
 
+    auto offsets = instruction_offsets(main_frame.function->chunk);
+    main_frame.function->instruction_offsets = offsets;
+
     std::sort(new_list.get_list()->begin(), new_list.get_list()->end(),
               [&func_vm, &function](const Value &lhs, const Value &rhs)
               {
@@ -2540,4 +2632,124 @@ static Value error_builtin(std::vector<Value> &args)
     exit(0);
 
     return message;
+}
+
+static Value future_builtin(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function '__future__' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value func = args[0];
+    Value vm = args[1];
+
+    if (!func.is_function())
+    {
+        error("Function '__future__' expects argument 'function' to be a Function");
+    }
+
+    if (!vm.is_pointer())
+    {
+        error("Function '__future__' expects argument 'vm' to be a Pointer");
+    }
+
+    if (func.get_function()->arity != 0)
+    {
+        error("Function '__future__' expects argument 'function' to be a Function with 0 parameters");
+    }
+
+    VM *_vm = (VM *)(vm.get_pointer()->value);
+
+    auto _future = std::async(std::launch::async, [vm = std::move(_vm), func = std::move(func)]() mutable
+                              {
+        VM func_vm;
+        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+        main->name = "";
+        main->arity = 0;
+        main->chunk = Chunk();
+        CallFrame main_frame;
+        main_frame.function = main;
+        main_frame.sp = 0;
+        main_frame.ip = main->chunk.code.data();
+        main_frame.frame_start = 0;
+        func_vm.frames.push_back(main_frame);
+
+        add_constant(main->chunk, func);
+        add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 0, 0);
+
+        add_code(main->chunk, OP_EXIT, 0);
+
+        auto offsets = instruction_offsets(main_frame.function->chunk);
+        main_frame.function->instruction_offsets = offsets;
+
+        evaluate(func_vm);
+
+        return func_vm.stack.back(); })
+                       .share();
+
+    auto f = new std::shared_future<Value>(_future);
+
+    auto future_ref = pointer_val();
+    auto future = (void *)(f);
+    future_ref.get_pointer()->value = future;
+    return future_ref;
+}
+
+static Value get_future_builtin(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function '__get_future__' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value future_ptr = args[0];
+
+    if (!future_ptr.is_pointer())
+    {
+        error("Function '__get_future__' expects argument 'function' to be a Pointer");
+    }
+
+    auto future = (std::shared_future<Value> *)(future_ptr.get_pointer()->value);
+
+    if (future->valid())
+    {
+        Value value = future->get();
+        delete future;
+        return value;
+    }
+
+    return none_val();
+}
+
+static Value check_future_builtin(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function '__check_future__' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value future_ptr = args[0];
+
+    if (!future_ptr.is_pointer())
+    {
+        error("Function '__check_future__' expects argument 'function' to be a Pointer");
+    }
+
+    auto future = (std::shared_future<Value> *)(future_ptr.get_pointer()->value);
+
+    if (future->valid())
+    {
+        auto is_ready = future->wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+        return boolean_val(is_ready);
+    }
+
+    return boolean_val(false);
 }

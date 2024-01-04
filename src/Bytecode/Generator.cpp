@@ -167,6 +167,20 @@ void gen_gt(Chunk &chunk, node_ptr node)
     add_code(chunk, OP_GT, node->line);
 }
 
+void gen_bitwise_or(Chunk &chunk, node_ptr node)
+{
+    generate(node->_Node.Op().left, chunk);
+    generate(node->_Node.Op().right, chunk);
+    add_code(chunk, OP_OR, node->line);
+}
+
+void gen_bitwise_and(Chunk &chunk, node_ptr node)
+{
+    generate(node->_Node.Op().left, chunk);
+    generate(node->_Node.Op().right, chunk);
+    add_code(chunk, OP_AND, node->line);
+}
+
 void gen_eq(Chunk &chunk, node_ptr node)
 {
     node_ptr left = node->_Node.Op().left;
@@ -480,10 +494,12 @@ void gen_while_loop(Chunk &chunk, node_ptr node)
     int jump_instruction = chunk.code.size() + 1;
     add_opcode(chunk, OP_POP_JUMP_IF_FALSE, 0, node->line);
     begin_scope();
-    current->in_loop = true;
+    // current->in_loop = true;
+    current->nested_loop_count++;
     generate_bytecode(node->_Node.WhileLoop().body->_Node.Object().elements, chunk);
     end_scope(chunk);
-    current->in_loop = false;
+    // current->in_loop = false;
+    current->nested_loop_count--;
     add_opcode(chunk, OP_JUMP_BACK, chunk.code.size() - start_index + 4, node->line);
     int offset = chunk.code.size() - jump_instruction - 4;
     uint8_t *bytes = int_to_bytes(offset);
@@ -493,7 +509,8 @@ void gen_while_loop(Chunk &chunk, node_ptr node)
 
 void gen_for_loop(Chunk &chunk, node_ptr node)
 {
-    current->in_loop = true;
+    // current->in_loop = true;
+    current->nested_loop_count++;
     if (!node->_Node.ForLoop().iterator)
     {
         if (!node->_Node.ForLoop().index_name)
@@ -505,18 +522,18 @@ void gen_for_loop(Chunk &chunk, node_ptr node)
         begin_scope();
 
         add_constant_code(chunk, number_val(0));
-        declareVariable(node->_Node.ForLoop().index_name->_Node.ID().value);
+        declareVariable(node->_Node.ForLoop().index_name->_Node.ID().value, false, true);
 
         if (node->_Node.ForLoop().value_name)
         {
             generate(node->_Node.ForLoop().start, chunk);
-            declareVariable(node->_Node.ForLoop().value_name->_Node.ID().value);
+            declareVariable(node->_Node.ForLoop().value_name->_Node.ID().value, false, true);
         }
 
         generate(node->_Node.ForLoop().end, chunk);
         generate(node->_Node.ForLoop().start, chunk);
         add_code(chunk, OP_SUBTRACT, node->line);
-        declareVariable("___size___");
+        declareVariable("___size___", false, true);
 
         int loop_start = chunk.code.size() - 1;
 
@@ -565,22 +582,22 @@ void gen_for_loop(Chunk &chunk, node_ptr node)
         begin_scope();
 
         add_constant_code(chunk, number_val(0));
-        declareVariable(node->_Node.ForLoop().index_name->_Node.ID().value);
+        declareVariable(node->_Node.ForLoop().index_name->_Node.ID().value, false, true);
 
         generate(node->_Node.ForLoop().iterator, chunk);
-        declareVariable("___iter___");
+        declareVariable("___iter___", false, true);
 
         if (node->_Node.ForLoop().value_name)
         {
             add_opcode(chunk, OP_LOAD, resolve_variable("___iter___"), node->line);
             add_constant_code(chunk, number_val(0));
             add_opcode(chunk, OP_ACCESSOR, 0, node->line);
-            declareVariable(node->_Node.ForLoop().value_name->_Node.ID().value);
+            declareVariable(node->_Node.ForLoop().value_name->_Node.ID().value, false, true);
         }
 
         add_opcode(chunk, OP_LOAD, resolve_variable("___iter___"), node->line);
         add_code(chunk, OP_LEN, node->line);
-        declareVariable("___size___");
+        declareVariable("___size___", false, true);
 
         add_opcode(chunk, OP_LOAD, resolve_variable("___size___"));
         add_constant_code(chunk, number_val(0), node->line);
@@ -629,7 +646,8 @@ void gen_for_loop(Chunk &chunk, node_ptr node)
         end_scope(chunk);
     }
     add_code(chunk, OP_LOOP_END, node->line);
-    current->in_loop = false;
+    // current->in_loop = false;
+    current->nested_loop_count--;
 }
 
 void gen_accessor(Chunk &chunk, node_ptr node)
@@ -729,7 +747,8 @@ void gen_hook(Chunk &chunk, node_ptr node)
 
 void gen_break(Chunk &chunk, node_ptr node)
 {
-    if (!current->in_loop)
+    // if (!current->in_loop)
+    if (current->nested_loop_count == 0)
     {
         error("Cannot use 'break' outside of a loop");
     }
@@ -739,7 +758,8 @@ void gen_break(Chunk &chunk, node_ptr node)
 
 void gen_continue(Chunk &chunk, node_ptr node)
 {
-    if (!current->in_loop)
+    // if (!current->in_loop)
+    if (current->nested_loop_count == 0)
     {
         error("Cannot use 'continue' outside of a loop");
     }
@@ -749,7 +769,8 @@ void gen_continue(Chunk &chunk, node_ptr node)
 
 void gen_return(Chunk &chunk, node_ptr node)
 {
-    if (!current->in_function)
+    // if (!current->in_function)
+    if (current->nested_function_count == 0)
     {
         error("Cannot use 'return' at the top level");
     }
@@ -767,7 +788,8 @@ void gen_return(Chunk &chunk, node_ptr node)
 
 void gen_yield(Chunk &chunk, node_ptr node)
 {
-    if (!current->in_function)
+    // if (!current->in_function)
+    if (current->nested_function_count == 0)
     {
         error("Cannot use 'yield' at the top level");
     }
@@ -793,13 +815,17 @@ void gen_function(Chunk &chunk, node_ptr node)
     current->prev = prev_compiler;
     current->in_object = prev_compiler->in_object;
     current->nested_object_count = prev_compiler->nested_object_count;
+    current->nested_function_count = prev_compiler->nested_function_count;
+    current->nested_loop_count = prev_compiler->nested_loop_count;
 
-    current->in_function = true;
+    // current->in_function = true;
+    current->nested_function_count++;
 
     std::shared_ptr<FunctionObj> function = std::make_shared<FunctionObj>();
     function->name = node->_Node.Function().name;
     function->arity = node->_Node.Function().params.size();
     function->chunk = Chunk();
+    function->chunk.import_path = chunk.import_path;
 
     Value function_value = function_val();
     function_value.value = function;
@@ -863,7 +889,8 @@ void gen_function(Chunk &chunk, node_ptr node)
         add_code(function->chunk, OP_RETURN, node->line);
     }
 
-    current->in_function = false;
+    // current->in_function = false;
+    current->nested_function_count++;
     function->closed_var_indexes = current->closed_vars;
 
     current = prev_compiler;
@@ -1122,15 +1149,43 @@ void gen_import(Chunk &chunk, node_ptr node)
 
 #if GCC_COMPILER
 #if __apple__ || __linux__
-    replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
+    if (chunk.import_path != "")
+    {
+        replaceAll(path, "@modules", chunk.import_path + "/" + target_name);
+    }
+    else
+    {
+        replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
+    }
 #else
-    replaceAll(path, "@modules", "C:/Program Files/vortex/modules/" + target_name);
+    if (chunk.import_path != "")
+    {
+        replaceAll(path, "@modules", chunk.import_path + "/" + target_name);
+    }
+    else
+    {
+        replaceAll(path, "@modules", "C:/Program Files/vortex/modules/" + target_name);
+    }
 #endif
 #else
 #if defined(__APPLE__) || defined(__linux__)
-    replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
+    if (chunk.import_path != "")
+    {
+        replaceAll(path, "@modules", chunk.import_path + "/" + target_name);
+    }
+    else
+    {
+        replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
+    }
 #else
-    replaceAll(path, "@modules", "C:/Program Files/vortex/modules/" + target_name);
+    if (chunk.import_path != "")
+    {
+        replaceAll(path, "@modules", chunk.import_path + "/" + target_name);
+    }
+    else
+    {
+        replaceAll(path, "@modules", "C:/Program Files/vortex/modules/" + target_name);
+    }
 #endif
 #endif
 
@@ -1149,7 +1204,7 @@ void gen_import(Chunk &chunk, node_ptr node)
         // if (current->in_function || current->in_object) {
         //     error("Cannot import [] outside of global scope");
         // }
-        if (current->in_function || current->nested_object_count > 0)
+        if (current->nested_function_count > 0 || current->nested_object_count > 0)
         {
             error("Cannot import [] outside of global scope");
         }
@@ -1381,12 +1436,14 @@ void generate(node_ptr node, Chunk &chunk)
         }
         if (node->_Node.Op().value == "&")
         {
-            gen_and(chunk, node);
+            // gen_and(chunk, node);
+            gen_bitwise_and(chunk, node);
             return;
         }
         if (node->_Node.Op().value == "|")
         {
-            gen_or(chunk, node);
+            // gen_or(chunk, node);
+            gen_bitwise_or(chunk, node);
             return;
         }
         if (node->_Node.Op().value == "-=")
@@ -1540,7 +1597,18 @@ void generate_bytecode(std::vector<node_ptr> &nodes, Chunk &chunk)
 
     for (Variable &var : current->variables)
     {
-        chunk.variables.push_back(var.name);
+        if (!var.is_internal)
+        {
+            if (std::find(chunk.public_variables.begin(), chunk.public_variables.end(), var.name) == chunk.public_variables.end())
+            {
+                chunk.public_variables.push_back(var.name);
+            }
+        }
+
+        if (std::find(chunk.variables.begin(), chunk.variables.end(), var.name) == chunk.variables.end())
+        {
+            chunk.variables.push_back(var.name);
+        }
     }
 }
 
@@ -1556,23 +1624,30 @@ static void end_scope(Chunk &chunk)
     while (current->variableCount > 0 && current->variables[current->variableCount - 1].depth > current->scopeDepth)
     {
         add_code(chunk, OP_POP);
+        std::string var = chunk.variables.back();
+        chunk.variables.pop_back();
+        if (!chunk.public_variables.empty() && chunk.public_variables.back() == var)
+        {
+            chunk.public_variables.pop_back();
+        }
         current->variables.erase(current->variables.begin() + current->variableCount - 1);
-        // chunk.variables.pop_back();
         current->variableCount--;
     }
 }
 
-static void addVariable(std::string name, bool is_const)
+static void addVariable(std::string name, bool is_const, bool is_internal)
 {
     current->variableCount++;
     Variable variable;
     variable.name = name;
     variable.depth = current->scopeDepth;
     variable.is_const = is_const;
+    variable.is_internal = is_internal;
+
     current->variables.push_back(variable);
 }
 
-static void declareVariable(std::string name, bool is_const)
+static void declareVariable(std::string name, bool is_const, bool is_internal)
 {
 
     for (int i = current->variableCount - 1; i >= 0; i--)
@@ -1589,7 +1664,7 @@ static void declareVariable(std::string name, bool is_const)
         }
     }
 
-    addVariable(name, is_const);
+    addVariable(name, is_const, is_internal);
 }
 
 static int resolve_variable(std::string name)

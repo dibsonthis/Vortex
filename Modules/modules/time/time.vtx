@@ -1,4 +1,4 @@
-const lib = load_lib("./bin/time", ["datetime"])
+const lib = load_lib("./bin/time", ["datetime", "sleep"])
 
 const datetime = () => lib.datetime()
 const datetimeObject = () => {
@@ -29,4 +29,11 @@ const datetimeObject = () => {
         s: time[2],
         year: datetime[4]
     }
+}
+
+const sleep = (ms) => lib.sleep(ms)
+
+const delay = (ms, func) => {
+    lib.sleep(ms)
+    return func()
 }
