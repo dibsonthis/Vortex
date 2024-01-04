@@ -45,7 +45,7 @@ jobs:
         do
         m=$(basename $module)
         pushd bin/build/modules/win
-        zip -r -y ${m}.zip ${m};
+        powershell Compress-Archive ${m} "${m}.zip";
         popd
         mv bin/build/modules/win/${m}.zip dist
         done
