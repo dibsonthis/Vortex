@@ -60,3 +60,4 @@ jobs:
             --title="Vortex-Win-${{ inputs.tag }}" \
             --generate-notes \
             --latest
+      shell: bash
