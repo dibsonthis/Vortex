@@ -11,7 +11,7 @@ on:
 
 jobs:
   compile:
-    runs-on: windows-latest
+    runs-on: windows-2019
 
     steps:
     - name: Checkout repository
@@ -49,6 +49,7 @@ jobs:
         popd
         mv bin/build/modules/win/${m}.zip dist
         done
+      shell: bash
 
     - name: Create release
       env:
