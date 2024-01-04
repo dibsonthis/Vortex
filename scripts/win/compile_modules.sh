@@ -36,7 +36,6 @@ else
     CONFIG=$CONFIG
 fi
 clang++ \
--fPIC \
 -dynamiclib \
 -shared \
 -Ofast \
