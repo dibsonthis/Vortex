@@ -6,7 +6,8 @@ mkdir -p bin/build/interp/win
 clang++ --version
 
 clang++ \
--g \
+-Ofast \
+-target x86_64-w64-windows-gnu \
 -std=c++20 \
 src/Node/Node.cpp \
 src/Lexer/Lexer.cpp \
@@ -16,4 +17,6 @@ src/Bytecode/Generator.cpp \
 src/VirtualMachine/VirtualMachine.cpp \
 src/utils/utils.cpp \
 main.cpp \
--o bin/build/interp/win/vortex.exe
+-lpthread \
+-lstdc++ \
+-o bin/build/interp/win/vortex
