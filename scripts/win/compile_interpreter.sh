@@ -5,7 +5,6 @@ mkdir -p bin/build/interp/win
 
 clang++ \
 -Ofast \
-# -Wno-everything \
 -std=c++20 \
 src/Node/Node.cpp \
 src/Lexer/Lexer.cpp \
