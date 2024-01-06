@@ -5,6 +5,7 @@ mkdir -p bin/build/interp/win
 
 clang++ \
 -Ofast \
+-g \
 -std=c++20 \
 src/Node/Node.cpp \
 src/Lexer/Lexer.cpp \
