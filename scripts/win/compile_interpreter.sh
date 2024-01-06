@@ -7,6 +7,7 @@ clang++ --version
 
 clang++ \
 -Ofast \
+-target x86_64-w64-windows-gnu \
 -std=c++20 \
 src/Node/Node.cpp \
 src/Lexer/Lexer.cpp \
