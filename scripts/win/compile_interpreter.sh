@@ -19,4 +19,5 @@ src/utils/utils.cpp \
 main.cpp \
 -lpthread \
 -lstdc++ \
+-femulated-tls \
 -o bin/build/interp/win/vortex
