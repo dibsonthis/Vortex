@@ -17,4 +17,5 @@ src/Bytecode/Generator.cpp \
 src/VirtualMachine/VirtualMachine.cpp \
 src/utils/utils.cpp \
 main.cpp \
+-lpthread \
 -o bin/build/interp/win/vortex
