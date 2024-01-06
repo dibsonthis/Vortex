@@ -3,9 +3,10 @@
 rm -r bin/build/interp/win
 mkdir -p bin/build/interp/win
 
+clang++ --version
+
 clang++ \
 -Ofast \
--g \
 -std=c++20 \
 src/Node/Node.cpp \
 src/Lexer/Lexer.cpp \
@@ -15,4 +16,4 @@ src/Bytecode/Generator.cpp \
 src/VirtualMachine/VirtualMachine.cpp \
 src/utils/utils.cpp \
 main.cpp \
--o bin/build/interp/win/vortex.exe
+-o bin/build/interp/win/vortex
