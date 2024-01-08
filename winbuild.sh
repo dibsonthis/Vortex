@@ -3,6 +3,7 @@
 build()
 {
     echo "Compiling Vortex..."
+    mkdir "$PWD"/bin/build
     mkdir "$PWD"/bin/build/interp
     mkdir "$PWD"/bin/build/interp/win
     clang++ \

@@ -3,6 +3,7 @@
 macBuild()
 {
     echo "Compiling Vortex..."
+    mkdir "$PWD"/bin/build
     mkdir "$PWD"/bin/build/interp
     mkdir "$PWD"/bin/build/interp/mac
     clang++ \
@@ -35,6 +36,7 @@ macBuild()
 linBuild()
 {
     echo "Compiling Vortex..."
+    mkdir "$PWD"/bin/build
     mkdir "$PWD"/bin/build/interp
     mkdir "$PWD"/bin/build/interp/linux
     clang++ \
