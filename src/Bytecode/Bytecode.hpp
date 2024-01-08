@@ -1,5 +1,6 @@
 #pragma once
 #include <variant>
+#include <functional>
 #include <unordered_map>
 #include <iomanip>
 #include <cmath>
