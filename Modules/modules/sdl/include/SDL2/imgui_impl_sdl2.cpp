@@ -96,7 +96,8 @@
 #include "SDL_syswm.h"
 #if defined(__APPLE__)
 #include <TargetConditionals.h>
-#else
+#endif
+#if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 #endif
 

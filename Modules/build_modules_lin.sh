@@ -15,15 +15,16 @@ echo Compiling $FILE
 if [ -z "$(ls -A $FILE/lib)" ]; then
    LIBS=""
 else
-    LIBS="$FILE/lib/lib*"
+    LIBS="$FILE/lib/*.so"
 fi
 
 CONFIG=""
+DIRECT_LIBS=""
 
 if [ "$FILE" = "sdl" ]; then
-    CONFIG="-D_THREAD_SAFE -framework GLUT -framework OpenGL $FILE/include/SDL2/*.cpp"
+    CONFIG="-D_THREAD_SAFE $FILE/include/SDL2/*.cpp"
 elif [ "$FILE" = "requests" ]; then
-    CONFIG="-framework CoreFoundation -framework Security"
+    DIRECT_LIBS="-lssl -lcrypto"
 elif [ "$FILE" = "sqlite" ]; then
     CONFIG="-lsqlite3"
 else
@@ -44,6 +45,7 @@ $LIBS \
 -stdlib=libc++ \
 $FILE/$FILE.cpp  \
 -o $FILE/bin/$FILE \
--Wl,-rpath,@loader_path/../lib
+$DIRECT_LIBS \
+-Wl,--disable-new-dtags -Wl,-rpath,'$ORIGIN/../lib'
 
 done

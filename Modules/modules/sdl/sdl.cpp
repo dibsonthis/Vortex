@@ -1,17 +1,20 @@
 #include "include/Vortex.hpp"
 
+#if defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+#endif
+
 #if defined(__APPLE__)
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
 #else
-#include <windows.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #endif
 
 #include "include/GL/glut.h"
 #include "include/SDL2/SDL.h"
-#include "include/SDL2/SDL_Image.h"
+#include "include/SDL2/SDL_image.h"
 #include "include/SDL2/SDL_ttf.h"
 #include "include/SDL2/imgui.h"
 #include "include/SDL2/imgui_impl_sdl2.h"
