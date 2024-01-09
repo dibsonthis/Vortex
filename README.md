@@ -149,7 +149,7 @@ Go to the root of the directory.
 
 <i>[Mac/Linux]</i> Run the build script: build.sh (requires clang++) \
 <i>[Windows]</i> Run the build script: winbuild.sh (requires clang++)
-.bat
+
 If you're on Mac/Linux, the installer will ask if you want to store the interpreter in usr/local/bin (and set up modules in usr/local/share). If you're on Windows, it asks to install them in C:/Program Files. This allows you to call Vortex from anywhere. If you choose yes, you'll need to input your password to continue.
 
 <b>Note:</b> If you choose to add Vortex in your bin folder (and modules in share), you can later remove them by running the uninstall.sh script found in usr/local/share/vortex
