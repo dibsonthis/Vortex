@@ -22,13 +22,25 @@ If you wish to make changes to the scaffolded directory, make sure to update the
 
 To run the program, simply call `./run` in the root directory. This will launch the intepreter with the provided entry point.
 
-**Please note, the precompiled version is currently only available on Mac.**
-
 To create an isolated self contained Vortex environment, simply cd into your desired directory and run the following code:
 
+Mac:
 ```bash
 curl https://raw.githubusercontent.com/dibsonthis/vortex-dist/main/mac/scaffold | bash
 ```
+
+Linux:
+```bash
+curl https://raw.githubusercontent.com/dibsonthis/vortex-dist/main/lin/scaffold | bash
+```
+
+Windows:
+```bash
+curl -LO -k https://raw.githubusercontent.com/dibsonthis/vortex-dist/main/win/scaffold.bat
+scaffold.bat
+```
+
+More information cam be found here: [Vortex Dist](https://github.com/dibsonthis/vortex-dist)
 
 ## Features
 
