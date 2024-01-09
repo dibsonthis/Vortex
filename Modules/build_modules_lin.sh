@@ -24,7 +24,7 @@ DIRECT_LIBS=""
 if [ "$FILE" = "sdl" ]; then
     CONFIG="-D_THREAD_SAFE $FILE/include/SDL2/*.cpp"
 elif [ "$FILE" = "requests" ]; then
-    DIRECT_LIBS="-lssl -lcrypto"
+    DIRECT_LIBS=""
 elif [ "$FILE" = "sqlite" ]; then
     CONFIG="-lsqlite3"
 else
