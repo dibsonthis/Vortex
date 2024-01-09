@@ -1,7 +1,7 @@
 {
   "files.associations": {
-    "*.rpl": "go",
     "*.vtx": "rust",
+    "*.rpl": "go",
     "array": "cpp",
     "*.tcc": "cpp",
     "cctype": "cpp",
@@ -98,7 +98,11 @@
     "future": "cpp",
     "format": "cpp",
     "__verbose_abort": "cpp",
-    "charconv": "cpp"
+    "charconv": "cpp",
+    "semaphore": "cpp",
+    "shared_mutex": "cpp",
+    "stop_token": "cpp",
+    "cinttypes": "cpp"
   },
   "C_Cpp.loggingLevel": "Debug",
   "C_Cpp.errorSquiggles": "disabled",

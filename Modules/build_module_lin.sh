@@ -6,7 +6,7 @@ RPATH="$ORIGIN/../lib"
 if [ -z "$(ls -A modules/$1/lib/*)" ]; then
    LIBS=""
 else
-    LIBS="lib/*.so"
+    LIBS="lib/*.so*"
 fi
 
 CONFIG=""
@@ -15,7 +15,7 @@ DIRECT_LIBS=""
 if [ "$1" = "sdl" ]; then
     CONFIG="-D_THREAD_SAFE include/SDL2/*.cpp"
 elif [ "$1" = "requests" ]; then
-    DIRECT_LIBS="-lssl -lcrypto"
+    DIRECT_LIBS=""
 elif [ "$1" = "sqlite" ]; then
     CONFIG="-lsqlite3"
 else

@@ -15,7 +15,7 @@ echo Compiling $FILE
 if [ -z "$(ls -A $FILE/lib)" ]; then
    LIBS=""
 else
-    LIBS="$FILE/lib/*.so"
+    LIBS="$FILE/lib/*.so*"
 fi
 
 CONFIG=""

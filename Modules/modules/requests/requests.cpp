@@ -138,7 +138,7 @@ extern "C" Value _get(std::vector<Value> &args)
     }
 
     httplib::Client cli(url.get_string());
-    #if defined(__APPLE__)
+    #if defined(__APPLE__) || defined(__linux__)
     cli.enable_server_certificate_verification(false);
     #endif
 
