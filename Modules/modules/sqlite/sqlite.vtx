@@ -1,0 +1,83 @@
+const lib = load_lib("./bin/sqlite", ["connect", "execute", "close"])
+
+const connect = (path) => lib.connect(path)
+const execute = (dbPtr, statement) => lib.execute(dbPtr, statement)
+const close = (dbPtr) => lib.close(dbPtr)
+
+const __contains = (list, val) => {
+    for (list, index, elem) {
+        if (elem == val) {
+            return true
+        }
+    }
+
+    return false
+}
+
+const toDicts = (queryResult, schema = {}) => {
+
+	if (queryResult.length() == 0) {
+		return queryResult
+	}
+
+    var dicts = []
+
+    for (queryResult, index, elem) {
+        var mapping = {}
+        for (elem.columns, i, column) {
+            if (!schema.info().keys.__contains(column)) {
+                mapping[column] = elem.values[i]
+            } else if (schema[column] == "Number") {
+                mapping[column] = number(elem.values[i])
+            } else if (schema[column] == "Boolean") {
+                mapping[column] = (elem.values[i] == "TRUE")
+            } else if (schema[column] == "None") {
+                if (elem.values[i] == "NULL") {
+                    mapping[column] = None
+                } else {
+                    mapping[column] = elem.values[i]
+                }
+            } else if (schema[column].type() == "Function") {
+                const fn = schema[column]
+                if (fn.info().arity != 1) {
+                    __error__(f"Schema function '${fn.info().name}' must contain 1 parameter", __vm__)
+                }
+                mapping[column] = fn(elem.values[i])
+            } else {
+				mapping[column] = elem.values[i]
+			}
+        }
+
+        dicts.append(mapping)
+    }
+
+    return dicts
+}
+
+type SqliteDB = (path) => {
+    return {
+        results: [],
+        is_open: true,
+        db: lib.connect(path),
+        connect: () => {
+            if (!this.is_open) {
+                this.db = lib.connect(path)
+                this.is_open = true
+            }
+            return this
+        },
+        execute: (statement) => {
+            if (this.is_open) {
+                this.results = lib.execute(this.db, statement)
+            }
+            return this
+        },
+        close: () => {
+            lib.close(this.db)
+            this.is_open = false
+            this.db = None
+            return this
+        },
+        to_dicts: (schema = {}) => toDicts(this.results, schema)
+    }
+}
