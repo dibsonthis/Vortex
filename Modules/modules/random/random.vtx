@@ -1,0 +1,4 @@
+const lib = load_lib("./bin/random", ["_rand", "_rand_range"])
+
+const rand = () => lib._rand()
+const rand_range = (start, end) => lib._rand_range(start, end)
