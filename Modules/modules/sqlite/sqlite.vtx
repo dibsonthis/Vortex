@@ -78,6 +78,6 @@ type SqliteDB = (path) => {
             this.db = None
             return this
         },
-        to_dicts: (schema = {}) => toDicts(this.results, schema)
+        parse: (schema = {}) => toDicts(this.results, schema)
     }
 }
