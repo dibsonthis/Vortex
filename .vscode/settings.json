@@ -1,7 +1,8 @@
 {
   "files.associations": {
-    "*.vtx": "rust",
     "*.rpl": "go",
+    "*.vtx": "rust",
+    "*.tsx": "typescriptreact",
     "array": "cpp",
     "*.tcc": "cpp",
     "cctype": "cpp",
@@ -102,7 +103,9 @@
     "semaphore": "cpp",
     "shared_mutex": "cpp",
     "stop_token": "cpp",
-    "cinttypes": "cpp"
+    "cinttypes": "cpp",
+    "*.ipp": "cpp",
+    "queue": "cpp"
   },
   "C_Cpp.loggingLevel": "Debug",
   "C_Cpp.errorSquiggles": "disabled",

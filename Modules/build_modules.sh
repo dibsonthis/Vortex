@@ -26,6 +26,8 @@ elif [ "$FILE" = "requests" ]; then
     CONFIG="-framework CoreFoundation -framework Security"
 elif [ "$FILE" = "sqlite" ]; then
     CONFIG="-lsqlite3"
+elif [ "$FILE" = "websockets" ]; then
+    CONFIG="-lssl -lcrypto -ldl"
 else
     CONFIG=$CONFIG
 fi

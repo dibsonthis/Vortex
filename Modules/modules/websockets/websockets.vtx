@@ -1,0 +1,7 @@
+const lib = load_lib("./bin/websockets", ["_run", "_client", "_close", "_send", "_get_response"])
+
+const client = (url) => lib._client(url)
+const close = (client) => lib._close(client)
+const run = (client) => lib._run(client)
+const send = (client, message) => lib._send(client, message)
+const get_response = (client) => lib._get_response(client)
