@@ -27,6 +27,9 @@ elif [ "$FILE" = "requests" ]; then
     DIRECT_LIBS=""
 elif [ "$FILE" = "sqlite" ]; then
     CONFIG="-lsqlite3"
+elif [ "$FILE" = "websockets" ]; then
+    CONFIG="Vortex/**/*.cpp"
+    DIRECT_LIBS=""
 else
     CONFIG=$CONFIG
 fi

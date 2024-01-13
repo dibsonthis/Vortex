@@ -22,6 +22,9 @@ elif [ "$1" = "requests" ]; then
     DIRECT_LIBS="-Llib -lws2_32 -l:libssl-3-x64.dll -l:libcrypto-3-x64.dll -lcrypt32"
 elif [ "$1" = "sqlite" ]; then
     CONFIG="-lsqlite3"
+elif [ "$1" = "websockets" ]; then
+    CONFIG="lib/*.dll Vortex/**/*.cpp"
+    DIRECT_LIBS="-Llib -lws2_32 -l:libssl-3-x64.dll -l:libcrypto-3-x64.dll -lcrypt32"
 else
     CONFIG=$CONFIG
 fi

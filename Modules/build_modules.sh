@@ -27,7 +27,8 @@ elif [ "$FILE" = "requests" ]; then
 elif [ "$FILE" = "sqlite" ]; then
     CONFIG="-lsqlite3"
 elif [ "$FILE" = "websockets" ]; then
-    CONFIG="-lssl -lcrypto -ldl"
+    CONFIG="-framework CoreFoundation -framework Security Vortex/**/*.cpp"
+    DIRECT_LIBS="-lssl -lcrypto"
 else
     CONFIG=$CONFIG
 fi

@@ -864,7 +864,7 @@ extern "C" Value _stop(std::vector<Value> &args)
 
 extern "C" Value _server_send(std::vector<Value> &args)
 {
-    int num_required_args = 2;
+    int num_required_args = 3;
 
     if (args.size() != num_required_args)
     {
@@ -872,11 +872,17 @@ extern "C" Value _server_send(std::vector<Value> &args)
     }
 
     Value server_object = args[0];
-    Value message = args[1];
+    Value id = args[1];
+    Value message = args[2];
 
     if (!server_object.is_object())
     {
         error("Function 'send' expects argument 'server' to be an object");
+    }
+
+    if (!id.is_number())
+    {
+        error("Function 'send' expects argument 'id' to be a number");
     }
 
     if (!message.is_string())
@@ -901,6 +907,60 @@ extern "C" Value _server_send(std::vector<Value> &args)
     if (s->stopped())
     {
         std::cout << "Connection is not running - cannot send" << std::endl;
+        return none_val();
+    }
+
+    for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
+    {
+        if ((it->second).sessionId == id.get_number())
+        {
+            s->send(it->first, message.get_string(), websocketpp::frame::opcode::text);
+            break;
+        }
+    }
+
+    return none_val();
+}
+
+extern "C" Value _server_broadcast(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'broadcast' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value server_object = args[0];
+    Value message = args[1];
+
+    if (!server_object.is_object())
+    {
+        error("Function 'broadcast' expects argument 'server' to be an object");
+    }
+
+    if (!message.is_string())
+    {
+        error("Function 'broadcast' expects argument 'message' to be a string");
+    }
+
+    auto &_server = server_object.get_object();
+
+    if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
+    {
+        error("Function 'broadcast' expects argument 'server' to be a valid server object");
+    }
+
+    if (!_server->values["server_ptr"].is_pointer())
+    {
+        error("Function 'broadcast' expects argument 'server' to be a valid server object");
+    }
+
+    server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
+
+    if (s->stopped())
+    {
+        std::cout << "Connection is not running - cannot broadcast" << std::endl;
         return none_val();
     }
 
@@ -1206,4 +1266,48 @@ extern "C" Value _server_on_close(std::vector<Value> &args)
     s->set_close_handler(on_close_func);
 
     return none_val();
+}
+
+extern "C" Value _server_get_clients(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'get_clients' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value server_object = args[0];
+
+    if (!server_object.is_object())
+    {
+        error("Function 'get_clients' expects argument 'server' to be an object");
+    }
+
+    auto &_server = server_object.get_object();
+
+    if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
+    {
+        error("Function 'get_clients' expects argument 'server' to be a valid server object");
+    }
+
+    if (!_server->values["server_ptr"].is_pointer())
+    {
+        error("Function 'get_clients' expects argument 'server' to be a valid server object");
+    }
+
+    server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
+
+    Value clients_list = list_val();
+
+    for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
+    {
+        Value client_object = object_val();
+        client_object.get_object()->keys = {"id", "name"};
+        client_object.get_object()->values["id"] = number_val((it->second).sessionId);
+        client_object.get_object()->values["name"] = string_val((it->second).name);
+        clients_list.get_list()->push_back(client_object);
+    }
+
+    return clients_list;
 }
