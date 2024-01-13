@@ -3,8 +3,6 @@
 #include <filesystem>
 #include "src/Lexer/Lexer.hpp"
 #include "src/Parser/Parser.hpp"
-#include "src/Interpreter/Interpreter.hpp"
-#include "src/Typechecker/Typechecker.hpp"
 #include "src/Bytecode/Bytecode.hpp"
 #include "src/Bytecode/Generator.hpp"
 #include "src/VirtualMachine/VirtualMachine.hpp"

@@ -1,6 +1,13 @@
 #define ASIO_STANDALONE
+#include <functional>
 #include "include/websocketpp/asio.hpp"
-#include "include/Vortex.hpp"
+// #include "include/Vortex.hpp"
+#include "Vortex/Node/Node.hpp"
+#include "Vortex/Lexer/Lexer.hpp"
+#include "Vortex/Parser/Parser.hpp"
+#include "Vortex/Bytecode/Bytecode.hpp"
+#include "Vortex/Bytecode/Generator.hpp"
+#include "Vortex/VirtualMachine/VirtualMachine.hpp"
 
 // TLS or no TLS
 #include "include/websocketpp/config/asio_client.hpp" // TLS
@@ -24,34 +31,6 @@ using websocketpp::lib::placeholders::_2;
 
 // pull out the type of messages sent by our config
 typedef websocketpp::config::asio_client::message_type::ptr message_ptr;
-
-std::map<client *, std::string> _responses;
-
-// Handlers
-void on_open(client *c, websocketpp::connection_hdl hdl)
-{
-    // std::string msg = "Hello";
-    // c->send(hdl, msg, websocketpp::frame::opcode::text);
-    // c->get_alog().write(websocketpp::log::alevel::app, "Sent Message: " + msg);
-}
-
-void on_fail(client *c, websocketpp::connection_hdl hdl)
-{
-    c->get_alog().write(websocketpp::log::alevel::app, "Connection Failed");
-}
-
-void on_message(client *c, websocketpp::connection_hdl hdl, message_ptr msg)
-{
-    _responses[c] = msg->get_payload();
-    // c->get_alog().write(websocketpp::log::alevel::app, "Received Reply: " + msg->get_payload());
-    // c->close(hdl, websocketpp::close::status::normal, "");
-}
-
-void on_close(client *c, websocketpp::connection_hdl hdl)
-{
-    _responses.erase(c);
-    c->get_alog().write(websocketpp::log::alevel::app, "Connection Closed");
-}
 
 using context_ptr = std::shared_ptr<asio::ssl::context>;
 
@@ -100,32 +79,31 @@ extern "C" Value _client(std::vector<Value> &args)
     // Initialize ASIO
     c->init_asio();
 
-    // Register our handlers
-    c->set_open_handler(bind(&on_open, c, ::_1));
-    c->set_fail_handler(bind(&on_fail, c, ::_1));
-    c->set_message_handler(bind(&on_message, c, ::_1, ::_2));
-    c->set_close_handler(bind(&on_close, c, ::_1));
     c->set_tls_init_handler(websocketpp::lib::bind(&on_tls_init));
 
     // Create a connection to the given URI and queue it for connection once
     // the event loop starts
     websocketpp::lib::error_code ec;
-    client::connection_ptr con = c->get_connection(uri, ec);
-    con->append_header("access-control-allow-origin", "*");
-    c->connect(con);
+    client::connection_ptr *con = new client::connection_ptr(c->get_connection(uri, ec));
+    (*con)->append_header("access-control-allow-origin", "*");
+    c->connect(*con);
 
     Value socket_object = object_val();
-    socket_object.get_object()->keys = {"websocket_ptr", "websocket_hdl", "running"};
+    socket_object.get_object()->keys = {"websocket_ptr", "connection_ptr", "websocket_hdl", "running"};
 
     Value client_ptr = pointer_val();
     client_ptr.get_pointer()->value = (void *)c;
 
     Value websocket_hdl = pointer_val();
-    websocketpp::connection_hdl *hdl = new websocketpp::connection_hdl(con->get_handle());
+    websocketpp::connection_hdl *hdl = new websocketpp::connection_hdl((*con)->get_handle());
     websocket_hdl.get_pointer()->value = hdl;
+
+    Value connection_ptr = pointer_val();
+    connection_ptr.get_pointer()->value = (void *)con;
 
     socket_object.get_object()->values["websocket_ptr"] = client_ptr;
     socket_object.get_object()->values["websocket_hdl"] = websocket_hdl;
+    socket_object.get_object()->values["connection_ptr"] = connection_ptr;
     socket_object.get_object()->values["running"] = boolean_val(false);
 
     return socket_object;
@@ -155,6 +133,11 @@ extern "C" Value _run(std::vector<Value> &args)
     }
 
     if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_hdl") == socket->keys.end())
+    {
+        error("Function 'run' expects argument 'client' to be a valid client object");
+    }
+
+    if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
     {
         error("Function 'run' expects argument 'client' to be a valid client object");
     }
@@ -193,6 +176,11 @@ extern "C" Value _close(std::vector<Value> &args)
     }
 
     if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_hdl") == socket->keys.end())
+    {
+        error("Function 'close' expects argument 'client' to be a valid client object");
+    }
+
+    if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
     {
         error("Function 'close' expects argument 'client' to be a valid client object");
     }
@@ -247,6 +235,11 @@ extern "C" Value _send(std::vector<Value> &args)
         error("Function 'send' expects argument 'client' to be a valid client object");
     }
 
+    if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
+    {
+        error("Function 'send' expects argument 'client' to be a valid client object");
+    }
+
     client *c = (client *)socket->values["websocket_ptr"].get_pointer()->value;
     websocketpp::connection_hdl *hdl = (websocketpp::connection_hdl *)socket->values["websocket_hdl"].get_pointer()->value;
 
@@ -261,46 +254,316 @@ extern "C" Value _send(std::vector<Value> &args)
     return none_val();
 }
 
-extern "C" Value _get_response(std::vector<Value> &args)
+extern "C" Value _on_open(std::vector<Value> &args)
 {
-    int num_required_args = 1;
+    int num_required_args = 2;
 
     if (args.size() != num_required_args)
     {
-        error("Function 'get_response' expects " + std::to_string(num_required_args) + " argument(s)");
+        error("Function 'op_open' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value socket_object = args[0];
+    Value func = args[1];
+
+    if (!func.is_function())
+    {
+        error("Function 'op_open' expects argument 'function' to be a Function");
+    }
 
     if (!socket_object.is_object())
     {
-        error("Function 'get_response' expects argument 'client' to be an object");
+        error("Function 'op_open' expects argument 'client' to be an object");
     }
 
     auto &socket = socket_object.get_object();
 
     if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_ptr") == socket->keys.end())
     {
-        error("Function 'get_message' expects argument 'client' to be a valid client object");
+        error("Function 'op_open' expects argument 'client' to be a valid client object");
     }
 
     if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_hdl") == socket->keys.end())
     {
-        error("Function 'get_message' expects argument 'client' to be a valid client object");
+        error("Function 'op_open' expects argument 'client' to be a valid client object");
+    }
+
+    if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
+    {
+        error("Function 'op_open' expects argument 'client' to be a valid client object");
+    }
+
+    if (func.get_function()->arity != 0)
+    {
+        error("Function 'op_open' expects argument 'function' to be a Function with 0 parameter");
     }
 
     client *c = (client *)socket->values["websocket_ptr"].get_pointer()->value;
+    client::connection_ptr *con = (client::connection_ptr *)socket->values["connection_ptr"].get_pointer()->value;
 
-    if (c->stopped())
+    auto on_open_func = [func](websocketpp::connection_hdl hdl)
     {
-        std::cout << "Connection is not running - cannot get response" << std::endl;
-        return none_val();
+        VM func_vm;
+        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+        main->name = "";
+        main->arity = 0;
+        main->chunk = Chunk();
+        CallFrame main_frame;
+        main_frame.function = main;
+        main_frame.sp = 0;
+        main_frame.ip = main->chunk.code.data();
+        main_frame.frame_start = 0;
+        func_vm.frames.push_back(main_frame);
+
+        add_constant(main->chunk, func);
+        add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 0, 0);
+
+        add_code(main->chunk, OP_EXIT, 0);
+
+        auto offsets = instruction_offsets(main_frame.function->chunk);
+        main_frame.function->instruction_offsets = offsets;
+
+        evaluate(func_vm);
+    };
+
+    (*con)->set_open_handler(on_open_func);
+
+    return none_val();
+}
+
+extern "C" Value _on_message(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'on_message' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
-    if (_responses.count(c))
+    Value socket_object = args[0];
+    Value func = args[1];
+
+    if (!func.is_function())
     {
-        return string_val(_responses[c]);
+        error("Function 'on_message' expects argument 'function' to be a Function");
     }
+
+    if (!socket_object.is_object())
+    {
+        error("Function 'on_message' expects argument 'client' to be an object");
+    }
+
+    auto &socket = socket_object.get_object();
+
+    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_ptr") == socket->keys.end())
+    {
+        error("Function 'on_message' expects argument 'client' to be a valid client object");
+    }
+
+    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_hdl") == socket->keys.end())
+    {
+        error("Function 'on_message' expects argument 'client' to be a valid client object");
+    }
+
+    if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
+    {
+        error("Function 'on_message' expects argument 'client' to be a valid client object");
+    }
+
+    if (func.get_function()->arity != 1)
+    {
+        error("Function 'on_message' expects argument 'function' to be a Function with 1 parameter");
+    }
+
+    client *c = (client *)socket->values["websocket_ptr"].get_pointer()->value;
+    client::connection_ptr *con = (client::connection_ptr *)socket->values["connection_ptr"].get_pointer()->value;
+
+    auto on_message_func = [func](websocketpp::connection_hdl hdl, message_ptr msg)
+    {
+        VM func_vm;
+        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+        main->name = "";
+        main->arity = 0;
+        main->chunk = Chunk();
+        CallFrame main_frame;
+        main_frame.function = main;
+        main_frame.sp = 0;
+        main_frame.ip = main->chunk.code.data();
+        main_frame.frame_start = 0;
+        func_vm.frames.push_back(main_frame);
+
+        add_constant(main->chunk, func);
+        add_constant(main->chunk, string_val(msg->get_payload()));
+        add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
+        add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 1, 0);
+
+        add_code(main->chunk, OP_EXIT, 0);
+
+        auto offsets = instruction_offsets(main_frame.function->chunk);
+        main_frame.function->instruction_offsets = offsets;
+
+        evaluate(func_vm);
+    };
+
+    (*con)->set_message_handler(on_message_func);
+
+    return none_val();
+}
+
+extern "C" Value _on_close(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'on_close' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value socket_object = args[0];
+    Value func = args[1];
+
+    if (!func.is_function())
+    {
+        error("Function 'on_close' expects argument 'function' to be a Function");
+    }
+
+    if (!socket_object.is_object())
+    {
+        error("Function 'on_close' expects argument 'client' to be an object");
+    }
+
+    auto &socket = socket_object.get_object();
+
+    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_ptr") == socket->keys.end())
+    {
+        error("Function 'on_close' expects argument 'client' to be a valid client object");
+    }
+
+    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_hdl") == socket->keys.end())
+    {
+        error("Function 'on_close' expects argument 'client' to be a valid client object");
+    }
+
+    if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
+    {
+        error("Function 'on_close' expects argument 'client' to be a valid client object");
+    }
+
+    if (func.get_function()->arity != 0)
+    {
+        error("Function 'on_close' expects argument 'function' to be a Function with 0 parameter");
+    }
+
+    client *c = (client *)socket->values["websocket_ptr"].get_pointer()->value;
+    client::connection_ptr *con = (client::connection_ptr *)socket->values["connection_ptr"].get_pointer()->value;
+
+    auto on_close_func = [func](websocketpp::connection_hdl hdl)
+    {
+        VM func_vm;
+        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+        main->name = "";
+        main->arity = 0;
+        main->chunk = Chunk();
+        CallFrame main_frame;
+        main_frame.function = main;
+        main_frame.sp = 0;
+        main_frame.ip = main->chunk.code.data();
+        main_frame.frame_start = 0;
+        func_vm.frames.push_back(main_frame);
+
+        add_constant(main->chunk, func);
+        add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 0, 0);
+
+        add_code(main->chunk, OP_EXIT, 0);
+
+        auto offsets = instruction_offsets(main_frame.function->chunk);
+        main_frame.function->instruction_offsets = offsets;
+
+        evaluate(func_vm);
+    };
+
+    (*con)->set_close_handler(on_close_func);
+
+    return none_val();
+}
+
+extern "C" Value _on_fail(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'on_fail' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value socket_object = args[0];
+    Value func = args[1];
+
+    if (!func.is_function())
+    {
+        error("Function 'on_fail' expects argument 'function' to be a Function");
+    }
+
+    if (!socket_object.is_object())
+    {
+        error("Function 'on_fail' expects argument 'client' to be an object");
+    }
+
+    auto &socket = socket_object.get_object();
+
+    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_ptr") == socket->keys.end())
+    {
+        error("Function 'on_fail' expects argument 'client' to be a valid client object");
+    }
+
+    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_hdl") == socket->keys.end())
+    {
+        error("Function 'on_fail' expects argument 'client' to be a valid client object");
+    }
+
+    if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
+    {
+        error("Function 'on_fail' expects argument 'client' to be a valid client object");
+    }
+
+    if (func.get_function()->arity != 0)
+    {
+        error("Function 'on_fail' expects argument 'function' to be a Function with 0 parameter");
+    }
+
+    client *c = (client *)socket->values["websocket_ptr"].get_pointer()->value;
+    client::connection_ptr *con = (client::connection_ptr *)socket->values["connection_ptr"].get_pointer()->value;
+
+    auto on_fail_func = [func](websocketpp::connection_hdl hdl)
+    {
+        VM func_vm;
+        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+        main->name = "";
+        main->arity = 0;
+        main->chunk = Chunk();
+        CallFrame main_frame;
+        main_frame.function = main;
+        main_frame.sp = 0;
+        main_frame.ip = main->chunk.code.data();
+        main_frame.frame_start = 0;
+        func_vm.frames.push_back(main_frame);
+
+        add_constant(main->chunk, func);
+        add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 0, 0);
+
+        add_code(main->chunk, OP_EXIT, 0);
+
+        auto offsets = instruction_offsets(main_frame.function->chunk);
+        main_frame.function->instruction_offsets = offsets;
+
+        evaluate(func_vm);
+    };
+
+    (*con)->set_fail_handler(on_fail_func);
 
     return none_val();
 }

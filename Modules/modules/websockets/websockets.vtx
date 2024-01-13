@@ -1,7 +1,36 @@
-const lib = load_lib("./bin/websockets", ["_run", "_client", "_close", "_send", "_get_response"])
+const lib = load_lib("./bin/websockets", ["_run", "_client", "_close", "_send", "_get_response", "_on_message", "_on_open", "_on_close", "_on_fail"])
 
 const client = (url) => lib._client(url)
 const close = (client) => lib._close(client)
 const run = (client) => lib._run(client)
 const send = (client, message) => lib._send(client, message)
 const get_response = (client) => lib._get_response(client)
+const on_message = (client, function) => lib._on_message(client, function)
+const on_open = (client, function) => lib._on_open(client, function)
+const on_close = (client, function) => lib._on_close(client, function)
+const on_fail = (client, function) => lib._on_fail(client, function)
+
+type Client = (url) => {
+    return {
+        client: lib._client(url),
+        close: () => lib._close(this.client),
+        close_async: () => {
+            lib._close(this.client)
+            this._thread.get()
+            this._thread = None
+        },
+        run: () => lib._run(this.client),
+        _thread: None,
+        run_async: () => {
+            import [Future] : future
+            const client = this.client
+            const thread = Future(() => client.run())
+            this._thread = thread
+        },
+        send: (message) => lib._send(this.client, message),
+        set_on_message: (function) => lib._on_message(this.client, function),
+        set_on_open: (function) => lib._on_open(this.client, function),
+        set_on_close: (function) => lib._on_close(this.client, function),
+        set_on_fail: (function) => lib._on_fail(this.client, function),
+    }
+}

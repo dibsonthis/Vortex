@@ -15,12 +15,12 @@ extern "C" Value __error__(std::vector<Value> &args)
 
     if (!message.is_string())
     {
-        error("Function 'exit' expects argument 'message' to be a string");
+        error("Function 'error' expects argument 'message' to be a string");
     }
 
     if (!vm.is_pointer())
     {
-        error("Function 'exit' expects argument 'vm' to be a pointer");
+        error("Function 'error' expects argument 'vm' to be a pointer");
     }
 
     VM *_vm = (VM *)(vm.get_pointer()->value);
