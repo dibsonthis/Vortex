@@ -1,7 +1,6 @@
 #define ASIO_STANDALONE
 #include <functional>
 #include "include/websocketpp/asio.hpp"
-// #include "include/Vortex.hpp"
 #include "Vortex/Node/Node.hpp"
 #include "Vortex/Lexer/Lexer.hpp"
 #include "Vortex/Parser/Parser.hpp"
@@ -142,6 +141,16 @@ extern "C" Value _run(std::vector<Value> &args)
         error("Function 'run' expects argument 'client' to be a valid client object");
     }
 
+    if (!socket->values["websocket_ptr"].is_pointer())
+    {
+        error("Function 'run' expects argument 'client' to be a valid client object");
+    }
+
+    if (!socket->values["websocket_hdl"].is_pointer())
+    {
+        error("Function 'run' expects argument 'client' to be a valid client object");
+    }
+
     client *c = (client *)socket->values["websocket_ptr"].get_pointer()->value;
     websocketpp::connection_hdl *hdl = (websocketpp::connection_hdl *)socket->values["websocket_hdl"].get_pointer()->value;
 
@@ -181,6 +190,16 @@ extern "C" Value _close(std::vector<Value> &args)
     }
 
     if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
+    {
+        error("Function 'close' expects argument 'client' to be a valid client object");
+    }
+
+    if (!socket->values["websocket_ptr"].is_pointer())
+    {
+        error("Function 'close' expects argument 'client' to be a valid client object");
+    }
+
+    if (!socket->values["websocket_hdl"].is_pointer())
     {
         error("Function 'close' expects argument 'client' to be a valid client object");
     }
@@ -240,6 +259,16 @@ extern "C" Value _send(std::vector<Value> &args)
         error("Function 'send' expects argument 'client' to be a valid client object");
     }
 
+    if (!socket->values["websocket_ptr"].is_pointer())
+    {
+        error("Function 'send' expects argument 'client' to be a valid client object");
+    }
+
+    if (!socket->values["websocket_hdl"].is_pointer())
+    {
+        error("Function 'send' expects argument 'client' to be a valid client object");
+    }
+
     client *c = (client *)socket->values["websocket_ptr"].get_pointer()->value;
     websocketpp::connection_hdl *hdl = (websocketpp::connection_hdl *)socket->values["websocket_hdl"].get_pointer()->value;
 
@@ -260,7 +289,7 @@ extern "C" Value _on_open(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'op_open' expects " + std::to_string(num_required_args) + " argument(s)");
+        error("Function 'on_open' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value socket_object = args[0];
@@ -268,34 +297,44 @@ extern "C" Value _on_open(std::vector<Value> &args)
 
     if (!func.is_function())
     {
-        error("Function 'op_open' expects argument 'function' to be a Function");
+        error("Function 'on_open' expects argument 'function' to be a Function");
     }
 
     if (!socket_object.is_object())
     {
-        error("Function 'op_open' expects argument 'client' to be an object");
+        error("Function 'on_open' expects argument 'client' to be an object");
     }
 
     auto &socket = socket_object.get_object();
 
     if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_ptr") == socket->keys.end())
     {
-        error("Function 'op_open' expects argument 'client' to be a valid client object");
+        error("Function 'on_open' expects argument 'client' to be a valid client object");
     }
 
     if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_hdl") == socket->keys.end())
     {
-        error("Function 'op_open' expects argument 'client' to be a valid client object");
+        error("Function 'on_open' expects argument 'client' to be a valid client object");
     }
 
     if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
     {
-        error("Function 'op_open' expects argument 'client' to be a valid client object");
+        error("Function 'on_open' expects argument 'client' to be a valid client object");
+    }
+
+    if (!socket->values["websocket_ptr"].is_pointer())
+    {
+        error("Function 'on_open' expects argument 'client' to be a valid client object");
+    }
+
+    if (!socket->values["websocket_hdl"].is_pointer())
+    {
+        error("Function 'on_open' expects argument 'client' to be a valid client object");
     }
 
     if (func.get_function()->arity != 0)
     {
-        error("Function 'op_open' expects argument 'function' to be a Function with 0 parameter");
+        error("Function 'on_open' expects argument 'function' to be a Function with 0 parameter");
     }
 
     client *c = (client *)socket->values["websocket_ptr"].get_pointer()->value;
@@ -367,6 +406,16 @@ extern "C" Value _on_message(std::vector<Value> &args)
     }
 
     if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
+    {
+        error("Function 'on_message' expects argument 'client' to be a valid client object");
+    }
+
+    if (!socket->values["websocket_ptr"].is_pointer())
+    {
+        error("Function 'on_message' expects argument 'client' to be a valid client object");
+    }
+
+    if (!socket->values["websocket_hdl"].is_pointer())
     {
         error("Function 'on_message' expects argument 'client' to be a valid client object");
     }
@@ -451,6 +500,16 @@ extern "C" Value _on_close(std::vector<Value> &args)
         error("Function 'on_close' expects argument 'client' to be a valid client object");
     }
 
+    if (!socket->values["websocket_ptr"].is_pointer())
+    {
+        error("Function 'on_close' expects argument 'client' to be a valid client object");
+    }
+
+    if (!socket->values["websocket_hdl"].is_pointer())
+    {
+        error("Function 'on_close' expects argument 'client' to be a valid client object");
+    }
+
     if (func.get_function()->arity != 0)
     {
         error("Function 'on_close' expects argument 'function' to be a Function with 0 parameter");
@@ -525,6 +584,16 @@ extern "C" Value _on_fail(std::vector<Value> &args)
     }
 
     if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
+    {
+        error("Function 'on_fail' expects argument 'client' to be a valid client object");
+    }
+
+    if (!socket->values["websocket_ptr"].is_pointer())
+    {
+        error("Function 'on_fail' expects argument 'client' to be a valid client object");
+    }
+
+    if (!socket->values["websocket_hdl"].is_pointer())
     {
         error("Function 'on_fail' expects argument 'client' to be a valid client object");
     }
