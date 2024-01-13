@@ -794,16 +794,6 @@ extern "C" Value _listen(std::vector<Value> &args)
         error("Function 'listen' expects argument 'server' to be a valid server object");
     }
 
-    // if (std::find(_server->keys.begin(), _server->keys.end(), "server_hdl") == _server->keys.end())
-    // {
-    //     error("Function 'listen' expects argument 'server' to be a valid server object");
-    // }
-
-    // if (std::find(_server->keys.begin(), _server->keys.end(), "connection_ptr") == _server->keys.end())
-    // {
-    //     error("Function 'listen' expects argument 'server' to be a valid server object");
-    // }
-
     if (!_server->values["server_ptr"].is_pointer())
     {
         error("Function 'listen' expects argument 'server' to be a valid server object");
@@ -850,28 +840,18 @@ extern "C" Value _stop(std::vector<Value> &args)
 
     if (std::find(_server->keys.begin(), _server->keys.end(), "server_hdl") == _server->keys.end())
     {
-        error("Function 'stop' expects argument 'client' to be a valid client object");
+        error("Function 'stop' expects argument 'server' to be a valid server object");
     }
 
     if (std::find(_server->keys.begin(), _server->keys.end(), "connection_ptr") == _server->keys.end())
     {
-        error("Function 'stop' expects argument 'client' to be a valid client object");
+        error("Function 'stop' expects argument 'server' to be a valid server object");
     }
 
     if (!_server->values["server_ptr"].is_pointer())
     {
         error("Function 'stop' expects argument 'server' to be a valid server object");
     }
-
-    // if (!_server->values["server_hdl"].is_pointer())
-    // {
-    //     error("Function 'stop' expects argument 'server' to be a valid server object");
-    // }
-
-    // if (!_server->values["connection_ptr"].is_pointer())
-    // {
-    //     error("Function 'stop' expects argument 'server' to be a valid server object");
-    // }
 
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
 
@@ -911,34 +891,12 @@ extern "C" Value _server_send(std::vector<Value> &args)
         error("Function 'send' expects argument 'server' to be a valid server object");
     }
 
-    // if (std::find(_server->keys.begin(), _server->keys.end(), "server_hdl") == _server->keys.end())
-    // {
-    //     error("Function 'send' expects argument 'server' to be a valid server object");
-    // }
-
-    // if (std::find(_server->keys.begin(), _server->keys.end(), "connection_ptr") == _server->keys.end())
-    // {
-    //     error("Function 'send' expects argument 'server' to be a valid server object");
-    // }
-
     if (!_server->values["server_ptr"].is_pointer())
     {
         error("Function 'send' expects argument 'server' to be a valid server object");
     }
 
-    // if (!_server->values["server_hdl"].is_pointer())
-    // {
-    //     error("Function 'send' expects argument 'server' to be a valid server object");
-    // }
-
-    // if (!_server->values["connection_ptr"].is_pointer())
-    // {
-    //     error("Function 'send' expects argument 'server' to be a valid server object");
-    // }
-
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
-    // websocketpp::connection_hdl *hdl = (websocketpp::connection_hdl *)_server->values["server_hdl"].get_pointer()->value;
-    // server::connection_ptr *con = (server::connection_ptr *)_server->values["connection_ptr"].get_pointer()->value;
 
     if (s->stopped())
     {
@@ -950,8 +908,6 @@ extern "C" Value _server_send(std::vector<Value> &args)
     {
         s->send(it->first, message.get_string(), websocketpp::frame::opcode::text);
     }
-
-    // s->send(*hdl, message.get_string(), websocketpp::frame::opcode::text);
 
     return none_val();
 }
@@ -985,33 +941,12 @@ extern "C" Value _server_on_open(std::vector<Value> &args)
         error("Function 'on_open' expects argument 'server' to be a valid server object");
     }
 
-    // if (std::find(_server->keys.begin(), _server->keys.end(), "server_hdl") == _server->keys.end())
-    // {
-    //     error("Function 'on_open' expects argument 'client' to be a valid client object");
-    // }
-
-    // if (std::find(_server->keys.begin(), _server->keys.end(), "connection_ptr") == _server->keys.end())
-    // {
-    //     error("Function 'on_open' expects argument 'client' to be a valid client object");
-    // }
-
     if (!_server->values["server_ptr"].is_pointer())
     {
         error("Function 'on_open' expects argument 'server' to be a valid server object");
     }
 
-    // if (!_server->values["server_hdl"].is_pointer())
-    // {
-    //     error("Function 'on_open' expects argument 'server' to be a valid server object");
-    // }
-
-    // if (!_server->values["connection_ptr"].is_pointer())
-    // {
-    //     error("Function 'on_open' expects argument 'server' to be a valid server object");
-    // }
-
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
-    // server::connection_ptr *con = (server::connection_ptr *)_server->values["connection_ptr"].get_pointer()->value;
 
     auto on_open_func = [func, s](websocketpp::connection_hdl hdl)
     {
@@ -1081,36 +1016,15 @@ extern "C" Value _server_on_message(std::vector<Value> &args)
 
     if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
     {
-        error("Function 'on_message' expects argument 'server' to be a valid client object");
+        error("Function 'on_message' expects argument 'server' to be a valid server object");
     }
-
-    // if (std::find(_server->keys.begin(), _server->keys.end(), "server_hdl") == _server->keys.end())
-    // {
-    //     error("Function 'on_message' expects argument 'server' to be a valid client object");
-    // }
-
-    // if (std::find(_server->keys.begin(), _server->keys.end(), "connection_ptr") == _server->keys.end())
-    // {
-    //     error("Function 'on_message' expects argument 'server' to be a valid client object");
-    // }
 
     if (!_server->values["server_ptr"].is_pointer())
     {
-        error("Function 'on_message' expects argument 'server' to be a valid client object");
+        error("Function 'on_message' expects argument 'server' to be a valid server object");
     }
 
-    // if (!_server->values["server_hdl"].is_pointer())
-    // {
-    //     error("Function 'on_message' expects argument 'server' to be a valid client object");
-    // }
-
-    // if (func.get_function()->arity != 1)
-    // {
-    //     error("Function 'on_message' expects argument 'function' to be a Function with 1 parameter");
-    // }
-
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
-    // server::connection_ptr *con = (server::connection_ptr *)_server->values["connection_ptr"].get_pointer()->value;
 
     auto on_message_func = [func](websocketpp::connection_hdl hdl, message_ptr msg)
     {
@@ -1182,33 +1096,12 @@ extern "C" Value _server_on_fail(std::vector<Value> &args)
         error("Function 'on_fail' expects argument 'server' to be a valid server object");
     }
 
-    // if (std::find(_server->keys.begin(), _server->keys.end(), "server_hdl") == _server->keys.end())
-    // {
-    //     error("Function 'on_fail' expects argument 'client' to be a valid client object");
-    // }
-
-    // if (std::find(_server->keys.begin(), _server->keys.end(), "connection_ptr") == _server->keys.end())
-    // {
-    //     error("Function 'on_fail' expects argument 'client' to be a valid client object");
-    // }
-
     if (!_server->values["server_ptr"].is_pointer())
     {
         error("Function 'on_fail' expects argument 'server' to be a valid server object");
     }
 
-    // if (!_server->values["server_hdl"].is_pointer())
-    // {
-    //     error("Function 'on_fail' expects argument 'server' to be a valid server object");
-    // }
-
-    // if (!_server->values["connection_ptr"].is_pointer())
-    // {
-    //     error("Function 'on_fail' expects argument 'server' to be a valid server object");
-    // }
-
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
-    // server::connection_ptr *con = (server::connection_ptr *)_server->values["connection_ptr"].get_pointer()->value;
 
     auto on_fail_func = [func](websocketpp::connection_hdl hdl)
     {
@@ -1270,33 +1163,12 @@ extern "C" Value _server_on_close(std::vector<Value> &args)
         error("Function 'on_close' expects argument 'server' to be a valid server object");
     }
 
-    // if (std::find(_server->keys.begin(), _server->keys.end(), "server_hdl") == _server->keys.end())
-    // {
-    //     error("Function 'on_close' expects argument 'client' to be a valid client object");
-    // }
-
-    // if (std::find(_server->keys.begin(), _server->keys.end(), "connection_ptr") == _server->keys.end())
-    // {
-    //     error("Function 'on_close' expects argument 'client' to be a valid client object");
-    // }
-
     if (!_server->values["server_ptr"].is_pointer())
     {
         error("Function 'on_close' expects argument 'server' to be a valid server object");
     }
 
-    // if (!_server->values["server_hdl"].is_pointer())
-    // {
-    //     error("Function 'on_close' expects argument 'server' to be a valid server object");
-    // }
-
-    // if (!_server->values["connection_ptr"].is_pointer())
-    // {
-    //     error("Function 'on_close' expects argument 'server' to be a valid server object");
-    // }
-
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
-    // server::connection_ptr *con = (server::connection_ptr *)_server->values["connection_ptr"].get_pointer()->value;
 
     auto on_close_func = [func](websocketpp::connection_hdl hdl)
     {
