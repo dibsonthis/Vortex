@@ -1,4 +1,10 @@
-const lib = load_lib("./bin/websockets", ["_run", "_client", "_close", "_send", "_get_response", "_on_message", "_on_open", "_on_close", "_on_fail"])
+const lib = load_lib("./bin/websockets", [
+    "_client", "_run", "_close", "_send", 
+    "_on_message", "_on_open", "_on_close", "_on_fail",
+    "_server", "_listen", "_stop", "_server_send", "_server_on_open", "_server_on_message",
+    "_server_on_fail", "_server_on_close"])
+
+/* Client */
 
 const client = (url) => lib._client(url)
 const close = (client) => lib._close(client)
@@ -9,6 +15,16 @@ const on_message = (client, function) => lib._on_message(client, function)
 const on_open = (client, function) => lib._on_open(client, function)
 const on_close = (client, function) => lib._on_close(client, function)
 const on_fail = (client, function) => lib._on_fail(client, function)
+
+/* Server */
+const server = () => lib._server()
+const server_listen = (server, port) => lib._listen(server, port)
+const server_stop = (server) => lib._stop(server)
+const server_send = (server, message) => lib._server_send(server, message)
+const server_on_open = (server, function) => lib._server_on_open(server, function)
+const server_on_message = (server, function) => lib._server_on_message(server, function)
+const server_on_fail = (server, function) => lib._server_on_fail(server, function)
+const server_on_close = (server, function) => lib._server_on_close(server, function)
 
 type Client = (url) => {
     return {

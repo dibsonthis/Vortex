@@ -1,13 +1,11 @@
-import sdl : "/Users/adib/Dev/Personal/Vortex/Modules/modules/sdl/sdl"
+import websockets : "/Users/adib/Dev/Personal/Vortex/Modules/modules/websockets/websockets"
+import [] : Future
+import time
 
-var init = sdl.initSDL()
+const s = websockets.server()
+Future(() => websockets.server_listen(s, 9002))
 
-if (init != 0) {
-	print("Error initializing SDL\n")
-	exit(1)
-} else {
-	print("Initialized SDL\n")
+while (true) {
+    time.sleep(5000)
+    websockets.server_send(s, "hello world")
 }
-
-const window = sdl.createWindow("Test", 300, 100, 800, 800)
-const renderer = sdl.createRenderer(window)
