@@ -1348,7 +1348,11 @@ extern "C" Value _server_close_connection(std::vector<Value> &args)
         if ((it->second).sessionId == id.get_number())
         {
             websocketpp::lib::error_code ec;
-            s->close(it->first, websocketpp::close::status::going_away, "", ec);
+            auto con = s->get_con_from_hdl(it->first);
+            if (con->get_state() == websocketpp::session::state::open)
+            {
+                s->close(it->first, websocketpp::close::status::going_away, "", ec);
+            }
             if (ec)
             {
                 std::cout << "> Error closing connection " << (it->second).sessionId << ": "
