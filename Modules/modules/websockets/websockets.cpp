@@ -893,7 +893,11 @@ extern "C" Value _server_send(std::vector<Value> &args)
     {
         if ((it->second).sessionId == id.get_number())
         {
-            s->send(it->first, message.get_string(), websocketpp::frame::opcode::text);
+            auto con = s->get_con_from_hdl(it->first);
+            if (con->get_state() == websocketpp::session::state::open)
+            {
+                s->send(it->first, message.get_string(), websocketpp::frame::opcode::text);
+            }
             break;
         }
     }
@@ -945,7 +949,11 @@ extern "C" Value _server_broadcast(std::vector<Value> &args)
 
     for (auto it = m_servers[s].begin(); it != m_servers[s].end(); ++it)
     {
-        s->send(it->first, message.get_string(), websocketpp::frame::opcode::text);
+        auto con = s->get_con_from_hdl(it->first);
+        if (con->get_state() == websocketpp::session::state::open)
+        {
+            s->send(it->first, message.get_string(), websocketpp::frame::opcode::text);
+        }
     }
 
     return none_val();
