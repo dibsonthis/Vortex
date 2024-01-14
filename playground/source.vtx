@@ -1,11 +1,37 @@
-import websockets : "/Users/adib/Dev/Personal/Vortex/Modules/modules/websockets/websockets"
-import [] : Future
+import [Client, Server] : "/Users/adib/Dev/Personal/Vortex/Modules/modules/websockets/websockets"
+import [Future] : future
+import [] : string
+import io
+import json
 import time
 
-const s = websockets.server()
-Future(() => websockets.server_listen(s, 9002))
+const server = Server()
+
+server.set_on_message((payload) => {
+	println(f"Message: ${payload}")
+})
+server.set_on_open(() => {
+	println("Ello' there")
+	println(server.get_clients())
+})
+server.set_on_close(() => {
+	println("Connection closed")
+})
+server.set_on_fail(() => {
+	println("Connection failed")
+})
+
+server.listen_async(9002)
+
+var i = 0
 
 while (true) {
-    time.sleep(5000)
-    websockets.server_send(s, "hello world")
+	time.sleep(5000)
+	server.broadcast(string(i))
+	i += 1
+
+	server.send(0, "You are my number 1")
+	server.send(1, "You were late")
+
+	server.close_connection(0)
 }

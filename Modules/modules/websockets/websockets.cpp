@@ -827,16 +827,6 @@ extern "C" Value _stop(std::vector<Value> &args)
         error("Function 'stop' expects argument 'server' to be a valid server object");
     }
 
-    if (std::find(_server->keys.begin(), _server->keys.end(), "server_hdl") == _server->keys.end())
-    {
-        error("Function 'stop' expects argument 'server' to be a valid server object");
-    }
-
-    if (std::find(_server->keys.begin(), _server->keys.end(), "connection_ptr") == _server->keys.end())
-    {
-        error("Function 'stop' expects argument 'server' to be a valid server object");
-    }
-
     if (!_server->values["server_ptr"].is_pointer())
     {
         error("Function 'stop' expects argument 'server' to be a valid server object");
@@ -1301,4 +1291,65 @@ extern "C" Value _server_get_clients(std::vector<Value> &args)
     }
 
     return clients_list;
+}
+
+extern "C" Value _server_close_connection(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'close_connection' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value server_object = args[0];
+    Value id = args[1];
+
+    if (!server_object.is_object())
+    {
+        error("Function 'close_connection' expects argument 'server' to be an object");
+    }
+
+    if (!id.is_number())
+    {
+        error("Function 'close_connection' expects argument 'id' to be a number");
+    }
+
+    auto &_server = server_object.get_object();
+
+    if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
+    {
+        error("Function 'close_connection' expects argument 'server' to be a valid server object");
+    }
+
+    if (!_server->values["server_ptr"].is_pointer())
+    {
+        error("Function 'close_connection' expects argument 'server' to be a valid server object");
+    }
+
+    server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
+
+    if (s->stopped())
+    {
+        std::cout << "Connection is not running - cannot close connection" << std::endl;
+        return none_val();
+    }
+
+    for (auto it = m_servers[s].begin(); it != m_servers[s].end(); ++it)
+    {
+        if ((it->second).sessionId == id.get_number())
+        {
+            websocketpp::lib::error_code ec;
+            s->close(it->first, websocketpp::close::status::going_away, "", ec);
+            if (ec)
+            {
+                std::cout << "> Error closing connection " << (it->second).sessionId << ": "
+                          << ec.message() << std::endl;
+            }
+            m_servers[s].erase(it->first);
+            break;
+        }
+    }
+
+    return none_val();
 }

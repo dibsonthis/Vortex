@@ -2,7 +2,7 @@ const lib = load_lib("./bin/websockets", [
     "_client", "_run", "_close", "_send", 
     "_on_message", "_on_open", "_on_close", "_on_fail",
     "_server", "_listen", "_stop", "_server_send", "_server_broadcast", "_server_on_open", "_server_on_message",
-    "_server_on_fail", "_server_on_close", "_server_get_clients"])
+    "_server_on_fail", "_server_on_close", "_server_get_clients", "_close_connection"])
 
 /* Client */
 
@@ -53,6 +53,7 @@ const server_on_message = (server, function) => lib._server_on_message(server, f
 const server_on_fail = (server, function) => lib._server_on_fail(server, function)
 const server_on_close = (server, function) => lib._server_on_close(server, function)
 const server_get_clients = (server) => lib._server_get_clients(server)
+const server_close_connection = (server, id) => lib._close_connection(server, id)
 
 type Server = () => {
     return {
@@ -66,6 +67,7 @@ type Server = () => {
         set_on_close: (function) => lib._server_on_close(this.server, function),
         set_on_fail: (function) => lib._server_on_fail(this.server, function),
         get_clients: () => lib._server_get_clients(this.server),
+        close_connection: (id) => lib._close_connection(this.server, id),
         _thread: None,
         listen_async: (port) => {
             import [Future] : future
