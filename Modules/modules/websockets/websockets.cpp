@@ -652,7 +652,7 @@ typedef std::map<websocketpp::connection_hdl, connection_data, std::owner_less<w
 
 std::map<server *, con_list> m_servers;
 
-con_list m_connections;
+// con_list m_connections;
 int m_next_sessionid;
 
 enum tls_mode
