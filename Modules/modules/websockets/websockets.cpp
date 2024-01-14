@@ -650,6 +650,8 @@ struct connection_data
 
 typedef std::map<websocketpp::connection_hdl, connection_data, std::owner_less<websocketpp::connection_hdl>> con_list;
 
+std::map<server *, con_list> m_servers;
+
 con_list m_connections;
 int m_next_sessionid;
 
@@ -659,11 +661,34 @@ enum tls_mode
     MOZILLA_MODERN = 2
 };
 
-connection_data &get_data_from_hdl(websocketpp::connection_hdl hdl)
-{
-    auto it = m_connections.find(hdl);
+// connection_data &get_data_from_hdl(websocketpp::connection_hdl hdl)
+// {
+//     auto it = m_connections.find(hdl);
 
-    if (it == m_connections.end())
+//     if (it == m_connections.end())
+//     {
+//         // this connection is not in the list. This really shouldn't happen
+//         // and probably means something else is wrong.
+//         throw std::invalid_argument("No data available for session");
+//     }
+
+//     return it->second;
+// }
+
+connection_data &get_data_from_hdl(server *server, websocketpp::connection_hdl hdl)
+{
+    auto s_it = m_servers.find(server);
+
+    if (s_it == m_servers.end())
+    {
+        throw std::invalid_argument("No servers available");
+    }
+
+    auto connections = s_it->second;
+
+    auto it = connections.find(hdl);
+
+    if (it == connections.end())
     {
         // this connection is not in the list. This really shouldn't happen
         // and probably means something else is wrong.
@@ -752,6 +777,8 @@ extern "C" Value _server(std::vector<Value> &args)
 
     // Initialize ASIO
     s->init_asio();
+
+    m_servers[s] = con_list();
 
     Value server_object = object_val();
     server_object.get_object()->keys = {"server_ptr", "running"};
@@ -910,7 +937,8 @@ extern "C" Value _server_send(std::vector<Value> &args)
         return none_val();
     }
 
-    for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
+    // for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
+    for (auto it = m_servers[s].begin(); it != m_servers[s].end(); ++it)
     {
         if ((it->second).sessionId == id.get_number())
         {
@@ -964,7 +992,8 @@ extern "C" Value _server_broadcast(std::vector<Value> &args)
         return none_val();
     }
 
-    for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
+    // for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
+    for (auto it = m_servers[s].begin(); it != m_servers[s].end(); ++it)
     {
         s->send(it->first, message.get_string(), websocketpp::frame::opcode::text);
     }
@@ -1019,7 +1048,9 @@ extern "C" Value _server_on_open(std::vector<Value> &args)
 
         data.name = path;
 
-        m_connections[hdl] = data;
+        m_servers[s][hdl] = data;
+
+        // m_connections[hdl] = data;
 
         VM func_vm;
         std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
@@ -1086,9 +1117,10 @@ extern "C" Value _server_on_message(std::vector<Value> &args)
 
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
 
-    auto on_message_func = [func](websocketpp::connection_hdl hdl, message_ptr msg)
+    auto on_message_func = [s, func](websocketpp::connection_hdl hdl, message_ptr msg)
     {
-        connection_data &data = get_data_from_hdl(hdl);
+        // connection_data &data = get_data_from_hdl(hdl);
+        connection_data &data = get_data_from_hdl(s, hdl);
 
         VM func_vm;
         std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
@@ -1230,14 +1262,15 @@ extern "C" Value _server_on_close(std::vector<Value> &args)
 
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
 
-    auto on_close_func = [func](websocketpp::connection_hdl hdl)
+    auto on_close_func = [s, func](websocketpp::connection_hdl hdl)
     {
-        connection_data &data = get_data_from_hdl(hdl);
+        connection_data &data = get_data_from_hdl(s, hdl);
 
         std::cout << "Closing connection " << data.name
                   << " with sessionid " << data.sessionId << std::endl;
 
-        m_connections.erase(hdl);
+        // m_connections.erase(hdl);
+        m_servers[s].erase(hdl);
 
         VM func_vm;
         std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
@@ -1300,7 +1333,8 @@ extern "C" Value _server_get_clients(std::vector<Value> &args)
 
     Value clients_list = list_val();
 
-    for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
+    // for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
+    for (auto it = m_servers[s].begin(); it != m_servers[s].end(); ++it)
     {
         Value client_object = object_val();
         client_object.get_object()->keys = {"id", "name"};
