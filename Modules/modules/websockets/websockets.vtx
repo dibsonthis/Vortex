@@ -10,7 +10,6 @@ const client = (url) => lib._client(url)
 const close = (client) => lib._client_close(client)
 const run = (client) => lib._run(client)
 const send = (client, message) => lib._send(client, message)
-const get_response = (client) => lib._get_response(client)
 const on_message = (client, function) => lib._on_message(client, function)
 const on_open = (client, function) => lib._on_open(client, function)
 const on_close = (client, function) => lib._on_close(client, function)
@@ -19,9 +18,25 @@ const on_fail = (client, function) => lib._on_fail(client, function)
 type Client = (url) => {
     return {
         client: lib._client(url),
+        reset: () => { 
+            this.client = lib._client(url) 
+            this.set_on_open(this.on_open)
+            this.set_on_close(this.on_close)
+            this.set_on_fail(this.on_fail)
+            this.set_on_message(this.on_message)
+            this.run()
+        },
+        reset_async: () => { 
+            this.client = lib._client(url) 
+            this.set_on_open(this.on_open)
+            this.set_on_close(this.on_close)
+            this.set_on_fail(this.on_fail)
+            this.set_on_message(this.on_message)
+            this.run_async()
+        },
         close: () => lib._client_close(this.client),
         close_async: () => {
-            lib._close(this.client)
+            lib._client_close(this.client)
             this._thread.get()
             this._thread = None
         },
@@ -34,10 +49,26 @@ type Client = (url) => {
             this._thread = thread
         },
         send: (message) => lib._send(this.client, message),
-        set_on_message: (function) => lib._on_message(this.client, function),
-        set_on_open: (function) => lib._on_open(this.client, function),
-        set_on_close: (function) => lib._on_close(this.client, function),
-        set_on_fail: (function) => lib._on_fail(this.client, function),
+        on_message: () => {},
+        on_open: () => {},
+        on_close: () => {},
+        on_fail: () => {},
+        set_on_message: (function) => {
+            lib._on_message(this.client, function)
+            this.on_message = function
+        },
+        set_on_open: (function) => {
+            lib._on_open(this.client, function)
+            this.on_open = function
+        },
+        set_on_close: (function) => {
+            lib._on_close(this.client, function)
+            this.on_close = function
+        },
+        set_on_fail: (function) => {
+            lib._on_fail(this.client, function)
+            this.on_fail = function
+        },
     }
 }
 
@@ -58,18 +89,55 @@ const server_close_connection = (server, id) => lib._server_close_connection(ser
 type Server = () => {
     return {
         server: lib._server(),
-        listen: (port) => lib._listen(this.server, port),
+        listen: (port) => {
+            lib._listen(this.server, port)
+            this._port = port
+        },
         send: (id, message) => lib._server_send(this.server, id, message),
         broadcast: (message) => lib._server_broadcast(this.server, message),
         stop: () => lib._stop(this.server),
-        set_on_message: (function) => lib._server_on_message(this.server, function),
-        set_on_open: (function) => lib._server_on_open(this.server, function),
-        set_on_close: (function) => lib._server_on_close(this.server, function),
-        set_on_fail: (function) => lib._server_on_fail(this.server, function),
+        set_on_message: (function) => {
+            lib._server_on_message(this.server, function)
+            this.on_message = function
+        },
+        set_on_open: (function) => {
+            lib._server_on_open(this.server, function)
+            this.on_open = function
+        },
+        set_on_close: (function) => {
+            lib._server_on_close(this.server, function)
+            this.on_close = function
+        },
+        set_on_fail: (function) => {
+            lib._server_on_fail(this.server, function)
+            this.on_fail = function
+        },
         get_clients: () => lib._server_get_clients(this.server),
         close_connection: (id) => lib._server_close_connection(this.server, id),
         _thread: None,
+        _port: 9002,
+        on_message: () => {},
+        on_open: () => {},
+        on_close: () => {},
+        on_fail: () => {},
+        reset: () => { 
+            this.server = lib._server() 
+            this.set_on_open(this.on_open)
+            this.set_on_close(this.on_close)
+            this.set_on_fail(this.on_fail)
+            this.set_on_message(this.on_message)
+            this.listen(this._port)
+        },
+        reset_async: () => { 
+            this.server = lib._server() 
+            this.set_on_open(this.on_open)
+            this.set_on_close(this.on_close)
+            this.set_on_fail(this.on_fail)
+            this.set_on_message(this.on_message)
+            this.listen_async(this._port)
+        },
         listen_async: (port) => {
+            this._port = port
             import [Future] : future
             const server = this.server
             const thread = Future(() => lib._listen(server, port))
