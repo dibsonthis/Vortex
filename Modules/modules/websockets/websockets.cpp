@@ -1002,9 +1002,9 @@ extern "C" Value _server_on_open(std::vector<Value> &args)
         data.sessionId = m_next_sessionid++;
 
         server::connection_ptr con = s->get_con_from_hdl(hdl);
-        std::string path = con->get_resource();
+        std::string endpoint = con->get_remote_endpoint();
 
-        data.name = path;
+        data.name = endpoint;
 
         m_servers[s][hdl] = data;
 
