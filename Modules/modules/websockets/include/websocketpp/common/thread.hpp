@@ -52,9 +52,9 @@
 #endif
 
 #if defined(_WEBSOCKETPP_MINGW_THREAD_)
-    #include <mingw-threads/mingw.thread.h>
-    #include <mingw-threads/mingw.mutex.h>
-    #include <mingw-threads/mingw.condition_variable.h>
+    #include "mingw-threads/mingw.thread.h"
+    #include "mingw-threads/mingw.mutex.h"
+    #include "mingw-threads/mingw.condition_variable.h"
 #elif defined(_WEBSOCKETPP_CPP11_THREAD_)
     #include <thread>
     #include <mutex>

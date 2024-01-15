@@ -1,5 +1,5 @@
 const lib = load_lib("./bin/websockets", [
-    "_client", "_run", "_close", "_send", 
+    "_client", "_run", "_client_close", "_send", 
     "_on_message", "_on_open", "_on_close", "_on_fail",
     "_server", "_listen", "_stop", "_server_send", "_server_broadcast", "_server_on_open", "_server_on_message",
     "_server_on_fail", "_server_on_close", "_server_get_clients", "_close_connection"])
@@ -7,7 +7,7 @@ const lib = load_lib("./bin/websockets", [
 /* Client */
 
 const client = (url) => lib._client(url)
-const close = (client) => lib._close(client)
+const close = (client) => lib._client_close(client)
 const run = (client) => lib._run(client)
 const send = (client, message) => lib._send(client, message)
 const get_response = (client) => lib._get_response(client)
@@ -19,7 +19,7 @@ const on_fail = (client, function) => lib._on_fail(client, function)
 type Client = (url) => {
     return {
         client: lib._client(url),
-        close: () => lib._close(this.client),
+        close: () => lib._client_close(this.client),
         close_async: () => {
             lib._close(this.client)
             this._thread.get()

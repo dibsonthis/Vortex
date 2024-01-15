@@ -30,8 +30,8 @@ elif [ "$FILE" = "requests" ]; then
 elif [ "$FILE" = "sqlite" ]; then
     CONFIG="-lsqlite3"
 elif [ "$FILE" = "websockets" ]; then
-    CONFIG="lib/*.dll $FILE/Vortex/**/*.cpp"
-    DIRECT_LIBS="-Llib -lws2_32 -l:libssl-3-x64.dll -l:libcrypto-3-x64.dll -lcrypt32"
+    CONFIG="$FILE/lib/*.dll $FILE/Vortex/**/*.cpp"
+    DIRECT_LIBS="-L$FILE/lib -l:libssl-3-x64.dll -l:libcrypto-3-x64.dll -lcrypt32 -DWIN32_LEAN_AND_MEAN -lpthread -lws2_32 -lmswsock"
 else
     CONFIG=$CONFIG
 fi
@@ -49,8 +49,7 @@ $LIBS \
 -std=c++20 \
 $FILE/$FILE.cpp  \
 -o $FILE/bin/$FILE \
-$DIRECT_LIBS \
-# -Wl,-rpath,@loader_path/../lib
+$DIRECT_LIBS
 
 cp $FILE/lib/*.dll $FILE
 

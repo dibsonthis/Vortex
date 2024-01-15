@@ -24,26 +24,24 @@ elif [ "$1" = "sqlite" ]; then
     CONFIG="-lsqlite3"
 elif [ "$1" = "websockets" ]; then
     CONFIG="lib/*.dll Vortex/**/*.cpp"
-    DIRECT_LIBS="-Llib -lws2_32 -l:libssl-3-x64.dll -l:libcrypto-3-x64.dll -lcrypt32"
+    DIRECT_LIBS="-Llib -l:libssl-3-x64.dll -l:libcrypto-3-x64.dll -lcrypt32 -DWIN32_LEAN_AND_MEAN -lpthread -lws2_32 -lmswsock"
 else
-    CONFIG=$CONFIG
+    CONFIG="-g"
 fi
 
 cd "$PWD"/modules/"$1"
 
 clang++ \
+-std=c++20 \
 -dynamiclib \
 -shared \
--g \
 -Wno-everything \
 $CONFIG \
 $LIBS \
 -Iinclude \
 -Llib \
--std=c++20 \
 "$1".cpp  \
 -o bin/"$1" \
-$DIRECT_LIBS \
-# -Wl,-rpath,$RPATH
+$DIRECT_LIBS
 
 cp lib/*.dll .

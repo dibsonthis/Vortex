@@ -1,12 +1,21 @@
 #define ASIO_STANDALONE
+#define ASIO_HAS_STD_ADDRESSOF
+#define ASIO_HAS_STD_ARRAY
+#define ASIO_HAS_CSTDINT
+#define ASIO_HAS_STD_SHARED_PTR
+#define ASIO_HAS_STD_TYPE_TRAITS
+#ifdef _WIN32 || _WIN64
+    // #define WIN32_LEAN_AND_MEAN
+    #define _WEBSOCKETPP_MINGW_THREAD_
+#endif
+// #include "Vortex/Node/Node.hpp"
 #include <functional>
-#include "include/websocketpp/asio.hpp"
-#include "Vortex/Node/Node.hpp"
 #include "Vortex/Lexer/Lexer.hpp"
 #include "Vortex/Parser/Parser.hpp"
 #include "Vortex/Bytecode/Bytecode.hpp"
 #include "Vortex/Bytecode/Generator.hpp"
 #include "Vortex/VirtualMachine/VirtualMachine.hpp"
+#include "include/websocketpp/asio.hpp"
 
 // TLS or no TLS
 #include "include/websocketpp/config/asio_client.hpp" // TLS
@@ -164,7 +173,7 @@ extern "C" Value _run(std::vector<Value> &args)
     return none_val();
 }
 
-extern "C" Value _close(std::vector<Value> &args)
+extern "C" Value _client_close(std::vector<Value> &args)
 {
     int num_required_args = 1;
 
