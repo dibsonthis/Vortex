@@ -1,8 +1,7 @@
 const lib = load_lib("./bin/websockets", [
     "_client", "_run", "_client_close", "_send", 
     "_on_message", "_on_open", "_on_close", "_on_fail",
-    "_server", "_listen", "_stop", "_server_send", "_server_broadcast", "_server_on_open", "_server_on_message",
-    "_server_on_fail", "_server_on_close", "_server_get_clients", "_server_close_connection"])
+    "_server", "_listen", "_stop", "_server_send", "_server_broadcast", "_server_on_open", "_server_on_message", "_server_on_fail", "_server_on_close", "_server_get_clients", "_server_close_connection"])
 
 /* Client */
 
