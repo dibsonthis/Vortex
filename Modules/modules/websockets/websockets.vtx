@@ -86,7 +86,7 @@ const server_get_clients = (server) => lib._server_get_clients(server)
 const server_close_connection = (server, id) => lib._server_close_connection(server, id)
 
 type Server = () => {
-    return {
+    const s = {
         server: lib._server(),
         listen: (port) => {
             lib._listen(this.server, port)
@@ -148,4 +148,7 @@ type Server = () => {
             this._thread = None
         }
     }
+
+    s.set_on_open(() => {})
+    return s
 }
