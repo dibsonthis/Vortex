@@ -148,7 +148,10 @@ type Server = () => {
             this._thread = None
         }
     }
-
+    // We set these here because
+    // internally these functions perform important client
+    // handling actions
     s.set_on_open(() => {})
+    s.set_on_close(() => {})
     return s
 }

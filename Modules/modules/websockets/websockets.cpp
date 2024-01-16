@@ -5,8 +5,8 @@
 #define ASIO_HAS_STD_SHARED_PTR
 #define ASIO_HAS_STD_TYPE_TRAITS
 #ifdef _WIN32 || _WIN64
-    // #define WIN32_LEAN_AND_MEAN
-    #define _WEBSOCKETPP_MINGW_THREAD_
+// #define WIN32_LEAN_AND_MEAN
+#define _WEBSOCKETPP_MINGW_THREAD_
 #endif
 // #include "Vortex/Node/Node.hpp"
 #include <functional>
@@ -902,12 +902,19 @@ extern "C" Value _server_send(std::vector<Value> &args)
     {
         if ((it->second).sessionId == id.get_number())
         {
-            auto con = s->get_con_from_hdl(it->first);
-            if (con->get_state() == websocketpp::session::state::open)
+            try
             {
-                s->send(it->first, message.get_string(), websocketpp::frame::opcode::text);
+                auto con = s->get_con_from_hdl(it->first);
+                if (con->get_state() == websocketpp::session::state::open)
+                {
+                    s->send(it->first, message.get_string(), websocketpp::frame::opcode::text);
+                }
+                break;
             }
-            break;
+            catch (...)
+            {
+                std::cout << "Error sending to client: " << (it->second).sessionId;
+            }
         }
     }
 
@@ -958,10 +965,18 @@ extern "C" Value _server_broadcast(std::vector<Value> &args)
 
     for (auto it = m_servers[s].begin(); it != m_servers[s].end(); ++it)
     {
-        auto con = s->get_con_from_hdl(it->first);
-        if (con->get_state() == websocketpp::session::state::open)
+        try
         {
-            s->send(it->first, message.get_string(), websocketpp::frame::opcode::text);
+            auto con = s->get_con_from_hdl(it->first);
+            if (con->get_state() == websocketpp::session::state::open)
+            {
+                s->send(it->first, message.get_string(), websocketpp::frame::opcode::text);
+            }
+            break;
+        }
+        catch (...)
+        {
+            std::cout << "Error sending to client: " << (it->second).sessionId;
         }
     }
 
@@ -1297,7 +1312,6 @@ extern "C" Value _server_get_clients(std::vector<Value> &args)
 
     Value clients_list = list_val();
 
-    // for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
     for (auto it = m_servers[s].begin(); it != m_servers[s].end(); ++it)
     {
         Value client_object = object_val();
