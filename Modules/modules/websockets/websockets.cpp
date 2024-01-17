@@ -63,25 +63,16 @@ static context_ptr on_tls_init()
     return ctx;
 }
 
-extern "C" Value _client(std::vector<Value> &args)
+extern "C" Value _client_init(std::vector<Value> &args)
 {
-    int num_required_args = 1;
+    int num_required_args = 0;
 
     if (args.size() != num_required_args)
     {
-        error("Function 'client' expects " + std::to_string(num_required_args) + " argument(s)");
-    }
-
-    Value url = args[0];
-
-    if (!url.is_string())
-    {
-        error("Function 'client' expects argument 'url' to be a string");
+        error("Function 'init_client' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     client *c = new client();
-
-    std::string uri = url.get_string();
 
     c->clear_access_channels(websocketpp::log::alevel::frame_header);
     c->clear_access_channels(websocketpp::log::alevel::frame_payload);
@@ -92,298 +83,80 @@ extern "C" Value _client(std::vector<Value> &args)
 
     c->set_tls_init_handler(websocketpp::lib::bind(&on_tls_init));
 
-    // Create a connection to the given URI and queue it for connection once
-    // the event loop starts
-    websocketpp::lib::error_code ec;
-    client::connection_ptr *con = new client::connection_ptr(c->get_connection(uri, ec));
-    (*con)->append_header("access-control-allow-origin", "*");
-    c->connect(*con);
-
-    Value socket_object = object_val();
-    socket_object.get_object()->keys = {"websocket_ptr", "connection_ptr", "websocket_hdl", "running"};
-
     Value client_ptr = pointer_val();
     client_ptr.get_pointer()->value = (void *)c;
 
-    Value websocket_hdl = pointer_val();
-    websocketpp::connection_hdl *hdl = new websocketpp::connection_hdl((*con)->get_handle());
-    websocket_hdl.get_pointer()->value = hdl;
-
-    Value connection_ptr = pointer_val();
-    connection_ptr.get_pointer()->value = (void *)con;
-
-    socket_object.get_object()->values["websocket_ptr"] = client_ptr;
-    socket_object.get_object()->values["websocket_hdl"] = websocket_hdl;
-    socket_object.get_object()->values["connection_ptr"] = connection_ptr;
-    socket_object.get_object()->values["running"] = boolean_val(false);
-
-    return socket_object;
+    return client_ptr;
 }
 
-extern "C" Value _run(std::vector<Value> &args)
+extern "C" Value _client_connect(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'client_connect' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value client_ptr = args[0];
+    Value url = args[1];
+
+    if (!client_ptr.is_pointer())
+    {
+        error("Function 'client_connect' expects argument 'client' to be a pointer");
+    }
+
+    if (!url.is_string())
+    {
+        error("Function 'client_connect' expects argument 'url' to be a string");
+    }
+
+    client *c = (client *)client_ptr.get_pointer()->value;
+
+    // Create a connection to the given URI and queue it for connection once
+    // the event loop starts
+    websocketpp::lib::error_code ec;
+    client::connection_ptr con = c->get_connection(url.get_string(), ec);
+
+    if (ec)
+    {
+        error("Could not create connection: " + ec.message());
+    }
+
+    (con)->append_header("access-control-allow-origin", "*");
+    c->connect(con);
+
+    Value con_ptr = pointer_val();
+    con_ptr.get_pointer()->value = (void *)con.get();
+
+    return con_ptr;
+}
+
+extern "C" Value _client_run(std::vector<Value> &args)
 {
     int num_required_args = 1;
 
     if (args.size() != num_required_args)
     {
-        error("Function 'run' expects " + std::to_string(num_required_args) + " argument(s)");
+        error("Function 'client_connect' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
-    Value socket_object = args[0];
+    Value client_ptr = args[0];
 
-    if (!socket_object.is_object())
+    if (!client_ptr.is_pointer())
     {
-        error("Function 'run' expects argument 'client' to be an object");
+        error("Function 'client_connect' expects argument 'client' to be a pointer");
     }
 
-    auto &socket = socket_object.get_object();
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_ptr") == socket->keys.end())
-    {
-        error("Function 'run' expects argument 'client' to be a valid client object");
-    }
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_hdl") == socket->keys.end())
-    {
-        error("Function 'run' expects argument 'client' to be a valid client object");
-    }
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
-    {
-        error("Function 'run' expects argument 'client' to be a valid client object");
-    }
-
-    if (!socket->values["websocket_ptr"].is_pointer())
-    {
-        error("Function 'run' expects argument 'client' to be a valid client object");
-    }
-
-    if (!socket->values["websocket_hdl"].is_pointer())
-    {
-        error("Function 'run' expects argument 'client' to be a valid client object");
-    }
-
-    client *c = (client *)socket->values["websocket_ptr"].get_pointer()->value;
-    websocketpp::connection_hdl *hdl = (websocketpp::connection_hdl *)socket->values["websocket_hdl"].get_pointer()->value;
-
-    socket->values["running"] = boolean_val(true);
+    client *c = (client *)client_ptr.get_pointer()->value;
 
     c->run();
+    c->reset();
 
     return none_val();
 }
 
-extern "C" Value _client_close(std::vector<Value> &args)
-{
-    int num_required_args = 1;
-
-    if (args.size() != num_required_args)
-    {
-        error("Function 'close' expects " + std::to_string(num_required_args) + " argument(s)");
-    }
-
-    Value socket_object = args[0];
-
-    if (!socket_object.is_object())
-    {
-        error("Function 'close' expects argument 'client' to be an object");
-    }
-
-    auto &socket = socket_object.get_object();
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_ptr") == socket->keys.end())
-    {
-        error("Function 'close' expects argument 'client' to be a valid client object");
-    }
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_hdl") == socket->keys.end())
-    {
-        error("Function 'close' expects argument 'client' to be a valid client object");
-    }
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
-    {
-        error("Function 'close' expects argument 'client' to be a valid client object");
-    }
-
-    if (!socket->values["websocket_ptr"].is_pointer())
-    {
-        error("Function 'close' expects argument 'client' to be a valid client object");
-    }
-
-    if (!socket->values["websocket_hdl"].is_pointer())
-    {
-        error("Function 'close' expects argument 'client' to be a valid client object");
-    }
-
-    client *c = (client *)socket->values["websocket_ptr"].get_pointer()->value;
-    websocketpp::connection_hdl *hdl = (websocketpp::connection_hdl *)socket->values["websocket_hdl"].get_pointer()->value;
-
-    if (c->stopped())
-    {
-        std::cout << "Connection is not running - cannot close" << std::endl;
-        return none_val();
-    }
-
-    c->close(*hdl, websocketpp::close::status::normal, "");
-
-    socket->values["running"] = boolean_val(false);
-
-    return none_val();
-}
-
-extern "C" Value _send(std::vector<Value> &args)
-{
-    int num_required_args = 2;
-
-    if (args.size() != num_required_args)
-    {
-        error("Function 'send' expects " + std::to_string(num_required_args) + " argument(s)");
-    }
-
-    Value socket_object = args[0];
-    Value message = args[1];
-
-    if (!socket_object.is_object())
-    {
-        error("Function 'send' expects argument 'client' to be an object");
-    }
-
-    if (!message.is_string())
-    {
-        error("Function 'send' expects argument 'message' to be a string");
-    }
-
-    auto &socket = socket_object.get_object();
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_ptr") == socket->keys.end())
-    {
-        error("Function 'send' expects argument 'client' to be a valid client object");
-    }
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_hdl") == socket->keys.end())
-    {
-        error("Function 'send' expects argument 'client' to be a valid client object");
-    }
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
-    {
-        error("Function 'send' expects argument 'client' to be a valid client object");
-    }
-
-    if (!socket->values["websocket_ptr"].is_pointer())
-    {
-        error("Function 'send' expects argument 'client' to be a valid client object");
-    }
-
-    if (!socket->values["websocket_hdl"].is_pointer())
-    {
-        error("Function 'send' expects argument 'client' to be a valid client object");
-    }
-
-    client *c = (client *)socket->values["websocket_ptr"].get_pointer()->value;
-    websocketpp::connection_hdl *hdl = (websocketpp::connection_hdl *)socket->values["websocket_hdl"].get_pointer()->value;
-
-    if (c->stopped())
-    {
-        std::cout << "Connection is not running - cannot send" << std::endl;
-        return none_val();
-    }
-
-    c->send(*hdl, message.get_string(), websocketpp::frame::opcode::text);
-
-    return none_val();
-}
-
-extern "C" Value _on_open(std::vector<Value> &args)
-{
-    int num_required_args = 2;
-
-    if (args.size() != num_required_args)
-    {
-        error("Function 'on_open' expects " + std::to_string(num_required_args) + " argument(s)");
-    }
-
-    Value socket_object = args[0];
-    Value func = args[1];
-
-    if (!func.is_function())
-    {
-        error("Function 'on_open' expects argument 'function' to be a Function");
-    }
-
-    if (!socket_object.is_object())
-    {
-        error("Function 'on_open' expects argument 'client' to be an object");
-    }
-
-    auto &socket = socket_object.get_object();
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_ptr") == socket->keys.end())
-    {
-        error("Function 'on_open' expects argument 'client' to be a valid client object");
-    }
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_hdl") == socket->keys.end())
-    {
-        error("Function 'on_open' expects argument 'client' to be a valid client object");
-    }
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
-    {
-        error("Function 'on_open' expects argument 'client' to be a valid client object");
-    }
-
-    if (!socket->values["websocket_ptr"].is_pointer())
-    {
-        error("Function 'on_open' expects argument 'client' to be a valid client object");
-    }
-
-    if (!socket->values["websocket_hdl"].is_pointer())
-    {
-        error("Function 'on_open' expects argument 'client' to be a valid client object");
-    }
-
-    if (func.get_function()->arity != 0)
-    {
-        error("Function 'on_open' expects argument 'function' to be a Function with 0 parameter");
-    }
-
-    client *c = (client *)socket->values["websocket_ptr"].get_pointer()->value;
-    client::connection_ptr *con = (client::connection_ptr *)socket->values["connection_ptr"].get_pointer()->value;
-
-    auto on_open_func = [func](websocketpp::connection_hdl hdl)
-    {
-        VM func_vm;
-        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
-        main->name = "";
-        main->arity = 0;
-        main->chunk = Chunk();
-        CallFrame main_frame;
-        main_frame.function = main;
-        main_frame.sp = 0;
-        main_frame.ip = main->chunk.code.data();
-        main_frame.frame_start = 0;
-        func_vm.frames.push_back(main_frame);
-
-        add_constant(main->chunk, func);
-        add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
-        add_opcode(main->chunk, OP_CALL, 0, 0);
-
-        add_code(main->chunk, OP_EXIT, 0);
-
-        auto offsets = instruction_offsets(main_frame.function->chunk);
-        main_frame.function->instruction_offsets = offsets;
-
-        evaluate(func_vm);
-    };
-
-    (*con)->set_open_handler(on_open_func);
-
-    return none_val();
-}
-
-extern "C" Value _on_message(std::vector<Value> &args)
+extern "C" Value _client_on_message(std::vector<Value> &args)
 {
     int num_required_args = 2;
 
@@ -392,7 +165,7 @@ extern "C" Value _on_message(std::vector<Value> &args)
         error("Function 'on_message' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
-    Value socket_object = args[0];
+    Value client_ptr = args[0];
     Value func = args[1];
 
     if (!func.is_function())
@@ -400,36 +173,9 @@ extern "C" Value _on_message(std::vector<Value> &args)
         error("Function 'on_message' expects argument 'function' to be a Function");
     }
 
-    if (!socket_object.is_object())
+    if (!client_ptr.is_pointer())
     {
-        error("Function 'on_message' expects argument 'client' to be an object");
-    }
-
-    auto &socket = socket_object.get_object();
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_ptr") == socket->keys.end())
-    {
-        error("Function 'on_message' expects argument 'client' to be a valid client object");
-    }
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_hdl") == socket->keys.end())
-    {
-        error("Function 'on_message' expects argument 'client' to be a valid client object");
-    }
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
-    {
-        error("Function 'on_message' expects argument 'client' to be a valid client object");
-    }
-
-    if (!socket->values["websocket_ptr"].is_pointer())
-    {
-        error("Function 'on_message' expects argument 'client' to be a valid client object");
-    }
-
-    if (!socket->values["websocket_hdl"].is_pointer())
-    {
-        error("Function 'on_message' expects argument 'client' to be a valid client object");
+        error("Function 'on_message' expects argument 'client' to be a pointer");
     }
 
     if (func.get_function()->arity != 1)
@@ -437,8 +183,7 @@ extern "C" Value _on_message(std::vector<Value> &args)
         error("Function 'on_message' expects argument 'function' to be a Function with 1 parameter");
     }
 
-    client *c = (client *)socket->values["websocket_ptr"].get_pointer()->value;
-    client::connection_ptr *con = (client::connection_ptr *)socket->values["connection_ptr"].get_pointer()->value;
+    client *c = (client *)client_ptr.get_pointer()->value;
 
     auto on_message_func = [func](websocketpp::connection_hdl hdl, message_ptr msg)
     {
@@ -468,12 +213,72 @@ extern "C" Value _on_message(std::vector<Value> &args)
         evaluate(func_vm);
     };
 
-    (*con)->set_message_handler(on_message_func);
+    c->set_message_handler(on_message_func);
 
     return none_val();
 }
 
-extern "C" Value _on_close(std::vector<Value> &args)
+extern "C" Value _client_on_open(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'on_open' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value client_ptr = args[0];
+    Value func = args[1];
+
+    if (!func.is_function())
+    {
+        error("Function 'on_open' expects argument 'function' to be a Function");
+    }
+
+    if (!client_ptr.is_pointer())
+    {
+        error("Function 'on_open' expects argument 'client' to be a pointer");
+    }
+
+    if (func.get_function()->arity != 0)
+    {
+        error("Function 'on_fail' expects argument 'function' to be a Function with 0 parameters");
+    }
+
+    client *c = (client *)client_ptr.get_pointer()->value;
+
+    auto on_open_func = [func](websocketpp::connection_hdl hdl)
+    {
+        VM func_vm;
+        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+        main->name = "";
+        main->arity = 0;
+        main->chunk = Chunk();
+        CallFrame main_frame;
+        main_frame.function = main;
+        main_frame.sp = 0;
+        main_frame.ip = main->chunk.code.data();
+        main_frame.frame_start = 0;
+        func_vm.frames.push_back(main_frame);
+
+        add_constant(main->chunk, func);
+        add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 0, 0);
+
+        add_code(main->chunk, OP_EXIT, 0);
+
+        auto offsets = instruction_offsets(main_frame.function->chunk);
+        main_frame.function->instruction_offsets = offsets;
+
+        evaluate(func_vm);
+    };
+
+    c->set_open_handler(on_open_func);
+
+    return none_val();
+}
+
+extern "C" Value _client_on_close(std::vector<Value> &args)
 {
     int num_required_args = 2;
 
@@ -482,7 +287,7 @@ extern "C" Value _on_close(std::vector<Value> &args)
         error("Function 'on_close' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
-    Value socket_object = args[0];
+    Value client_ptr = args[0];
     Value func = args[1];
 
     if (!func.is_function())
@@ -490,45 +295,17 @@ extern "C" Value _on_close(std::vector<Value> &args)
         error("Function 'on_close' expects argument 'function' to be a Function");
     }
 
-    if (!socket_object.is_object())
+    if (!client_ptr.is_pointer())
     {
-        error("Function 'on_close' expects argument 'client' to be an object");
-    }
-
-    auto &socket = socket_object.get_object();
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_ptr") == socket->keys.end())
-    {
-        error("Function 'on_close' expects argument 'client' to be a valid client object");
-    }
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_hdl") == socket->keys.end())
-    {
-        error("Function 'on_close' expects argument 'client' to be a valid client object");
-    }
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
-    {
-        error("Function 'on_close' expects argument 'client' to be a valid client object");
-    }
-
-    if (!socket->values["websocket_ptr"].is_pointer())
-    {
-        error("Function 'on_close' expects argument 'client' to be a valid client object");
-    }
-
-    if (!socket->values["websocket_hdl"].is_pointer())
-    {
-        error("Function 'on_close' expects argument 'client' to be a valid client object");
+        error("Function 'on_close' expects argument 'client' to be a pointer");
     }
 
     if (func.get_function()->arity != 0)
     {
-        error("Function 'on_close' expects argument 'function' to be a Function with 0 parameter");
+        error("Function 'on_fail' expects argument 'function' to be a Function with 0 parameters");
     }
 
-    client *c = (client *)socket->values["websocket_ptr"].get_pointer()->value;
-    client::connection_ptr *con = (client::connection_ptr *)socket->values["connection_ptr"].get_pointer()->value;
+    client *c = (client *)client_ptr.get_pointer()->value;
 
     auto on_close_func = [func](websocketpp::connection_hdl hdl)
     {
@@ -556,12 +333,12 @@ extern "C" Value _on_close(std::vector<Value> &args)
         evaluate(func_vm);
     };
 
-    (*con)->set_close_handler(on_close_func);
+    c->set_close_handler(on_close_func);
 
     return none_val();
 }
 
-extern "C" Value _on_fail(std::vector<Value> &args)
+extern "C" Value _client_on_fail(std::vector<Value> &args)
 {
     int num_required_args = 2;
 
@@ -570,7 +347,7 @@ extern "C" Value _on_fail(std::vector<Value> &args)
         error("Function 'on_fail' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
-    Value socket_object = args[0];
+    Value client_ptr = args[0];
     Value func = args[1];
 
     if (!func.is_function())
@@ -578,45 +355,17 @@ extern "C" Value _on_fail(std::vector<Value> &args)
         error("Function 'on_fail' expects argument 'function' to be a Function");
     }
 
-    if (!socket_object.is_object())
+    if (!client_ptr.is_pointer())
     {
-        error("Function 'on_fail' expects argument 'client' to be an object");
-    }
-
-    auto &socket = socket_object.get_object();
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_ptr") == socket->keys.end())
-    {
-        error("Function 'on_fail' expects argument 'client' to be a valid client object");
-    }
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "websocket_hdl") == socket->keys.end())
-    {
-        error("Function 'on_fail' expects argument 'client' to be a valid client object");
-    }
-
-    if (std::find(socket->keys.begin(), socket->keys.end(), "connection_ptr") == socket->keys.end())
-    {
-        error("Function 'on_fail' expects argument 'client' to be a valid client object");
-    }
-
-    if (!socket->values["websocket_ptr"].is_pointer())
-    {
-        error("Function 'on_fail' expects argument 'client' to be a valid client object");
-    }
-
-    if (!socket->values["websocket_hdl"].is_pointer())
-    {
-        error("Function 'on_fail' expects argument 'client' to be a valid client object");
+        error("Function 'on_fail' expects argument 'client' to be a pointer");
     }
 
     if (func.get_function()->arity != 0)
     {
-        error("Function 'on_fail' expects argument 'function' to be a Function with 0 parameter");
+        error("Function 'on_fail' expects argument 'function' to be a Function with 0 parameters");
     }
 
-    client *c = (client *)socket->values["websocket_ptr"].get_pointer()->value;
-    client::connection_ptr *con = (client::connection_ptr *)socket->values["connection_ptr"].get_pointer()->value;
+    client *c = (client *)client_ptr.get_pointer()->value;
 
     auto on_fail_func = [func](websocketpp::connection_hdl hdl)
     {
@@ -644,7 +393,97 @@ extern "C" Value _on_fail(std::vector<Value> &args)
         evaluate(func_vm);
     };
 
-    (*con)->set_fail_handler(on_fail_func);
+    c->set_fail_handler(on_fail_func);
+
+    return none_val();
+}
+
+extern "C" Value _client_send(std::vector<Value> &args)
+{
+    int num_required_args = 3;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'client_send' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value client_ptr = args[0];
+    Value con_ptr = args[1];
+    Value message = args[2];
+
+    if (!client_ptr.is_pointer())
+    {
+        error("Function 'client_send' expects argument 'client' to be a pointer");
+    }
+
+    if (!con_ptr.is_pointer())
+    {
+        error("Function 'client_send' expects argument 'con_ptr' to be a pointer");
+    }
+
+    if (!message.is_string())
+    {
+        error("Function 'client_send' expects argument 'message' to be a string");
+    }
+
+    client *c = (client *)client_ptr.get_pointer()->value;
+    client::connection_type *con = (client::connection_type *)con_ptr.get_pointer()->value;
+
+    if (c->stopped())
+    {
+        std::cout << "Connection is not running - cannot send" << std::endl;
+        return none_val();
+    }
+
+    c->send((*con).get_handle(), message.get_string(), websocketpp::frame::opcode::text);
+
+    return none_val();
+}
+
+extern "C" Value _client_close(std::vector<Value> &args)
+{
+    int num_required_args = 4;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'client_close' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value client_ptr = args[0];
+    Value con_ptr = args[1];
+    Value code = args[2];
+    Value reason = args[3];
+
+    if (!client_ptr.is_pointer())
+    {
+        error("Function 'client_close' expects argument 'client' to be a pointer");
+    }
+
+    if (!con_ptr.is_pointer())
+    {
+        error("Function 'client_close' expects argument 'con_ptr' to be a pointer");
+    }
+
+    if (!code.is_number())
+    {
+        error("Function 'client_close' expects argument 'code' to be a number");
+    }
+
+    if (!reason.is_string())
+    {
+        error("Function 'client_close' expects argument 'reason' to be a string");
+    }
+
+    client *c = (client *)client_ptr.get_pointer()->value;
+    client::connection_type *con = (client::connection_type *)con_ptr.get_pointer()->value;
+
+    if (c->stopped())
+    {
+        std::cout << "Connection is not running - cannot close" << std::endl;
+        return none_val();
+    }
+
+    c->close((*con).get_handle(), code.get_number(), reason.get_string());
 
     return none_val();
 }
@@ -1385,6 +1224,433 @@ extern "C" Value _server_close_connection(std::vector<Value> &args)
             break;
         }
     }
+
+    return none_val();
+}
+
+/* TESTING */
+
+extern "C" Value _TEST_init_client(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'client' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    client *c = new client();
+
+    c->clear_access_channels(websocketpp::log::alevel::frame_header);
+    c->clear_access_channels(websocketpp::log::alevel::frame_payload);
+    // c->set_error_channels(websocketpp::log::elevel::none);
+
+    // Initialize ASIO
+    c->init_asio();
+
+    c->set_tls_init_handler(websocketpp::lib::bind(&on_tls_init));
+
+    Value client_ptr = pointer_val();
+    client_ptr.get_pointer()->value = (void *)c;
+
+    return client_ptr;
+}
+
+extern "C" Value _TEST_client_connect(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'client_connect' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value client_ptr = args[0];
+    Value url = args[1];
+
+    if (!client_ptr.is_pointer())
+    {
+        error("Function 'client_connect' expects argument 'client' to be a pointer");
+    }
+
+    if (!url.is_string())
+    {
+        error("Function 'client_connect' expects argument 'url' to be a string");
+    }
+
+    client *c = (client *)client_ptr.get_pointer()->value;
+
+    // Create a connection to the given URI and queue it for connection once
+    // the event loop starts
+    websocketpp::lib::error_code ec;
+    client::connection_ptr con = c->get_connection(url.get_string(), ec);
+
+    if (ec)
+    {
+        error("Could not create connection: " + ec.message());
+    }
+
+    (con)->append_header("access-control-allow-origin", "*");
+    c->connect(con);
+
+    Value con_ptr = pointer_val();
+    con_ptr.get_pointer()->value = (void *)con.get();
+
+    return con_ptr;
+}
+
+extern "C" Value _TEST_client_run(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'client_connect' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value client_ptr = args[0];
+
+    if (!client_ptr.is_pointer())
+    {
+        error("Function 'client_connect' expects argument 'client' to be a pointer");
+    }
+
+    client *c = (client *)client_ptr.get_pointer()->value;
+
+    c->run();
+    c->reset();
+
+    return none_val();
+}
+
+extern "C" Value _TEST_client_on_message(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'on_message' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value client_ptr = args[0];
+    Value func = args[1];
+
+    if (!func.is_function())
+    {
+        error("Function 'on_message' expects argument 'function' to be a Function");
+    }
+
+    if (!client_ptr.is_pointer())
+    {
+        error("Function 'on_message' expects argument 'client' to be a pointer");
+    }
+
+    if (func.get_function()->arity != 1)
+    {
+        error("Function 'on_message' expects argument 'function' to be a Function with 1 parameter");
+    }
+
+    client *c = (client *)client_ptr.get_pointer()->value;
+
+    auto on_message_func = [func](websocketpp::connection_hdl hdl, message_ptr msg)
+    {
+        VM func_vm;
+        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+        main->name = "";
+        main->arity = 0;
+        main->chunk = Chunk();
+        CallFrame main_frame;
+        main_frame.function = main;
+        main_frame.sp = 0;
+        main_frame.ip = main->chunk.code.data();
+        main_frame.frame_start = 0;
+        func_vm.frames.push_back(main_frame);
+
+        add_constant(main->chunk, func);
+        add_constant(main->chunk, string_val(msg->get_payload()));
+        add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
+        add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 1, 0);
+
+        add_code(main->chunk, OP_EXIT, 0);
+
+        auto offsets = instruction_offsets(main_frame.function->chunk);
+        main_frame.function->instruction_offsets = offsets;
+
+        evaluate(func_vm);
+    };
+
+    c->set_message_handler(on_message_func);
+
+    return none_val();
+}
+
+extern "C" Value _TEST_client_on_open(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'on_open' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value client_ptr = args[0];
+    Value func = args[1];
+
+    if (!func.is_function())
+    {
+        error("Function 'on_open' expects argument 'function' to be a Function");
+    }
+
+    if (!client_ptr.is_pointer())
+    {
+        error("Function 'on_open' expects argument 'client' to be a pointer");
+    }
+
+    if (func.get_function()->arity != 0)
+    {
+        error("Function 'on_fail' expects argument 'function' to be a Function with 0 parameters");
+    }
+
+    client *c = (client *)client_ptr.get_pointer()->value;
+
+    auto on_open_func = [func](websocketpp::connection_hdl hdl)
+    {
+        VM func_vm;
+        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+        main->name = "";
+        main->arity = 0;
+        main->chunk = Chunk();
+        CallFrame main_frame;
+        main_frame.function = main;
+        main_frame.sp = 0;
+        main_frame.ip = main->chunk.code.data();
+        main_frame.frame_start = 0;
+        func_vm.frames.push_back(main_frame);
+
+        add_constant(main->chunk, func);
+        add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 0, 0);
+
+        add_code(main->chunk, OP_EXIT, 0);
+
+        auto offsets = instruction_offsets(main_frame.function->chunk);
+        main_frame.function->instruction_offsets = offsets;
+
+        evaluate(func_vm);
+    };
+
+    c->set_open_handler(on_open_func);
+
+    return none_val();
+}
+
+extern "C" Value _TEST_client_on_close(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'on_close' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value client_ptr = args[0];
+    Value func = args[1];
+
+    if (!func.is_function())
+    {
+        error("Function 'on_close' expects argument 'function' to be a Function");
+    }
+
+    if (!client_ptr.is_pointer())
+    {
+        error("Function 'on_close' expects argument 'client' to be a pointer");
+    }
+
+    if (func.get_function()->arity != 0)
+    {
+        error("Function 'on_fail' expects argument 'function' to be a Function with 0 parameters");
+    }
+
+    client *c = (client *)client_ptr.get_pointer()->value;
+
+    auto on_close_func = [func](websocketpp::connection_hdl hdl)
+    {
+        VM func_vm;
+        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+        main->name = "";
+        main->arity = 0;
+        main->chunk = Chunk();
+        CallFrame main_frame;
+        main_frame.function = main;
+        main_frame.sp = 0;
+        main_frame.ip = main->chunk.code.data();
+        main_frame.frame_start = 0;
+        func_vm.frames.push_back(main_frame);
+
+        add_constant(main->chunk, func);
+        add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 0, 0);
+
+        add_code(main->chunk, OP_EXIT, 0);
+
+        auto offsets = instruction_offsets(main_frame.function->chunk);
+        main_frame.function->instruction_offsets = offsets;
+
+        evaluate(func_vm);
+    };
+
+    c->set_close_handler(on_close_func);
+
+    return none_val();
+}
+
+extern "C" Value _TEST_client_on_fail(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'on_fail' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value client_ptr = args[0];
+    Value func = args[1];
+
+    if (!func.is_function())
+    {
+        error("Function 'on_fail' expects argument 'function' to be a Function");
+    }
+
+    if (!client_ptr.is_pointer())
+    {
+        error("Function 'on_fail' expects argument 'client' to be a pointer");
+    }
+
+    if (func.get_function()->arity != 0)
+    {
+        error("Function 'on_fail' expects argument 'function' to be a Function with 0 parameters");
+    }
+
+    client *c = (client *)client_ptr.get_pointer()->value;
+
+    auto on_fail_func = [func](websocketpp::connection_hdl hdl)
+    {
+        VM func_vm;
+        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+        main->name = "";
+        main->arity = 0;
+        main->chunk = Chunk();
+        CallFrame main_frame;
+        main_frame.function = main;
+        main_frame.sp = 0;
+        main_frame.ip = main->chunk.code.data();
+        main_frame.frame_start = 0;
+        func_vm.frames.push_back(main_frame);
+
+        add_constant(main->chunk, func);
+        add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 0, 0);
+
+        add_code(main->chunk, OP_EXIT, 0);
+
+        auto offsets = instruction_offsets(main_frame.function->chunk);
+        main_frame.function->instruction_offsets = offsets;
+
+        evaluate(func_vm);
+    };
+
+    c->set_fail_handler(on_fail_func);
+
+    return none_val();
+}
+
+extern "C" Value _TEST_client_send(std::vector<Value> &args)
+{
+    int num_required_args = 3;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'client_send' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value client_ptr = args[0];
+    Value con_ptr = args[1];
+    Value message = args[2];
+
+    if (!client_ptr.is_pointer())
+    {
+        error("Function 'client_send' expects argument 'client' to be a pointer");
+    }
+
+    if (!con_ptr.is_pointer())
+    {
+        error("Function 'client_send' expects argument 'con_ptr' to be a pointer");
+    }
+
+    if (!message.is_string())
+    {
+        error("Function 'client_send' expects argument 'message' to be a string");
+    }
+
+    client *c = (client *)client_ptr.get_pointer()->value;
+    client::connection_type *con = (client::connection_type *)con_ptr.get_pointer()->value;
+
+    if (c->stopped())
+    {
+        std::cout << "Connection is not running - cannot send" << std::endl;
+        return none_val();
+    }
+
+    c->send((*con).get_handle(), message.get_string(), websocketpp::frame::opcode::text);
+
+    return none_val();
+}
+
+extern "C" Value _TEST_client_close(std::vector<Value> &args)
+{
+    int num_required_args = 4;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'client_close' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value client_ptr = args[0];
+    Value con_ptr = args[1];
+    Value code = args[2];
+    Value reason = args[3];
+
+    if (!client_ptr.is_pointer())
+    {
+        error("Function 'client_close' expects argument 'client' to be a pointer");
+    }
+
+    if (!con_ptr.is_pointer())
+    {
+        error("Function 'client_close' expects argument 'con_ptr' to be a pointer");
+    }
+
+    if (!code.is_number())
+    {
+        error("Function 'client_close' expects argument 'code' to be a number");
+    }
+
+    if (!reason.is_string())
+    {
+        error("Function 'client_close' expects argument 'reason' to be a string");
+    }
+
+    client *c = (client *)client_ptr.get_pointer()->value;
+    client::connection_type *con = (client::connection_type *)con_ptr.get_pointer()->value;
+
+    if (c->stopped())
+    {
+        std::cout << "Connection is not running - cannot close" << std::endl;
+        return none_val();
+    }
+
+    c->close((*con).get_handle(), code.get_number(), reason.get_string());
 
     return none_val();
 }

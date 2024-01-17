@@ -1,73 +1,78 @@
 const lib = load_lib("./bin/websockets", [
-    "_client", "_run", "_client_close", "_send", 
-    "_on_message", "_on_open", "_on_close", "_on_fail",
-    "_server", "_listen", "_stop", "_server_send", "_server_broadcast", "_server_on_open", "_server_on_message", "_server_on_fail", "_server_on_close", "_server_get_clients", "_server_close_connection"])
+
+    "_server", "_listen", "_stop", "_server_send", "_server_broadcast", "_server_on_open", "_server_on_message", "_server_on_fail", "_server_on_close", "_server_get_clients", "_server_close_connection",
+
+    "_client_init", "_client_connect", "_client_run", 
+    "_client_on_message", "_client_on_open", "_client_on_close", 
+    "_client_on_fail", "_client_send", "_client_close"])
 
 /* Client */
 
-const client = (url) => lib._client(url)
-const close = (client) => lib._client_close(client)
-const run = (client) => lib._run(client)
-const send = (client, message) => lib._send(client, message)
-const on_message = (client, function) => lib._on_message(client, function)
-const on_open = (client, function) => lib._on_open(client, function)
-const on_close = (client, function) => lib._on_close(client, function)
-const on_fail = (client, function) => lib._on_fail(client, function)
+const init_client = () => lib._client_init()
+const connect_client = (client, url) => lib._client_connect(client, url)
+const run_client = (client) => lib._client_run(client)
+const on_message_client = (client, function) => lib._client_on_message(client, function)
+const on_open_client = (client, function) => lib._client_on_open(client, function)
+const on_close_client = (client, function) => lib._client_on_close(client, function)
+const on_fail_client = (client, function) => lib._client_on_fail(client, function)
+const send_client = (client, con, message) => lib._client_send(client, con, message)
+const close_client = (client, con, code, reason) => lib._client_close(client, con, code, reason)
 
-type Client = (url) => {
+
+type Client = (uri) => {
+    import time
     return {
-        client: lib._client(url),
-        reset: () => { 
-            this.client = lib._client(url) 
-            this.set_on_open(this.on_open)
-            this.set_on_close(this.on_close)
-            this.set_on_fail(this.on_fail)
-            this.set_on_message(this.on_message)
-            this.run()
+        uri: uri,
+        client: lib._client_init(),
+        connection: None,
+        connect: () => {
+            this.connection = lib._client_connect(this.client, this.uri)
         },
-        reset_async: () => { 
-            this.client = lib._client(url) 
-            this.set_on_open(this.on_open)
-            this.set_on_close(this.on_close)
-            this.set_on_fail(this.on_fail)
-            this.set_on_message(this.on_message)
-            this.run_async()
+        run: () => client._run(this),
+        send: (message) => lib._client_send(this.client, this.connection, message),
+        set_on_open:(function) => {
+                const client = this
+                lib._client_on_open(this.client, () => {
+                client.reconnect_attempts_count = 0
+                function()
+            })
         },
-        close: () => lib._client_close(this.client),
-        close_async: () => {
-            lib._client_close(this.client)
-            this._thread.get()
-            this._thread = None
+        set_on_close: (function) => lib._client_on_close(this.client, function),
+        set_on_fail: (function) => lib._client_on_fail(this.client, function),
+        set_on_message: (function) => lib._client_on_message(this.client, function),
+        close: (code = 1000, reason = "Normal") => lib._client_close(this.client, this.connection, code, reason),
+        reconnect: true,
+        reconnect_timeout: 5,
+        reconnect_attempts: 10,
+        reconnect_attempts_count: 0,
+        _run: (client) => {
+            while (true) {
+                client.connection = lib._client_connect(client.client, client.uri)
+                lib._client_run(client.client)
+
+                if (!client.reconnect) {
+                    break
+                }
+                
+                client.reconnect_attempts_count += 1
+                println(f"Connection closed, attempting to reconnect in ${client.reconnect_timeout} seconds - attempt ${client.reconnect_attempts_count}/${client.reconnect_attempts}")
+                time.sleep(client.reconnect_timeout * 1000)
+
+                if (client.reconnect_attempts_count >= client.reconnect_attempts) {
+                    println(f"Cannot connect to '${client.uri} - terminating connection")
+                    break
+                }
+            }
         },
-        run: () => lib._run(this.client),
+        /* Async */
         _thread: None,
         run_async: () => {
             import [Future] : future
-            const client = this.client
-            const thread = Future(() => lib._run(client))
-            this._thread = thread
-        },
-        send: (message) => lib._send(this.client, message),
-        on_message: () => {},
-        on_open: () => {},
-        on_close: () => {},
-        on_fail: () => {},
-        set_on_message: (function) => {
-            lib._on_message(this.client, function)
-            this.on_message = function
-        },
-        set_on_open: (function) => {
-            lib._on_open(this.client, function)
-            this.on_open = function
-        },
-        set_on_close: (function) => {
-            lib._on_close(this.client, function)
-            this.on_close = function
-        },
-        set_on_fail: (function) => {
-            lib._on_fail(this.client, function)
-            this.on_fail = function
-        },
+            const client = this
+            this._thread = Future(() => {
+                client._run(client)
+            })
+        }
     }
 }
 
