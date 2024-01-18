@@ -45,7 +45,13 @@ const imgui = {
 	begin_child: (name, x, y) => lib.imgui_begin_child(name, x, y),
 	end_child: () => lib.imgui_end_child(),
 	combo: (text, choice, choices) => lib.imgui_combo(text, choice, choices),
-	input_text: (label, text, hint = "") => lib.imgui_input_text(label, text, hint),
+	input_text: (label, text, hint = "") => {
+		var _label = label
+		if (label == "") {
+			_label = "##"
+		}
+		return lib.imgui_input_text(_label, text, hint)
+	},
 	same_line: (offset_from_start_x = 0, spacing = -1) =>lib.imgui_same_line(offset_from_start_x, spacing),
 	set_cursor_pos_x: (local_x) => lib.imgui_set_cursor_pos_x(local_x),
 	set_cursor_pos_y: (local_y) => lib.imgui_set_cursor_pos_y(local_y),
