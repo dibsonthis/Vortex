@@ -174,11 +174,11 @@ type Server = () => {
         close_connection: (id) => lib._server_close_connection(this.server, id),
         _thread: None,
         _port: 9002,
-        on_message: () => {},
-        on_open: () => {},
-        on_close: () => {},
-        on_fail: () => {},
-        on_validate: () => {},
+        on_message: (data) => {},
+        on_open: (data) => {},
+        on_close: (data) => {},
+        on_fail: (data) => {},
+        on_validate: (data, headers) => {},
         reset: () => { 
             this.server = lib._server() 
             this.set_on_open(this.on_open)
@@ -211,7 +211,7 @@ type Server = () => {
     // We set these here because
     // internally these functions perform important client
     // handling actions
-    s.set_on_open(() => {})
-    s.set_on_close(() => {})
+    s.set_on_open((data) => {})
+    s.set_on_close((data) => {})
     return s
 }

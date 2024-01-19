@@ -864,9 +864,9 @@ extern "C" Value _server_on_validate(std::vector<Value> &args)
         error("Function 'on_validate' expects argument 'function' to be a Function");
     }
 
-    if (func.get_function()->arity != 1)
+    if (func.get_function()->arity != 2)
     {
-        error("Function 'on_validate' expects argument 'function' to be a Function with 1 parameter");
+        error("Function 'on_validate' expects argument 'function' to be a Function with 2 parameters");
     }
 
     auto &_server = server_object.get_object();
@@ -898,6 +898,16 @@ extern "C" Value _server_on_validate(std::vector<Value> &args)
             header_internal_object->values[header.first] = string_val(header.second);
         }
 
+        connection_data &data = m_servers[s][hdl];
+
+        std::string endpoint = con->get_remote_endpoint();
+        data.name = endpoint;
+
+        Value data_obj = object_val();
+        data_obj.get_object()->keys = {"id", "name"};
+        data_obj.get_object()->values["id"] = number_val(data.sessionId);
+        data_obj.get_object()->values["name"] = string_val(data.name);
+
         VM func_vm;
         std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
         main->name = "";
@@ -911,10 +921,12 @@ extern "C" Value _server_on_validate(std::vector<Value> &args)
         func_vm.frames.push_back(main_frame);
 
         add_constant(main->chunk, func);
+        add_constant(main->chunk, data_obj);
         add_constant(main->chunk, header_object);
+        add_opcode(main->chunk, OP_LOAD_CONST, 2, 0);
         add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
         add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
-        add_opcode(main->chunk, OP_CALL, 1, 0);
+        add_opcode(main->chunk, OP_CALL, 2, 0);
 
         add_code(main->chunk, OP_EXIT, 0);
 
@@ -963,9 +975,9 @@ extern "C" Value _server_on_open(std::vector<Value> &args)
         error("Function 'on_open' expects argument 'function' to be a Function");
     }
 
-    if (func.get_function()->arity != 0)
+    if (func.get_function()->arity != 1)
     {
-        error("Function 'on_open' expects argument 'function' to be a Function with 0 parameters");
+        error("Function 'on_open' expects argument 'function' to be a Function with 1 parameter1");
     }
 
     auto &_server = server_object.get_object();
@@ -995,6 +1007,11 @@ extern "C" Value _server_on_open(std::vector<Value> &args)
 
         m_servers[s][hdl] = data;
 
+        Value data_obj = object_val();
+        data_obj.get_object()->keys = {"id", "name"};
+        data_obj.get_object()->values["id"] = number_val(data.sessionId);
+        data_obj.get_object()->values["name"] = string_val(data.name);
+
         VM func_vm;
         std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
         main->name = "";
@@ -1008,8 +1025,10 @@ extern "C" Value _server_on_open(std::vector<Value> &args)
         func_vm.frames.push_back(main_frame);
 
         add_constant(main->chunk, func);
+        add_constant(main->chunk, data_obj);
+        add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
         add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
-        add_opcode(main->chunk, OP_CALL, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 1, 0);
 
         add_code(main->chunk, OP_EXIT, 0);
 
@@ -1128,9 +1147,9 @@ extern "C" Value _server_on_fail(std::vector<Value> &args)
         error("Function 'on_fail' expects argument 'function' to be a Function");
     }
 
-    if (func.get_function()->arity != 0)
+    if (func.get_function()->arity != 1)
     {
-        error("Function 'on_fail' expects argument 'function' to be a Function with 0 parameters");
+        error("Function 'on_fail' expects argument 'function' to be a Function with 1 parameter");
     }
 
     auto &_server = server_object.get_object();
@@ -1147,8 +1166,17 @@ extern "C" Value _server_on_fail(std::vector<Value> &args)
 
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
 
-    auto on_fail_func = [func](websocketpp::connection_hdl hdl)
+    auto on_fail_func = [s, func](websocketpp::connection_hdl hdl)
     {
+        connection_data &data = m_servers[s][hdl];
+
+        Value data_obj = object_val();
+        data_obj.get_object()->keys = {"id", "name"};
+        data_obj.get_object()->values["id"] = number_val(data.sessionId);
+        data_obj.get_object()->values["name"] = string_val(data.name);
+
+        m_servers[s].erase(hdl);
+
         VM func_vm;
         std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
         main->name = "";
@@ -1162,8 +1190,10 @@ extern "C" Value _server_on_fail(std::vector<Value> &args)
         func_vm.frames.push_back(main_frame);
 
         add_constant(main->chunk, func);
+        add_constant(main->chunk, data_obj);
+        add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
         add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
-        add_opcode(main->chunk, OP_CALL, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 1, 0);
 
         add_code(main->chunk, OP_EXIT, 0);
 
@@ -1200,9 +1230,9 @@ extern "C" Value _server_on_close(std::vector<Value> &args)
         error("Function 'on_close' expects argument 'function' to be a Function");
     }
 
-    if (func.get_function()->arity != 0)
+    if (func.get_function()->arity != 1)
     {
-        error("Function 'on_close' expects argument 'function' to be a Function with 0 parameters");
+        error("Function 'on_close' expects argument 'function' to be a Function with 1 parameter");
     }
 
     auto &_server = server_object.get_object();
@@ -1223,6 +1253,11 @@ extern "C" Value _server_on_close(std::vector<Value> &args)
     {
         connection_data &data = m_servers[s][hdl];
 
+        Value data_obj = object_val();
+        data_obj.get_object()->keys = {"id", "name"};
+        data_obj.get_object()->values["id"] = number_val(data.sessionId);
+        data_obj.get_object()->values["name"] = string_val(data.name);
+
         std::cout << "Closing connection " << data.name
                   << " with id " << data.sessionId << std::endl;
 
@@ -1241,8 +1276,10 @@ extern "C" Value _server_on_close(std::vector<Value> &args)
         func_vm.frames.push_back(main_frame);
 
         add_constant(main->chunk, func);
+        add_constant(main->chunk, data_obj);
+        add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
         add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
-        add_opcode(main->chunk, OP_CALL, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 1, 0);
 
         add_code(main->chunk, OP_EXIT, 0);
 
