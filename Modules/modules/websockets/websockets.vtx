@@ -39,16 +39,16 @@ type Client = (uri) => {
         },
         set_on_close: (function) => {
             const client = this
-            lib._client_on_close(this.client, () => {
+            lib._client_on_close(this.client, (data) => {
                 client.connected = false
-                function()
+                function(data)
             })
         },
         set_on_fail: (function) => {
             const client = this
-            lib._client_on_fail(this.client, () => {
+            lib._client_on_fail(this.client, (data) => {
                 client.connected = false
-                function()
+                function(data)
             })
         },
         set_on_message: (function) => lib._client_on_message(this.client, function),
@@ -120,8 +120,8 @@ type Client = (uri) => {
     // internally these functions perform important connection
     // handling actions
     c.set_on_open(() => {})
-    c.set_on_close(() => {})
-    c.set_on_fail(() => {})
+    c.set_on_close((data) => {})
+    c.set_on_fail((data) => {})
     return c
 }
 

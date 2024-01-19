@@ -320,15 +320,23 @@ extern "C" Value _client_on_close(std::vector<Value> &args)
         error("Function 'on_close' expects argument 'client' to be a pointer");
     }
 
-    if (func.get_function()->arity != 0)
+    if (func.get_function()->arity != 1)
     {
-        error("Function 'on_close' expects argument 'function' to be a Function with 0 parameters");
+        error("Function 'on_close' expects argument 'function' to be a Function with 1 parameters");
     }
 
     client *c = (client *)client_ptr.get_pointer()->value;
 
-    auto on_close_func = [func](websocketpp::connection_hdl hdl)
+    auto on_close_func = [c, func](websocketpp::connection_hdl hdl)
     {
+        websocketpp::close::status::value status = c->get_con_from_hdl(hdl)->get_local_close_code();
+        std::string reason = c->get_con_from_hdl(hdl)->get_local_close_reason();
+
+        Value close_object = object_val();
+        close_object.get_object()->keys = {"status", "reason"};
+        close_object.get_object()->values["status"] = number_val(status);
+        close_object.get_object()->values["reason"] = string_val(reason);
+
         VM func_vm;
         std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
         main->name = "";
@@ -342,8 +350,10 @@ extern "C" Value _client_on_close(std::vector<Value> &args)
         func_vm.frames.push_back(main_frame);
 
         add_constant(main->chunk, func);
+        add_constant(main->chunk, close_object);
+        add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
         add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
-        add_opcode(main->chunk, OP_CALL, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 1, 0);
 
         add_code(main->chunk, OP_EXIT, 0);
 
@@ -380,15 +390,23 @@ extern "C" Value _client_on_fail(std::vector<Value> &args)
         error("Function 'on_fail' expects argument 'client' to be a pointer");
     }
 
-    if (func.get_function()->arity != 0)
+    if (func.get_function()->arity != 1)
     {
-        error("Function 'on_fail' expects argument 'function' to be a Function with 0 parameters");
+        error("Function 'on_fail' expects argument 'function' to be a Function with 1 parameter");
     }
 
     client *c = (client *)client_ptr.get_pointer()->value;
 
-    auto on_fail_func = [func](websocketpp::connection_hdl hdl)
+    auto on_fail_func = [c, func](websocketpp::connection_hdl hdl)
     {
+        websocketpp::close::status::value status = c->get_con_from_hdl(hdl)->get_local_close_code();
+        std::string reason = c->get_con_from_hdl(hdl)->get_local_close_reason();
+
+        Value close_object = object_val();
+        close_object.get_object()->keys = {"status", "reason"};
+        close_object.get_object()->values["status"] = number_val(status);
+        close_object.get_object()->values["reason"] = string_val(reason);
+
         VM func_vm;
         std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
         main->name = "";
@@ -402,8 +420,10 @@ extern "C" Value _client_on_fail(std::vector<Value> &args)
         func_vm.frames.push_back(main_frame);
 
         add_constant(main->chunk, func);
+        add_constant(main->chunk, close_object);
+        add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
         add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
-        add_opcode(main->chunk, OP_CALL, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 1, 0);
 
         add_code(main->chunk, OP_EXIT, 0);
 
