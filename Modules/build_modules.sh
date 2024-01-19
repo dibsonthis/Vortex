@@ -6,6 +6,7 @@ cd modules
 for FILE in *; 
 do
 
+rm -rf $FILE/bin
 mkdir $FILE/bin
 mkdir $FILE/lib
 mkdir $FILE/include
