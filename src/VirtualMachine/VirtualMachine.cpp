@@ -16,7 +16,6 @@ Value pop(VM &vm)
 
 static void runtimeError(VM &vm, std::string message, ...)
 {
-
     vm.status = 1;
 
     CallFrame frame = vm.frames.back();
@@ -2406,6 +2405,10 @@ static Value load_lib_builtin(std::vector<Value> &args)
         }
 
         NativeFunction fn = (NativeFunction)dlsym(handle, name.get_string().c_str());
+        if (!fn)
+        {
+            error("Module error: Function '" + name.get_string() + "' is not defined in the C module '" + path.get_string() + "'");
+        }
         Value native = native_val();
         native.get_native()->function = fn;
         obj->values[name.get_string()] = native;
@@ -2439,6 +2442,10 @@ static Value load_lib_builtin(std::vector<Value> &args)
         }
 
         NativeFunction fn = (NativeFunction)GetProcAddress(hinstLib, name.get_string().c_str());
+        if (!fn)
+        {
+            error("Module error: Function '" + name.get_string() + "' is not defined in the C module '" + path.get_string() + "'");
+        }
         Value native = native_val();
         native.get_native()->function = fn;
         obj->values[name.get_string()] = native;

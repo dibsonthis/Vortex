@@ -91,7 +91,7 @@ extern "C" Value _client_init(std::vector<Value> &args)
 
 extern "C" Value _client_connect(std::vector<Value> &args)
 {
-    int num_required_args = 2;
+    int num_required_args = 3;
 
     if (args.size() != num_required_args)
     {
@@ -100,6 +100,7 @@ extern "C" Value _client_connect(std::vector<Value> &args)
 
     Value client_ptr = args[0];
     Value url = args[1];
+    Value headers = args[2];
 
     if (!client_ptr.is_pointer())
     {
@@ -109,6 +110,11 @@ extern "C" Value _client_connect(std::vector<Value> &args)
     if (!url.is_string())
     {
         error("Function 'client_connect' expects argument 'url' to be a string");
+    }
+
+    if (!headers.is_object())
+    {
+        error("Function 'client_connect' expects argument 'headers' to be a object");
     }
 
     client *c = (client *)client_ptr.get_pointer()->value;
@@ -121,6 +127,20 @@ extern "C" Value _client_connect(std::vector<Value> &args)
     if (ec)
     {
         error("Could not create connection: " + ec.message());
+    }
+
+    auto headers_object = headers.get_object();
+
+    for (auto &x : headers_object->values)
+    {
+        if (!x.second.is_string())
+        {
+            std::cout << "Header warning: ignoring '" + x.first + "' - value must be a string" << std::endl;
+        }
+        else
+        {
+            (con)->append_header(x.first, x.second.get_string());
+        }
     }
 
     (con)->append_header("access-control-allow-origin", "*");
@@ -242,7 +262,7 @@ extern "C" Value _client_on_open(std::vector<Value> &args)
 
     if (func.get_function()->arity != 0)
     {
-        error("Function 'on_fail' expects argument 'function' to be a Function with 0 parameters");
+        error("Function 'on_open' expects argument 'function' to be a Function with 0 parameters");
     }
 
     client *c = (client *)client_ptr.get_pointer()->value;
@@ -302,7 +322,7 @@ extern "C" Value _client_on_close(std::vector<Value> &args)
 
     if (func.get_function()->arity != 0)
     {
-        error("Function 'on_fail' expects argument 'function' to be a Function with 0 parameters");
+        error("Function 'on_close' expects argument 'function' to be a Function with 0 parameters");
     }
 
     client *c = (client *)client_ptr.get_pointer()->value;
@@ -822,6 +842,105 @@ extern "C" Value _server_broadcast(std::vector<Value> &args)
     return none_val();
 }
 
+extern "C" Value _server_on_validate(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'on_validate' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value server_object = args[0];
+    Value func = args[1];
+
+    if (!server_object.is_object())
+    {
+        error("Function 'on_validate' expects argument 'server' to be an object");
+    }
+
+    if (!func.is_function())
+    {
+        error("Function 'on_validate' expects argument 'function' to be a Function");
+    }
+
+    if (func.get_function()->arity != 1)
+    {
+        error("Function 'on_validate' expects argument 'function' to be a Function with 1 parameter");
+    }
+
+    auto &_server = server_object.get_object();
+
+    if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
+    {
+        error("Function 'on_validate' expects argument 'server' to be a valid server object");
+    }
+
+    if (!_server->values["server_ptr"].is_pointer())
+    {
+        error("Function 'on_validate' expects argument 'server' to be a valid server object");
+    }
+
+    server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
+
+    auto on_validate_func = [func, s](websocketpp::connection_hdl hdl)
+    {
+        server::connection_ptr con = s->get_con_from_hdl(hdl);
+        auto &req = con->get_request();
+        auto &headers = req.get_headers();
+
+        Value header_object = object_val();
+        auto &header_internal_object = header_object.get_object();
+
+        for (const auto &header : headers)
+        {
+            header_internal_object->keys.push_back(header.first);
+            header_internal_object->values[header.first] = string_val(header.second);
+        }
+
+        VM func_vm;
+        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+        main->name = "";
+        main->arity = 0;
+        main->chunk = Chunk();
+        CallFrame main_frame;
+        main_frame.function = main;
+        main_frame.sp = 0;
+        main_frame.ip = main->chunk.code.data();
+        main_frame.frame_start = 0;
+        func_vm.frames.push_back(main_frame);
+
+        add_constant(main->chunk, func);
+        add_constant(main->chunk, header_object);
+        add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
+        add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 1, 0);
+
+        add_code(main->chunk, OP_EXIT, 0);
+
+        auto offsets = instruction_offsets(main_frame.function->chunk);
+        main_frame.function->instruction_offsets = offsets;
+
+        evaluate(func_vm);
+
+        if (func_vm.stack.size() == 0)
+        {
+            return false;
+        }
+
+        if (!func_vm.stack.back().is_boolean())
+        {
+            return false;
+        }
+
+        return func_vm.stack.back().get_boolean();
+    };
+
+    s->set_validate_handler(on_validate_func);
+
+    return none_val();
+}
+
 extern "C" Value _server_on_open(std::vector<Value> &args)
 {
     int num_required_args = 2;
@@ -842,6 +961,11 @@ extern "C" Value _server_on_open(std::vector<Value> &args)
     if (!func.is_function())
     {
         error("Function 'on_open' expects argument 'function' to be a Function");
+    }
+
+    if (func.get_function()->arity != 0)
+    {
+        error("Function 'on_open' expects argument 'function' to be a Function with 0 parameters");
     }
 
     auto &_server = server_object.get_object();
@@ -922,6 +1046,11 @@ extern "C" Value _server_on_message(std::vector<Value> &args)
         error("Function 'on_message' expects argument 'server' to be an object");
     }
 
+    if (func.get_function()->arity != 1)
+    {
+        error("Function 'on_message' expects argument 'function' to be a Function with 1 parameter");
+    }
+
     auto &_server = server_object.get_object();
 
     if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
@@ -954,7 +1083,6 @@ extern "C" Value _server_on_message(std::vector<Value> &args)
 
         Value payload = object_val();
         payload.get_object()->keys = {"id", "name", "data"};
-        // payload.get_object()->values["id"] = number_val(data.sessionId);
         payload.get_object()->values["id"] = number_val(data.sessionId);
         payload.get_object()->values["name"] = string_val(data.name);
         payload.get_object()->values["data"] = string_val(msg->get_payload());
@@ -998,6 +1126,11 @@ extern "C" Value _server_on_fail(std::vector<Value> &args)
     if (!func.is_function())
     {
         error("Function 'on_fail' expects argument 'function' to be a Function");
+    }
+
+    if (func.get_function()->arity != 0)
+    {
+        error("Function 'on_fail' expects argument 'function' to be a Function with 0 parameters");
     }
 
     auto &_server = server_object.get_object();
@@ -1065,6 +1198,11 @@ extern "C" Value _server_on_close(std::vector<Value> &args)
     if (!func.is_function())
     {
         error("Function 'on_close' expects argument 'function' to be a Function");
+    }
+
+    if (func.get_function()->arity != 0)
+    {
+        error("Function 'on_close' expects argument 'function' to be a Function with 0 parameters");
     }
 
     auto &_server = server_object.get_object();
