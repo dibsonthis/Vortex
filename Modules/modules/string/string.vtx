@@ -80,3 +80,20 @@ const contains = (str, substr) => {
 
     return false
 }
+
+const w_chars = (str, width = 2) => {
+    var char_list = []
+    var char = ""
+    for (str.chars(), i, c) {
+        if (c == " ") {
+            char_list.append(" ")
+            continue
+        }
+        char += c
+        if (char.length() == width) {
+            char_list.append(char)
+            char = ""
+        }
+    }
+    return char_list
+}
