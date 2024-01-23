@@ -15,7 +15,7 @@ const lib = load_lib("./bin/sdl",
 	"imgui_begin_main_menu_bar", "imgui_end_main_menu_bar",
 	"imgui_begin_menu", "imgui_end_menu", "imgui_menu_item",
 	"imgui_begin_child", "imgui_end_child",
-	"imgui_combo", "imgui_input_text", "imgui_same_line",
+	"imgui_combo", "imgui_input_text", "imgui_input_password", "imgui_same_line",
 	"imgui_set_cursor_pos_x", "imgui_set_cursor_pos_y", "imgui_image"])
 
 const imgui = {
@@ -51,6 +51,13 @@ const imgui = {
 			_label = "##"
 		}
 		return lib.imgui_input_text(_label, text, hint)
+	},
+	input_password: (label, text, hint = "") => {
+		var _label = label
+		if (label == "") {
+			_label = "##"
+		}
+		return lib.imgui_input_password(_label, text, hint)
 	},
 	same_line: (offset_from_start_x = 0, spacing = -1) =>lib.imgui_same_line(offset_from_start_x, spacing),
 	set_cursor_pos_x: (local_x) => lib.imgui_set_cursor_pos_x(local_x),

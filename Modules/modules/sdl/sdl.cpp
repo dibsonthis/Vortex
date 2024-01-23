@@ -1657,6 +1657,41 @@ extern "C" Value imgui_input_text(std::vector<Value> &args)
     return string_val(str);
 }
 
+extern "C" Value imgui_input_password(std::vector<Value> &args)
+{
+    int num_required_args = 3;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'input_password' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value label = args[0];
+    Value text = args[1];
+    Value hint = args[2];
+
+    if (!label.is_string())
+    {
+        error("Function 'input_password' expects arg 'label' to be a string");
+    }
+
+    if (!text.is_string())
+    {
+        error("Function 'input_password' expects arg 'text' to be a string");
+    }
+
+    if (!hint.is_string())
+    {
+        error("Function 'input_password' expects arg 'hint' to be a string");
+    }
+
+    auto str = text.get_string();
+
+    ImGui::InputTextWithHint(label.get_string().c_str(), hint.get_string().c_str(), &str, ImGuiInputTextFlags_Password);
+
+    return string_val(str);
+}
+
 extern "C" Value imgui_same_line(std::vector<Value> &args)
 {
     int num_required_args = 2;

@@ -792,7 +792,7 @@ extern "C" Value _server_send(std::vector<Value> &args)
             }
             catch (...)
             {
-                std::cout << "Error sending to client: " << (it->second).sessionId;
+                std::cout << "Error sending to client: " << (it->second).sessionId << std::endl;
             }
         }
     }
@@ -855,7 +855,7 @@ extern "C" Value _server_broadcast(std::vector<Value> &args)
         }
         catch (...)
         {
-            std::cout << "Error sending to client: " << (it->second).sessionId;
+            std::cout << "Error sending to client: " << (it->second).sessionId << std::endl;
         }
     }
 
