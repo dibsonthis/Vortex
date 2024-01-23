@@ -957,15 +957,24 @@ extern "C" Value _server_on_validate(std::vector<Value> &args)
 
         if (func_vm.stack.size() == 0)
         {
+            m_servers[s].erase(hdl);
             return false;
         }
 
         if (!func_vm.stack.back().is_boolean())
         {
+            m_servers[s].erase(hdl);
             return false;
         }
 
-        return func_vm.stack.back().get_boolean();
+        bool res = func_vm.stack.back().get_boolean();
+
+        if (!res)
+        {
+            m_servers[s].erase(hdl);
+        }
+
+        return res;
     };
 
     s->set_validate_handler(on_validate_func);

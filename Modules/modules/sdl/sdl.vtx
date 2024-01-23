@@ -5,6 +5,10 @@ const lib = load_lib("./bin/sdl",
 	"drawPoint", "drawLine", "drawRect", "drawGeometry",
 	"loadTexture", "loadText", "getWindowSize",
 	"showCursor", "queryTexture", "destroyTexture", 
+	/* mixer */
+	"mixer_load_wav", "mixer_play_channel",
+	"mixer_load_music", "mixer_play_music", "mixer_pause_music",
+	"mixer_resume_music", "mixer_halt_music", "mixer_music_status",
 	/* imgui */
 	"imgui_check_version", "imgui_create_context", "imgui_init_io", 
 	"imgui_init_for_sdl", "imgui_sdl_render_init", "imgui_get_io",
@@ -16,7 +20,10 @@ const lib = load_lib("./bin/sdl",
 	"imgui_begin_menu", "imgui_end_menu", "imgui_menu_item",
 	"imgui_begin_child", "imgui_end_child",
 	"imgui_combo", "imgui_input_text", "imgui_input_password", "imgui_same_line",
-	"imgui_set_cursor_pos_x", "imgui_set_cursor_pos_y", "imgui_image"])
+	"imgui_set_cursor_pos_x", "imgui_set_cursor_pos_y", "imgui_get_cursor_pos",
+	"imgui_image",
+	"imgui_push_style_color", "imgui_pop_style_color",
+	"imgui_import_font", "imgui_push_font", "imgui_pop_font", "imgui_get_font"])
 
 const imgui = {
 	check_version: () => lib.imgui_check_version(),
@@ -62,8 +69,71 @@ const imgui = {
 	same_line: (offset_from_start_x = 0, spacing = -1) =>lib.imgui_same_line(offset_from_start_x, spacing),
 	set_cursor_pos_x: (local_x) => lib.imgui_set_cursor_pos_x(local_x),
 	set_cursor_pos_y: (local_y) => lib.imgui_set_cursor_pos_y(local_y),
-	image: (texture, width = -1, height = -1) => lib.imgui_image(texture, width, height)
-
+	get_cursor_pos: () => lib.imgui_get_cursor_pos(),
+	image: (texture, width = -1, height = -1) => lib.imgui_image(texture, width, height),
+	push_style_color: (imgui_color = 0, r = 0, g = 0, b = 0, a = 255) => lib.imgui_push_style_color(imgui_color, r, g, b, a),
+	pop_style_color: (count = 1) => lib.imgui_pop_style_color(count),
+	import_font: (font_file, font_size = 12) => lib.imgui_import_font(font_file, font_size),
+	push_font: (font_ptr) => lib.imgui_push_font(font_ptr),
+	pop_font: () => lib.imgui_pop_font(),
+	get_font: () => lib.imgui_get_font(),
+	IMGUI_COLOR: {
+		Text: 0,
+		TextDisabled: 1,
+		WindowBg: 2, // Background of normal windows
+		ChildBg: 3,  // Background of child windows
+		PopupBg: 4,  // Background of popups, menus, tooltips windows
+		Border: 5,
+		BorderShadow: 6,
+		FrameBg: 7, // Background of checkbox, radio button, plot, slider, text input
+		FrameBgHovered: 8,
+		FrameBgActive: 9,
+		TitleBg: 10,
+		TitleBgActive: 11,
+		TitleBgCollapsed: 12,
+		MenuBarBg: 13,
+		ScrollbarBg: 14,
+		ScrollbarGrab: 15,
+		ScrollbarGrabHovered: 16,
+		ScrollbarGrabActive: 17,
+		CheckMark: 18,
+		SliderGrab: 19,
+		SliderGrabActive: 20,
+		Button: 21,
+		ButtonHovered: 22,
+		ButtonActive: 23,
+		Header: 24, // Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem
+		HeaderHovered: 25,
+		HeaderActive: 26,
+		Separator: 27,
+		SeparatorHovered: 28,
+		SeparatorActive: 29,
+		ResizeGrip: 30, // Resize grip in lower-right and lower-left corners of windows.
+		ResizeGripHovered: 31,
+		ResizeGripActive: 32,
+		Tab: 33, // TabItem in a TabBar
+		TabHovered: 34,
+		TabActive: 35,
+		TabUnfocused: 36,
+		TabUnfocusedActive: 37,
+		DockingPreview: 38, // Preview overlay color when about to docking something
+		DockingEmptyBg: 39, // Background color for empty node (e.g. CentralNode with no window docked into it)
+		PlotLines: 40,
+		PlotLinesHovered: 41,
+		PlotHistogram: 42,
+		PlotHistogramHovered: 43,
+		TableHeaderBg: 44,     // Table header background
+		TableBorderStrong: 45, // Table outer and header borders (prefer using Alpha=1.0 here)
+		TableBorderLight: 46,  // Table inner borders (prefer using Alpha=1.0 here)
+		TableRowBg: 47,        // Table row background (even rows)
+		TableRowBgAlt: 48,     // Table row background (odd rows)
+		TextSelectedBg: 49,
+		DragDropTarget: 50,        // Rectangle highlighting a drop target
+		NavHighlight: 51,          // Gamepad/keyboard: current highlighted item
+		NavWindowingHighlight: 52, // Highlight window when using CTRL+TAB
+		NavWindowingDimBg: 53,     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
+		ModalWindowDimBg: 54,      // Darken/colorize entire screen behind a modal window, when one is active
+	}
 }
 
 const initSDL = () => lib.initSDL()
@@ -86,6 +156,14 @@ const getWindowSize = (window) => lib.getWindowSize(window)
 const showCursor = (flag) => lib.showCursor(flag)
 const queryTexture = (texture) => lib.queryTexture(texture)
 const destroyTexture = (texture) => lib.destroyTexture(texture)
+const loadWav = (wav_file) => lib.mixer_load_wav(wav_file)
+const playWav = (wav_ptr, channel = -1, loops = 0) => lib.mixer_play_channel(channel, wav_ptr, loops)
+const loadMusic = (music_file) => lib.mixer_load_music(music_file)
+const playMusic = (music_ptr, loops = 0) => lib.mixer_play_music(music_ptr, loops)
+const pauseMusic = () => lib.mixer_pause_music()
+const resumeMusic = () => lib.mixer_resume_music()
+const haltMusic = () => lib.mixer_halt_music()
+const musicStatus = () => lib.mixer_music_status()
 
 const pollEvent = () => {
 	const eventObj = lib.pollEvent()

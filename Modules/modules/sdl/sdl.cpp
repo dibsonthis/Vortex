@@ -16,6 +16,7 @@
 #include "include/SDL2/SDL.h"
 #include "include/SDL2/SDL_image.h"
 #include "include/SDL2/SDL_ttf.h"
+#include "include/SDL2/SDL_mixer.h"
 #include "include/SDL2/imgui.h"
 #include "include/SDL2/imgui_impl_sdl2.h"
 #include "include/SDL2/imgui_impl_sdlrenderer2.h"
@@ -30,10 +31,34 @@ extern "C" Value initSDL(std::vector<Value> &args)
         error("Function 'initSDL' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
-    TTF_Init();
-    IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
+    int ttf_init = TTF_Init();
+    int img_init = IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
+    int mix_init = Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096);
 
     int init = SDL_Init(SDL_INIT_EVERYTHING);
+
+    if (ttf_init == -1)
+    {
+        std::cout << "Failed to init TTF\n";
+        return number_val(-1);
+    }
+
+    if (img_init == -1)
+    {
+        std::cout << "Failed to init Image\n";
+        return number_val(-1);
+    }
+
+    if (mix_init == -1)
+    {
+        std::cout << "Failed to init Mixer\n";
+        return number_val(-1);
+    }
+
+    if (init == -1)
+    {
+        std::cout << "Failed to init SDL2\n";
+    }
 
     return number_val(init);
 }
@@ -1018,6 +1043,180 @@ extern "C" Value showCursor(std::vector<Value> &args)
 //     return new_vortex_obj(NodeType::NONE);
 // }
 
+/* Mixer */
+
+extern "C" Value mixer_load_wav(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'load_wav' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value wav_file = args[0];
+
+    if (!wav_file.is_string())
+    {
+        error("Function 'load_wav' expects arg 'wav_file' to be a string");
+    }
+
+    auto wav = Mix_LoadWAV(wav_file.get_string().c_str());
+
+    Value wav_ptr = pointer_val();
+    wav_ptr.get_pointer()->value = (void *)wav;
+
+    return wav_ptr;
+}
+
+extern "C" Value mixer_play_channel(std::vector<Value> &args)
+{
+    int num_required_args = 3;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'play_channel' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value channel = args[0];
+    Value wav_ptr = args[1];
+    Value loops = args[2];
+
+    if (!channel.is_number())
+    {
+        error("Function 'play_channel' expects arg 'channel' to be a number");
+    }
+
+    if (!wav_ptr.is_pointer())
+    {
+        error("Function 'play_channel' expects arg 'wav_ptr' to be a pointer");
+    }
+
+    if (!loops.is_number())
+    {
+        error("Function 'play_channel' expects arg 'loops' to be a number");
+    }
+
+    int res = Mix_PlayChannel(channel.get_number(), (Mix_Chunk *)wav_ptr.get_pointer()->value, loops.get_number());
+
+    return number_val(res);
+}
+
+extern "C" Value mixer_load_music(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'load_music' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value file = args[0];
+
+    if (!file.is_string())
+    {
+        error("Function 'load_music' expects arg 'music_file' to be a string");
+    }
+
+    auto music = Mix_LoadMUS(file.get_string().c_str());
+
+    Value music_ptr = pointer_val();
+    music_ptr.get_pointer()->value = (void *)music;
+
+    return music_ptr;
+}
+
+extern "C" Value mixer_play_music(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'play_music' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value music_ptr = args[0];
+    Value loops = args[1];
+
+    if (!music_ptr.is_pointer())
+    {
+        error("Function 'play_music' expects arg 'music_ptr' to be a pointer");
+    }
+
+    if (!loops.is_number())
+    {
+        error("Function 'play_music' expects arg 'loops' to be a number");
+    }
+
+    int res = Mix_PlayMusic((Mix_Music *)music_ptr.get_pointer()->value, loops.get_number());
+
+    return number_val(res);
+}
+
+extern "C" Value mixer_pause_music(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'pause_music' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Mix_PauseMusic();
+
+    return none_val();
+}
+
+extern "C" Value mixer_resume_music(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'resume_music' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Mix_ResumeMusic();
+
+    return none_val();
+}
+
+extern "C" Value mixer_halt_music(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'halt_music' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    int res = Mix_HaltMusic();
+
+    return number_val(res);
+}
+
+extern "C" Value mixer_music_status(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'music_status' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    bool music_playing = (bool)Mix_PlayingMusic();
+    bool music_paused = (bool)Mix_PausedMusic();
+
+    Value status_obj = object_val();
+    status_obj.get_object()->keys = {"playing", "paused"};
+    status_obj.get_object()->values["playing"] = boolean_val(music_playing);
+    status_obj.get_object()->values["paused"] = boolean_val(music_paused);
+
+    return status_obj;
+}
+
+/* IMGUI */
+
 extern "C" Value imgui_check_version(std::vector<Value> &args)
 {
     int num_required_args = 0;
@@ -1719,6 +1918,25 @@ extern "C" Value imgui_same_line(std::vector<Value> &args)
     return boolean_val(true);
 }
 
+extern "C" Value imgui_get_cursor_pos(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'get_cursor_pos' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    auto pos = ImGui::GetCursorPos();
+
+    Value pos_obj = object_val();
+    pos_obj.get_object()->keys = {"x", "y"};
+    pos_obj.get_object()->values["x"] = number_val(pos.x);
+    pos_obj.get_object()->values["y"] = number_val(pos.y);
+
+    return pos_obj;
+}
+
 extern "C" Value imgui_set_cursor_pos_x(std::vector<Value> &args)
 {
     int num_required_args = 1;
@@ -1810,4 +2028,156 @@ extern "C" Value imgui_image(std::vector<Value> &args)
     ImGui::Image((ImTextureID)(intptr_t)texturePtr, ImVec2(_width, _height));
 
     return boolean_val(true);
+}
+
+extern "C" Value imgui_push_style_color(std::vector<Value> &args)
+{
+    int num_required_args = 5;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'push_style_color' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value imgui_color = args[0];
+    Value r = args[1];
+    Value g = args[2];
+    Value b = args[3];
+    Value a = args[4];
+
+    if (!imgui_color.is_number())
+    {
+        error("Function 'push_style_color' expects arg 'imgui_color' to be a number");
+    }
+
+    if (!r.is_number())
+    {
+        error("Function 'push_style_color' expects arg 'r' to be a number");
+    }
+
+    if (!g.is_number())
+    {
+        error("Function 'push_style_color' expects arg 'g' to be a number");
+    }
+
+    if (!b.is_number())
+    {
+        error("Function 'push_style_color' expects arg 'b' to be a number");
+    }
+
+    if (!a.is_number())
+    {
+        error("Function 'push_style_color' expects arg 'a' to be a number");
+    }
+
+    ImGui::PushStyleColor(imgui_color.get_number(), ImVec4(r.get_number(), g.get_number(), b.get_number(), a.get_number()));
+
+    return none_val();
+}
+
+extern "C" Value imgui_pop_style_color(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'pop_style_color' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value count = args[0];
+
+    if (!count.is_number())
+    {
+        error("Function 'pop_style_color' expects arg 'count' to be a number");
+    }
+
+    ImGui::PopStyleColor(count.get_number());
+
+    return none_val();
+}
+
+extern "C" Value imgui_import_font(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'import_font' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    auto &io = ImGui::GetIO();
+
+    Value font_file = args[0];
+    Value font_size = args[1];
+
+    if (!font_file.is_string())
+    {
+        error("Function 'import_font' expects arg 'font_file' to be a string");
+    }
+
+    if (!font_size.is_number())
+    {
+        error("Function 'import_font' expects arg 'font_size' to be a number");
+    }
+
+    auto font = io.Fonts->AddFontFromFileTTF(font_file.get_string().c_str(), font_size.get_number(), NULL, io.Fonts->GetGlyphRangesDefault());
+
+    Value font_ptr = pointer_val();
+    font_ptr.get_pointer()->value = (void *)font;
+
+    return font_ptr;
+}
+
+extern "C" Value imgui_push_font(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'push_font' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value font_ptr = args[0];
+
+    if (!font_ptr.is_pointer())
+    {
+        error("Function 'push_font' expects arg 'font_ptr' to be a pointer");
+    }
+
+    ImFont *font = (ImFont *)font_ptr.get_pointer()->value;
+
+    ImGui::PushFont(font);
+
+    return none_val();
+}
+
+extern "C" Value imgui_pop_font(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'pop_font' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    ImGui::PopFont();
+
+    return none_val();
+}
+
+extern "C" Value imgui_get_font(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'get_font' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    auto font = ImGui::GetFont();
+
+    Value font_ptr = pointer_val();
+    font_ptr.get_pointer()->value = (void *)font;
+
+    return font_ptr;
 }
