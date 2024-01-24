@@ -734,10 +734,41 @@ extern "C" Value getWindowSize(std::vector<Value> &args)
     SDL_GetWindowSize(windowPtr, &w, &h);
 
     Value sizeObj = object_val();
+    sizeObj.get_object()->keys = {"w", "h"};
     sizeObj.get_object()->values["w"] = number_val(w);
     sizeObj.get_object()->values["h"] = number_val(h);
 
     return sizeObj;
+}
+
+extern "C" Value getWindowPos(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'getWindowPos' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value window = args[0];
+
+    if (!window.is_pointer())
+    {
+        error("Function 'getWindowPos' expects arg 'window' to be a pointer");
+    }
+
+    SDL_Window *windowPtr = (SDL_Window *)window.get_pointer()->value;
+
+    int x, y;
+
+    SDL_GetWindowPosition(windowPtr, &x, &y);
+
+    Value posObj = object_val();
+    posObj.get_object()->keys = {"x", "y"};
+    posObj.get_object()->values["x"] = number_val(x);
+    posObj.get_object()->values["y"] = number_val(y);
+
+    return posObj;
 }
 
 extern "C" Value showCursor(std::vector<Value> &args)
@@ -1524,7 +1555,7 @@ extern "C" Value imgui_show_demo_window(std::vector<Value> &args)
 
 extern "C" Value imgui_begin(std::vector<Value> &args)
 {
-    int num_required_args = 1;
+    int num_required_args = 2;
 
     if (args.size() != num_required_args)
     {
@@ -1532,13 +1563,19 @@ extern "C" Value imgui_begin(std::vector<Value> &args)
     }
 
     Value name = args[0];
+    Value flags = args[1];
 
     if (!name.is_string())
     {
         error("Function 'begin' expects arg 'name' to be a string");
     }
 
-    bool result = ImGui::Begin(name.get_string().c_str());
+    if (!flags.is_number())
+    {
+        error("Function 'begin' expects arg 'flags' to be a number");
+    }
+
+    bool result = ImGui::Begin(name.get_string().c_str(), (bool *)__null, flags.get_number());
 
     return boolean_val(result);
 }
@@ -1555,6 +1592,60 @@ extern "C" Value imgui_end(std::vector<Value> &args)
     ImGui::End();
 
     return boolean_val(true);
+}
+
+extern "C" Value imgui_set_window_size(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'set_window_size' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value width = args[0];
+    Value height = args[1];
+
+    if (!width.is_number())
+    {
+        error("Function 'set_window_size' expects arg 'width' to be a number");
+    }
+
+    if (!height.is_number())
+    {
+        error("Function 'set_window_size' expects arg 'height' to be a number");
+    }
+
+    ImGui::SetWindowSize(ImVec2(width.get_number(), height.get_number()));
+
+    return none_val();
+}
+
+extern "C" Value imgui_set_window_pos(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'set_window_pos' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value xPos = args[0];
+    Value yPos = args[1];
+
+    if (!xPos.is_number())
+    {
+        error("Function 'set_window_pos' expects arg 'xPos' to be a number");
+    }
+
+    if (!yPos.is_number())
+    {
+        error("Function 'set_window_pos' expects arg 'yPos' to be a number");
+    }
+
+    ImGui::SetWindowPos(ImVec2(xPos.get_number(), yPos.get_number()));
+
+    return none_val();
 }
 
 extern "C" Value imgui_text(std::vector<Value> &args)
@@ -1778,7 +1869,7 @@ extern "C" Value imgui_menu_item(std::vector<Value> &args)
 
 extern "C" Value imgui_begin_child(std::vector<Value> &args)
 {
-    int num_required_args = 3;
+    int num_required_args = 5;
 
     if (args.size() != num_required_args)
     {
@@ -1786,25 +1877,37 @@ extern "C" Value imgui_begin_child(std::vector<Value> &args)
     }
 
     Value name = args[0];
-    Value x = args[1];
-    Value y = args[2];
+    Value width = args[1];
+    Value height = args[2];
+    Value border = args[3];
+    Value flags = args[4];
 
     if (!name.is_string())
     {
         error("Function 'begin_child' expects arg 'name' to be a string");
     }
 
-    if (!x.is_number())
+    if (!width.is_number())
     {
-        error("Function 'begin_child' expects arg 'x' to be a number");
+        error("Function 'begin_child' expects arg 'width' to be a number");
     }
 
-    if (!y.is_number())
+    if (!height.is_number())
     {
-        error("Function 'begin_child' expects arg 'y' to be a number");
+        error("Function 'begin_child' expects arg 'height' to be a number");
     }
 
-    bool result = ImGui::BeginChild(name.get_string().c_str(), ImVec2(x.get_number(), y.get_number()));
+    if (!border.is_boolean())
+    {
+        error("Function 'begin_child' expects arg 'border' to be a boolean");
+    }
+
+    if (!flags.is_number())
+    {
+        error("Function 'begin_child' expects arg 'flags' to be a number");
+    }
+
+    bool result = ImGui::BeginChild(name.get_string().c_str(), ImVec2(width.get_number(), height.get_number()), border.get_boolean(), flags.get_number());
 
     return boolean_val(result);
 }
@@ -1821,6 +1924,48 @@ extern "C" Value imgui_end_child(std::vector<Value> &args)
     ImGui::EndChild();
 
     return boolean_val(true);
+}
+
+extern "C" Value imgui_set_scroll_here_y(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'set_scroll_here_y' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value center_y_ratio = args[0];
+
+    if (!center_y_ratio.is_number())
+    {
+        error("Function 'set_scroll_here_y' expects arg 'center_y_ratio' to be a number");
+    }
+
+    ImGui::SetScrollHereY(center_y_ratio.get_number());
+
+    return none_val();
+}
+
+extern "C" Value imgui_set_scroll_here_x(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'set_scroll_here_x' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value center_x_ratio = args[0];
+
+    if (!center_x_ratio.is_number())
+    {
+        error("Function 'set_scroll_here_x' expects arg 'center_x_ratio' to be a number");
+    }
+
+    ImGui::SetScrollHereX(center_x_ratio.get_number());
+
+    return none_val();
 }
 
 extern "C" Value imgui_combo(std::vector<Value> &args)

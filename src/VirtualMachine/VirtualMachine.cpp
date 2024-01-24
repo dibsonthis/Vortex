@@ -574,7 +574,11 @@ static EvaluateResult run(VM &vm)
                 }
                 Value &value = *value_pointer;
                 auto hoisted = std::make_shared<Closure>();
-                hoisted->location = &value;
+                // hoisted->location = &value;
+                hoisted->location = value_pointer;
+                hoisted->frame_name = frame->name;
+                hoisted->name = var.name;
+                hoisted->index = var.index;
                 if (vm.closed_values.size() == 0)
                 {
                     closure_obj->closed_vars.push_back(hoisted);
@@ -585,7 +589,9 @@ static EvaluateResult run(VM &vm)
                     bool found = false;
                     for (auto &cl : vm.closed_values)
                     {
-                        if (cl->location == &value)
+                        // if (cl->location == &value)
+                        // if (cl->location == value_pointer)
+                        if (cl->name == var.name && cl->index == var.index && cl->frame_name == frame->name)
                         {
                             closure_obj->closed_vars.push_back(cl);
                             found = true;

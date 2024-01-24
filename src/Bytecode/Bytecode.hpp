@@ -349,6 +349,9 @@ struct Value
 
 struct Closure
 {
+    std::string name;
+    std::string frame_name;
+    int index;
     Value *location;
     Value closed;
 };

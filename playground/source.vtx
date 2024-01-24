@@ -1,13 +1,8 @@
-const Button = (text, config = {}) => {
-    const color = config.color || {r: 0, g: 0, b: 0.5, a: 1}
-    const size = config.size || {w: 100, h: 20}
-    const hoverColor = config.hoverColor || {r: 0, g: 0, b: 1, a: 1}
-    const activeColor = config.activeColor || {r: 0, g: 1, b: 1, a: 1}
-    const onClick = config.onClick || (() => {})
-
-	onClick()
+const Counter = () => {
+    var p = 1
+    const f = () => p
 }
 
-Button("Hi", {
-	onClick: () => println("here")
-})
+while (true) {
+    Counter()
+}
