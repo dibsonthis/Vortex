@@ -1215,6 +1215,54 @@ extern "C" Value mixer_music_status(std::vector<Value> &args)
     return status_obj;
 }
 
+extern "C" Value mixer_volume(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'volume' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value channel = args[0];
+    Value volume = args[1];
+
+    if (!channel.is_number())
+    {
+        error("Function 'volume' expects arg 'channel' to be a number");
+    }
+
+    if (!volume.is_number())
+    {
+        error("Function 'volume' expects arg 'volume' to be a number");
+    }
+
+    int res = Mix_Volume(channel.get_number(), volume.get_number());
+
+    return number_val(res);
+}
+
+extern "C" Value mixer_music_volume(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'music_volume' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value volume = args[0];
+
+    if (!volume.is_number())
+    {
+        error("Function 'music_volume' expects arg 'volume' to be a number");
+    }
+
+    int res = Mix_VolumeMusic(volume.get_number());
+
+    return number_val(res);
+}
+
 /* IMGUI */
 
 extern "C" Value imgui_check_version(std::vector<Value> &args)

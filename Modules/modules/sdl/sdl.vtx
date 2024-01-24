@@ -9,6 +9,7 @@ const lib = load_lib("./bin/sdl",
 	"mixer_load_wav", "mixer_play_channel",
 	"mixer_load_music", "mixer_play_music", "mixer_pause_music",
 	"mixer_resume_music", "mixer_halt_music", "mixer_music_status",
+	"mixer_volume", "mixer_music_volume",
 	/* imgui */
 	"imgui_check_version", "imgui_create_context", "imgui_init_io", 
 	"imgui_init_for_sdl", "imgui_sdl_render_init", "imgui_get_io",
@@ -164,6 +165,8 @@ const pauseMusic = () => lib.mixer_pause_music()
 const resumeMusic = () => lib.mixer_resume_music()
 const haltMusic = () => lib.mixer_halt_music()
 const musicStatus = () => lib.mixer_music_status()
+const volume = (_volume = -1, channel = -1) => lib.mixer_volume(channel, _volume)
+const musicVolume = (_volume = -1) => lib.mixer_music_volume(_volume)
 
 const pollEvent = () => {
 	const eventObj = lib.pollEvent()

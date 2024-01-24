@@ -1525,7 +1525,17 @@ void generate(node_ptr node, Chunk &chunk)
             gen_and(chunk, node);
             return;
         }
+        if (node->_Node.Op().value == "&&")
+        {
+            gen_and(chunk, node);
+            return;
+        }
         if (node->_Node.Op().value == "or")
+        {
+            gen_or(chunk, node);
+            return;
+        }
+        if (node->_Node.Op().value == "||")
         {
             gen_or(chunk, node);
             return;
