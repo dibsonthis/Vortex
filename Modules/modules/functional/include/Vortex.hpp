@@ -366,6 +366,10 @@ std::string toString(Value value)
 
 struct Closure
 {
+    std::string name;
+    std::string frame_name;
+    bool is_local;
+    int index;
     Value *location;
     Value closed;
 };

@@ -1,6 +1,8 @@
 const Counter = () => {
-    var p = 1
-    const f = () => p
+    var p = {x: 10}
+    const f = () => {
+        println(p)
+    }
 }
 
 while (true) {
