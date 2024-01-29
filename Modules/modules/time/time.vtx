@@ -1,6 +1,7 @@
-const lib = load_lib("./bin/time", ["datetime", "sleep"])
+const lib = load_lib("./bin/time", ["datetime", "sleep", "_clock"])
 
 const datetime = () => lib.datetime()
+const clock = () => lib._clock()
 const datetimeObject = () => {
     import [split] : string
     import [filter, indexOf] : functional

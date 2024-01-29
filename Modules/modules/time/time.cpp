@@ -24,6 +24,22 @@ extern "C" Value datetime(std::vector<Value> &args)
     return string_val(datetime);
 }
 
+extern "C" Value _clock(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'clock' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    auto curr_time = std::chrono::system_clock::now();
+    auto curr_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(curr_time);
+    auto duration = curr_ms.time_since_epoch().count();
+
+    return number_val(duration);
+}
+
 extern "C" Value sleep(std::vector<Value> &args)
 {
     using namespace std::chrono_literals;

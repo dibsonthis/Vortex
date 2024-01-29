@@ -4,6 +4,7 @@ const lib = load_lib("./bin/sdl",
 	"getKeyName", "setRenderDrawColor", "delay",
 	"drawPoint", "drawLine", "drawRect", "drawGeometry",
 	"loadTexture", "loadText", "getWindowSize", "getWindowPos",
+	"getMouseState",
 	"showCursor", "queryTexture", "destroyTexture", 
 	/* mixer */
 	"mixer_load_wav", "mixer_play_channel",
@@ -180,6 +181,7 @@ const getKeyName = (keyCode) => lib.getKeyName(keyCode)
 const setRenderDrawColor = (renderer, r = 0, g = 0, b = 0, a = 255) 
 	=> lib.setRenderDrawColor(renderer, r, g, b, a)
 const delay = (ms) => lib.delay(ms)
+const getMouseState = () => lib.getMouseState()
 const drawPoint = (renderer, xPos, yPos) => lib.drawPoint(renderer, xPos, yPos)
 const drawLine = (renderer, x1, y1, x2, y2) => lib.drawLine(renderer, x1, y1, x2, y2)
 const drawRect = (renderer, x, y, w, h) => lib.drawRect(renderer, x, y, w, h)

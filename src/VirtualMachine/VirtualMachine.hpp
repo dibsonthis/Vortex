@@ -95,6 +95,7 @@ static Value remove_prop_builtin(std::vector<Value> &args);
 static Value length_builtin(std::vector<Value> &args);
 static Value load_lib_builtin(std::vector<Value> &args);
 static Value copy_builtin(std::vector<Value> &args);
+static Value pure_builtin(std::vector<Value> &args);
 static Value sort_builtin(std::vector<Value> &args);
 static Value info_builtin(std::vector<Value> &args);
 static Value type_builtin(std::vector<Value> &args);

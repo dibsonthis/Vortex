@@ -100,6 +100,7 @@ static EvaluateResult run(VM &vm)
     define_native(vm, "info", info_builtin);
     define_native(vm, "type", type_builtin);
     define_native(vm, "copy", copy_builtin);
+    define_native(vm, "pure", pure_builtin);
     define_native(vm, "sort", sort_builtin);
     define_native(vm, "__future__", future_builtin);
     define_native(vm, "__get_future__", get_future_builtin);
@@ -166,6 +167,20 @@ static EvaluateResult run(VM &vm)
                 }
                 vm.stack.pop_back();
             }
+
+            // for (auto &cl : frame->function->closed_vars)
+            // {
+            //     for (int i = 0; i < vm.closed_values.size(); i++)
+            //     {
+            //         if (cl == vm.closed_values[i])
+            //         {
+            //             vm.closed_values.erase(vm.closed_values.begin() + i);
+            //         }
+            //     }
+            // }
+
+            // frame->function->closed_vars.clear();
+
             vm.frames.pop_back();
             frame = &vm.frames.back();
             frame->ip = &frame->function->chunk.code[instruction_index];
@@ -578,6 +593,8 @@ static EvaluateResult run(VM &vm)
                 hoisted->name = var.name;
                 hoisted->index = var.index;
                 hoisted->is_local = var.is_local;
+                hoisted->initial_location = value_pointer;
+
                 if (vm.closed_values.size() == 0)
                 {
                     closure_obj->closed_vars.push_back(hoisted);
@@ -586,16 +603,40 @@ static EvaluateResult run(VM &vm)
                 else
                 {
                     bool found = false;
+
+                    // for (auto &cl : vm.closed_values)
+                    // {
+                    //     if ((cl->location == value_pointer) || (cl->name == var.name && cl->index == var.index && cl->frame_name == frame->name && cl->is_local == var.is_local))
+                    //     {
+                    //         cl->closed = *value_pointer;
+                    //         cl->location = value_pointer;
+                    //         closure_obj->closed_vars.push_back(cl);
+                    //         found = true;
+                    //         break;
+                    //     }
+                    // }
+
                     for (auto &cl : vm.closed_values)
                     {
-                        if ((cl->location == value_pointer) || (cl->name == var.name && cl->index == var.index && cl->frame_name == frame->name && cl->is_local == var.is_local))
+                        // if (cl->location == value_pointer)
+                        if ((cl->location == value_pointer) || cl->initial_location == value_pointer && cl->name == var.name && cl->index == var.index && cl->is_local == var.is_local && cl->frame_name == frame->name)
                         {
                             cl->closed = *value_pointer;
                             cl->location = value_pointer;
+                            // cl->initial_location = value_pointer;
                             closure_obj->closed_vars.push_back(cl);
                             found = true;
                             break;
                         }
+                        // if (cl->initial_location == value_pointer && cl->name == var.name)
+                        // {
+                        //     cl->closed = *value_pointer;
+                        //     cl->location = value_pointer;
+                        //     // cl->initial_location = value_pointer;
+                        //     closure_obj->closed_vars.push_back(cl);
+                        //     found = true;
+                        //     break;
+                        // }
                     }
 
                     if (!found)
@@ -1494,6 +1535,13 @@ static EvaluateResult run(VM &vm)
             int index = READ_INT();
             Value function = pop(vm);
             vm.stack[index + frame->frame_start].hooks.onChangeHook = std::make_shared<Value>(function);
+            break;
+        }
+        case OP_HOOK_CLOSURE_ONCHANGE:
+        {
+            int index = READ_INT();
+            Value function = pop(vm);
+            (*frame->function->closed_vars[index]->location).hooks.onChangeHook = std::make_shared<Value>(function);
             break;
         }
         case OP_NEGATE:
@@ -2481,6 +2529,7 @@ Value copy(Value &value)
         new_func.get_function()->is_type_generator = value.get_function()->is_type_generator;
         new_func.get_function()->name = value.get_function()->name;
         new_func.get_function()->object = value.get_function()->object;
+        new_func.hooks = value.hooks;
         return new_func;
     }
     case List:
@@ -2491,6 +2540,7 @@ Value copy(Value &value)
         {
             new_list.get_list()->push_back(copy(elem));
         }
+        new_list.hooks = value.hooks;
         return new_list;
     }
     case Object:
@@ -2506,6 +2556,7 @@ Value copy(Value &value)
         {
             new_object.get_object()->values[prop.first] = copy(prop.second);
         }
+        new_object.hooks = value.hooks;
         return new_object;
     }
     default:
@@ -2524,6 +2575,18 @@ static Value copy_builtin(std::vector<Value> &args)
 
     Value value = args[0];
     return copy(value);
+}
+
+static Value pure_builtin(std::vector<Value> &args)
+{
+    if (args.size() != 1)
+    {
+        error("Function 'pure' expects 1 argument");
+    }
+
+    Value value = copy(args[0]);
+    value.hooks.onChangeHook = nullptr;
+    return value;
 }
 
 static Value sort_builtin(std::vector<Value> &args)

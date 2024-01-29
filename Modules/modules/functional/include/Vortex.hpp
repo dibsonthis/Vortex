@@ -372,6 +372,7 @@ struct Closure
     int index;
     Value *location;
     Value closed;
+    Value *initial_location;
 };
 
 Value new_val()

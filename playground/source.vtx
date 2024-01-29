@@ -1,10 +1,47 @@
+
 const Counter = () => {
-    var p = {x: 10}
-    const f = () => {
-        println(p)
-    }
+    var p = 10
+    return (() => p)
 }
 
 while (true) {
-    Counter()
+    const c = Counter()
+    println(c())
 }
+
+// const Blah = (n) => {
+//     return () => n
+// }
+
+// const b1 = Blah(10)
+// const b2 = Blah(20)
+
+// b1().println()
+// b2().println()
+
+// const App = (app_name, app_fn, flags = 0) => {
+//     const _app = () => {
+//         app_fn()
+//     }
+
+//     return {
+//         run: () => _app()
+//     }
+// }
+
+// const Defer = (fn, s, b) => {
+//     var start_time = None
+//     var duration = 0
+
+//     return () => {
+//         println(duration >= s)
+//     }
+// }
+
+// const d = Defer(() => {}, 1, true)
+
+// const app = App("Bloop", () => {
+//     d()
+// })
+
+// app.run()

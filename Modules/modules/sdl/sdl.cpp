@@ -370,6 +370,28 @@ extern "C" Value delay(std::vector<Value> &args)
     return none_val();
 }
 
+extern "C" Value getMouseState(std::vector<Value> &args)
+{
+    int num_required_args = 0;
+
+    if (args.size() != num_required_args)
+    {
+        error("Function 'getMouseState' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    int x, y;
+
+    int state = SDL_GetMouseState(&x, &y);
+
+    Value mouse_state = object_val();
+    mouse_state.get_object()->keys = {"state", "x", "y"};
+    mouse_state.get_object()->values["state"] = number_val(state);
+    mouse_state.get_object()->values["x"] = number_val(x);
+    mouse_state.get_object()->values["y"] = number_val(y);
+
+    return mouse_state;
+}
+
 extern "C" Value drawPoint(std::vector<Value> &args)
 {
     int num_required_args = 3;

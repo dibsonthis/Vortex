@@ -75,7 +75,8 @@ enum OpCode
     OP_LOOP,
     OP_LOOP_END,
     OP_ITER,
-    OP_HOOK_ONCHANGE
+    OP_HOOK_ONCHANGE,
+    OP_HOOK_CLOSURE_ONCHANGE,
 };
 
 enum ValueType
@@ -355,6 +356,7 @@ struct Closure
     int index;
     Value *location;
     Value closed;
+    Value *initial_location;
 };
 
 Value new_val();

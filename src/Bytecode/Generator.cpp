@@ -710,10 +710,17 @@ void gen_hook(Chunk &chunk, node_ptr node)
 {
     if (node->_Node.Op().left->type == NodeType::ID)
     {
+        bool is_closure = false;
         int index = resolve_variable(node->_Node.Op().left->_Node.ID().value);
         if (index == -1)
         {
-            error("Cannot assign hook to closure or global variable");
+            // error("Cannot assign hook to closure or global variable");
+            index = resolve_closure_nested(node->_Node.Op().left->_Node.ID().value);
+            if (index == -1)
+            {
+                error("Cannot assign hook to global variable");
+            }
+            is_closure = true;
         }
 
         if (node->_Node.Op().right->type != NodeType::FUNC_CALL)
@@ -732,7 +739,14 @@ void gen_hook(Chunk &chunk, node_ptr node)
         generate(function, chunk);
         if (hook_name == "onChange")
         {
-            add_opcode(chunk, OP_HOOK_ONCHANGE, index, node->line);
+            if (is_closure)
+            {
+                add_opcode(chunk, OP_HOOK_CLOSURE_ONCHANGE, index, node->line);
+            }
+            else
+            {
+                add_opcode(chunk, OP_HOOK_ONCHANGE, index, node->line);
+            }
         }
         else
         {
