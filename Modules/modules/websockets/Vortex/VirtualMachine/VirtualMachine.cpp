@@ -16,7 +16,6 @@ Value pop(VM &vm)
 
 static void runtimeError(VM &vm, std::string message, ...)
 {
-
     vm.status = 1;
 
     CallFrame frame = vm.frames.back();
@@ -168,6 +167,20 @@ static EvaluateResult run(VM &vm)
                 }
                 vm.stack.pop_back();
             }
+
+            // for (auto &cl : frame->function->closed_vars)
+            // {
+            //     for (int i = 0; i < vm.closed_values.size(); i++)
+            //     {
+            //         if (cl == vm.closed_values[i])
+            //         {
+            //             vm.closed_values.erase(vm.closed_values.begin() + i);
+            //         }
+            //     }
+            // }
+
+            // frame->function->closed_vars.clear();
+
             vm.frames.pop_back();
             frame = &vm.frames.back();
             frame->ip = &frame->function->chunk.code[instruction_index];
@@ -561,6 +574,25 @@ static EvaluateResult run(VM &vm)
             closure_obj->is_type_generator = function->is_type_generator;
             closure_obj->instruction_offsets = function->instruction_offsets;
             closure_obj->closed_vars = std::vector<std::shared_ptr<Closure>>();
+
+            // auto compare_closures = [](const std::shared_ptr<Closure> &cl1, const std::shared_ptr<Closure> &cl2)
+            // {
+            //     return cl1->initial_location == cl2->initial_location;
+            // };
+
+            // auto pred = [](const std::shared_ptr<Closure> &cl1, const std::shared_ptr<Closure> &cl2)
+            // {
+            //     return cl1->initial_location < cl2->initial_location;
+            // };
+
+            // std::sort(vm.closed_values.begin(), vm.closed_values.end(), pred);
+
+            // auto new_vec = std::unique(vm.closed_values.begin(), vm.closed_values.end(), compare_closures);
+
+            // std::cout << vm.closed_values.size() << std::endl;
+
+            // vm.closed_values.erase(new_vec, vm.closed_values.end());
+
             for (auto &var : closure_obj->closed_var_indexes)
             {
                 int index = var.index;
@@ -580,6 +612,8 @@ static EvaluateResult run(VM &vm)
                 hoisted->name = var.name;
                 hoisted->index = var.index;
                 hoisted->is_local = var.is_local;
+                hoisted->initial_location = value_pointer;
+
                 if (vm.closed_values.size() == 0)
                 {
                     closure_obj->closed_vars.push_back(hoisted);
@@ -588,12 +622,11 @@ static EvaluateResult run(VM &vm)
                 else
                 {
                     bool found = false;
+
                     for (auto &cl : vm.closed_values)
                     {
-                        if ((cl->location == value_pointer) || (cl->name == var.name && cl->index == var.index && cl->frame_name == frame->name && cl->is_local == var.is_local))
+                        if (cl->location == value_pointer)
                         {
-                            cl->closed = *value_pointer;
-                            cl->location = value_pointer;
                             closure_obj->closed_vars.push_back(cl);
                             found = true;
                             break;
@@ -602,12 +635,27 @@ static EvaluateResult run(VM &vm)
 
                     if (!found)
                     {
+                        bool f = false;
+                        for (auto &cl : vm.closed_values)
+                        {
+                            if (cl->initial_location == value_pointer)
+                            {
+                                cl = hoisted;
+                                f = true;
+                            }
+                        }
+                        if (!f)
+                        {
+                            vm.closed_values.push_back(hoisted);
+                        }
                         closure_obj->closed_vars.push_back(hoisted);
-                        vm.closed_values.push_back(hoisted);
+                        // vm.closed_values.push_back(hoisted);
                     }
                 }
             }
+
             function->closed_vars = closure_obj->closed_vars;
+
             push(vm, closure);
             break;
         }
@@ -1800,6 +1848,7 @@ static int call_function(VM &vm, Value &function, int param_num, CallFrame *&fra
         for (int i = 0; i < param_num; i++)
         {
             Value arg = pop(vm);
+            arg.meta.is_const = false;
             if (arg.meta.unpack)
             {
                 arg.meta.unpack = false;
@@ -2419,6 +2468,10 @@ static Value load_lib_builtin(std::vector<Value> &args)
         }
 
         NativeFunction fn = (NativeFunction)dlsym(handle, name.get_string().c_str());
+        if (!fn)
+        {
+            error("Module error: Function '" + name.get_string() + "' is not defined in the C module '" + path.get_string() + "'");
+        }
         Value native = native_val();
         native.get_native()->function = fn;
         obj->values[name.get_string()] = native;
@@ -2452,6 +2505,10 @@ static Value load_lib_builtin(std::vector<Value> &args)
         }
 
         NativeFunction fn = (NativeFunction)GetProcAddress(hinstLib, name.get_string().c_str());
+        if (!fn)
+        {
+            error("Module error: Function '" + name.get_string() + "' is not defined in the C module '" + path.get_string() + "'");
+        }
         Value native = native_val();
         native.get_native()->function = fn;
         obj->values[name.get_string()] = native;
