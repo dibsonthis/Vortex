@@ -1576,8 +1576,11 @@ static EvaluateResult run(VM &vm)
             }
             if (!constant.is_boolean())
             {
-                runtimeError(vm, "Operand must be a boolean: " + constant.value_repr() + " (" + constant.type_repr() + ")");
-                return EVALUATE_RUNTIME_ERROR;
+                Value value = boolean_val(false);
+                push(vm, value);
+                break;
+                // runtimeError(vm, "Operand must be a boolean: " + constant.value_repr() + " (" + constant.type_repr() + ")");
+                // return EVALUATE_RUNTIME_ERROR;
             }
             Value value = boolean_val(!constant.get_boolean());
             push(vm, value);
