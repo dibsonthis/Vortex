@@ -1,6 +1,8 @@
-var x = []
+var x = [1, 2, 3]
 x::onChange((data) => {
-    println(data.current[data.current.length()-1])
+    // data.current = [1, 2, 3]
+    data.current.append("bye")
 })
-x.append(10)
+
+x.remove(0)
 println(x)
