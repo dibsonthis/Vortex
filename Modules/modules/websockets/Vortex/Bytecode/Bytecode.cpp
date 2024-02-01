@@ -272,6 +272,8 @@ int disassemble_instruction(Chunk &chunk, int offset)
         return simple_instruction("OP_EXIT", offset);
     case OP_POP:
         return simple_instruction("OP_POP", offset);
+    case OP_POP_CLOSE:
+        return simple_instruction("OP_POP_CLOSE", offset);
     case OP_RETURN:
         return simple_instruction("OP_RETURN", offset);
     case OP_YIELD:
@@ -416,6 +418,8 @@ int advance(Chunk &chunk, int offset)
     case OP_EXIT:
         return offset + 1;
     case OP_POP:
+        return offset + 1;
+    case OP_POP_CLOSE:
         return offset + 1;
     case OP_RETURN:
         return offset + 1;

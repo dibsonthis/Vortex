@@ -1006,7 +1006,7 @@ extern "C" Value _server_on_open(std::vector<Value> &args)
 
     if (func.get_function()->arity != 1)
     {
-        error("Function 'on_open' expects argument 'function' to be a Function with 1 parameter1");
+        error("Function 'on_open' expects argument 'function' to be a Function with 1 parameter");
     }
 
     auto &_server = server_object.get_object();

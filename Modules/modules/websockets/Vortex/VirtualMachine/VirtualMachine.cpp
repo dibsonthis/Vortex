@@ -14,6 +14,24 @@ Value pop(VM &vm)
     return value;
 }
 
+Value pop_close(VM &vm)
+{
+    Value &v = vm.stack.back();
+    for (auto &closure : vm.closed_values)
+    {
+        if (closure->location == &v)
+        {
+            closure->closed = v;
+            closure->location = &closure->closed;
+            break;
+        }
+    }
+    Value value = std::move(vm.stack.back());
+    vm.stack.pop_back();
+    vm.sp--;
+    return value;
+}
+
 static void runtimeError(VM &vm, std::string message, ...)
 {
     vm.status = 1;
@@ -256,13 +274,14 @@ static EvaluateResult run(VM &vm)
             }
             if (value.hooks.onChangeHook)
             {
-
                 Value new_value = pop(vm);
 
                 Value obj = object_val();
                 obj.get_object()->keys = {"old", "current"};
                 obj.get_object()->values["old"] = value;
                 obj.get_object()->values["current"] = new_value;
+
+                vm.stack[index + frame->frame_start] = new_value;
 
                 VM func_vm;
                 std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
@@ -341,6 +360,8 @@ static EvaluateResult run(VM &vm)
                     obj.get_object()->keys = {"old", "current"};
                     obj.get_object()->values["old"] = current;
                     obj.get_object()->values["current"] = value;
+
+                    container.get_object()->values[accessor.get_string()] = value;
 
                     // store onChangeHook here
                     auto hook = obj.get_object()->values["old"].hooks.onChangeHook;
@@ -687,6 +708,8 @@ static EvaluateResult run(VM &vm)
                 obj.get_object()->values["old"] = value;
                 obj.get_object()->values["current"] = new_value;
 
+                *frame->function->closed_vars[index]->location = new_value;
+
                 VM func_vm;
                 std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
                 main->name = "";
@@ -762,6 +785,7 @@ static EvaluateResult run(VM &vm)
             {
                 frame->ip += offset;
             }
+
             pop(vm);
             break;
         }
@@ -780,6 +804,11 @@ static EvaluateResult run(VM &vm)
         case OP_POP:
         {
             pop(vm);
+            break;
+        }
+        case OP_POP_CLOSE:
+        {
+            pop_close(vm);
             break;
         }
         case OP_LOOP:

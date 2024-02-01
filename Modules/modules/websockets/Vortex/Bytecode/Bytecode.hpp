@@ -54,6 +54,7 @@ enum OpCode
     OP_MAKE_NON_CONST,
     OP_TYPE_DEFAULTS,
     OP_POP,
+    OP_POP_CLOSE,
     OP_JUMP_IF_FALSE,
     OP_JUMP_IF_TRUE,
     OP_POP_JUMP_IF_FALSE,
@@ -76,7 +77,7 @@ enum OpCode
     OP_LOOP_END,
     OP_ITER,
     OP_HOOK_ONCHANGE,
-    OP_HOOK_CLOSURE_ONCHANGE,
+    OP_HOOK_CLOSURE_ONCHANGE
 };
 
 enum ValueType

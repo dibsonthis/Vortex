@@ -14,6 +14,24 @@ Value pop(VM &vm)
     return value;
 }
 
+Value pop_close(VM &vm)
+{
+    Value &v = vm.stack.back();
+    for (auto &closure : vm.closed_values)
+    {
+        if (closure->location == &v)
+        {
+            closure->closed = v;
+            closure->location = &closure->closed;
+            break;
+        }
+    }
+    Value value = std::move(vm.stack.back());
+    vm.stack.pop_back();
+    vm.sp--;
+    return value;
+}
+
 static void runtimeError(VM &vm, std::string message, ...)
 {
     vm.status = 1;
@@ -256,13 +274,14 @@ static EvaluateResult run(VM &vm)
             }
             if (value.hooks.onChangeHook)
             {
-
                 Value new_value = pop(vm);
 
                 Value obj = object_val();
                 obj.get_object()->keys = {"old", "current"};
                 obj.get_object()->values["old"] = value;
                 obj.get_object()->values["current"] = new_value;
+
+                vm.stack[index + frame->frame_start] = new_value;
 
                 VM func_vm;
                 std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
@@ -341,6 +360,8 @@ static EvaluateResult run(VM &vm)
                     obj.get_object()->keys = {"old", "current"};
                     obj.get_object()->values["old"] = current;
                     obj.get_object()->values["current"] = value;
+
+                    container.get_object()->values[accessor.get_string()] = value;
 
                     // store onChangeHook here
                     auto hook = obj.get_object()->values["old"].hooks.onChangeHook;
@@ -687,6 +708,8 @@ static EvaluateResult run(VM &vm)
                 obj.get_object()->values["old"] = value;
                 obj.get_object()->values["current"] = new_value;
 
+                *frame->function->closed_vars[index]->location = new_value;
+
                 VM func_vm;
                 std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
                 main->name = "";
@@ -762,6 +785,7 @@ static EvaluateResult run(VM &vm)
             {
                 frame->ip += offset;
             }
+
             pop(vm);
             break;
         }
@@ -780,6 +804,11 @@ static EvaluateResult run(VM &vm)
         case OP_POP:
         {
             pop(vm);
+            break;
+        }
+        case OP_POP_CLOSE:
+        {
+            pop_close(vm);
             break;
         }
         case OP_LOOP:
@@ -2198,9 +2227,61 @@ static Value append_builtin(std::vector<Value> &args)
         error("Function 'append' expects argument 'list' to be a list");
     }
 
-    auto &ls = list.get_list();
+    Value list_copy = copy(list);
 
+    auto &ls = list.get_list();
     ls->push_back(value);
+
+    if (list.hooks.onChangeHook)
+    {
+        Value obj = object_val();
+        obj.get_object()->keys = {"old", "current"};
+        obj.get_object()->values["old"] = list_copy;
+        obj.get_object()->values["current"] = list;
+
+        // store onChangeHook here
+        auto hook = obj.get_object()->values["old"].hooks.onChangeHook;
+        obj.get_object()->values["old"].hooks.onChangeHook = nullptr;
+
+        auto value_hook = obj.get_object()->values["current"].hooks.onChangeHook;
+        obj.get_object()->values["current"].hooks.onChangeHook = nullptr;
+
+        VM func_vm;
+        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+        main->name = "";
+        main->arity = 0;
+        main->chunk = Chunk();
+        CallFrame main_frame;
+        main_frame.function = main;
+        main_frame.sp = 0;
+        main_frame.ip = main->chunk.code.data();
+        main_frame.frame_start = 0;
+        func_vm.frames.push_back(main_frame);
+
+        add_constant(main->chunk, *hook);
+        add_constant(main->chunk, obj);
+
+        add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
+        add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+        add_opcode(main->chunk, OP_CALL, 1, 0);
+        add_code(main->chunk, OP_EXIT, 0);
+
+        auto offsets = instruction_offsets(main_frame.function->chunk);
+        main_frame.function->instruction_offsets = offsets;
+
+        auto status = evaluate(func_vm);
+
+        obj.get_object()->values["old"].hooks.onChangeHook = hook;
+        obj.get_object()->values["current"].hooks.onChangeHook = value_hook;
+
+        if (status != 0)
+        {
+            exit(1);
+        }
+
+        obj.get_object()->values["current"].hooks.onChangeHook = list.hooks.onChangeHook;
+        ls = obj.get_object()->values["current"].get_list();
+    }
 
     return list;
 }

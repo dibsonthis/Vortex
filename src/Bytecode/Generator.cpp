@@ -1647,7 +1647,8 @@ static void end_scope(Chunk &chunk)
 
     while (current->variableCount > 0 && current->variables[current->variableCount - 1].depth > current->scopeDepth)
     {
-        add_code(chunk, OP_POP);
+        // add_code(chunk, OP_POP);
+        add_code(chunk, OP_POP_CLOSE);
         std::string var = chunk.variables.back();
         chunk.variables.pop_back();
         if (!chunk.public_variables.empty() && chunk.public_variables.back() == var)

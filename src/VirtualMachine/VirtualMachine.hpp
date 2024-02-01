@@ -67,6 +67,7 @@ enum EvaluateResult
 
 void push(VM &vm, Value &value);
 Value pop(VM &vm);
+Value pop_close(VM &vm);
 
 static void runtimeError(VM &vm, std::string message, ...);
 static void define_global(VM &vm, std::string name, Value value);

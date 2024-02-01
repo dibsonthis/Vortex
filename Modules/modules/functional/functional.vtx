@@ -207,8 +207,14 @@ const obj_map = (obj, fn) => {
         }
         return new
     }
+    if (arity == 4) {
+        for (keys, i, key) {
+            new[key] = fn(key, obj[key], i, new)
+        }
+        return new
+    }
 
-    error("Function 'obj_map' expects a function with an arity of either 1, 2 or 3")
+    error("Function 'obj_map' expects a function with an arity of either 1, 2, 3 or 4")
 }
 
 const obj_filter = (obj, fn) => {
