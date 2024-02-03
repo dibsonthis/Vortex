@@ -132,6 +132,7 @@ struct FunctionObj
     bool generator_init = false;
     bool generator_done = false;
     bool is_type_generator = false;
+std::string import_path;
 };
 
 struct TypeObj

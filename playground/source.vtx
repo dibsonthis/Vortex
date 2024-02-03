@@ -1,8 +1,1 @@
-var x = [1, 2, 3]
-x::onChange((data) => {
-    // data.current = [1, 2, 3]
-    data.current.append("bye")
-})
-
-x.remove(0)
-println(x)
+dis()

@@ -8,14 +8,14 @@ extern "C" Value list_dir(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'list_dir' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'list_dir' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value filePath = args[0];
 
     if (!filePath.is_string())
     {
-        error("Parameter 'filePath' must be a string");
+        return error_object("Parameter 'filePath' must be a string");
     }
 
     Value dir_list = list_val();
@@ -48,7 +48,7 @@ extern "C" Value os_name(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'os_name' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'os_name' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     std::string os_name_str;

@@ -28,7 +28,7 @@ extern "C" Value initSDL(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'initSDL' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'initSDL' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     int ttf_init = TTF_Init();
@@ -69,7 +69,7 @@ extern "C" Value createWindow(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'createWindow' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'createWindow' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value windowName = args[0];
@@ -81,32 +81,32 @@ extern "C" Value createWindow(std::vector<Value> &args)
 
     if (!windowName.is_string())
     {
-        error("Function 'createWindow' expects arg 'windowName' to be a string");
+        return error_object("Function 'createWindow' expects arg 'windowName' to be a string");
     }
 
     if (!xPos.is_number())
     {
-        error("Function 'createWindow' expects arg 'xPos' to be a number");
+        return error_object("Function 'createWindow' expects arg 'xPos' to be a number");
     }
 
     if (!yPos.is_number())
     {
-        error("Function 'createWindow' expects arg 'yPos' to be a number");
+        return error_object("Function 'createWindow' expects arg 'yPos' to be a number");
     }
 
     if (!width.is_number())
     {
-        error("Function 'createWindow' expects arg 'width' to be a number");
+        return error_object("Function 'createWindow' expects arg 'width' to be a number");
     }
 
     if (!height.is_number())
     {
-        error("Function 'createWindow' expects arg 'height' to be a number");
+        return error_object("Function 'createWindow' expects arg 'height' to be a number");
     }
 
     if (!flags.is_number())
     {
-        error("Function 'createWindow' expects arg 'flags' to be a number");
+        return error_object("Function 'createWindow' expects arg 'flags' to be a number");
     }
 
     SDL_Window *window = SDL_CreateWindow(windowName.get_string().c_str(),
@@ -124,7 +124,7 @@ extern "C" Value createWindow(std::vector<Value> &args)
     auto sdl_error = std::string(SDL_GetError());
     // if (sdl_error != "")
     // {
-    //     error("SDL Error (createWindow): " + sdl_error);
+    //     return error_object("SDL Error (createWindow): " + sdl_error);
     // }
 
     std::cout << "Initalized window: " << window << "\n";
@@ -137,7 +137,7 @@ extern "C" Value createRenderer(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'createRenderer' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'createRenderer' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value window = args[0];
@@ -145,12 +145,12 @@ extern "C" Value createRenderer(std::vector<Value> &args)
 
     if (!window.is_pointer())
     {
-        error("Function 'createRenderer' expects arg 'window' to be a pointer");
+        return error_object("Function 'createRenderer' expects arg 'window' to be a pointer");
     }
 
     if (!index.is_number())
     {
-        error("Function 'createRenderer' expects arg 'index' to be a number");
+        return error_object("Function 'createRenderer' expects arg 'index' to be a number");
     }
 
     SDL_Window *windowPtr = (SDL_Window *)window.get_pointer()->value;
@@ -163,7 +163,7 @@ extern "C" Value createRenderer(std::vector<Value> &args)
     auto sdl_error = std::string(SDL_GetError());
     // if (sdl_error != "")
     // {
-    //     error("SDL Error (createRenderer): " + sdl_error);
+    //     return error_object("SDL Error (createRenderer): " + sdl_error);
     // }
 
     std::cout << "Initalized renderer: " << renderer << "\n";
@@ -246,14 +246,14 @@ extern "C" Value renderClear(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'renderClear' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'renderClear' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value renderer = args[0];
 
     if (!renderer.is_pointer())
     {
-        error("Function 'renderClear' expects arg 'renderer' to be a pointer");
+        return error_object("Function 'renderClear' expects arg 'renderer' to be a pointer");
     }
 
     SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
@@ -262,7 +262,7 @@ extern "C" Value renderClear(std::vector<Value> &args)
 
     if (status != 0)
     {
-        error("SDL Error (renderClear): " + std::string(SDL_GetError()) + "\n");
+        return error_object("SDL Error (renderClear): " + std::string(SDL_GetError()) + "\n");
     }
 
     return none_val();
@@ -274,14 +274,14 @@ extern "C" Value renderPresent(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'renderPresent' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'renderPresent' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value renderer = args[0];
 
     if (!renderer.is_pointer())
     {
-        error("Function 'renderPresent' expects arg 'renderer' to be a pointer");
+        return error_object("Function 'renderPresent' expects arg 'renderer' to be a pointer");
     }
 
     SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
@@ -297,14 +297,14 @@ extern "C" Value getKeyName(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'getKeyName' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'getKeyName' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value keyCode = args[0];
 
     if (!keyCode.is_number())
     {
-        error("Function 'getKeyName' expects arg 'keyCode' to be a number");
+        return error_object("Function 'getKeyName' expects arg 'keyCode' to be a number");
     }
 
     const char *key_name = SDL_GetKeyName(keyCode.get_number());
@@ -318,7 +318,7 @@ extern "C" Value setRenderDrawColor(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'setRenderDrawColor' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'setRenderDrawColor' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value renderer = args[0];
@@ -329,12 +329,12 @@ extern "C" Value setRenderDrawColor(std::vector<Value> &args)
 
     if (!renderer.is_pointer())
     {
-        error("Function 'setRenderDrawColor' expects arg 'renderer' to be a pointer");
+        return error_object("Function 'setRenderDrawColor' expects arg 'renderer' to be a pointer");
     }
 
     if (!(r.is_number() && g.is_number() && b.is_number() && a.is_number()))
     {
-        error("Function 'setRenderDrawColor' expects args 'r', 'g', 'b', 'a' to be numbers");
+        return error_object("Function 'setRenderDrawColor' expects args 'r', 'g', 'b', 'a' to be numbers");
     }
 
     SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
@@ -343,7 +343,7 @@ extern "C" Value setRenderDrawColor(std::vector<Value> &args)
 
     if (status != 0)
     {
-        error("SDL Error (setRenderDrawColor): " + std::string(SDL_GetError()) + "\n");
+        return error_object("SDL Error (setRenderDrawColor): " + std::string(SDL_GetError()) + "\n");
     }
 
     return none_val();
@@ -355,14 +355,14 @@ extern "C" Value delay(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'delay' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'delay' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value ms = args[0];
 
     if (!ms.is_number())
     {
-        error("Function 'delay' expects arg 'ms' to be a number");
+        return error_object("Function 'delay' expects arg 'ms' to be a number");
     }
 
     SDL_Delay(ms.get_number());
@@ -376,7 +376,7 @@ extern "C" Value getMouseState(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'getMouseState' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'getMouseState' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     int x, y;
@@ -398,7 +398,7 @@ extern "C" Value drawPoint(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'drawPoint' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'drawPoint' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value renderer = args[0];
@@ -407,12 +407,12 @@ extern "C" Value drawPoint(std::vector<Value> &args)
 
     if (!renderer.is_pointer())
     {
-        error("Function 'drawPoint' expects arg 'renderer' to be a pointer");
+        return error_object("Function 'drawPoint' expects arg 'renderer' to be a pointer");
     }
 
     if (!(xPos.is_number() && yPos.is_number()))
     {
-        error("Function 'drawPoint' expects args 'xPos', 'yPos' to be numbers");
+        return error_object("Function 'drawPoint' expects args 'xPos', 'yPos' to be numbers");
     }
 
     SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
@@ -421,7 +421,7 @@ extern "C" Value drawPoint(std::vector<Value> &args)
 
     if (draw != 0)
     {
-        error("Function 'drawPoint' failed");
+        return error_object("Function 'drawPoint' failed");
     }
 
     return none_val();
@@ -433,7 +433,7 @@ extern "C" Value drawLine(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'drawLine' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'drawLine' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value renderer = args[0];
@@ -444,12 +444,12 @@ extern "C" Value drawLine(std::vector<Value> &args)
 
     if (!renderer.is_pointer())
     {
-        error("Function 'drawLine' expects arg 'renderer' to be a pointer");
+        return error_object("Function 'drawLine' expects arg 'renderer' to be a pointer");
     }
 
     if (!(x1.is_number() && y1.is_number() && x2.is_number() && y2.is_number()))
     {
-        error("Function 'drawLine' expects args 'x1', 'y1', 'x2', 'y2' to be numbers");
+        return error_object("Function 'drawLine' expects args 'x1', 'y1', 'x2', 'y2' to be numbers");
     }
 
     SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
@@ -458,7 +458,7 @@ extern "C" Value drawLine(std::vector<Value> &args)
 
     if (draw != 0)
     {
-        error("Function 'drawLine' failed");
+        return error_object("Function 'drawLine' failed");
     }
 
     return none_val();
@@ -470,7 +470,7 @@ extern "C" Value drawRect(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'drawRect' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'drawRect' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value renderer = args[0];
@@ -481,12 +481,12 @@ extern "C" Value drawRect(std::vector<Value> &args)
 
     if (!renderer.is_pointer())
     {
-        error("Function 'drawRect' expects arg 'renderer' to be a pointer");
+        return error_object("Function 'drawRect' expects arg 'renderer' to be a pointer");
     }
 
     if (!(x.is_number() && y.is_number() && w.is_number() && h.is_number()))
     {
-        error("Function 'drawRect' expects args 'x', 'y', 'w', 'h' to be numbers");
+        return error_object("Function 'drawRect' expects args 'x', 'y', 'w', 'h' to be numbers");
     }
 
     SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
@@ -502,7 +502,7 @@ extern "C" Value drawRect(std::vector<Value> &args)
 
     if (draw != 0 || fill != 0)
     {
-        error("Function 'drawRect' failed");
+        return error_object("Function 'drawRect' failed");
     }
 
     return none_val();
@@ -514,7 +514,7 @@ extern "C" Value drawGeometry(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'drawGeometry' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'drawGeometry' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value renderer = args[0];
@@ -523,17 +523,17 @@ extern "C" Value drawGeometry(std::vector<Value> &args)
 
     if (!renderer.is_pointer())
     {
-        error("Function 'drawGeometry' expects arg 'renderer' to be a pointer");
+        return error_object("Function 'drawGeometry' expects arg 'renderer' to be a pointer");
     }
 
     if (!texture.is_pointer() && !texture.is_none())
     {
-        error("Function 'drawGeometry' expects arg 'texture' to be a pointer or none");
+        return error_object("Function 'drawGeometry' expects arg 'texture' to be a pointer or none");
     }
 
     if (!vertices.is_list())
     {
-        error("Function 'drawGeometry' expects arg 'vertices' to be a list");
+        return error_object("Function 'drawGeometry' expects arg 'vertices' to be a list");
     }
 
     SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
@@ -564,7 +564,7 @@ extern "C" Value drawGeometry(std::vector<Value> &args)
 
     if (render != 0)
     {
-        error("SDL Error (drawGeometry): " + std::string(SDL_GetError()) + "\n");
+        return error_object("SDL Error (drawGeometry): " + std::string(SDL_GetError()) + "\n");
     }
 
     return none_val();
@@ -576,7 +576,7 @@ extern "C" Value loadTexture(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'loadTexture' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'loadTexture' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value renderer = args[0];
@@ -584,12 +584,12 @@ extern "C" Value loadTexture(std::vector<Value> &args)
 
     if (!renderer.is_pointer())
     {
-        error("Function 'loadTexture' expects arg 'renderer' to be a pointer");
+        return error_object("Function 'loadTexture' expects arg 'renderer' to be a pointer");
     }
 
     if (!filePath.is_string())
     {
-        error("Function 'loadTexture' expects arg 'filePath' to be a string");
+        return error_object("Function 'loadTexture' expects arg 'filePath' to be a string");
     }
 
     SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
@@ -597,7 +597,7 @@ extern "C" Value loadTexture(std::vector<Value> &args)
 
     if (!texture)
     {
-        error("SDL Error (loadTexture): " + std::string(SDL_GetError()) + "\n");
+        return error_object("SDL Error (loadTexture): " + std::string(SDL_GetError()) + "\n");
     }
 
     Value texturePtr = pointer_val();
@@ -612,14 +612,14 @@ extern "C" Value queryTexture(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'queryTexture' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'queryTexture' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value texture = args[0];
 
     if (!texture.is_pointer())
     {
-        error("Function 'queryTexture' expects arg 'texture' to be a pointer");
+        return error_object("Function 'queryTexture' expects arg 'texture' to be a pointer");
     }
 
     SDL_Texture *texturePtr = (SDL_Texture *)texture.get_pointer()->value;
@@ -641,14 +641,14 @@ extern "C" Value destroyTexture(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'destroyTexture' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'destroyTexture' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value texture = args[0];
 
     if (!texture.is_pointer())
     {
-        error("Function 'destroyTexture' expects arg 'texture' to be a pointer");
+        return error_object("Function 'destroyTexture' expects arg 'texture' to be a pointer");
     }
 
     SDL_Texture *texturePtr = (SDL_Texture *)texture.get_pointer()->value;
@@ -664,7 +664,7 @@ extern "C" Value loadText(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'loadText' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'loadText' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value renderer = args[0];
@@ -677,22 +677,22 @@ extern "C" Value loadText(std::vector<Value> &args)
 
     if (!renderer.is_pointer())
     {
-        error("Function 'loadText' expects arg 'renderer' to be a pointer");
+        return error_object("Function 'loadText' expects arg 'renderer' to be a pointer");
     }
 
     if (!fontPath.is_string())
     {
-        error("Function 'loadText' expects arg 'fontPath' to be a string");
+        return error_object("Function 'loadText' expects arg 'fontPath' to be a string");
     }
 
     if (!fontSize.is_number() && !r.is_number() && !g.is_number() && !b.is_number())
     {
-        error("Function 'loadText' expects args 'fontPath', 'r', 'g', 'b' to be numbers");
+        return error_object("Function 'loadText' expects args 'fontPath', 'r', 'g', 'b' to be numbers");
     }
 
     if (!text.is_string())
     {
-        error("Function 'loadText' expects arg 'text' to be a string");
+        return error_object("Function 'loadText' expects arg 'text' to be a string");
     }
 
     SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
@@ -706,7 +706,7 @@ extern "C" Value loadText(std::vector<Value> &args)
 
     if (!font)
     {
-        error("SDL Error (loadText): " + std::string(SDL_GetError()) + "\n");
+        return error_object("SDL Error (loadText): " + std::string(SDL_GetError()) + "\n");
     }
 
     SDL_Surface *surfaceMessage =
@@ -714,14 +714,14 @@ extern "C" Value loadText(std::vector<Value> &args)
 
     if (!surfaceMessage)
     {
-        error("SDL Error (loadText): " + std::string(SDL_GetError()) + "\n");
+        return error_object("SDL Error (loadText): " + std::string(SDL_GetError()) + "\n");
     }
 
     SDL_Texture *texture = SDL_CreateTextureFromSurface(rendererPtr, surfaceMessage);
 
     if (!texture)
     {
-        error("SDL Error (loadText): " + std::string(SDL_GetError()) + "\n");
+        return error_object("SDL Error (loadText): " + std::string(SDL_GetError()) + "\n");
     }
 
     Value texturePtr = pointer_val();
@@ -739,14 +739,14 @@ extern "C" Value getWindowSize(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'getWindowSize' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'getWindowSize' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value window = args[0];
 
     if (!window.is_pointer())
     {
-        error("Function 'getWindowSize' expects arg 'window' to be a pointer");
+        return error_object("Function 'getWindowSize' expects arg 'window' to be a pointer");
     }
 
     SDL_Window *windowPtr = (SDL_Window *)window.get_pointer()->value;
@@ -769,14 +769,14 @@ extern "C" Value getWindowPos(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'getWindowPos' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'getWindowPos' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value window = args[0];
 
     if (!window.is_pointer())
     {
-        error("Function 'getWindowPos' expects arg 'window' to be a pointer");
+        return error_object("Function 'getWindowPos' expects arg 'window' to be a pointer");
     }
 
     SDL_Window *windowPtr = (SDL_Window *)window.get_pointer()->value;
@@ -799,14 +799,14 @@ extern "C" Value showCursor(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'showCursor' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'showCursor' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value flag = args[0];
 
     if (!flag.is_number())
     {
-        error("Function 'showCursor' expects arg 'flag' to be a number");
+        return error_object("Function 'showCursor' expects arg 'flag' to be a number");
     }
 
     int state = SDL_ShowCursor((int)flag.get_number());
@@ -1104,14 +1104,14 @@ extern "C" Value mixer_load_wav(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'load_wav' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'load_wav' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value wav_file = args[0];
 
     if (!wav_file.is_string())
     {
-        error("Function 'load_wav' expects arg 'wav_file' to be a string");
+        return error_object("Function 'load_wav' expects arg 'wav_file' to be a string");
     }
 
     auto wav = Mix_LoadWAV(wav_file.get_string().c_str());
@@ -1128,7 +1128,7 @@ extern "C" Value mixer_play_channel(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'play_channel' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'play_channel' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value channel = args[0];
@@ -1137,17 +1137,17 @@ extern "C" Value mixer_play_channel(std::vector<Value> &args)
 
     if (!channel.is_number())
     {
-        error("Function 'play_channel' expects arg 'channel' to be a number");
+        return error_object("Function 'play_channel' expects arg 'channel' to be a number");
     }
 
     if (!wav_ptr.is_pointer())
     {
-        error("Function 'play_channel' expects arg 'wav_ptr' to be a pointer");
+        return error_object("Function 'play_channel' expects arg 'wav_ptr' to be a pointer");
     }
 
     if (!loops.is_number())
     {
-        error("Function 'play_channel' expects arg 'loops' to be a number");
+        return error_object("Function 'play_channel' expects arg 'loops' to be a number");
     }
 
     int res = Mix_PlayChannel(channel.get_number(), (Mix_Chunk *)wav_ptr.get_pointer()->value, loops.get_number());
@@ -1161,14 +1161,14 @@ extern "C" Value mixer_load_music(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'load_music' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'load_music' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value file = args[0];
 
     if (!file.is_string())
     {
-        error("Function 'load_music' expects arg 'music_file' to be a string");
+        return error_object("Function 'load_music' expects arg 'music_file' to be a string");
     }
 
     auto music = Mix_LoadMUS(file.get_string().c_str());
@@ -1185,7 +1185,7 @@ extern "C" Value mixer_play_music(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'play_music' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'play_music' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value music_ptr = args[0];
@@ -1193,12 +1193,12 @@ extern "C" Value mixer_play_music(std::vector<Value> &args)
 
     if (!music_ptr.is_pointer())
     {
-        error("Function 'play_music' expects arg 'music_ptr' to be a pointer");
+        return error_object("Function 'play_music' expects arg 'music_ptr' to be a pointer");
     }
 
     if (!loops.is_number())
     {
-        error("Function 'play_music' expects arg 'loops' to be a number");
+        return error_object("Function 'play_music' expects arg 'loops' to be a number");
     }
 
     int res = Mix_PlayMusic((Mix_Music *)music_ptr.get_pointer()->value, loops.get_number());
@@ -1212,7 +1212,7 @@ extern "C" Value mixer_pause_music(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'pause_music' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'pause_music' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Mix_PauseMusic();
@@ -1226,7 +1226,7 @@ extern "C" Value mixer_resume_music(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'resume_music' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'resume_music' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Mix_ResumeMusic();
@@ -1240,7 +1240,7 @@ extern "C" Value mixer_halt_music(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'halt_music' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'halt_music' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     int res = Mix_HaltMusic();
@@ -1254,7 +1254,7 @@ extern "C" Value mixer_music_status(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'music_status' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'music_status' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     bool music_playing = (bool)Mix_PlayingMusic();
@@ -1274,7 +1274,7 @@ extern "C" Value mixer_volume(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'volume' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'volume' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value channel = args[0];
@@ -1282,12 +1282,12 @@ extern "C" Value mixer_volume(std::vector<Value> &args)
 
     if (!channel.is_number())
     {
-        error("Function 'volume' expects arg 'channel' to be a number");
+        return error_object("Function 'volume' expects arg 'channel' to be a number");
     }
 
     if (!volume.is_number())
     {
-        error("Function 'volume' expects arg 'volume' to be a number");
+        return error_object("Function 'volume' expects arg 'volume' to be a number");
     }
 
     int res = Mix_Volume(channel.get_number(), volume.get_number());
@@ -1301,14 +1301,14 @@ extern "C" Value mixer_music_volume(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'music_volume' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'music_volume' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value volume = args[0];
 
     if (!volume.is_number())
     {
-        error("Function 'music_volume' expects arg 'volume' to be a number");
+        return error_object("Function 'music_volume' expects arg 'volume' to be a number");
     }
 
     int res = Mix_VolumeMusic(volume.get_number());
@@ -1324,7 +1324,7 @@ extern "C" Value imgui_check_version(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'check_version' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'check_version' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     bool result = IMGUI_CHECKVERSION();
@@ -1338,7 +1338,7 @@ extern "C" Value imgui_create_context(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'create_context' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'create_context' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     auto context = ImGui::CreateContext();
@@ -1354,7 +1354,7 @@ extern "C" Value imgui_init_io(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'init_io' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'init_io' expects " + std::to_string(num_required_args) + " argument(s)");
     }
     auto &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
@@ -1370,7 +1370,7 @@ extern "C" Value imgui_get_io(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'get_io' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'get_io' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     auto &io = ImGui::GetIO();
@@ -1397,7 +1397,7 @@ extern "C" Value imgui_init_for_sdl(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'init_for_sdl' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'init_for_sdl' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value window = args[0];
@@ -1405,12 +1405,12 @@ extern "C" Value imgui_init_for_sdl(std::vector<Value> &args)
 
     if (!renderer.is_pointer())
     {
-        error("Function 'init_for_sdl' expects arg 'renderer' to be a pointer");
+        return error_object("Function 'init_for_sdl' expects arg 'renderer' to be a pointer");
     }
 
     if (!window.is_pointer())
     {
-        error("Function 'init_for_sdl' expects arg 'window' to be a pointer");
+        return error_object("Function 'init_for_sdl' expects arg 'window' to be a pointer");
     }
 
     SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
@@ -1426,14 +1426,14 @@ extern "C" Value imgui_sdl_render_init(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'sdl_render_init' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'sdl_render_init' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value &renderer = args[0];
 
     if (!renderer.is_pointer())
     {
-        error("Function 'sdl_render_init' expects arg 'renderer' to be a pointer");
+        return error_object("Function 'sdl_render_init' expects arg 'renderer' to be a pointer");
     }
 
     SDL_Renderer *rendererPtr = (SDL_Renderer *)renderer.get_pointer()->value;
@@ -1448,14 +1448,14 @@ extern "C" Value imgui_process_event(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'imgui_process_event' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'imgui_process_event' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value event = args[0];
 
     if (!event.is_object())
     {
-        error("Function 'init_for_sdl' expects arg 'event' to be an object");
+        return error_object("Function 'init_for_sdl' expects arg 'event' to be an object");
     }
 
     auto &event_obj = event.get_object();
@@ -1498,7 +1498,7 @@ extern "C" Value imgui_new_frame(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'new_frame' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'new_frame' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     ImGui_ImplSDLRenderer2_NewFrame();
@@ -1514,7 +1514,7 @@ extern "C" Value imgui_render(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'render' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'render' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     ImGui::Render();
@@ -1528,7 +1528,7 @@ extern "C" Value imgui_get_draw_data(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'get_draw_data' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'get_draw_data' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     ImDrawData *data = ImGui::GetDrawData();
@@ -1544,14 +1544,14 @@ extern "C" Value imgui_render_draw_data(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'render_draw_data' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'render_draw_data' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value data_ptr = args[0];
 
     if (!data_ptr.is_pointer())
     {
-        error("Function 'render_draw_data' expects arg 'data' to be a pointer");
+        return error_object("Function 'render_draw_data' expects arg 'data' to be a pointer");
     }
 
     ImDrawData *data = (ImDrawData *)data_ptr.get_pointer()->value;
@@ -1567,7 +1567,7 @@ extern "C" Value imgui_show_demo_window(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'show_demo_window' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'show_demo_window' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     ImGui::ShowDemoWindow();
@@ -1581,7 +1581,7 @@ extern "C" Value imgui_begin(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'begin' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'begin' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value name = args[0];
@@ -1589,12 +1589,12 @@ extern "C" Value imgui_begin(std::vector<Value> &args)
 
     if (!name.is_string())
     {
-        error("Function 'begin' expects arg 'name' to be a string");
+        return error_object("Function 'begin' expects arg 'name' to be a string");
     }
 
     if (!flags.is_number())
     {
-        error("Function 'begin' expects arg 'flags' to be a number");
+        return error_object("Function 'begin' expects arg 'flags' to be a number");
     }
 
     bool result = ImGui::Begin(name.get_string().c_str(), (bool *)__null, flags.get_number());
@@ -1608,7 +1608,7 @@ extern "C" Value imgui_end(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'end' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'end' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     ImGui::End();
@@ -1622,7 +1622,7 @@ extern "C" Value imgui_set_window_size(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'set_window_size' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'set_window_size' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value width = args[0];
@@ -1630,12 +1630,12 @@ extern "C" Value imgui_set_window_size(std::vector<Value> &args)
 
     if (!width.is_number())
     {
-        error("Function 'set_window_size' expects arg 'width' to be a number");
+        return error_object("Function 'set_window_size' expects arg 'width' to be a number");
     }
 
     if (!height.is_number())
     {
-        error("Function 'set_window_size' expects arg 'height' to be a number");
+        return error_object("Function 'set_window_size' expects arg 'height' to be a number");
     }
 
     ImGui::SetWindowSize(ImVec2(width.get_number(), height.get_number()));
@@ -1649,7 +1649,7 @@ extern "C" Value imgui_set_window_pos(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'set_window_pos' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'set_window_pos' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value xPos = args[0];
@@ -1657,12 +1657,12 @@ extern "C" Value imgui_set_window_pos(std::vector<Value> &args)
 
     if (!xPos.is_number())
     {
-        error("Function 'set_window_pos' expects arg 'xPos' to be a number");
+        return error_object("Function 'set_window_pos' expects arg 'xPos' to be a number");
     }
 
     if (!yPos.is_number())
     {
-        error("Function 'set_window_pos' expects arg 'yPos' to be a number");
+        return error_object("Function 'set_window_pos' expects arg 'yPos' to be a number");
     }
 
     ImGui::SetWindowPos(ImVec2(xPos.get_number(), yPos.get_number()));
@@ -1676,7 +1676,7 @@ extern "C" Value imgui_text(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'text' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'text' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value text = args[0];
@@ -1684,12 +1684,12 @@ extern "C" Value imgui_text(std::vector<Value> &args)
 
     if (!text.is_string())
     {
-        error("Function 'text' expects arg 'text' to be a string");
+        return error_object("Function 'text' expects arg 'text' to be a string");
     }
 
     if (!wrapped.is_boolean())
     {
-        error("Function 'text' expects arg 'wrapped' to be a boolean");
+        return error_object("Function 'text' expects arg 'wrapped' to be a boolean");
     }
 
     if (wrapped.get_boolean())
@@ -1710,7 +1710,7 @@ extern "C" Value imgui_button(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'button' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'button' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value text = args[0];
@@ -1719,17 +1719,17 @@ extern "C" Value imgui_button(std::vector<Value> &args)
 
     if (!text.is_string())
     {
-        error("Function 'button' expects arg 'text' to be a string");
+        return error_object("Function 'button' expects arg 'text' to be a string");
     }
 
     if (!x.is_number())
     {
-        error("Function 'button' expects arg 'x' to be a number");
+        return error_object("Function 'button' expects arg 'x' to be a number");
     }
 
     if (!y.is_number())
     {
-        error("Function 'button' expects arg 'y' to be a number");
+        return error_object("Function 'button' expects arg 'y' to be a number");
     }
 
     bool result = ImGui::Button(text.get_string().c_str(), ImVec2(x.get_number(), y.get_number()));
@@ -1743,7 +1743,7 @@ extern "C" Value imgui_checkbox(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'checkbox' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'checkbox' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value text = args[0];
@@ -1751,12 +1751,12 @@ extern "C" Value imgui_checkbox(std::vector<Value> &args)
 
     if (!text.is_string())
     {
-        error("Function 'checkbox' expects arg 'text' to be a string");
+        return error_object("Function 'checkbox' expects arg 'text' to be a string");
     }
 
     if (!checked.is_boolean())
     {
-        error("Function 'checkbox' expects arg 'checked' to be a boolean");
+        return error_object("Function 'checkbox' expects arg 'checked' to be a boolean");
     }
 
     bool result = ImGui::Checkbox(text.get_string().c_str(), checked.get_boolean());
@@ -1770,7 +1770,7 @@ extern "C" Value imgui_slider_float(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'slider_float' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'slider_float' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value text = args[0];
@@ -1780,22 +1780,22 @@ extern "C" Value imgui_slider_float(std::vector<Value> &args)
 
     if (!text.is_string())
     {
-        error("Function 'slider_float' expects arg 'text' to be a string");
+        return error_object("Function 'slider_float' expects arg 'text' to be a string");
     }
 
     if (!number.is_number())
     {
-        error("Function 'slider_float' expects arg 'number' to be a number");
+        return error_object("Function 'slider_float' expects arg 'number' to be a number");
     }
 
     if (!min.is_number())
     {
-        error("Function 'slider_float' expects arg 'min' to be a number");
+        return error_object("Function 'slider_float' expects arg 'min' to be a number");
     }
 
     if (!max.is_number())
     {
-        error("Function 'slider_float' expects arg 'max' to be a number");
+        return error_object("Function 'slider_float' expects arg 'max' to be a number");
     }
 
     auto number_value = (float)number.get_number();
@@ -1811,7 +1811,7 @@ extern "C" Value imgui_begin_main_menu_bar(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'begin_main_menu_bar' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'begin_main_menu_bar' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     bool result = ImGui::BeginMainMenuBar();
@@ -1825,7 +1825,7 @@ extern "C" Value imgui_end_main_menu_bar(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'end_main_menu_bar' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'end_main_menu_bar' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     ImGui::EndMainMenuBar();
@@ -1839,14 +1839,14 @@ extern "C" Value imgui_begin_menu(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'begin_menu' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'begin_menu' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value name = args[0];
 
     if (!name.is_string())
     {
-        error("Function 'begin_menu' expects arg 'name' to be a string");
+        return error_object("Function 'begin_menu' expects arg 'name' to be a string");
     }
 
     bool result = ImGui::BeginMenu(name.get_string().c_str());
@@ -1860,7 +1860,7 @@ extern "C" Value imgui_end_menu(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'end_menu' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'end_menu' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     ImGui::EndMenu();
@@ -1874,14 +1874,14 @@ extern "C" Value imgui_menu_item(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'menu_item' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'menu_item' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value name = args[0];
 
     if (!name.is_string())
     {
-        error("Function 'menu_item' expects arg 'name' to be a string");
+        return error_object("Function 'menu_item' expects arg 'name' to be a string");
     }
 
     bool result = ImGui::MenuItem(name.get_string().c_str());
@@ -1895,7 +1895,7 @@ extern "C" Value imgui_begin_child(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'begin_child' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'begin_child' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value name = args[0];
@@ -1906,27 +1906,27 @@ extern "C" Value imgui_begin_child(std::vector<Value> &args)
 
     if (!name.is_string())
     {
-        error("Function 'begin_child' expects arg 'name' to be a string");
+        return error_object("Function 'begin_child' expects arg 'name' to be a string");
     }
 
     if (!width.is_number())
     {
-        error("Function 'begin_child' expects arg 'width' to be a number");
+        return error_object("Function 'begin_child' expects arg 'width' to be a number");
     }
 
     if (!height.is_number())
     {
-        error("Function 'begin_child' expects arg 'height' to be a number");
+        return error_object("Function 'begin_child' expects arg 'height' to be a number");
     }
 
     if (!border.is_boolean())
     {
-        error("Function 'begin_child' expects arg 'border' to be a boolean");
+        return error_object("Function 'begin_child' expects arg 'border' to be a boolean");
     }
 
     if (!flags.is_number())
     {
-        error("Function 'begin_child' expects arg 'flags' to be a number");
+        return error_object("Function 'begin_child' expects arg 'flags' to be a number");
     }
 
     bool result = ImGui::BeginChild(name.get_string().c_str(), ImVec2(width.get_number(), height.get_number()), border.get_boolean(), flags.get_number());
@@ -1940,7 +1940,7 @@ extern "C" Value imgui_end_child(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'end_child' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'end_child' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     ImGui::EndChild();
@@ -1954,14 +1954,14 @@ extern "C" Value imgui_set_scroll_here_y(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'set_scroll_here_y' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'set_scroll_here_y' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value center_y_ratio = args[0];
 
     if (!center_y_ratio.is_number())
     {
-        error("Function 'set_scroll_here_y' expects arg 'center_y_ratio' to be a number");
+        return error_object("Function 'set_scroll_here_y' expects arg 'center_y_ratio' to be a number");
     }
 
     ImGui::SetScrollHereY(center_y_ratio.get_number());
@@ -1975,14 +1975,14 @@ extern "C" Value imgui_set_scroll_here_x(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'set_scroll_here_x' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'set_scroll_here_x' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value center_x_ratio = args[0];
 
     if (!center_x_ratio.is_number())
     {
-        error("Function 'set_scroll_here_x' expects arg 'center_x_ratio' to be a number");
+        return error_object("Function 'set_scroll_here_x' expects arg 'center_x_ratio' to be a number");
     }
 
     ImGui::SetScrollHereX(center_x_ratio.get_number());
@@ -1996,7 +1996,7 @@ extern "C" Value imgui_combo(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'combo' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'combo' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value text = args[0];
@@ -2005,17 +2005,17 @@ extern "C" Value imgui_combo(std::vector<Value> &args)
 
     if (!text.is_string())
     {
-        error("Function 'combo' expects arg 'text' to be a string");
+        return error_object("Function 'combo' expects arg 'text' to be a string");
     }
 
     if (!choice.is_number())
     {
-        error("Function 'combo' expects arg 'choice' to be a number");
+        return error_object("Function 'combo' expects arg 'choice' to be a number");
     }
 
     if (!choices.is_list())
     {
-        error("Function 'combo' expects arg 'choices' to be a list");
+        return error_object("Function 'combo' expects arg 'choices' to be a list");
     }
 
     auto choice_value = (int)choice.get_number();
@@ -2042,7 +2042,7 @@ extern "C" Value imgui_input_text(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'input_text' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'input_text' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value label = args[0];
@@ -2051,17 +2051,17 @@ extern "C" Value imgui_input_text(std::vector<Value> &args)
 
     if (!label.is_string())
     {
-        error("Function 'input_text' expects arg 'label' to be a string");
+        return error_object("Function 'input_text' expects arg 'label' to be a string");
     }
 
     if (!text.is_string())
     {
-        error("Function 'input_text' expects arg 'text' to be a string");
+        return error_object("Function 'input_text' expects arg 'text' to be a string");
     }
 
     if (!hint.is_string())
     {
-        error("Function 'input_text' expects arg 'hint' to be a string");
+        return error_object("Function 'input_text' expects arg 'hint' to be a string");
     }
 
     auto str = text.get_string();
@@ -2077,7 +2077,7 @@ extern "C" Value imgui_input_password(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'input_password' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'input_password' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value label = args[0];
@@ -2086,17 +2086,17 @@ extern "C" Value imgui_input_password(std::vector<Value> &args)
 
     if (!label.is_string())
     {
-        error("Function 'input_password' expects arg 'label' to be a string");
+        return error_object("Function 'input_password' expects arg 'label' to be a string");
     }
 
     if (!text.is_string())
     {
-        error("Function 'input_password' expects arg 'text' to be a string");
+        return error_object("Function 'input_password' expects arg 'text' to be a string");
     }
 
     if (!hint.is_string())
     {
-        error("Function 'input_password' expects arg 'hint' to be a string");
+        return error_object("Function 'input_password' expects arg 'hint' to be a string");
     }
 
     auto str = text.get_string();
@@ -2112,7 +2112,7 @@ extern "C" Value imgui_same_line(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'same_line' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'same_line' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value offset_from_start_x = args[0];
@@ -2120,12 +2120,12 @@ extern "C" Value imgui_same_line(std::vector<Value> &args)
 
     if (!offset_from_start_x.is_number())
     {
-        error("Function 'same_line' expects arg 'offset_from_start_x' to be a number");
+        return error_object("Function 'same_line' expects arg 'offset_from_start_x' to be a number");
     }
 
     if (!spacing.is_number())
     {
-        error("Function 'same_line' expects arg 'spacing' to be a number");
+        return error_object("Function 'same_line' expects arg 'spacing' to be a number");
     }
 
     ImGui::SameLine(offset_from_start_x.get_number(), spacing.get_number());
@@ -2139,7 +2139,7 @@ extern "C" Value imgui_get_cursor_pos(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'get_cursor_pos' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'get_cursor_pos' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     auto pos = ImGui::GetCursorPos();
@@ -2158,14 +2158,14 @@ extern "C" Value imgui_set_cursor_pos_x(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'set_cursor_pos_x' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'set_cursor_pos_x' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value local_x = args[0];
 
     if (!local_x.is_number())
     {
-        error("Function 'set_cursor_pos_x' expects arg 'local_x' to be a number");
+        return error_object("Function 'set_cursor_pos_x' expects arg 'local_x' to be a number");
     }
 
     ImGui::SetCursorPosX(local_x.get_number());
@@ -2179,14 +2179,14 @@ extern "C" Value imgui_set_cursor_pos_y(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'set_cursor_pos_y' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'set_cursor_pos_y' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value local_y = args[0];
 
     if (!local_y.is_number())
     {
-        error("Function 'set_cursor_pos_y' expects arg 'local_y' to be a number");
+        return error_object("Function 'set_cursor_pos_y' expects arg 'local_y' to be a number");
     }
 
     ImGui::SetCursorPosY(local_y.get_number());
@@ -2200,7 +2200,7 @@ extern "C" Value imgui_image(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'image' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'image' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value texture = args[0];
@@ -2209,17 +2209,17 @@ extern "C" Value imgui_image(std::vector<Value> &args)
 
     if (!texture.is_pointer())
     {
-        error("Function 'image' expects arg 'texture' to be a pointer");
+        return error_object("Function 'image' expects arg 'texture' to be a pointer");
     }
 
     if (!width.is_number())
     {
-        error("Function 'image' expects arg 'width' to be a number");
+        return error_object("Function 'image' expects arg 'width' to be a number");
     }
 
     if (!height.is_number())
     {
-        error("Function 'image' expects arg 'height' to be a number");
+        return error_object("Function 'image' expects arg 'height' to be a number");
     }
 
     SDL_Texture *texturePtr = (SDL_Texture *)texture.get_pointer()->value;
@@ -2251,7 +2251,7 @@ extern "C" Value imgui_push_style_color(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'push_style_color' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'push_style_color' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value imgui_color = args[0];
@@ -2262,27 +2262,27 @@ extern "C" Value imgui_push_style_color(std::vector<Value> &args)
 
     if (!imgui_color.is_number())
     {
-        error("Function 'push_style_color' expects arg 'imgui_color' to be a number");
+        return error_object("Function 'push_style_color' expects arg 'imgui_color' to be a number");
     }
 
     if (!r.is_number())
     {
-        error("Function 'push_style_color' expects arg 'r' to be a number");
+        return error_object("Function 'push_style_color' expects arg 'r' to be a number");
     }
 
     if (!g.is_number())
     {
-        error("Function 'push_style_color' expects arg 'g' to be a number");
+        return error_object("Function 'push_style_color' expects arg 'g' to be a number");
     }
 
     if (!b.is_number())
     {
-        error("Function 'push_style_color' expects arg 'b' to be a number");
+        return error_object("Function 'push_style_color' expects arg 'b' to be a number");
     }
 
     if (!a.is_number())
     {
-        error("Function 'push_style_color' expects arg 'a' to be a number");
+        return error_object("Function 'push_style_color' expects arg 'a' to be a number");
     }
 
     ImGui::PushStyleColor(imgui_color.get_number(), ImVec4(r.get_number(), g.get_number(), b.get_number(), a.get_number()));
@@ -2296,14 +2296,14 @@ extern "C" Value imgui_pop_style_color(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'pop_style_color' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'pop_style_color' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value count = args[0];
 
     if (!count.is_number())
     {
-        error("Function 'pop_style_color' expects arg 'count' to be a number");
+        return error_object("Function 'pop_style_color' expects arg 'count' to be a number");
     }
 
     ImGui::PopStyleColor(count.get_number());
@@ -2317,7 +2317,7 @@ extern "C" Value imgui_import_font(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'import_font' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'import_font' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     auto &io = ImGui::GetIO();
@@ -2327,12 +2327,12 @@ extern "C" Value imgui_import_font(std::vector<Value> &args)
 
     if (!font_file.is_string())
     {
-        error("Function 'import_font' expects arg 'font_file' to be a string");
+        return error_object("Function 'import_font' expects arg 'font_file' to be a string");
     }
 
     if (!font_size.is_number())
     {
-        error("Function 'import_font' expects arg 'font_size' to be a number");
+        return error_object("Function 'import_font' expects arg 'font_size' to be a number");
     }
 
     auto font = io.Fonts->AddFontFromFileTTF(font_file.get_string().c_str(), font_size.get_number(), NULL, io.Fonts->GetGlyphRangesDefault());
@@ -2349,14 +2349,14 @@ extern "C" Value imgui_push_font(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'push_font' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'push_font' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value font_ptr = args[0];
 
     if (!font_ptr.is_pointer())
     {
-        error("Function 'push_font' expects arg 'font_ptr' to be a pointer");
+        return error_object("Function 'push_font' expects arg 'font_ptr' to be a pointer");
     }
 
     ImFont *font = (ImFont *)font_ptr.get_pointer()->value;
@@ -2372,7 +2372,7 @@ extern "C" Value imgui_pop_font(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'pop_font' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'pop_font' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     ImGui::PopFont();
@@ -2386,7 +2386,7 @@ extern "C" Value imgui_get_font(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'get_font' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'get_font' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     auto font = ImGui::GetFont();

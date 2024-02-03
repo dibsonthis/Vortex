@@ -1,0 +1,8 @@
+type c = () => {
+    const g = () => {
+        return 10 + ""
+    }
+    return {
+        g: g
+    }
+}

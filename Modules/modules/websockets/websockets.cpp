@@ -69,7 +69,7 @@ extern "C" Value _client_init(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'init_client' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'init_client' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     client *c = new client();
@@ -95,7 +95,7 @@ extern "C" Value _client_connect(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'client_connect' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'client_connect' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value client_ptr = args[0];
@@ -104,17 +104,17 @@ extern "C" Value _client_connect(std::vector<Value> &args)
 
     if (!client_ptr.is_pointer())
     {
-        error("Function 'client_connect' expects argument 'client' to be a pointer");
+        return error_object("Function 'client_connect' expects argument 'client' to be a pointer");
     }
 
     if (!url.is_string())
     {
-        error("Function 'client_connect' expects argument 'url' to be a string");
+        return error_object("Function 'client_connect' expects argument 'url' to be a string");
     }
 
     if (!headers.is_object())
     {
-        error("Function 'client_connect' expects argument 'headers' to be a object");
+        return error_object("Function 'client_connect' expects argument 'headers' to be a object");
     }
 
     client *c = (client *)client_ptr.get_pointer()->value;
@@ -126,7 +126,7 @@ extern "C" Value _client_connect(std::vector<Value> &args)
 
     if (ec)
     {
-        error("Could not create connection: " + ec.message());
+        return error_object("Could not create connection: " + ec.message());
     }
 
     auto headers_object = headers.get_object();
@@ -158,14 +158,14 @@ extern "C" Value _client_run(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'client_connect' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'client_connect' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value client_ptr = args[0];
 
     if (!client_ptr.is_pointer())
     {
-        error("Function 'client_connect' expects argument 'client' to be a pointer");
+        return error_object("Function 'client_connect' expects argument 'client' to be a pointer");
     }
 
     client *c = (client *)client_ptr.get_pointer()->value;
@@ -182,7 +182,7 @@ extern "C" Value _client_on_message(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'on_message' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'on_message' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value client_ptr = args[0];
@@ -190,17 +190,17 @@ extern "C" Value _client_on_message(std::vector<Value> &args)
 
     if (!func.is_function())
     {
-        error("Function 'on_message' expects argument 'function' to be a Function");
+        return error_object("Function 'on_message' expects argument 'function' to be a Function");
     }
 
     if (!client_ptr.is_pointer())
     {
-        error("Function 'on_message' expects argument 'client' to be a pointer");
+        return error_object("Function 'on_message' expects argument 'client' to be a pointer");
     }
 
     if (func.get_function()->arity != 1)
     {
-        error("Function 'on_message' expects argument 'function' to be a Function with 1 parameter");
+        return error_object("Function 'on_message' expects argument 'function' to be a Function with 1 parameter");
     }
 
     client *c = (client *)client_ptr.get_pointer()->value;
@@ -244,7 +244,7 @@ extern "C" Value _client_on_open(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'on_open' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'on_open' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value client_ptr = args[0];
@@ -252,17 +252,17 @@ extern "C" Value _client_on_open(std::vector<Value> &args)
 
     if (!func.is_function())
     {
-        error("Function 'on_open' expects argument 'function' to be a Function");
+        return error_object("Function 'on_open' expects argument 'function' to be a Function");
     }
 
     if (!client_ptr.is_pointer())
     {
-        error("Function 'on_open' expects argument 'client' to be a pointer");
+        return error_object("Function 'on_open' expects argument 'client' to be a pointer");
     }
 
     if (func.get_function()->arity != 0)
     {
-        error("Function 'on_open' expects argument 'function' to be a Function with 0 parameters");
+        return error_object("Function 'on_open' expects argument 'function' to be a Function with 0 parameters");
     }
 
     client *c = (client *)client_ptr.get_pointer()->value;
@@ -304,7 +304,7 @@ extern "C" Value _client_on_close(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'on_close' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'on_close' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value client_ptr = args[0];
@@ -312,17 +312,17 @@ extern "C" Value _client_on_close(std::vector<Value> &args)
 
     if (!func.is_function())
     {
-        error("Function 'on_close' expects argument 'function' to be a Function");
+        return error_object("Function 'on_close' expects argument 'function' to be a Function");
     }
 
     if (!client_ptr.is_pointer())
     {
-        error("Function 'on_close' expects argument 'client' to be a pointer");
+        return error_object("Function 'on_close' expects argument 'client' to be a pointer");
     }
 
     if (func.get_function()->arity != 1)
     {
-        error("Function 'on_close' expects argument 'function' to be a Function with 1 parameters");
+        return error_object("Function 'on_close' expects argument 'function' to be a Function with 1 parameters");
     }
 
     client *c = (client *)client_ptr.get_pointer()->value;
@@ -374,7 +374,7 @@ extern "C" Value _client_on_fail(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'on_fail' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'on_fail' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value client_ptr = args[0];
@@ -382,17 +382,17 @@ extern "C" Value _client_on_fail(std::vector<Value> &args)
 
     if (!func.is_function())
     {
-        error("Function 'on_fail' expects argument 'function' to be a Function");
+        return error_object("Function 'on_fail' expects argument 'function' to be a Function");
     }
 
     if (!client_ptr.is_pointer())
     {
-        error("Function 'on_fail' expects argument 'client' to be a pointer");
+        return error_object("Function 'on_fail' expects argument 'client' to be a pointer");
     }
 
     if (func.get_function()->arity != 1)
     {
-        error("Function 'on_fail' expects argument 'function' to be a Function with 1 parameter");
+        return error_object("Function 'on_fail' expects argument 'function' to be a Function with 1 parameter");
     }
 
     client *c = (client *)client_ptr.get_pointer()->value;
@@ -444,7 +444,7 @@ extern "C" Value _client_send(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'client_send' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'client_send' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value client_ptr = args[0];
@@ -453,17 +453,17 @@ extern "C" Value _client_send(std::vector<Value> &args)
 
     if (!client_ptr.is_pointer())
     {
-        error("Function 'client_send' expects argument 'client' to be a pointer");
+        return error_object("Function 'client_send' expects argument 'client' to be a pointer");
     }
 
     if (!con_ptr.is_pointer())
     {
-        error("Function 'client_send' expects argument 'con_ptr' to be a pointer");
+        return error_object("Function 'client_send' expects argument 'con_ptr' to be a pointer");
     }
 
     if (!message.is_string())
     {
-        error("Function 'client_send' expects argument 'message' to be a string");
+        return error_object("Function 'client_send' expects argument 'message' to be a string");
     }
 
     client *c = (client *)client_ptr.get_pointer()->value;
@@ -486,7 +486,7 @@ extern "C" Value _client_close(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'client_close' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'client_close' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value client_ptr = args[0];
@@ -496,22 +496,22 @@ extern "C" Value _client_close(std::vector<Value> &args)
 
     if (!client_ptr.is_pointer())
     {
-        error("Function 'client_close' expects argument 'client' to be a pointer");
+        return error_object("Function 'client_close' expects argument 'client' to be a pointer");
     }
 
     if (!con_ptr.is_pointer())
     {
-        error("Function 'client_close' expects argument 'con_ptr' to be a pointer");
+        return error_object("Function 'client_close' expects argument 'con_ptr' to be a pointer");
     }
 
     if (!code.is_number())
     {
-        error("Function 'client_close' expects argument 'code' to be a number");
+        return error_object("Function 'client_close' expects argument 'code' to be a number");
     }
 
     if (!reason.is_string())
     {
-        error("Function 'client_close' expects argument 'reason' to be a string");
+        return error_object("Function 'client_close' expects argument 'reason' to be a string");
     }
 
     client *c = (client *)client_ptr.get_pointer()->value;
@@ -614,7 +614,7 @@ extern "C" Value _server(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'server' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'server' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     server *s = new server();
@@ -648,7 +648,7 @@ extern "C" Value _server_listen(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'listen' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'listen' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value server_object = args[0];
@@ -656,24 +656,24 @@ extern "C" Value _server_listen(std::vector<Value> &args)
 
     if (!server_object.is_object())
     {
-        error("Function 'listen' expects argument 'server' to be an object");
+        return error_object("Function 'listen' expects argument 'server' to be an object");
     }
 
     if (!port.is_number())
     {
-        error("Function 'listen' expects argument 'port' to be a number");
+        return error_object("Function 'listen' expects argument 'port' to be a number");
     }
 
     auto &_server = server_object.get_object();
 
     if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
     {
-        error("Function 'listen' expects argument 'server' to be a valid server object");
+        return error_object("Function 'listen' expects argument 'server' to be a valid server object");
     }
 
     if (!_server->values["server_ptr"].is_pointer())
     {
-        error("Function 'listen' expects argument 'server' to be a valid server object");
+        return error_object("Function 'listen' expects argument 'server' to be a valid server object");
     }
 
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
@@ -698,26 +698,26 @@ extern "C" Value _server_stop(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'stop' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'stop' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value server_object = args[0];
 
     if (!server_object.is_object())
     {
-        error("Function 'stop' expects argument 'server' to be an object");
+        return error_object("Function 'stop' expects argument 'server' to be an object");
     }
 
     auto &_server = server_object.get_object();
 
     if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
     {
-        error("Function 'stop' expects argument 'server' to be a valid server object");
+        return error_object("Function 'stop' expects argument 'server' to be a valid server object");
     }
 
     if (!_server->values["server_ptr"].is_pointer())
     {
-        error("Function 'stop' expects argument 'server' to be a valid server object");
+        return error_object("Function 'stop' expects argument 'server' to be a valid server object");
     }
 
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
@@ -735,7 +735,7 @@ extern "C" Value _server_send(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'send' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'send' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value server_object = args[0];
@@ -744,29 +744,29 @@ extern "C" Value _server_send(std::vector<Value> &args)
 
     if (!server_object.is_object())
     {
-        error("Function 'send' expects argument 'server' to be an object");
+        return error_object("Function 'send' expects argument 'server' to be an object");
     }
 
     if (!id.is_number())
     {
-        error("Function 'send' expects argument 'id' to be a number");
+        return error_object("Function 'send' expects argument 'id' to be a number");
     }
 
     if (!message.is_string())
     {
-        error("Function 'send' expects argument 'message' to be a string");
+        return error_object("Function 'send' expects argument 'message' to be a string");
     }
 
     auto &_server = server_object.get_object();
 
     if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
     {
-        error("Function 'send' expects argument 'server' to be a valid server object");
+        return error_object("Function 'send' expects argument 'server' to be a valid server object");
     }
 
     if (!_server->values["server_ptr"].is_pointer())
     {
-        error("Function 'send' expects argument 'server' to be a valid server object");
+        return error_object("Function 'send' expects argument 'server' to be a valid server object");
     }
 
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
@@ -806,7 +806,7 @@ extern "C" Value _server_broadcast(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'broadcast' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'broadcast' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value server_object = args[0];
@@ -814,24 +814,24 @@ extern "C" Value _server_broadcast(std::vector<Value> &args)
 
     if (!server_object.is_object())
     {
-        error("Function 'broadcast' expects argument 'server' to be an object");
+        return error_object("Function 'broadcast' expects argument 'server' to be an object");
     }
 
     if (!message.is_string())
     {
-        error("Function 'broadcast' expects argument 'message' to be a string");
+        return error_object("Function 'broadcast' expects argument 'message' to be a string");
     }
 
     auto &_server = server_object.get_object();
 
     if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
     {
-        error("Function 'broadcast' expects argument 'server' to be a valid server object");
+        return error_object("Function 'broadcast' expects argument 'server' to be a valid server object");
     }
 
     if (!_server->values["server_ptr"].is_pointer())
     {
-        error("Function 'broadcast' expects argument 'server' to be a valid server object");
+        return error_object("Function 'broadcast' expects argument 'server' to be a valid server object");
     }
 
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
@@ -868,7 +868,7 @@ extern "C" Value _server_on_validate(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'on_validate' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'on_validate' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value server_object = args[0];
@@ -876,29 +876,29 @@ extern "C" Value _server_on_validate(std::vector<Value> &args)
 
     if (!server_object.is_object())
     {
-        error("Function 'on_validate' expects argument 'server' to be an object");
+        return error_object("Function 'on_validate' expects argument 'server' to be an object");
     }
 
     if (!func.is_function())
     {
-        error("Function 'on_validate' expects argument 'function' to be a Function");
+        return error_object("Function 'on_validate' expects argument 'function' to be a Function");
     }
 
     if (func.get_function()->arity != 2)
     {
-        error("Function 'on_validate' expects argument 'function' to be a Function with 2 parameters");
+        return error_object("Function 'on_validate' expects argument 'function' to be a Function with 2 parameters");
     }
 
     auto &_server = server_object.get_object();
 
     if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
     {
-        error("Function 'on_validate' expects argument 'server' to be a valid server object");
+        return error_object("Function 'on_validate' expects argument 'server' to be a valid server object");
     }
 
     if (!_server->values["server_ptr"].is_pointer())
     {
-        error("Function 'on_validate' expects argument 'server' to be a valid server object");
+        return error_object("Function 'on_validate' expects argument 'server' to be a valid server object");
     }
 
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
@@ -988,7 +988,7 @@ extern "C" Value _server_on_open(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'on_open' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'on_open' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value server_object = args[0];
@@ -996,29 +996,29 @@ extern "C" Value _server_on_open(std::vector<Value> &args)
 
     if (!server_object.is_object())
     {
-        error("Function 'on_open' expects argument 'server' to be an object");
+        return error_object("Function 'on_open' expects argument 'server' to be an object");
     }
 
     if (!func.is_function())
     {
-        error("Function 'on_open' expects argument 'function' to be a Function");
+        return error_object("Function 'on_open' expects argument 'function' to be a Function");
     }
 
     if (func.get_function()->arity != 1)
     {
-        error("Function 'on_open' expects argument 'function' to be a Function with 1 parameter");
+        return error_object("Function 'on_open' expects argument 'function' to be a Function with 1 parameter");
     }
 
     auto &_server = server_object.get_object();
 
     if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
     {
-        error("Function 'on_open' expects argument 'server' to be a valid server object");
+        return error_object("Function 'on_open' expects argument 'server' to be a valid server object");
     }
 
     if (!_server->values["server_ptr"].is_pointer())
     {
-        error("Function 'on_open' expects argument 'server' to be a valid server object");
+        return error_object("Function 'on_open' expects argument 'server' to be a valid server object");
     }
 
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
@@ -1078,7 +1078,7 @@ extern "C" Value _server_on_message(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'on_message' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'on_message' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value server_object = args[0];
@@ -1086,29 +1086,29 @@ extern "C" Value _server_on_message(std::vector<Value> &args)
 
     if (!func.is_function())
     {
-        error("Function 'on_message' expects argument 'function' to be a Function");
+        return error_object("Function 'on_message' expects argument 'function' to be a Function");
     }
 
     if (!server_object.is_object())
     {
-        error("Function 'on_message' expects argument 'server' to be an object");
+        return error_object("Function 'on_message' expects argument 'server' to be an object");
     }
 
     if (func.get_function()->arity != 1)
     {
-        error("Function 'on_message' expects argument 'function' to be a Function with 1 parameter");
+        return error_object("Function 'on_message' expects argument 'function' to be a Function with 1 parameter");
     }
 
     auto &_server = server_object.get_object();
 
     if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
     {
-        error("Function 'on_message' expects argument 'server' to be a valid server object");
+        return error_object("Function 'on_message' expects argument 'server' to be a valid server object");
     }
 
     if (!_server->values["server_ptr"].is_pointer())
     {
-        error("Function 'on_message' expects argument 'server' to be a valid server object");
+        return error_object("Function 'on_message' expects argument 'server' to be a valid server object");
     }
 
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
@@ -1160,7 +1160,7 @@ extern "C" Value _server_on_fail(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'on_fail' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'on_fail' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value server_object = args[0];
@@ -1168,29 +1168,29 @@ extern "C" Value _server_on_fail(std::vector<Value> &args)
 
     if (!server_object.is_object())
     {
-        error("Function 'on_fail' expects argument 'server' to be an object");
+        return error_object("Function 'on_fail' expects argument 'server' to be an object");
     }
 
     if (!func.is_function())
     {
-        error("Function 'on_fail' expects argument 'function' to be a Function");
+        return error_object("Function 'on_fail' expects argument 'function' to be a Function");
     }
 
     if (func.get_function()->arity != 1)
     {
-        error("Function 'on_fail' expects argument 'function' to be a Function with 1 parameter");
+        return error_object("Function 'on_fail' expects argument 'function' to be a Function with 1 parameter");
     }
 
     auto &_server = server_object.get_object();
 
     if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
     {
-        error("Function 'on_fail' expects argument 'server' to be a valid server object");
+        return error_object("Function 'on_fail' expects argument 'server' to be a valid server object");
     }
 
     if (!_server->values["server_ptr"].is_pointer())
     {
-        error("Function 'on_fail' expects argument 'server' to be a valid server object");
+        return error_object("Function 'on_fail' expects argument 'server' to be a valid server object");
     }
 
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
@@ -1243,7 +1243,7 @@ extern "C" Value _server_on_close(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'on_close' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'on_close' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value server_object = args[0];
@@ -1251,29 +1251,29 @@ extern "C" Value _server_on_close(std::vector<Value> &args)
 
     if (!server_object.is_object())
     {
-        error("Function 'on_close' expects argument 'server' to be an object");
+        return error_object("Function 'on_close' expects argument 'server' to be an object");
     }
 
     if (!func.is_function())
     {
-        error("Function 'on_close' expects argument 'function' to be a Function");
+        return error_object("Function 'on_close' expects argument 'function' to be a Function");
     }
 
     if (func.get_function()->arity != 1)
     {
-        error("Function 'on_close' expects argument 'function' to be a Function with 1 parameter");
+        return error_object("Function 'on_close' expects argument 'function' to be a Function with 1 parameter");
     }
 
     auto &_server = server_object.get_object();
 
     if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
     {
-        error("Function 'on_close' expects argument 'server' to be a valid server object");
+        return error_object("Function 'on_close' expects argument 'server' to be a valid server object");
     }
 
     if (!_server->values["server_ptr"].is_pointer())
     {
-        error("Function 'on_close' expects argument 'server' to be a valid server object");
+        return error_object("Function 'on_close' expects argument 'server' to be a valid server object");
     }
 
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
@@ -1329,26 +1329,26 @@ extern "C" Value _server_get_clients(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'get_clients' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'get_clients' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value server_object = args[0];
 
     if (!server_object.is_object())
     {
-        error("Function 'get_clients' expects argument 'server' to be an object");
+        return error_object("Function 'get_clients' expects argument 'server' to be an object");
     }
 
     auto &_server = server_object.get_object();
 
     if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
     {
-        error("Function 'get_clients' expects argument 'server' to be a valid server object");
+        return error_object("Function 'get_clients' expects argument 'server' to be a valid server object");
     }
 
     if (!_server->values["server_ptr"].is_pointer())
     {
-        error("Function 'get_clients' expects argument 'server' to be a valid server object");
+        return error_object("Function 'get_clients' expects argument 'server' to be a valid server object");
     }
 
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;
@@ -1373,7 +1373,7 @@ extern "C" Value _server_close_connection(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'close_connection' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'close_connection' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value server_object = args[0];
@@ -1381,24 +1381,24 @@ extern "C" Value _server_close_connection(std::vector<Value> &args)
 
     if (!server_object.is_object())
     {
-        error("Function 'close_connection' expects argument 'server' to be an object");
+        return error_object("Function 'close_connection' expects argument 'server' to be an object");
     }
 
     if (!id.is_number())
     {
-        error("Function 'close_connection' expects argument 'id' to be a number");
+        return error_object("Function 'close_connection' expects argument 'id' to be a number");
     }
 
     auto &_server = server_object.get_object();
 
     if (std::find(_server->keys.begin(), _server->keys.end(), "server_ptr") == _server->keys.end())
     {
-        error("Function 'close_connection' expects argument 'server' to be a valid server object");
+        return error_object("Function 'close_connection' expects argument 'server' to be a valid server object");
     }
 
     if (!_server->values["server_ptr"].is_pointer())
     {
-        error("Function 'close_connection' expects argument 'server' to be a valid server object");
+        return error_object("Function 'close_connection' expects argument 'server' to be a valid server object");
     }
 
     server *s = (server *)_server->values["server_ptr"].get_pointer()->value;

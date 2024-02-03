@@ -49,12 +49,13 @@ static void runtimeError(VM &vm, std::string message, ...)
         CallFrame *frame = &vm.frames[i];
         auto &function = frame->function;
         size_t instruction = frame->ip - function->chunk.code.data() - 1;
-        if (function->name == "error")
+        if (function->name == "error" || function->name == "Error")
         {
             continue;
         }
         fprintf(stderr, "[line %d] in ",
                 function->chunk.lines[instruction]);
+
         if (function->name == "")
         {
             std::string name = frame->name;
@@ -62,11 +63,19 @@ static void runtimeError(VM &vm, std::string message, ...)
             {
                 name = "script";
             }
-            fprintf(stderr, "%s", (name + "\n").c_str());
+
+            fprintf(stderr, "%s\n", (name + ":" + std::to_string(function->chunk.lines[instruction])).c_str());
         }
         else
         {
-            fprintf(stderr, "%s()\n", function->name.c_str());
+            if (function->import_path != "")
+            {
+                fprintf(stderr, "%s:%d <%s>\n", function->import_path.c_str(), function->chunk.lines[instruction], function->name.c_str());
+            }
+            else
+            {
+                fprintf(stderr, "%s()\n", function->name.c_str());
+            }
         }
     }
 }
@@ -125,6 +134,7 @@ static EvaluateResult run(VM &vm)
     define_native(vm, "__check_future__", check_future_builtin);
     define_native(vm, "exit", exit_builtin);
     define_native(vm, "__error__", error_builtin);
+    define_native(vm, "Error", error_type_builtin);
     define_native(vm, "load_lib", load_lib_builtin);
 
     CallFrame *frame = &vm.frames.back();
@@ -164,6 +174,13 @@ static EvaluateResult run(VM &vm)
                 frame->function->generator_done = true;
             }
             Value return_value = pop(vm);
+
+            if (return_value.is_object() && return_value.get_object()->type_name == "Error")
+            {
+                runtimeError(vm, return_value.get_object()->values["message"].get_string());
+                return EVALUATE_RUNTIME_ERROR;
+            }
+
             return_value.meta.temp_non_const = false;
             if (frame->function->is_type_generator && return_value.is_object())
             {
@@ -522,6 +539,7 @@ static EvaluateResult run(VM &vm)
         {
             int count = READ_INT();
             Value function = pop(vm);
+            function.get_function()->import_path = frame->name;
             for (int i = 0; i < count; i++)
             {
                 function.get_function()->default_values.insert(function.get_function()->default_values.begin(), pop(vm));
@@ -1151,6 +1169,13 @@ static EvaluateResult run(VM &vm)
                     }
                 }
                 Value result = native_function->function(args);
+
+                if (result.is_object() && result.get_object()->type_name == "Error")
+                {
+                    runtimeError(vm, result.get_object()->values["message"].get_string());
+                    return EVALUATE_RUNTIME_ERROR;
+                }
+
                 push(vm, result);
                 break;
             }
@@ -1359,7 +1384,8 @@ static EvaluateResult run(VM &vm)
                     main->chunk = Chunk();
                     main->chunk.import_path = frame->function->chunk.import_path;
                     CallFrame main_frame;
-                    main_frame.name = frame->name;
+                    // main_frame.name = frame->name;
+                    main_frame.name = path.get_string();
                     main_frame.function = main;
                     main_frame.sp = 0;
                     main_frame.ip = main->chunk.code.data();
@@ -1392,6 +1418,11 @@ static EvaluateResult run(VM &vm)
                     for (int i = 0; i < import_vm.frames[0].function->chunk.public_variables.size(); i++)
                     {
                         auto &var = import_vm.frames[0].function->chunk.public_variables[i];
+                        auto &value = import_vm.stack[i];
+                        if (value.is_function())
+                        {
+                            import_vm.stack[i].get_function()->import_path = path.get_string();
+                        }
                         define_global(vm, var, import_vm.stack[i]);
                     }
 
@@ -1429,7 +1460,8 @@ static EvaluateResult run(VM &vm)
                     main->chunk = Chunk();
                     main->chunk.import_path = frame->function->chunk.import_path;
                     CallFrame main_frame;
-                    main_frame.name = frame->name;
+                    main_frame.name = path.get_string();
+                    // main_frame.name = frame->name;
                     main_frame.function = main;
                     main_frame.sp = 0;
                     main_frame.ip = main->chunk.code.data();
@@ -1464,6 +1496,12 @@ static EvaluateResult run(VM &vm)
                     for (int i = 0; i < import_vm.frames[0].function->chunk.public_variables.size(); i++)
                     {
                         auto &var = import_vm.frames[0].function->chunk.public_variables[i];
+
+                        if (import_vm.stack[i].is_function())
+                        {
+                            import_vm.stack[i].get_function()->import_path = path.get_string();
+                        }
+
                         obj->values[var] = import_vm.stack[i];
                         obj->keys.push_back(var);
                     }
@@ -1514,7 +1552,8 @@ static EvaluateResult run(VM &vm)
                 main->chunk = Chunk();
                 main->chunk.import_path = frame->function->chunk.import_path;
                 CallFrame main_frame;
-                main_frame.name = frame->name;
+                // main_frame.name = frame->name;
+                main_frame.name = path.get_string();
                 main_frame.function = main;
                 main_frame.sp = 0;
                 main_frame.ip = main->chunk.code.data();
@@ -1551,6 +1590,11 @@ static EvaluateResult run(VM &vm)
                     {
                         if (name == import_vm.frames[0].function->chunk.public_variables[i])
                         {
+                            if (import_vm.stack[i].is_function())
+                            {
+                                import_vm.stack[i].get_function()->import_path = path.get_string();
+                            }
+
                             push(vm, import_vm.stack[i]);
                             found = true;
                             break;
@@ -2044,6 +2088,7 @@ static int call_function(VM &vm, Value &function, int param_num, CallFrame *&fra
     CallFrame call_frame;
     call_frame.frame_start = vm.stack.size();
     call_frame.function = function_obj;
+    call_frame.name = function_obj->import_path;
     if (object)
     {
         call_frame.function->object = object;
@@ -2088,7 +2133,7 @@ static Value dis_builtin(std::vector<Value> &args)
 {
     if (args.size() != 1)
     {
-        error("Function 'dis' expects 1 argument");
+        return error_object("Function 'dis' expects 1 argument");
     }
 
     Value function = args[0];
@@ -2104,7 +2149,7 @@ static Value dis_builtin(std::vector<Value> &args)
 
     if (!function.is_function())
     {
-        error("Function 'dis' expects 1 'Function' argument");
+        return error_object("Function 'dis' expects 1 'Function' argument");
     }
 
     std::cout << '\n';
@@ -2117,7 +2162,7 @@ static Value to_string_builtin(std::vector<Value> &args)
 {
     if (args.size() != 1)
     {
-        error("Function 'string' expects 1 argument");
+        return error_object("Function 'string' expects 1 argument");
     }
 
     Value value = args[0];
@@ -2129,7 +2174,7 @@ static Value to_number_builtin(std::vector<Value> &args)
 {
     if (args.size() < 1 || args.size() > 2)
     {
-        error("Function 'number' expects 1 or 2 argument");
+        return error_object("Function 'number' expects 1 or 2 argument");
     }
 
     Value value = args[0];
@@ -2154,7 +2199,7 @@ static Value to_number_builtin(std::vector<Value> &args)
         }
         catch (...)
         {
-            // error("Cannot convert \"" + str + "\" to a number");
+            // return error_object("Cannot convert \"" + str + "\" to a number");
             return none_val();
         }
     };
@@ -2177,7 +2222,7 @@ static Value insert_builtin(std::vector<Value> &args)
     int arg_count = 3;
     if (args.size() != arg_count)
     {
-        error("Function 'insert' expects " + std::to_string(arg_count) + " argument(s)");
+        return error_object("Function 'insert' expects " + std::to_string(arg_count) + " argument(s)");
     }
 
     Value list = args[0];
@@ -2186,12 +2231,12 @@ static Value insert_builtin(std::vector<Value> &args)
 
     if (!list.is_list())
     {
-        error("Function 'insert' expects argument 'list' to be a list");
+        return error_object("Function 'insert' expects argument 'list' to be a list");
     }
 
     if (!pos.is_number())
     {
-        error("Function 'insert' expects argument 'pos' to be a number");
+        return error_object("Function 'insert' expects argument 'pos' to be a number");
     }
 
     int pos_num = pos.get_number();
@@ -2269,7 +2314,7 @@ static Value append_builtin(std::vector<Value> &args)
     int arg_count = 2;
     if (args.size() != arg_count)
     {
-        error("Function 'append' expects " + std::to_string(arg_count) + " argument(s)");
+        return error_object("Function 'append' expects " + std::to_string(arg_count) + " argument(s)");
     }
 
     Value list = args[0];
@@ -2277,7 +2322,7 @@ static Value append_builtin(std::vector<Value> &args)
 
     if (!list.is_list())
     {
-        error("Function 'append' expects argument 'list' to be a list");
+        return error_object("Function 'append' expects argument 'list' to be a list");
     }
 
     Value list_copy = copy(list);
@@ -2344,7 +2389,7 @@ static Value remove_builtin(std::vector<Value> &args)
     int arg_count = 2;
     if (args.size() != arg_count)
     {
-        error("Function 'remove' expects " + std::to_string(arg_count) + " argument(s)");
+        return error_object("Function 'remove' expects " + std::to_string(arg_count) + " argument(s)");
     }
 
     Value list = args[0];
@@ -2352,12 +2397,12 @@ static Value remove_builtin(std::vector<Value> &args)
 
     if (!list.is_list())
     {
-        error("Function 'remove' expects argument 'list' to be a list");
+        return error_object("Function 'remove' expects argument 'list' to be a list");
     }
 
     if (!pos.is_number())
     {
-        error("Function 'remove' expects argument 'pos' to be a number");
+        return error_object("Function 'remove' expects argument 'pos' to be a number");
     }
 
     int pos_num = pos.get_number();
@@ -2434,7 +2479,7 @@ static Value remove_prop_builtin(std::vector<Value> &args)
     int arg_count = 2;
     if (args.size() != arg_count)
     {
-        error("Function 'remove_prop' expects " + std::to_string(arg_count) + " argument(s)");
+        return error_object("Function 'remove_prop' expects " + std::to_string(arg_count) + " argument(s)");
     }
 
     Value obj = args[0];
@@ -2442,12 +2487,12 @@ static Value remove_prop_builtin(std::vector<Value> &args)
 
     if (!obj.is_object())
     {
-        error("Function 'remove_prop' expects argument 'object' to be an object");
+        return error_object("Function 'remove_prop' expects argument 'object' to be an object");
     }
 
     if (!name.is_string())
     {
-        error("Function 'remove_prop' expects argument 'name' to be a string");
+        return error_object("Function 'remove_prop' expects argument 'name' to be a string");
     }
 
     std::string &_name = name.get_string();
@@ -2463,7 +2508,7 @@ static Value length_builtin(std::vector<Value> &args)
 {
     if (args.size() != 1)
     {
-        error("Function 'length' expects 1 argument");
+        return error_object("Function 'length' expects 1 argument");
     }
 
     Value value = args[0];
@@ -2497,7 +2542,7 @@ static Value type_builtin(std::vector<Value> &args)
 {
     if (args.size() != 1)
     {
-        error("Function 'type' expects 1 argument");
+        return error_object("Function 'type' expects 1 argument");
     }
 
     Value value = args[0];
@@ -2551,7 +2596,7 @@ static Value info_builtin(std::vector<Value> &args)
 {
     if (args.size() != 1)
     {
-        error("Function 'info' expects 1 argument");
+        return error_object("Function 'info' expects 1 argument");
     }
 
     Value value = args[0];
@@ -2619,7 +2664,7 @@ static Value load_lib_builtin(std::vector<Value> &args)
     int arg_count = 2;
     if (args.size() != arg_count)
     {
-        error("Function 'load_lib' expects " + std::to_string(arg_count) + " argument(s)");
+        return error_object("Function 'load_lib' expects " + std::to_string(arg_count) + " argument(s)");
     }
 
     Value path = args[0];
@@ -2627,12 +2672,12 @@ static Value load_lib_builtin(std::vector<Value> &args)
 
     if (!path.is_string())
     {
-        error("Function 'load_lib' expects arg 'path' to be a string");
+        return error_object("Function 'load_lib' expects arg 'path' to be a string");
     }
 
     if (!func_list.is_list())
     {
-        error("Function 'load_lib' expects arg 'func_list' to be a list");
+        return error_object("Function 'load_lib' expects arg 'func_list' to be a list");
     }
 
     Value lib_obj = object_val();
@@ -2643,7 +2688,7 @@ static Value load_lib_builtin(std::vector<Value> &args)
 
     if (!handle)
     {
-        error("Cannot open library: " + std::string(dlerror()));
+        return error_object("Cannot open library: " + std::string(dlerror()));
     }
 
     typedef void (*load_t)(VM &vm);
@@ -2654,13 +2699,13 @@ static Value load_lib_builtin(std::vector<Value> &args)
     {
         if (!name.is_string())
         {
-            error("Function names must be strings");
+            return error_object("Function names must be strings");
         }
 
         NativeFunction fn = (NativeFunction)dlsym(handle, name.get_string().c_str());
         if (!fn)
         {
-            error("Module error: Function '" + name.get_string() + "' is not defined in the C module '" + path.get_string() + "'");
+            return error_object("Module error: Function '" + name.get_string() + "' is not defined in the C module '" + path.get_string() + "'");
         }
         Value native = native_val();
         native.get_native()->function = fn;
@@ -2682,7 +2727,7 @@ static Value load_lib_builtin(std::vector<Value> &args)
     {
         DWORD error_msg = GetLastError();
         std::cout << error_msg << std::endl;
-        error("Cannot open library: " + path_str);
+        return error_object("Cannot open library: " + path_str);
     }
 
     auto &obj = lib_obj.get_object();
@@ -2691,13 +2736,13 @@ static Value load_lib_builtin(std::vector<Value> &args)
     {
         if (!name.is_string())
         {
-            error("Function names must be strings");
+            return error_object("Function names must be strings");
         }
 
         NativeFunction fn = (NativeFunction)GetProcAddress(hinstLib, name.get_string().c_str());
         if (!fn)
         {
-            error("Module error: Function '" + name.get_string() + "' is not defined in the C module '" + path.get_string() + "'");
+            return error_object("Module error: Function '" + name.get_string() + "' is not defined in the C module '" + path.get_string() + "'");
         }
         Value native = native_val();
         native.get_native()->function = fn;
@@ -2770,7 +2815,7 @@ static Value copy_builtin(std::vector<Value> &args)
 {
     if (args.size() != 1)
     {
-        error("Function 'copy' expects 1 argument");
+        return error_object("Function 'copy' expects 1 argument");
     }
 
     Value value = args[0];
@@ -2781,7 +2826,7 @@ static Value pure_builtin(std::vector<Value> &args)
 {
     if (args.size() != 1)
     {
-        error("Function 'pure' expects 1 argument");
+        return error_object("Function 'pure' expects 1 argument");
     }
 
     Value value = copy(args[0]);
@@ -2793,7 +2838,7 @@ static Value sort_builtin(std::vector<Value> &args)
 {
     if (args.size() != 2)
     {
-        error("Function 'sort' expects 2 argument");
+        return error_object("Function 'sort' expects 2 argument");
     }
 
     Value value = args[0];
@@ -2801,7 +2846,7 @@ static Value sort_builtin(std::vector<Value> &args)
 
     if (!value.is_list() || !function.is_function())
     {
-        error("Function 'sort' expects arg 'list' to be a list and arg 'function' to be a function");
+        return error_object("Function 'sort' expects arg 'list' to be a list and arg 'function' to be a function");
     }
 
     if (value.get_list()->size() < 2)
@@ -2867,14 +2912,14 @@ static Value exit_builtin(std::vector<Value> &args)
 {
     if (args.size() != 1)
     {
-        error("Function 'exit' expects 1 argument");
+        return error_object("Function 'exit' expects 1 argument");
     }
 
     Value value = args[0];
 
     if (!value.is_number())
     {
-        error("Function 'exit' expects 1 number argument");
+        return error_object("Function 'exit' expects 1 number argument");
     }
 
     exit(value.get_number());
@@ -2886,7 +2931,7 @@ static Value error_builtin(std::vector<Value> &args)
 {
     if (args.size() != 2)
     {
-        error("Function 'error' expects 1 argument");
+        return error_object("Function 'error' expects 1 argument");
     }
 
     Value message = args[0];
@@ -2894,12 +2939,12 @@ static Value error_builtin(std::vector<Value> &args)
 
     if (!message.is_string())
     {
-        error("Function 'exit' expects argument 'message' to be a string");
+        return error_object("Function 'exit' expects argument 'message' to be a string");
     }
 
     if (!vm.is_pointer())
     {
-        error("Function 'exit' expects argument 'vm' to be a pointer");
+        return error_object("Function 'exit' expects argument 'vm' to be a pointer");
     }
 
     VM *_vm = (VM *)(vm.get_pointer()->value);
@@ -2909,13 +2954,40 @@ static Value error_builtin(std::vector<Value> &args)
     return message;
 }
 
+Value error_object(std::string message)
+{
+    Value error_obj = object_val();
+    error_obj.get_object()->type_name = "Error";
+    error_obj.get_object()->keys = {"message"};
+    error_obj.get_object()->values["message"] = string_val(message);
+
+    return error_obj;
+}
+
+static Value error_type_builtin(std::vector<Value> &args)
+{
+    if (args.size() != 1)
+    {
+        return error_object("Type 'Error' expects 1 argument");
+    }
+
+    Value message = args[0];
+
+    if (!message.is_string())
+    {
+        return error_object("Type 'Exit' expects argument 'message' to be a string");
+    }
+
+    return error_object(message.get_string());
+}
+
 static Value future_builtin(std::vector<Value> &args)
 {
     int num_required_args = 2;
 
     if (args.size() != num_required_args)
     {
-        error("Function '__future__' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function '__future__' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value func = args[0];
@@ -2923,17 +2995,17 @@ static Value future_builtin(std::vector<Value> &args)
 
     if (!func.is_function())
     {
-        error("Function '__future__' expects argument 'function' to be a Function");
+        return error_object("Function '__future__' expects argument 'function' to be a Function");
     }
 
     if (!vm.is_pointer())
     {
-        error("Function '__future__' expects argument 'vm' to be a Pointer");
+        return error_object("Function '__future__' expects argument 'vm' to be a Pointer");
     }
 
     if (func.get_function()->arity != 0)
     {
-        error("Function '__future__' expects argument 'function' to be a Function with 0 parameters");
+        return error_object("Function '__future__' expects argument 'function' to be a Function with 0 parameters");
     }
 
     VM *_vm = (VM *)(vm.get_pointer()->value);
@@ -2980,14 +3052,14 @@ static Value get_future_builtin(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function '__get_future__' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function '__get_future__' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value future_ptr = args[0];
 
     if (!future_ptr.is_pointer())
     {
-        error("Function '__get_future__' expects argument 'function' to be a Pointer");
+        return error_object("Function '__get_future__' expects argument 'function' to be a Pointer");
     }
 
     auto future = (std::shared_future<Value> *)(future_ptr.get_pointer()->value);
@@ -3008,14 +3080,14 @@ static Value check_future_builtin(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function '__check_future__' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function '__check_future__' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value future_ptr = args[0];
 
     if (!future_ptr.is_pointer())
     {
-        error("Function '__check_future__' expects argument 'function' to be a Pointer");
+        return error_object("Function '__check_future__' expects argument 'function' to be a Pointer");
     }
 
     auto future = (std::shared_future<Value> *)(future_ptr.get_pointer()->value);

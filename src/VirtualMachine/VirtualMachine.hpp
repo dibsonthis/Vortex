@@ -82,6 +82,7 @@ void freeVM(VM &vm);
 bool is_equal(Value &v1, Value &v2);
 bool is_falsey(Value &value);
 Value copy(Value &value);
+Value error_object(std::string message);
 
 static Value print_builtin(std::vector<Value> &args);
 static Value println_builtin(std::vector<Value> &args);
@@ -102,6 +103,7 @@ static Value info_builtin(std::vector<Value> &args);
 static Value type_builtin(std::vector<Value> &args);
 static Value exit_builtin(std::vector<Value> &args);
 static Value error_builtin(std::vector<Value> &args);
+static Value error_type_builtin(std::vector<Value> &args);
 
 static Value future_builtin(std::vector<Value> &args);
 static Value get_future_builtin(std::vector<Value> &args);

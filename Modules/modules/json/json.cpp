@@ -138,14 +138,14 @@ extern "C" Value parse(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'parse' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'parse' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value jsonStr = args[0];
 
     if (!jsonStr.is_string())
     {
-        error("Parameter 'jsonStr' must be a string");
+        return error_object("Parameter 'jsonStr' must be a string");
     }
 
     std::string json_body = jsonStr.get_string();
@@ -187,14 +187,14 @@ extern "C" Value serialize(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'serialize' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'serialize' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value jsonObj = args[0];
 
     if (!jsonObj.is_list() && !jsonObj.is_object())
     {
-        error("Parameter 'jsonObj' must be a list or object");
+        return error_object("Parameter 'jsonObj' must be a list or object");
     }
 
     Value serialized_object = string_val(toString(jsonObj, true));

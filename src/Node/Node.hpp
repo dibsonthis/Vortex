@@ -139,6 +139,7 @@ struct FuncNode {
 	bool type_function = false;
 	bool is_generator = false;
 	bool is_type_generator = false;
+std::string import_path;
 };
 
 struct AccessorNode {

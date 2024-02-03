@@ -915,10 +915,12 @@ void gen_function(Chunk &chunk, node_ptr node)
         add_opcode(chunk, OP_MAKE_CLOSURE, 0, node->line);
     }
 
-    if (function->defaults > 0)
-    {
-        add_opcode(chunk, OP_MAKE_FUNCTION, function->defaults, node->line);
-    }
+    add_opcode(chunk, OP_MAKE_FUNCTION, function->defaults, node->line);
+
+    // if (function->defaults > 0)
+    // {
+    //     add_opcode(chunk, OP_MAKE_FUNCTION, function->defaults, node->line);
+    // }
 
     auto offsets = instruction_offsets(function->chunk);
     function->instruction_offsets = offsets;

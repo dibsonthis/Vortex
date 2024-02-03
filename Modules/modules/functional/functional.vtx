@@ -1,5 +1,3 @@
-import [error] : sys
-
 const map = (list, func) => {
     var new = []
     const arity = func.info().arity
@@ -25,7 +23,7 @@ const map = (list, func) => {
         return new
     }
     
-    error("Function 'map' expects a function with an arity of either 1, 2 or 3")
+    return Error("Function 'map' expects a function with an arity of either 1, 2 or 3")
 }
 
 const flatmap = (list, func) => {
@@ -65,7 +63,7 @@ const flatmap = (list, func) => {
             }
         }
     } else {
-        error("Function 'flatmap' expects a function with an arity of either 1, 2 or 3")
+        return Error("Function 'flatmap' expects a function with an arity of either 1, 2 or 3")
     }
 
     return new
@@ -93,7 +91,7 @@ const filter = (list, func) => {
             }
         }
     } else {
-        error("Function 'filter' expects a function with an arity of either 1, 2 or 3")
+        return Error("Function 'filter' expects a function with an arity of either 1, 2 or 3")
     }
 
     return new
@@ -103,7 +101,7 @@ const reduce = (list, func) => {
     var res
     const arity = func.info().arity
     if (arity != 2) {
-        error("Function 'reduce' expects a function with an arity of 2\n")
+        return Error("Function 'reduce' expects a function with an arity of 2\n")
     }
 
     if (list.length() < 2) {
@@ -142,7 +140,7 @@ const find = (list, func) => {
             }
         }
     } else {
-        error("Function 'find' expects a function with an arity of either 1, 2 or 3")
+        return Error("Function 'find' expects a function with an arity of either 1, 2 or 3")
     }
 }
 
@@ -161,7 +159,7 @@ const forEach = (list, func) => {
             func(value, index, list)
         }
     } else {
-        error("Function 'forEach' expects a function with an arity of either 1, 2 or 3")
+        return Error("Function 'forEach' expects a function with an arity of either 1, 2 or 3")
     }
 }
 
@@ -177,7 +175,7 @@ const indexOf = (list, value) => {
 
 const chain = (value, func) => {
     if (func.type() != "Function") {
-        error("Function 'chain' expects parameter 'func' to be a function")
+        return Error("Function 'chain' expects parameter 'func' to be a function")
     }
     return func(value)
 }
@@ -214,7 +212,7 @@ const obj_map = (obj, fn) => {
         return new
     }
 
-    error("Function 'obj_map' expects a function with an arity of either 1, 2, 3 or 4")
+    return Error("Function 'obj_map' expects a function with an arity of either 1, 2, 3 or 4")
 }
 
 const obj_filter = (obj, fn) => {
@@ -249,7 +247,7 @@ const obj_filter = (obj, fn) => {
         return new
     }
 
-    error("Function 'obj_filter' expects a function with an arity of either 1, 2 or 3")
+    return Error("Function 'obj_filter' expects a function with an arity of either 1, 2 or 3")
 }
 
 const obj_transform = (obj, fn) => {
@@ -281,7 +279,7 @@ const obj_transform = (obj, fn) => {
         return new
     }
 
-    error("Function 'obj_transform' expects a function with an arity of either 1, 2 or 3")
+    return Error("Function 'obj_transform' expects a function with an arity of either 1, 2 or 3")
 }
 
 const list_to_obj = (ls, fn) => {
@@ -307,7 +305,7 @@ const list_to_obj = (ls, fn) => {
         return new
     }
 
-    error("Function 'list_to_obj' expects a function with an arity of either 1, 2 or 3")
+    return Error("Function 'list_to_obj' expects a function with an arity of either 1, 2 or 3")
 }
 
 const range = (start, end) => {

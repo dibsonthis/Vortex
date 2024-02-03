@@ -60,6 +60,7 @@ struct FunctionObj
     bool generator_init = false;
     bool generator_done = false;
     bool is_type_generator = false;
+std::string import_path;
 };
 
 struct TypeObj
@@ -478,6 +479,16 @@ struct VM
         stack.reserve(100000);
     }
 };
+
+Value error_object(std::string message)
+{
+    Value error_obj = object_val();
+    error_obj.get_object()->type_name = "Error";
+    error_obj.get_object()->keys = {"message"};
+    error_obj.get_object()->values["message"] = string_val(message);
+
+    return error_obj;
+}
 
 static void runtimeError(VM &vm, std::string message, ...)
 {

@@ -35,7 +35,7 @@ int main(int argc, char **argv)
         main->arity = 0;
         main->chunk = Chunk();
         CallFrame main_frame;
-        main_frame.name = "source";
+        main_frame.name = "source.vtx";
         main_frame.function = main;
         main_frame.sp = 0;
         main_frame.ip = main->chunk.code.data();

@@ -12,7 +12,7 @@ extern "C" Value datetime(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'datetime' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'datetime' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     auto curr_time = std::chrono::system_clock::now();
@@ -30,7 +30,7 @@ extern "C" Value _clock(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'clock' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'clock' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     auto curr_time = std::chrono::system_clock::now();
@@ -48,14 +48,14 @@ extern "C" Value sleep(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'sleep' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'sleep' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value ms = args[0];
 
     if (!ms.is_number())
     {
-        error("Function 'sleep' expects argument 'ms' to be a number");
+        return error_object("Function 'sleep' expects argument 'ms' to be a number");
     }
 
     auto _ms = ms.get_number() * 1ms;

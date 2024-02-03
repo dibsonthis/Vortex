@@ -7,7 +7,7 @@ extern "C" Value __error__(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function '__error__' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function '__error__' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value message = args[0];
@@ -15,12 +15,12 @@ extern "C" Value __error__(std::vector<Value> &args)
 
     if (!message.is_string())
     {
-        error("Function 'error' expects argument 'message' to be a string");
+        return error_object("Function 'error' expects argument 'message' to be a string");
     }
 
     if (!vm.is_pointer())
     {
-        error("Function 'error' expects argument 'vm' to be a pointer");
+        return error_object("Function 'error' expects argument 'vm' to be a pointer");
     }
 
     VM *_vm = (VM *)(vm.get_pointer()->value);
@@ -36,14 +36,14 @@ extern "C" Value __stack__(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function '__stack__' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function '__stack__' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value vm = args[0];
 
     if (!vm.is_pointer())
     {
-        error("Function '__stack__' expects argument 'vm' to be a pointer");
+        return error_object("Function '__stack__' expects argument 'vm' to be a pointer");
     }
 
     VM *_vm = (VM *)(vm.get_pointer()->value);
@@ -64,14 +64,14 @@ extern "C" Value __globals__(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function '__globals__' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function '__globals__' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value vm = args[0];
 
     if (!vm.is_pointer())
     {
-        error("Function '__globals__' expects argument 'vm' to be a pointer");
+        return error_object("Function '__globals__' expects argument 'vm' to be a pointer");
     }
 
     VM *_vm = (VM *)(vm.get_pointer()->value);
@@ -93,14 +93,14 @@ extern "C" Value __frame__(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function '__stack__' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function '__stack__' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value vm = args[0];
 
     if (!vm.is_pointer())
     {
-        error("Function '__stack__' expects argument 'vm' to be a pointer");
+        return error_object("Function '__stack__' expects argument 'vm' to be a pointer");
     }
 
     VM *_vm = (VM *)(vm.get_pointer()->value);
@@ -120,7 +120,7 @@ extern "C" Value __system__(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function '__system__' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function '__system__' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value command = args[0];
@@ -128,12 +128,12 @@ extern "C" Value __system__(std::vector<Value> &args)
 
     if (!command.is_string())
     {
-        error("Function 'system' expects argument 'command' to be a string");
+        return error_object("Function 'system' expects argument 'command' to be a string");
     }
 
     if (!vm.is_pointer())
     {
-        error("Function 'system' expects argument 'vm' to be a pointer");
+        return error_object("Function 'system' expects argument 'vm' to be a pointer");
     }
 
     system(command.get_string().c_str());

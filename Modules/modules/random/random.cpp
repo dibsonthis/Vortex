@@ -7,7 +7,7 @@ extern "C" Value _rand(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'rand' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'rand' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     const int range_from = -INT_MAX;
@@ -25,7 +25,7 @@ extern "C" Value _rand_range(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'rand_range' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'rand_range' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value start = args[0];
@@ -33,11 +33,11 @@ extern "C" Value _rand_range(std::vector<Value> &args)
 
     if (!start.is_number())
     {
-        error("Parameter 'start' must be a number");
+        return error_object("Parameter 'start' must be a number");
     }
     if (!end.is_number())
     {
-        error("Parameter 'end' must be a number");
+        return error_object("Parameter 'end' must be a number");
     }
 
     const int range_from = args[0].get_number();

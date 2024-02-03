@@ -109,7 +109,7 @@ extern "C" Value _get(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'get' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'get' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value url = args[0];
@@ -118,17 +118,17 @@ extern "C" Value _get(std::vector<Value> &args)
 
     if (!url.is_string())
     {
-        error("Function 'get' expects argument 'url' to be a string");
+        return error_object("Function 'get' expects argument 'url' to be a string");
     }
 
     if (!endpoint.is_string())
     {
-        error("Function 'get' expects argument 'endpoint' to be a string");
+        return error_object("Function 'get' expects argument 'endpoint' to be a string");
     }
 
     if (!headers.is_object())
     {
-        error("Function 'get' expects argument 'headers' to be a object");
+        return error_object("Function 'get' expects argument 'headers' to be a object");
     }
 
     httplib::Headers _headers;
@@ -138,9 +138,9 @@ extern "C" Value _get(std::vector<Value> &args)
     }
 
     httplib::Client cli(url.get_string());
-    #if defined(__APPLE__) || defined(__linux__)
+#if defined(__APPLE__) || defined(__linux__)
     cli.enable_server_certificate_verification(false);
-    #endif
+#endif
 
     auto res = cli.Get(endpoint.get_string(), _headers);
 
@@ -176,7 +176,7 @@ extern "C" Value _post(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'post' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'post' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value url = args[0];
@@ -186,28 +186,28 @@ extern "C" Value _post(std::vector<Value> &args)
 
     if (!url.is_string())
     {
-        error("Function 'post' expects argument 'url' to be a string");
+        return error_object("Function 'post' expects argument 'url' to be a string");
     }
 
     if (!endpoint.is_string())
     {
-        error("Function 'post' expects argument 'endpoint' to be a string");
+        return error_object("Function 'post' expects argument 'endpoint' to be a string");
     }
 
     if (!payload.is_object() && !payload.is_string())
     {
-        error("Function 'post' expects argument 'payload' to be an object or string");
+        return error_object("Function 'post' expects argument 'payload' to be an object or string");
     }
 
     if (!headers.is_object())
     {
-        error("Function 'post' expects argument 'headers' to be an object");
+        return error_object("Function 'post' expects argument 'headers' to be an object");
     }
 
     httplib::Client cli(url.get_string());
-    #if defined(__APPLE__)
+#if defined(__APPLE__)
     cli.enable_server_certificate_verification(false);
-    #endif
+#endif
 
     httplib::Headers _headers;
     for (auto &prop : headers.get_object()->values)
@@ -263,7 +263,7 @@ extern "C" Value _put(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'put' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'put' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value url = args[0];
@@ -273,28 +273,28 @@ extern "C" Value _put(std::vector<Value> &args)
 
     if (!url.is_string())
     {
-        error("Function 'put' expects argument 'url' to be a string");
+        return error_object("Function 'put' expects argument 'url' to be a string");
     }
 
     if (!endpoint.is_string())
     {
-        error("Function 'put' expects argument 'endpoint' to be a string");
+        return error_object("Function 'put' expects argument 'endpoint' to be a string");
     }
 
     if (!payload.is_object() && !payload.is_string())
     {
-        error("Function 'put' expects argument 'payload' to be an object or string");
+        return error_object("Function 'put' expects argument 'payload' to be an object or string");
     }
 
     if (!headers.is_object())
     {
-        error("Function 'put' expects argument 'headers' to be an object");
+        return error_object("Function 'put' expects argument 'headers' to be an object");
     }
 
     httplib::Client cli(url.get_string());
-    #if defined(__APPLE__)
+#if defined(__APPLE__)
     cli.enable_server_certificate_verification(false);
-    #endif
+#endif
 
     httplib::Headers _headers;
     for (auto &prop : headers.get_object()->values)
@@ -350,7 +350,7 @@ extern "C" Value _patch(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'patch' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'patch' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value url = args[0];
@@ -360,28 +360,28 @@ extern "C" Value _patch(std::vector<Value> &args)
 
     if (!url.is_string())
     {
-        error("Function 'patch' expects argument 'url' to be a string");
+        return error_object("Function 'patch' expects argument 'url' to be a string");
     }
 
     if (!endpoint.is_string())
     {
-        error("Function 'patch' expects argument 'endpoint' to be a string");
+        return error_object("Function 'patch' expects argument 'endpoint' to be a string");
     }
 
     if (!payload.is_object() && !payload.is_string())
     {
-        error("Function 'patch' expects argument 'payload' to be an object or string");
+        return error_object("Function 'patch' expects argument 'payload' to be an object or string");
     }
 
     if (!headers.is_object())
     {
-        error("Function 'patch' expects argument 'headers' to be an object");
+        return error_object("Function 'patch' expects argument 'headers' to be an object");
     }
 
     httplib::Client cli(url.get_string());
-    #if defined(__APPLE__)
+#if defined(__APPLE__)
     cli.enable_server_certificate_verification(false);
-    #endif
+#endif
 
     httplib::Headers _headers;
     for (auto &prop : headers.get_object()->values)
@@ -434,7 +434,7 @@ extern "C" Value _delete(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'delete' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'delete' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value url = args[0];
@@ -443,17 +443,17 @@ extern "C" Value _delete(std::vector<Value> &args)
 
     if (!url.is_string())
     {
-        error("Function 'delete' expects argument 'url' to be a string");
+        return error_object("Function 'delete' expects argument 'url' to be a string");
     }
 
     if (!endpoint.is_string())
     {
-        error("Function 'delete' expects argument 'endpoint' to be a string");
+        return error_object("Function 'delete' expects argument 'endpoint' to be a string");
     }
 
     if (!headers.is_object())
     {
-        error("Function 'delete' expects argument 'headers' to be a object");
+        return error_object("Function 'delete' expects argument 'headers' to be a object");
     }
 
     httplib::Headers _headers;
@@ -463,9 +463,9 @@ extern "C" Value _delete(std::vector<Value> &args)
     }
 
     httplib::Client cli(url.get_string());
-    #if defined(__APPLE__)
+#if defined(__APPLE__)
     cli.enable_server_certificate_verification(false);
-    #endif
+#endif
 
     auto res = cli.Delete(endpoint.get_string(), _headers);
 
@@ -501,7 +501,7 @@ extern "C" Value _options(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'options' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'options' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value url = args[0];
@@ -510,17 +510,17 @@ extern "C" Value _options(std::vector<Value> &args)
 
     if (!url.is_string())
     {
-        error("Function 'options' expects argument 'url' to be a string");
+        return error_object("Function 'options' expects argument 'url' to be a string");
     }
 
     if (!endpoint.is_string())
     {
-        error("Function 'options' expects argument 'endpoint' to be a string");
+        return error_object("Function 'options' expects argument 'endpoint' to be a string");
     }
 
     if (!headers.is_object())
     {
-        error("Function 'options' expects argument 'headers' to be a object");
+        return error_object("Function 'options' expects argument 'headers' to be a object");
     }
 
     httplib::Headers _headers;
@@ -530,9 +530,9 @@ extern "C" Value _options(std::vector<Value> &args)
     }
 
     httplib::Client cli(url.get_string());
-    #if defined(__APPLE__)
+#if defined(__APPLE__)
     cli.enable_server_certificate_verification(false);
-    #endif
+#endif
 
     auto res = cli.Options(endpoint.get_string(), _headers);
 
@@ -568,7 +568,7 @@ extern "C" Value _head(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'head' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'head' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value url = args[0];
@@ -577,17 +577,17 @@ extern "C" Value _head(std::vector<Value> &args)
 
     if (!url.is_string())
     {
-        error("Function 'head' expects argument 'url' to be a string");
+        return error_object("Function 'head' expects argument 'url' to be a string");
     }
 
     if (!endpoint.is_string())
     {
-        error("Function 'head' expects argument 'endpoint' to be a string");
+        return error_object("Function 'head' expects argument 'endpoint' to be a string");
     }
 
     if (!headers.is_object())
     {
-        error("Function 'head' expects argument 'headers' to be a object");
+        return error_object("Function 'head' expects argument 'headers' to be a object");
     }
 
     httplib::Headers _headers;
@@ -597,9 +597,9 @@ extern "C" Value _head(std::vector<Value> &args)
     }
 
     httplib::Client cli(url.get_string());
-    #if defined(__APPLE__)
+#if defined(__APPLE__)
     cli.enable_server_certificate_verification(false);
-    #endif
+#endif
 
     auto res = cli.Head(endpoint.get_string(), _headers);
 
@@ -873,18 +873,18 @@ extern "C" Value _head(std::vector<Value> &args)
 //             VortexObj result = interp.eval_func_call(func_call, v_callback);
 
 //             if (result->type == NodeType::_ERROR) {
-//                 throw std::runtime_error(result->_Node.Error().message);
+//                 throw std::runtime_return error_object(result->_Node.Error().message);
 //             }
 
 //             if (result->type == NodeType::OBJECT && result->TypeInfo.type_name == "Redirect") {
 //                 std::vector<std::string> params;
 //                 if (!result->_Node.Object().properties.count("route")) {
-//                     throw std::runtime_error("Redirect object must contain 'route'");
+//                     throw std::runtime_return error_object("Redirect object must contain 'route'");
 //                 }
 
 //                 VortexObj redirect_route_node = result->_Node.Object().properties["route"];
 //                 if (redirect_route_node->type != NodeType::STRING) {
-//                     throw std::runtime_error("Redirect object property 'route' must be a string");
+//                     throw std::runtime_return error_object("Redirect object property 'route' must be a string");
 //                 }
 
 //                 std::string parsed_route = parse_route(redirect_route_node->_Node.String().value, params);
@@ -934,18 +934,18 @@ extern "C" Value _head(std::vector<Value> &args)
 //         VortexObj result = interp.eval_func_call(func_call, v_callback);
 
 //         if (result->type == NodeType::_ERROR) {
-//             throw std::runtime_error(result->_Node.Error().message);
+//             throw std::runtime_return error_object(result->_Node.Error().message);
 //         }
 
 //         if (result->type == NodeType::OBJECT && result->TypeInfo.type_name == "Redirect") {
 //             std::vector<std::string> params;
 //             if (!result->_Node.Object().properties.count("route")) {
-//                 throw std::runtime_error("Redirect object must contain 'route'");
+//                 throw std::runtime_return error_object("Redirect object must contain 'route'");
 //             }
 
 //             VortexObj redirect_route_node = result->_Node.Object().properties["route"];
 //             if (redirect_route_node->type != NodeType::STRING) {
-//                 throw std::runtime_error("Redirect object property 'route' must be a string");
+//                 throw std::runtime_return error_object("Redirect object property 'route' must be a string");
 //             }
 
 //             std::string parsed_route = parse_route(redirect_route_node->_Node.String().value, params);
@@ -1055,18 +1055,18 @@ extern "C" Value _head(std::vector<Value> &args)
 //             VortexObj result = interp.eval_func_call(func_call, v_callback);
 
 //             if (result->type == NodeType::_ERROR) {
-//                 throw std::runtime_error(result->_Node.Error().message);
+//                 throw std::runtime_return error_object(result->_Node.Error().message);
 //             }
 
 //             if (result->type == NodeType::OBJECT && result->TypeInfo.type_name == "Redirect") {
 //                 std::vector<std::string> params;
 //                 if (!result->_Node.Object().properties.count("route")) {
-//                     throw std::runtime_error("Redirect object must contain 'route'");
+//                     throw std::runtime_return error_object("Redirect object must contain 'route'");
 //                 }
 
 //                 VortexObj redirect_route_node = result->_Node.Object().properties["route"];
 //                 if (redirect_route_node->type != NodeType::STRING) {
-//                     throw std::runtime_error("Redirect object property 'route' must be a string");
+//                     throw std::runtime_return error_object("Redirect object property 'route' must be a string");
 //                 }
 
 //                 std::string parsed_route = parse_route(redirect_route_node->_Node.String().value, params);
@@ -1119,12 +1119,12 @@ extern "C" Value _head(std::vector<Value> &args)
 //         if (result->type == NodeType::OBJECT && result->TypeInfo.type_name == "Redirect") {
 //             std::vector<std::string> params;
 //             if (!result->_Node.Object().properties.count("route")) {
-//                 throw std::runtime_error("Redirect object must contain 'route'");
+//                 throw std::runtime_return error_object("Redirect object must contain 'route'");
 //             }
 
 //             VortexObj redirect_route_node = result->_Node.Object().properties["route"];
 //             if (redirect_route_node->type != NodeType::STRING) {
-//                 throw std::runtime_error("Redirect object property 'route' must be a string");
+//                 throw std::runtime_return error_object("Redirect object property 'route' must be a string");
 //             }
 
 //             std::string parsed_route = parse_route(redirect_route_node->_Node.String().value, params);
@@ -1134,7 +1134,7 @@ extern "C" Value _head(std::vector<Value> &args)
 //         }
 
 //         if (result->type == NodeType::_ERROR) {
-//             throw std::runtime_error(result->_Node.Error().message);
+//             throw std::runtime_return error_object(result->_Node.Error().message);
 //         }
 
 //         std::string content_type = v_content_type->_Node.String().value;

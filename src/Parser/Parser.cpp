@@ -1454,16 +1454,16 @@ void Parser::parse_keywords(std::string end)
                 // current_node->type = NodeType::ANY;
                 // current_node->TypeInfo.is_type = true;
             }
-            else if (current_node->_Node.ID().value == "Error")
-            {
-                current_node->type = NodeType::STRING;
-                current_node->_Node = StringNode();
-                current_node->_Node.String().value = "Error";
-                current_node->TypeInfo.is_type = true;
-                // current_node->type = NodeType::_ERROR;
-                // current_node->_Node = ErrorNode();
-                // current_node->TypeInfo.is_type = true;
-            }
+            // else if (current_node->_Node.ID().value == "Error")
+            // {
+            //     current_node->type = NodeType::STRING;
+            //     current_node->_Node = StringNode();
+            //     current_node->_Node.String().value = "Error";
+            //     current_node->TypeInfo.is_type = true;
+            //     // current_node->type = NodeType::_ERROR;
+            //     // current_node->_Node = ErrorNode();
+            //     // current_node->TypeInfo.is_type = true;
+            // }
         }
         advance();
     }

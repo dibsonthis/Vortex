@@ -7,14 +7,14 @@ extern "C" Value ceil_(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'ceil' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'ceil' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
 
     if (!value.is_number())
     {
-        error("Parameter 'value' must be a number");
+        return error_object("Parameter 'value' must be a number");
     }
 
     double new_value = std::ceil(value.get_number());
@@ -27,14 +27,14 @@ extern "C" Value floor_(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'floor' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'floor' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
 
     if (!value.is_number())
     {
-        error("Parameter 'value' must be a number");
+        return error_object("Parameter 'value' must be a number");
     }
 
     double new_value = std::floor(value.get_number());
@@ -47,14 +47,14 @@ extern "C" Value abs_(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'abs' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'abs' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
 
     if (!value.is_number())
     {
-        error("Parameter 'value' must be a number");
+        return error_object("Parameter 'value' must be a number");
     }
 
     double new_value = std::abs(value.get_number());
@@ -67,14 +67,14 @@ extern "C" Value sqrt_(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'sqrt' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'sqrt' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
 
     if (!value.is_number())
     {
-        error("Parameter 'value' must be a number");
+        return error_object("Parameter 'value' must be a number");
     }
 
     double new_value = std::sqrt(value.get_number());
@@ -87,14 +87,14 @@ extern "C" Value trunc_(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'trunc' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'trunc' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
 
     if (!value.is_number())
     {
-        error("Parameter 'value' must be a number");
+        return error_object("Parameter 'value' must be a number");
     }
 
     double num = value.get_number();
@@ -122,7 +122,7 @@ extern "C" Value log_(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'log' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'log' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
@@ -130,12 +130,12 @@ extern "C" Value log_(std::vector<Value> &args)
 
     if (!value.is_number())
     {
-        error("Parameter 'value' must be a number");
+        return error_object("Parameter 'value' must be a number");
     }
 
     if (!base.is_number())
     {
-        error("Parameter 'base' must be a number");
+        return error_object("Parameter 'base' must be a number");
     }
 
     double new_value = std::log2(value.get_number()) / std::log2(base.get_number());
@@ -149,7 +149,7 @@ extern "C" Value pow_(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'pow' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'pow' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
@@ -157,12 +157,12 @@ extern "C" Value pow_(std::vector<Value> &args)
 
     if (!value.is_number())
     {
-        error("Parameter 'value' must be a number");
+        return error_object("Parameter 'value' must be a number");
     }
 
     if (!exponent.is_number())
     {
-        error("Parameter 'exponent' must be a number");
+        return error_object("Parameter 'exponent' must be a number");
     }
 
     double new_value = std::pow(value.get_number(), exponent.get_number());
@@ -178,14 +178,14 @@ extern "C" Value tan_(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'tan' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'tan' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
 
     if (!value.is_number())
     {
-        error("Parameter 'value' must be a number");
+        return error_object("Parameter 'value' must be a number");
     }
 
     auto new_value = std::tan(value.get_number());
@@ -198,14 +198,14 @@ extern "C" Value sin_(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'sin' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'sin' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
 
     if (!value.is_number())
     {
-        error("Parameter 'value' must be a number");
+        return error_object("Parameter 'value' must be a number");
     }
 
     auto new_value = std::sin(value.get_number());
@@ -218,14 +218,14 @@ extern "C" Value cos_(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'cos' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'cos' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value value = args[0];
 
     if (!value.is_number())
     {
-        error("Parameter 'value' must be a number");
+        return error_object("Parameter 'value' must be a number");
     }
 
     auto new_value = std::cos(value.get_number());
@@ -238,7 +238,7 @@ extern "C" Value multMat4(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'multMat4' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'multMat4' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value vec = args[0];
@@ -246,14 +246,14 @@ extern "C" Value multMat4(std::vector<Value> &args)
 
     if (!vec.is_object())
     {
-        error("Parameter 'vec' must be an object");
+        return error_object("Parameter 'vec' must be an object");
     }
 
     auto &in = vec.get_object();
 
     if (!mat.is_list())
     {
-        error("Parameter 'mat' must be an object");
+        return error_object("Parameter 'mat' must be an object");
     }
 
     auto &list = mat.get_list();

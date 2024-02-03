@@ -9,14 +9,14 @@ extern "C" Value connect(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'connect' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'connect' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     Value v_path = args[0];
 
     if (!v_path.is_string())
     {
-        error("Parameter 'path' must be a string");
+        return error_object("Parameter 'path' must be a string");
     }
 
     sqlite3 *db;
@@ -28,7 +28,7 @@ extern "C" Value connect(std::vector<Value> &args)
 
     if (rc)
     {
-        error("Can't open database: " + std::string(sqlite3_errmsg(db)));
+        return error_object("Can't open database: " + std::string(sqlite3_errmsg(db)));
     }
 
     Value db_ptr = pointer_val();
@@ -64,7 +64,7 @@ extern "C" Value execute(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'execute' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'execute' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     results.clear();
@@ -74,11 +74,11 @@ extern "C" Value execute(std::vector<Value> &args)
 
     if (!v_db.is_pointer())
     {
-        error("Parameter 'dbPtr' must be a pointer");
+        return error_object("Parameter 'dbPtr' must be a pointer");
     }
     if (!v_stmnt.is_string())
     {
-        error("Parameter 'statement' must be a string");
+        return error_object("Parameter 'statement' must be a string");
     }
 
     sqlite3 *db = (sqlite3 *)v_db.get_pointer()->value;
@@ -92,7 +92,7 @@ extern "C" Value execute(std::vector<Value> &args)
     {
         std::string error_msg = "SQL Error: " + std::string(zErrMsg);
         sqlite3_free(zErrMsg);
-        error(error_msg);
+        return error_object(error_msg);
     }
 
     Value res_list = list_val();
@@ -107,7 +107,7 @@ extern "C" Value close(std::vector<Value> &args)
 
     if (args.size() != num_required_args)
     {
-        error("Function 'execute' expects " + std::to_string(num_required_args) + " argument(s)");
+        return error_object("Function 'execute' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
     results.clear();
@@ -116,7 +116,7 @@ extern "C" Value close(std::vector<Value> &args)
 
     if (!v_db.is_pointer())
     {
-        error("Parameter 'dbPtr' must be a pointer");
+        return error_object("Parameter 'dbPtr' must be a pointer");
     }
 
     sqlite3 *db = (sqlite3 *)v_db.get_pointer()->value;
