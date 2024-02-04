@@ -435,7 +435,7 @@ int gen_try_catch(Chunk &chunk, node_ptr node)
         add_constant_code(chunk, object_val());
         declareVariable(error_var_name, false, true);
         add_code(chunk, OP_SWAP_TOS, node->line);
-        add_constant_code(chunk, string_val("message"));
+        add_constant_code(chunk, string_val("info"));
         add_code(chunk, OP_SWAP_TOS, node->line);
         add_code(chunk, OP_SET_PROPERTY, node->line);
     }

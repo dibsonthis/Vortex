@@ -77,7 +77,10 @@ enum OpCode
     OP_LOOP_END,
     OP_ITER,
     OP_HOOK_ONCHANGE,
-    OP_HOOK_CLOSURE_ONCHANGE
+    OP_HOOK_CLOSURE_ONCHANGE,
+    OP_TRY_BEGIN,
+    OP_TRY_END,
+    OP_CATCH_BEGIN
 };
 
 enum ValueType
@@ -132,7 +135,7 @@ struct FunctionObj
     bool generator_init = false;
     bool generator_done = false;
     bool is_type_generator = false;
-std::string import_path;
+    std::string import_path;
 };
 
 struct TypeObj

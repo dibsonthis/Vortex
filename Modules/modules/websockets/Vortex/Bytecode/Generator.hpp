@@ -54,6 +54,7 @@ void gen_paren(Chunk &chunk, node_ptr node);
 void gen_var(Chunk &chunk, node_ptr node);
 void gen_const(Chunk &chunk, node_ptr node);
 void gen_id(Chunk &chunk, node_ptr node, int global_flag = 0);
+int gen_try_catch(Chunk &chunk, node_ptr node);
 int gen_if(Chunk &chunk, node_ptr node);
 void gen_if_block(Chunk &chunk, node_ptr node);
 void gen_while_loop(Chunk &chunk, node_ptr node);

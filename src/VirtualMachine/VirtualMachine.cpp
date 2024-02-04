@@ -35,13 +35,21 @@ Value pop_close(VM &vm)
 static void runtimeError(VM &vm, std::string message, ...)
 {
 
-    CallFrame &frame = vm.frames.back();
+    int last_frame = vm.frames.size() - 1;
+    CallFrame &frame = vm.frames[last_frame];
+    // vm.frames.pop_back();
 
     if (vm.try_instructions.size() > 0)
     {
         vm.status = 2;
-        Value error_message = string_val(message);
-        push(vm, error_message);
+
+        size_t instr = frame.ip - frame.function->chunk.code.data() - 1;
+
+        Value error_obj = object_val();
+        error_obj.get_object()->keys = {"message", "line", "path"};
+        error_obj.get_object()->values["message"] = string_val(message);
+        error_obj.get_object()->values["line"] = number_val(frame.function->chunk.lines[instr]);
+        error_obj.get_object()->values["path"] = string_val(frame.function->name == "" ? frame.name : frame.function->import_path);
 
         int current_offset = (int)(size_t)(frame.ip - &frame.function->chunk.code[0]);
         int instruction_index = std::find(frame.function->instruction_offsets.begin(), frame.function->instruction_offsets.end(), current_offset) - frame.function->instruction_offsets.begin();
@@ -49,6 +57,22 @@ static void runtimeError(VM &vm, std::string message, ...)
         int _instruction = frame.function->chunk.code[instruction];
         while (true)
         {
+            if (instruction_index == 0)
+            {
+                int to_clean = vm.stack.size() - frame.sp;
+                for (int i = 0; i < to_clean; i++)
+                {
+                    Value &value = vm.stack.back();
+                    vm.stack.pop_back();
+                }
+
+                last_frame -= 1;
+                frame = vm.frames[last_frame];
+                current_offset = (int)(size_t)(frame.ip - &frame.function->chunk.code[0]);
+                instruction_index = std::find(frame.function->instruction_offsets.begin(), frame.function->instruction_offsets.end(), current_offset) - frame.function->instruction_offsets.begin();
+                instruction = frame.function->instruction_offsets[instruction_index];
+                _instruction = frame.function->chunk.code[instruction];
+            }
             instruction_index--;
             instruction = frame.function->instruction_offsets[instruction_index];
             int diff = frame.function->instruction_offsets[instruction_index + 1] - instruction;
@@ -59,6 +83,7 @@ static void runtimeError(VM &vm, std::string message, ...)
                 break;
             }
         }
+        push(vm, error_obj);
         frame.ip += vm.try_instructions.back() + 5;
         vm.try_instructions.pop_back();
         // vm.status = 0;
@@ -240,19 +265,6 @@ static EvaluateResult run(VM &vm)
                 vm.stack.pop_back();
             }
 
-            // for (auto &cl : frame->function->closed_vars)
-            // {
-            //     for (int i = 0; i < vm.closed_values.size(); i++)
-            //     {
-            //         if (cl == vm.closed_values[i])
-            //         {
-            //             vm.closed_values.erase(vm.closed_values.begin() + i);
-            //         }
-            //     }
-            // }
-
-            // frame->function->closed_vars.clear();
-
             vm.frames.pop_back();
             frame = &vm.frames.back();
             frame->ip = &frame->function->chunk.code[instruction_index];
@@ -296,6 +308,10 @@ static EvaluateResult run(VM &vm)
         case OP_TRY_END:
         {
             vm.try_instructions.pop_back();
+            break;
+        }
+        case OP_CATCH_BEGIN:
+        {
             break;
         }
         case OP_LOAD_THIS:
@@ -594,6 +610,7 @@ static EvaluateResult run(VM &vm)
                 if (flag == 0)
                 {
                     runtimeError(vm, "Global '" + name_str + "' is undefined");
+                    pop(vm);
                     if (vm.status == 2)
                     {
                         vm.status = 0;
@@ -1336,7 +1353,12 @@ static EvaluateResult run(VM &vm)
 
             if (!function.is_function())
             {
+                for (int i = 0; i < param_num; i++)
+                {
+                    pop(vm);
+                }
                 runtimeError(vm, "Object is not callable: " + function.value_repr() + " (" + function.type_repr() + ")");
+
                 if (vm.status == 2)
                 {
                     vm.status = 0;
@@ -1348,7 +1370,7 @@ static EvaluateResult run(VM &vm)
 
             int status = call_function(vm, function, param_num, frame);
 
-            if (status < 0)
+            if (status != 0)
             {
                 if (vm.status == 2)
                 {
@@ -1412,7 +1434,12 @@ static EvaluateResult run(VM &vm)
 
             if (!function.is_function())
             {
+                for (int i = 0; i < param_num; i++)
+                {
+                    pop(vm);
+                }
                 runtimeError(vm, "Object is not callable: " + function.value_repr() + " (" + function.type_repr() + ")");
+
                 if (vm.status == 2)
                 {
                     vm.status = 0;
@@ -1424,7 +1451,7 @@ static EvaluateResult run(VM &vm)
 
             int status = call_function(vm, function, param_num, frame, std::make_shared<Value>(object));
 
-            if (status < 0)
+            if (status != 0)
             {
                 if (vm.status == 2)
                 {

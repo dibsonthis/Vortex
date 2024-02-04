@@ -1,16 +1,9 @@
-const y = 40
+const g = {
 
-try {
-    const x = 100
-    x + "hi"
-    println(x)
-} catch(e) {
-    println(e.message)
-    try {
-        3 + "e"
-    } catch (e) {
-        println(e.message)
-    }
 }
 
-println(y)
+try {
+    g.h(5)
+} catch(e) {
+    println(e)
+}

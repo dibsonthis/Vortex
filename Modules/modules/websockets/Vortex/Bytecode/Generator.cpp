@@ -380,9 +380,6 @@ void gen_id(Chunk &chunk, node_ptr node, int global_flag)
 {
     if (node->_Node.ID().value == "this")
     {
-        // if (!current->in_object) {
-        //     error("Cannot use 'this' in outer scope");
-        // }
         if (current->nested_object_count == 0)
         {
             error("Cannot use 'this' in outer scope");
@@ -406,39 +403,49 @@ void gen_id(Chunk &chunk, node_ptr node, int global_flag)
     {
         add_opcode(chunk, OP_LOAD_CLOSURE, index, node->line);
     }
-    // int index = resolve_variable(node->_Node.ID().value);
-    //  if (index == -1) {
-    //      auto prev_compiler = current;
-    //      if (!current->prev) {
-    //          goto is_global;
-    //      }
-    //      current = current->prev;
-    //      int index = resolve_variable(node->_Node.ID().value);
-    //      if (index == -1) {
-    //          current = prev_compiler;
-    //          goto is_global;
-    //      }
-    //      bool captured = false;
-    //      for (int var : prev_compiler->closed_vars) {
-    //          if (index == var) {
-    //              captured = true;
-    //              break;
-    //          }
-    //      }
-    //      if (!captured) {
-    //          prev_compiler->closed_vars.push_back(index);
-    //      }
-    //      add_opcode(chunk, OP_LOAD_CLOSURE, index, node->line);
-    //      current = prev_compiler;
-    //      return;
-    //  }
-    //  add_opcode(chunk, OP_LOAD, index, node->line);
-    //  return;
+}
 
-    // is_global:
-    //     add_constant_code(chunk, string_val(node->_Node.ID().value), node->line);
-    //     add_opcode(chunk, OP_LOAD_GLOBAL, global_flag, node->line);
-    //     return;
+int gen_try_catch(Chunk &chunk, node_ptr node)
+{
+    int try_begin_instruction = chunk.code.size() + 1;
+    add_opcode(chunk, OP_TRY_BEGIN, 0, node->line);
+    // begin_scope();
+    generate_bytecode(node->_Node.TryCatch().try_body->_Node.Object().elements, chunk);
+    // end_scope(chunk);
+    add_code(chunk, OP_TRY_END, node->line);
+    int jump_instruction = chunk.code.size() + 1;
+    add_opcode(chunk, OP_JUMP, 0, node->line);
+    begin_scope();
+
+    int catch_offset = chunk.code.size() - try_begin_instruction - 4;
+    // int catch_offset = chunk.code.size();
+    uint8_t *catch_bytes = int_to_bytes(catch_offset);
+    patch_bytes(chunk, try_begin_instruction, catch_bytes);
+
+    add_code(chunk, OP_CATCH_BEGIN, node->line);
+
+    // error object
+    if (node->_Node.TryCatch().catch_keyword->_Node.FunctionCall().args.size() > 1)
+    {
+        error("Catch keyword expects 0 or 1 arguments");
+    }
+    if (node->_Node.TryCatch().catch_keyword->_Node.FunctionCall().args.size() == 1)
+    {
+        std::string error_var_name = node->_Node.TryCatch().catch_keyword->_Node.FunctionCall().args[0]->_Node.ID().value;
+        add_constant_code(chunk, object_val());
+        declareVariable(error_var_name, false, true);
+        add_code(chunk, OP_SWAP_TOS, node->line);
+        add_constant_code(chunk, string_val("info"));
+        add_code(chunk, OP_SWAP_TOS, node->line);
+        add_code(chunk, OP_SET_PROPERTY, node->line);
+    }
+
+    generate_bytecode(node->_Node.TryCatch().catch_body->_Node.Object().elements, chunk);
+    end_scope(chunk);
+    int offset = chunk.code.size() - jump_instruction - 4;
+    uint8_t *bytes = int_to_bytes(offset);
+    patch_bytes(chunk, jump_instruction, bytes);
+    return jump_instruction;
 }
 
 int gen_if(Chunk &chunk, node_ptr node)
@@ -915,10 +922,12 @@ void gen_function(Chunk &chunk, node_ptr node)
         add_opcode(chunk, OP_MAKE_CLOSURE, 0, node->line);
     }
 
-    if (function->defaults > 0)
-    {
-        add_opcode(chunk, OP_MAKE_FUNCTION, function->defaults, node->line);
-    }
+    add_opcode(chunk, OP_MAKE_FUNCTION, function->defaults, node->line);
+
+    // if (function->defaults > 0)
+    // {
+    //     add_opcode(chunk, OP_MAKE_FUNCTION, function->defaults, node->line);
+    // }
 
     auto offsets = instruction_offsets(function->chunk);
     function->instruction_offsets = offsets;
@@ -1319,6 +1328,11 @@ void generate(node_ptr node, Chunk &chunk)
     case NodeType::IF_BLOCK:
     {
         gen_if_block(chunk, node);
+        break;
+    }
+    case NodeType::TRY_CATCH:
+    {
+        gen_try_catch(chunk, node);
         break;
     }
     case NodeType::WHILE_LOOP:

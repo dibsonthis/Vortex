@@ -1,8 +1,1 @@
-type c = () => {
-    const g = () => {
-        return 10 + ""
-    }
-    return {
-        g: g
-    }
-}
+const g = (a, b) => a + b

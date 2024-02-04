@@ -561,7 +561,7 @@ int advance(Chunk &chunk, int offset)
 
 std::vector<int> instruction_offsets(Chunk &chunk)
 {
-    std::vector<int> offsets;
+    std::vector<int> offsets = {0};
 
     for (int offset = 0; offset < chunk.code.size();)
     {

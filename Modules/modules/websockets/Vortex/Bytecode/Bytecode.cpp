@@ -278,6 +278,12 @@ int disassemble_instruction(Chunk &chunk, int offset)
         return simple_instruction("OP_RETURN", offset);
     case OP_YIELD:
         return simple_instruction("OP_YIELD", offset);
+    case OP_TRY_BEGIN:
+        return op_code_instruction("OP_TRY_BEGIN", chunk, offset);
+    case OP_TRY_END:
+        return simple_instruction("OP_TRY_END", offset);
+    case OP_CATCH_BEGIN:
+        return simple_instruction("OP_CATCH_BEGIN", offset);
     case OP_LOAD_GLOBAL:
         return op_code_instruction("OP_LOAD_GLOBAL", chunk, offset);
     case OP_LOAD_CONST:
@@ -425,6 +431,12 @@ int advance(Chunk &chunk, int offset)
         return offset + 1;
     case OP_YIELD:
         return offset + 1;
+    case OP_TRY_BEGIN:
+        return offset + 5;
+    case OP_TRY_END:
+        return offset + 1;
+    case OP_CATCH_BEGIN:
+        return offset + 1;
     case OP_LOAD_GLOBAL:
         return offset + 5;
     case OP_LOAD_CONST:
@@ -549,7 +561,7 @@ int advance(Chunk &chunk, int offset)
 
 std::vector<int> instruction_offsets(Chunk &chunk)
 {
-    std::vector<int> offsets;
+    std::vector<int> offsets = {0};
 
     for (int offset = 0; offset < chunk.code.size();)
     {

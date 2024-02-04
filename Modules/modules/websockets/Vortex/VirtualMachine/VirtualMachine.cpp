@@ -34,9 +34,65 @@ Value pop_close(VM &vm)
 
 static void runtimeError(VM &vm, std::string message, ...)
 {
-    vm.status = 1;
 
-    CallFrame frame = vm.frames.back();
+    int last_frame = vm.frames.size() - 1;
+    CallFrame &frame = vm.frames[last_frame];
+    // vm.frames.pop_back();
+
+    if (vm.try_instructions.size() > 0)
+    {
+        vm.status = 2;
+
+        size_t instr = frame.ip - frame.function->chunk.code.data() - 1;
+
+        Value error_obj = object_val();
+        error_obj.get_object()->keys = {"message", "line", "path"};
+        error_obj.get_object()->values["message"] = string_val(message);
+        error_obj.get_object()->values["line"] = number_val(frame.function->chunk.lines[instr]);
+        error_obj.get_object()->values["path"] = string_val(frame.function->name == "" ? frame.name : frame.function->import_path);
+
+        int current_offset = (int)(size_t)(frame.ip - &frame.function->chunk.code[0]);
+        int instruction_index = std::find(frame.function->instruction_offsets.begin(), frame.function->instruction_offsets.end(), current_offset) - frame.function->instruction_offsets.begin();
+        int instruction = frame.function->instruction_offsets[instruction_index];
+        int _instruction = frame.function->chunk.code[instruction];
+        while (true)
+        {
+            if (instruction_index == 0)
+            {
+                int to_clean = vm.stack.size() - frame.sp;
+                for (int i = 0; i < to_clean; i++)
+                {
+                    Value &value = vm.stack.back();
+                    vm.stack.pop_back();
+                }
+
+                last_frame -= 1;
+                frame = vm.frames[last_frame];
+                current_offset = (int)(size_t)(frame.ip - &frame.function->chunk.code[0]);
+                instruction_index = std::find(frame.function->instruction_offsets.begin(), frame.function->instruction_offsets.end(), current_offset) - frame.function->instruction_offsets.begin();
+                instruction = frame.function->instruction_offsets[instruction_index];
+                _instruction = frame.function->chunk.code[instruction];
+            }
+            instruction_index--;
+            instruction = frame.function->instruction_offsets[instruction_index];
+            int diff = frame.function->instruction_offsets[instruction_index + 1] - instruction;
+            frame.ip -= diff;
+            _instruction = frame.function->chunk.code[instruction];
+            if (_instruction == OP_TRY_BEGIN)
+            {
+                break;
+            }
+        }
+        push(vm, error_obj);
+        frame.ip += vm.try_instructions.back() + 5;
+        vm.try_instructions.pop_back();
+        // vm.status = 0;
+        return;
+    }
+    else
+    {
+        vm.status = 1;
+    }
 
     va_list args;
     va_start(args, message);
@@ -178,6 +234,12 @@ static EvaluateResult run(VM &vm)
             if (return_value.is_object() && return_value.get_object()->type_name == "Error")
             {
                 runtimeError(vm, return_value.get_object()->values["message"].get_string());
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
 
@@ -202,19 +264,6 @@ static EvaluateResult run(VM &vm)
                 }
                 vm.stack.pop_back();
             }
-
-            // for (auto &cl : frame->function->closed_vars)
-            // {
-            //     for (int i = 0; i < vm.closed_values.size(); i++)
-            //     {
-            //         if (cl == vm.closed_values[i])
-            //         {
-            //             vm.closed_values.erase(vm.closed_values.begin() + i);
-            //         }
-            //     }
-            // }
-
-            // frame->function->closed_vars.clear();
 
             vm.frames.pop_back();
             frame = &vm.frames.back();
@@ -248,6 +297,21 @@ static EvaluateResult run(VM &vm)
             frame = &vm.frames.back();
             frame->ip = &frame->function->chunk.code[instruction_index];
             push(vm, return_value);
+            break;
+        }
+        case OP_TRY_BEGIN:
+        {
+            int index = READ_INT();
+            vm.try_instructions.push_back(index);
+            break;
+        }
+        case OP_TRY_END:
+        {
+            vm.try_instructions.pop_back();
+            break;
+        }
+        case OP_CATCH_BEGIN:
+        {
             break;
         }
         case OP_LOAD_THIS:
@@ -286,6 +350,12 @@ static EvaluateResult run(VM &vm)
                 if (!value.meta.temp_non_const)
                 {
                     runtimeError(vm, "Cannot modify const");
+                    if (vm.status == 2)
+                    {
+                        vm.status = 0;
+                        break;
+                    }
+
                     return EVALUATE_RUNTIME_ERROR;
                 }
             }
@@ -359,6 +429,12 @@ static EvaluateResult run(VM &vm)
                 if (!container.meta.temp_non_const)
                 {
                     runtimeError(vm, "Cannot modify const");
+                    if (vm.status == 2)
+                    {
+                        vm.status = 0;
+                        break;
+                    }
+
                     return EVALUATE_RUNTIME_ERROR;
                 }
             }
@@ -367,6 +443,12 @@ static EvaluateResult run(VM &vm)
                 if (!accessor.is_string())
                 {
                     runtimeError(vm, "Object accessor must be a string - accessor used: " + accessor.value_repr() + " (" + accessor.type_repr() + ")");
+                    if (vm.status == 2)
+                    {
+                        vm.status = 0;
+                        break;
+                    }
+
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 Value current = container.get_object()->values[accessor.get_string()];
@@ -440,6 +522,12 @@ static EvaluateResult run(VM &vm)
                 if (!accessor.is_number())
                 {
                     runtimeError(vm, "List accessor must be a number - accessor used: " + accessor.value_repr() + " (" + accessor.type_repr() + ")");
+                    if (vm.status == 2)
+                    {
+                        vm.status = 0;
+                        break;
+                    }
+
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 auto &list = *container.get_list();
@@ -462,11 +550,23 @@ static EvaluateResult run(VM &vm)
                 if (!accessor.is_number())
                 {
                     runtimeError(vm, "String accessor must be a number - accessor used: " + accessor.value_repr() + " (" + accessor.type_repr() + ")");
+                    if (vm.status == 2)
+                    {
+                        vm.status = 0;
+                        break;
+                    }
+
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 if (!value.is_string())
                 {
                     runtimeError(vm, "String values must be of type string - value used: " + value.value_repr() + " (" + value.type_repr() + ")");
+                    if (vm.status == 2)
+                    {
+                        vm.status = 0;
+                        break;
+                    }
+
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 auto &string = container.get_string();
@@ -488,9 +588,16 @@ static EvaluateResult run(VM &vm)
             else
             {
                 runtimeError(vm, "Object is not accessible: " + container.value_repr() + " (" + container.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
-            push(vm, value);
+            // push(vm, value);
+            push(vm, container);
             break;
         }
         case OP_LOAD_GLOBAL:
@@ -503,6 +610,13 @@ static EvaluateResult run(VM &vm)
                 if (flag == 0)
                 {
                     runtimeError(vm, "Global '" + name_str + "' is undefined");
+                    pop(vm);
+                    if (vm.status == 2)
+                    {
+                        vm.status = 0;
+                        break;
+                    }
+
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 else if (flag == 1)
@@ -527,6 +641,12 @@ static EvaluateResult run(VM &vm)
                 if (!prop_name.is_string())
                 {
                     runtimeError(vm, "Object keys must evaluate to strings - key used: " + prop_name.value_repr() + " (" + prop_name.type_repr() + ")");
+                    if (vm.status == 2)
+                    {
+                        vm.status = 0;
+                        break;
+                    }
+
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 object_obj->keys.insert(object_obj->keys.begin(), prop_name.get_string());
@@ -716,6 +836,12 @@ static EvaluateResult run(VM &vm)
                 if (!value.meta.temp_non_const)
                 {
                     runtimeError(vm, "Cannot modify const");
+                    if (vm.status == 2)
+                    {
+                        vm.status = 0;
+                        break;
+                    }
+
                     return EVALUATE_RUNTIME_ERROR;
                 }
             }
@@ -1026,6 +1152,12 @@ static EvaluateResult run(VM &vm)
                     break;
                 }
                 runtimeError(vm, "Object is not accessible: " + _container.value_repr() + " (" + _container.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
 
@@ -1040,6 +1172,12 @@ static EvaluateResult run(VM &vm)
                 if (!_index.is_number())
                 {
                     runtimeError(vm, "Accessor must be a number - accessor used: " + _index.value_repr() + " (" + _index.type_repr() + ")");
+                    if (vm.status == 2)
+                    {
+                        vm.status = 0;
+                        break;
+                    }
+
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 int index = _index.get_number();
@@ -1059,6 +1197,12 @@ static EvaluateResult run(VM &vm)
                 if (!_index.is_string())
                 {
                     runtimeError(vm, "Accessor must be a string - accessor used: " + _index.value_repr() + " (" + _index.type_repr() + ")");
+                    if (vm.status == 2)
+                    {
+                        vm.status = 0;
+                        break;
+                    }
+
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 std::string &index = _index.get_string();
@@ -1084,6 +1228,12 @@ static EvaluateResult run(VM &vm)
                 if (!_index.is_number())
                 {
                     runtimeError(vm, "Accessor must be a number - accessor used: " + _index.value_repr() + " (" + _index.type_repr() + ")");
+                    if (vm.status == 2)
+                    {
+                        vm.status = 0;
+                        break;
+                    }
+
                     return EVALUATE_RUNTIME_ERROR;
                 }
                 int index = _index.get_number();
@@ -1112,6 +1262,12 @@ static EvaluateResult run(VM &vm)
             if (!list.is_list())
             {
                 runtimeError(vm, "Operand must be a list - value: " + list.value_repr() + " (" + list.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(list.get_list()->size());
@@ -1124,6 +1280,12 @@ static EvaluateResult run(VM &vm)
             if (!list.is_list())
             {
                 runtimeError(vm, "Operand must be a list - value: " + list.value_repr() + " (" + list.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             list.meta.unpack = true;
@@ -1176,6 +1338,12 @@ static EvaluateResult run(VM &vm)
                 if (result.is_object() && result.get_object()->type_name == "Error")
                 {
                     runtimeError(vm, result.get_object()->values["message"].get_string());
+                    if (vm.status == 2)
+                    {
+                        vm.status = 0;
+                        break;
+                    }
+
                     return EVALUATE_RUNTIME_ERROR;
                 }
 
@@ -1185,14 +1353,31 @@ static EvaluateResult run(VM &vm)
 
             if (!function.is_function())
             {
+                for (int i = 0; i < param_num; i++)
+                {
+                    pop(vm);
+                }
                 runtimeError(vm, "Object is not callable: " + function.value_repr() + " (" + function.type_repr() + ")");
+
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
 
             int status = call_function(vm, function, param_num, frame);
 
-            if (status < 0)
+            if (status != 0)
             {
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             break;
@@ -1249,14 +1434,31 @@ static EvaluateResult run(VM &vm)
 
             if (!function.is_function())
             {
+                for (int i = 0; i < param_num; i++)
+                {
+                    pop(vm);
+                }
                 runtimeError(vm, "Object is not callable: " + function.value_repr() + " (" + function.type_repr() + ")");
+
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
 
             int status = call_function(vm, function, param_num, frame, std::make_shared<Value>(object));
 
-            if (status < 0)
+            if (status != 0)
             {
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
 
@@ -1291,6 +1493,12 @@ static EvaluateResult run(VM &vm)
                     catch (...)
                     {
                         runtimeError(vm, "No such file or directory: '" + parent_path.string() + "'");
+                        if (vm.status == 2)
+                        {
+                            vm.status = 0;
+                            break;
+                        }
+
                         return EVALUATE_RUNTIME_ERROR;
                     }
 
@@ -1368,6 +1576,12 @@ static EvaluateResult run(VM &vm)
                     catch (...)
                     {
                         runtimeError(vm, "No such file or directory: '" + parent_path.string() + "'");
+                        if (vm.status == 2)
+                        {
+                            vm.status = 0;
+                            break;
+                        }
+
                         return EVALUATE_RUNTIME_ERROR;
                     }
 
@@ -1461,6 +1675,12 @@ static EvaluateResult run(VM &vm)
                 catch (...)
                 {
                     runtimeError(vm, "No such file or directory: '" + parent_path.string() + "'");
+                    if (vm.status == 2)
+                    {
+                        vm.status = 0;
+                        break;
+                    }
+
                     return EVALUATE_RUNTIME_ERROR;
                 }
 
@@ -1523,6 +1743,12 @@ static EvaluateResult run(VM &vm)
                     if (!found)
                     {
                         runtimeError(vm, "Cannot import variable '" + name + "' from '" + path.get_string() + "'");
+                        if (vm.status == 2)
+                        {
+                            vm.status = 0;
+                            break;
+                        }
+
                         return EVALUATE_RUNTIME_ERROR;
                     }
                 }
@@ -1551,6 +1777,12 @@ static EvaluateResult run(VM &vm)
             if (!constant.is_number())
             {
                 runtimeError(vm, "Operand must be a number: " + constant.value_repr() + " (" + constant.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(-constant.get_number());
@@ -1572,7 +1804,13 @@ static EvaluateResult run(VM &vm)
                 push(vm, value);
                 break;
                 // runtimeError(vm, "Operand must be a boolean: " + constant.value_repr() + " (" + constant.type_repr() + ")");
-                // return EVALUATE_RUNTIME_ERROR;
+                // if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
+                return EVALUATE_RUNTIME_ERROR;
             }
             Value value = boolean_val(!constant.get_boolean());
             push(vm, value);
@@ -1591,6 +1829,13 @@ static EvaluateResult run(VM &vm)
             if (!v1.is_number() || !v2.is_number())
             {
                 runtimeError(vm, "Cannot perform operation '+' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
+
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(v1.get_number() + v2.get_number());
@@ -1604,6 +1849,12 @@ static EvaluateResult run(VM &vm)
             if (!v1.is_number() || !v2.is_number())
             {
                 runtimeError(vm, "Cannot perform operation '-' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(v1.get_number() - v2.get_number());
@@ -1617,6 +1868,12 @@ static EvaluateResult run(VM &vm)
             if (!v1.is_number() || !v2.is_number())
             {
                 runtimeError(vm, "Cannot perform operation '*' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(v1.get_number() * v2.get_number());
@@ -1630,6 +1887,12 @@ static EvaluateResult run(VM &vm)
             if (!v1.is_number() || !v2.is_number())
             {
                 runtimeError(vm, "Cannot perform operation '/' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(v1.get_number() / v2.get_number());
@@ -1643,6 +1906,12 @@ static EvaluateResult run(VM &vm)
             if (!v1.is_number() || !v2.is_number())
             {
                 runtimeError(vm, "Cannot perform operation '%' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(fmod(v1.get_number(), v2.get_number()));
@@ -1656,6 +1925,12 @@ static EvaluateResult run(VM &vm)
             if (!v1.is_number() || !v2.is_number())
             {
                 runtimeError(vm, "Cannot perform operation '^' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val(pow(v1.get_number(), v2.get_number()));
@@ -1669,6 +1944,12 @@ static EvaluateResult run(VM &vm)
             if (!v1.is_number() || !v2.is_number())
             {
                 runtimeError(vm, "Cannot perform operation '&' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val((int)v1.get_number() & (int)v2.get_number());
@@ -1682,6 +1963,12 @@ static EvaluateResult run(VM &vm)
             if (!v1.is_number() || !v2.is_number())
             {
                 runtimeError(vm, "Cannot perform operation '|' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = number_val((int)v1.get_number() | (int)v2.get_number());
@@ -1711,6 +1998,12 @@ static EvaluateResult run(VM &vm)
             if (!v1.is_number() || !v2.is_number())
             {
                 runtimeError(vm, "Cannot perform operation '<=' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = boolean_val(v1.get_number() <= v2.get_number());
@@ -1724,6 +2017,12 @@ static EvaluateResult run(VM &vm)
             if (!v1.is_number() || !v2.is_number())
             {
                 runtimeError(vm, "Cannot perform operation '>=' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = boolean_val(v1.get_number() >= v2.get_number());
@@ -1737,6 +2036,12 @@ static EvaluateResult run(VM &vm)
             if (!v1.is_number() || !v2.is_number())
             {
                 runtimeError(vm, "Cannot perform operation '<' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = boolean_val(v1.get_number() < v2.get_number());
@@ -1750,6 +2055,12 @@ static EvaluateResult run(VM &vm)
             if (!v1.is_number() || !v2.is_number())
             {
                 runtimeError(vm, "Cannot perform operation '>' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = boolean_val(v1.get_number() > v2.get_number());
@@ -1763,6 +2074,12 @@ static EvaluateResult run(VM &vm)
             if (!v1.is_number() || !v2.is_number())
             {
                 runtimeError(vm, "Cannot perform operation '..' on values: " + v1.value_repr() + " (" + v1.type_repr() + "), " + v2.value_repr() + " (" + v2.type_repr() + ")");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
                 return EVALUATE_RUNTIME_ERROR;
             }
             Value value = list_val();
