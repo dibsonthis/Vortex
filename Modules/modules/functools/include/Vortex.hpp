@@ -384,6 +384,7 @@ struct VM
     int status = 0;
     std::vector<std::shared_ptr<Closure>> closed_values;
     int coro_count = 0;
+std::vector<int> try_instructions;
 
     VM()
     {

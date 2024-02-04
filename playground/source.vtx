@@ -1,7 +1,16 @@
-import [c] : "/Users/adib/Dev/Personal/Vortex/playground/other"
+const y = 40
 
-const f = c()
+try {
+    const x = 100
+    x + "hi"
+    println(x)
+} catch(e) {
+    println(e.message)
+    try {
+        3 + "e"
+    } catch (e) {
+        println(e.message)
+    }
+}
 
-const b = () => f.g()
-
-b()
+println(y)
