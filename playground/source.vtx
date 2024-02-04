@@ -1,1 +1,7 @@
-dis()
+import [c] : "/Users/adib/Dev/Personal/Vortex/playground/other"
+
+const f = c()
+
+const b = () => f.g()
+
+b()

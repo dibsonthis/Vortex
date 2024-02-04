@@ -539,7 +539,10 @@ static EvaluateResult run(VM &vm)
         {
             int count = READ_INT();
             Value function = pop(vm);
+            // std::string base_name = frame->name.substr(frame->name.find_last_of("/\\") + 1);
+            // function.get_function()->import_path = std::filesystem::current_path().string() + "/" + base_name;
             function.get_function()->import_path = frame->name;
+            // function.get_function()->import_path = std::filesystem::absolute(frame->name);
             for (int i = 0; i < count; i++)
             {
                 function.get_function()->default_values.insert(function.get_function()->default_values.begin(), pop(vm));
@@ -1258,92 +1261,6 @@ static EvaluateResult run(VM &vm)
             }
 
             break;
-
-            // auto& function_obj = function.get_function();
-            // int positional_args = function_obj->arity - function_obj->defaults;
-
-            // int num_captured = 0;
-            // int num_unpacked = 0;
-            // int capturing = -1;
-
-            // for (int i = 0; i < param_num; i++) {
-            //     Value arg = pop(vm);
-            //     if (arg.meta.unpack) {
-            //         arg.meta.unpack = false;
-            //         num_unpacked--;
-            //         for (int j = 0; j < arg.get_list()->size(); j++) {
-            //             num_unpacked++;
-            //             auto _arg = arg.get_list()->at(j);
-
-            //             Value& constant = function_obj->chunk.constants[i+j];
-
-            //             if (constant.is_list() && constant.meta.packer) {
-            //                 capturing = i+j;
-            //                 constant = copy(constant);
-            //                 constant.get_list()->clear();
-            //                 constant.get_list()->push_back(_arg);
-            //             } else {
-            //                 if (capturing >= 0) {
-            //                     function_obj->chunk.constants[capturing].get_list()->push_back(_arg);
-            //                     num_captured++;
-            //                 } else {
-            //                     function_obj->chunk.constants[i + j] = _arg;
-            //                 }
-            //             }
-            //         }
-            //     } else {
-            //         Value& constant = function_obj->chunk.constants[i];
-            //         if (constant.is_list() && constant.meta.packer) {
-            //             capturing = i;
-            //             constant = copy(constant);
-            //             constant.get_list()->clear();
-            //             constant.get_list()->push_back(arg);
-            //         } else {
-            //             if (capturing >= 0) {
-            //                 function_obj->chunk.constants[capturing].get_list()->push_back(arg);
-            //                 num_captured++;
-            //             } else {
-            //                 function_obj->chunk.constants[i] = arg;
-            //             }
-            //         }
-            //     }
-            // }
-
-            // param_num += num_unpacked - num_captured;
-
-            // if ((param_num < positional_args) || (param_num > function_obj->arity)) {
-            //     runtimeError(vm, "Function '" + function_obj->name + "' expects " + std::to_string(function_obj->arity) + " argument(s)");
-            //     return EVALUATE_RUNTIME_ERROR;
-            // }
-
-            // if (param_num < function_obj->arity) {
-            //     // We have defaults we want to inject
-            //     int default_index = 0;
-            //     for (int i = param_num; i < function_obj->arity; i++) {
-            //         Meta meta = function_obj->chunk.constants[i].meta;
-            //         function_obj->chunk.constants[i] = function_obj->default_values[default_index];
-            //         function_obj->chunk.constants[i].meta = meta;
-            //         default_index++;
-            //     }
-            // }
-
-            // //disassemble_chunk(function_obj->chunk, function_obj->name + "__");
-
-            // CallFrame call_frame;
-            // call_frame.frame_start = vm.stack.size();
-            // call_frame.function = function_obj;
-            // call_frame.function->object = std::make_shared<Value>(object);
-            // call_frame.sp = vm.stack.size();
-            // call_frame.ip = function_obj->chunk.code.data();
-
-            // int instruction_index = frame->ip - &frame->function->chunk.code[0];
-
-            // call_frame.instruction_index = instruction_index;
-
-            // vm.frames.push_back(call_frame);
-            // frame = &vm.frames.back();
-
-            // break;
         }
         case OP_IMPORT:
         {
@@ -1385,7 +1302,8 @@ static EvaluateResult run(VM &vm)
                     main->chunk.import_path = frame->function->chunk.import_path;
                     CallFrame main_frame;
                     // main_frame.name = frame->name;
-                    main_frame.name = path.get_string();
+                    // main_frame.name = path.get_string();
+                    main_frame.name = std::filesystem::current_path().string() + "/" + path.get_string().substr(path.get_string().find_last_of("/\\") + 1);
                     main_frame.function = main;
                     main_frame.sp = 0;
                     main_frame.ip = main->chunk.code.data();
@@ -1460,8 +1378,9 @@ static EvaluateResult run(VM &vm)
                     main->chunk = Chunk();
                     main->chunk.import_path = frame->function->chunk.import_path;
                     CallFrame main_frame;
-                    main_frame.name = path.get_string();
                     // main_frame.name = frame->name;
+                    // main_frame.name = path.get_string();
+                    main_frame.name = std::filesystem::current_path().string() + "/" + path.get_string().substr(path.get_string().find_last_of("/\\") + 1);
                     main_frame.function = main;
                     main_frame.sp = 0;
                     main_frame.ip = main->chunk.code.data();
@@ -1553,7 +1472,7 @@ static EvaluateResult run(VM &vm)
                 main->chunk.import_path = frame->function->chunk.import_path;
                 CallFrame main_frame;
                 // main_frame.name = frame->name;
-                main_frame.name = path.get_string();
+                main_frame.name = std::filesystem::current_path().string() + "/" + path.get_string().substr(path.get_string().find_last_of("/\\") + 1);
                 main_frame.function = main;
                 main_frame.sp = 0;
                 main_frame.ip = main->chunk.code.data();
