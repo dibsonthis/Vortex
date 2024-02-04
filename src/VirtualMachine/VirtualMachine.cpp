@@ -1419,10 +1419,10 @@ static EvaluateResult run(VM &vm)
                     {
                         auto &var = import_vm.frames[0].function->chunk.public_variables[i];
                         auto &value = import_vm.stack[i];
-                        if (value.is_function())
-                        {
-                            import_vm.stack[i].get_function()->import_path = path.get_string();
-                        }
+                        // if (value.is_function())
+                        // {
+                        //     import_vm.stack[i].get_function()->import_path = path.get_string();
+                        // }
                         define_global(vm, var, import_vm.stack[i]);
                     }
 
@@ -1497,10 +1497,10 @@ static EvaluateResult run(VM &vm)
                     {
                         auto &var = import_vm.frames[0].function->chunk.public_variables[i];
 
-                        if (import_vm.stack[i].is_function())
-                        {
-                            import_vm.stack[i].get_function()->import_path = path.get_string();
-                        }
+                        // if (import_vm.stack[i].is_function())
+                        // {
+                        //     import_vm.stack[i].get_function()->import_path = path.get_string();
+                        // }
 
                         obj->values[var] = import_vm.stack[i];
                         obj->keys.push_back(var);
@@ -1590,10 +1590,10 @@ static EvaluateResult run(VM &vm)
                     {
                         if (name == import_vm.frames[0].function->chunk.public_variables[i])
                         {
-                            if (import_vm.stack[i].is_function())
-                            {
-                                import_vm.stack[i].get_function()->import_path = path.get_string();
-                            }
+                            // if (import_vm.stack[i].is_function())
+                            // {
+                            //     import_vm.stack[i].get_function()->import_path = path.get_string();
+                            // }
 
                             push(vm, import_vm.stack[i]);
                             found = true;
