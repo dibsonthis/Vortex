@@ -3210,16 +3210,26 @@ Value error_object(std::string message, std::string error_type)
 
 static Value error_type_builtin(std::vector<Value> &args)
 {
-    if (args.size() != 1)
+    if (args.size() < 1 || args.size() > 2)
     {
-        return error_object("Type 'Error' expects 1 argument");
+        return error_object("Type 'Error' expects 1 or 2 arguments");
     }
 
     Value message = args[0];
 
     if (!message.is_string())
     {
-        return error_object("Type 'Exit' expects argument 'message' to be a string");
+        return error_object("Type 'Error' expects argument 'message' to be a string");
+    }
+
+    if (args.size() == 2)
+    {
+        if (!args[1].is_string())
+        {
+            return error_object("Type 'Error' expects argument 'type' to be a string");
+        }
+
+        return error_object(message.get_string(), args[1].get_string());
     }
 
     return error_object(message.get_string());
