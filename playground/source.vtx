@@ -1,26 +1,12 @@
-const Timer = (func) => {
-    return (...args) => {
-        try {
-            10 * ""
-        } catch (e) {
-            println(e)
-        }
-        const start = clock()
-        var value = func(...args)
-        const duration = clock() - start
-        println(f"Duration (${func.info().name}): ", duration)
-        return value
-    }
+const obj_a = {
+    // a: 1,
+    // b: 2
 }
 
-@Timer
-const somefunc = () => {
-    var i = 0
-    for (0..100) {
-        for (0..100) {
-            i += 1
-        }
-    }
+const obj_b = {
+    ...obj_a,
+    b: 40,
+    c: 70
 }
 
-somefunc()
+println(obj_b)

@@ -4,6 +4,7 @@
 #include <sstream>
 #include <algorithm>
 #include <future>
+#include <set>
 
 #include "../utils/utils.hpp"
 #include "../Lexer/Lexer.hpp"

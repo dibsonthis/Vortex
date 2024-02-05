@@ -647,8 +647,43 @@ static EvaluateResult run(VM &vm)
             int size = READ_INT();
             Value object = object_val();
             auto &object_obj = object.get_object();
+            std::set<std::string> _keys;
             for (int i = 0; i < size; i++)
             {
+                Value tos = vm.stack.back();
+
+                if (tos.meta.unpack)
+                {
+                    if (!tos.is_object())
+                    {
+                        runtimeError(vm, "Cannot unpack non-object value - value: " + tos.value_repr() + " (" + tos.type_repr() + ")");
+                        if (vm.status == 2)
+                        {
+                            vm.status = 0;
+                            break;
+                        }
+
+                        return EVALUATE_RUNTIME_ERROR;
+                    }
+                    tos = pop(vm);
+                    size--;
+                    for (int i = tos.get_object()->keys.size() - 1; i >= 0; i--)
+                    {
+                        std::string key = tos.get_object()->keys[i];
+                        Value k = string_val(key);
+                        push(vm, k);
+                        push(vm, tos.get_object()->values[key]);
+                        size++;
+                    }
+
+                    tos.meta.unpack = false;
+
+                    if (tos.get_object()->values.size() == 0)
+                    {
+                        size++;
+                        continue;
+                    }
+                }
                 Value prop_value = pop(vm);
                 Value prop_name = pop(vm);
                 if (!prop_name.is_string())
@@ -662,7 +697,12 @@ static EvaluateResult run(VM &vm)
 
                     return EVALUATE_RUNTIME_ERROR;
                 }
-                object_obj->keys.insert(object_obj->keys.begin(), prop_name.get_string());
+                // object_obj->keys.insert(object_obj->keys.begin(), prop_name.get_string());
+                if (_keys.insert(prop_name.get_string()).second)
+                {
+                    object_obj->keys.push_back(prop_name.get_string());
+                }
+
                 object_obj->values[prop_name.get_string()] = prop_value;
             }
             push(vm, object);
@@ -1146,7 +1186,33 @@ static EvaluateResult run(VM &vm)
             auto &list_val = list.get_list();
             for (int i = 0; i < size; i++)
             {
-                list_val->insert(list_val->begin(), pop(vm));
+                Value v = pop(vm);
+                if (v.meta.unpack)
+                {
+                    if (!v.is_list())
+                    {
+                        runtimeError(vm, "Operand must be a list - value: " + v.value_repr() + " (" + v.type_repr() + ")");
+                        if (vm.status == 2)
+                        {
+                            vm.status = 0;
+                            break;
+                        }
+
+                        return EVALUATE_RUNTIME_ERROR;
+                    }
+
+                    for (int i = (*v.get_list()).size() - 1; i >= 0; i--)
+                    {
+                        Value &e = (*v.get_list())[i];
+                        list_val->insert(list_val->begin(), e);
+                    }
+
+                    v.meta.unpack = false;
+                }
+                else
+                {
+                    list_val->insert(list_val->begin(), v);
+                }
             }
             push(vm, list);
             break;
@@ -1289,10 +1355,10 @@ static EvaluateResult run(VM &vm)
         }
         case OP_UNPACK:
         {
-            Value &list = vm.stack.back();
-            if (!list.is_list())
+            Value &value = vm.stack.back();
+            if (!value.is_list() && !value.is_object())
             {
-                runtimeError(vm, "Operand must be a list - value: " + list.value_repr() + " (" + list.type_repr() + ")");
+                runtimeError(vm, "Operand must be a list or object - value: " + value.value_repr() + " (" + value.type_repr() + ")");
                 if (vm.status == 2)
                 {
                     vm.status = 0;
@@ -1301,7 +1367,7 @@ static EvaluateResult run(VM &vm)
 
                 return EVALUATE_RUNTIME_ERROR;
             }
-            list.meta.unpack = true;
+            value.meta.unpack = true;
             break;
         }
         case OP_REMOVE_PUSH:

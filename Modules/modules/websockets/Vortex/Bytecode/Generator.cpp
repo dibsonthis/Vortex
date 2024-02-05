@@ -1121,8 +1121,16 @@ void gen_object(Chunk &chunk, node_ptr node)
         elements.push_back(object_node.elements[0]);
     }
 
-    for (auto &elem : elements)
+    // for (auto &elem : elements)
+    for (int i = elements.size() - 1; i >= 0; i--)
     {
+        auto elem = elements[i];
+
+        if (elem->type == NodeType::OP && elem->_Node.Op().value == "...")
+        {
+            generate(elem, chunk);
+            continue;
+        }
         if (elem->type != NodeType::OP || elem->_Node.Op().value != ":")
         {
             error("Object properties must be in shape (name: value)");
@@ -1588,7 +1596,9 @@ void generate(node_ptr node, Chunk &chunk)
         }
         if (node->_Node.Op().value == "...")
         {
-            error("Cannot unpack value here");
+            generate(node->_Node.Op().right, chunk);
+            add_code(chunk, OP_UNPACK, node->line);
+            // error("Cannot unpack value here");
         }
     }
 }
