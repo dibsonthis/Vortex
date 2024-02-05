@@ -440,6 +440,7 @@ int gen_try_catch(Chunk &chunk, node_ptr node)
 
     generate_bytecode(node->_Node.TryCatch().catch_body->_Node.Object().elements, chunk);
     end_scope(chunk);
+    add_code(chunk, OP_POP, node->line); // pop the error object off the stack
     int offset = chunk.code.size() - jump_instruction - 4;
     uint8_t *bytes = int_to_bytes(offset);
     patch_bytes(chunk, jump_instruction, bytes);
