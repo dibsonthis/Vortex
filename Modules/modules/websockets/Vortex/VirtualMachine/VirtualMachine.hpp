@@ -70,7 +70,7 @@ void push(VM &vm, Value &value);
 Value pop(VM &vm);
 Value pop_close(VM &vm);
 
-static void runtimeError(VM &vm, std::string message, ...);
+static void runtimeError(VM &vm, std::string message, std::string error_type = "GenericError", ...);
 static void define_global(VM &vm, std::string name, Value value);
 static void define_native(VM &vm, std::string name, NativeFunction function);
 static EvaluateResult run(VM &vm);
@@ -83,7 +83,7 @@ void freeVM(VM &vm);
 bool is_equal(Value &v1, Value &v2);
 bool is_falsey(Value &value);
 Value copy(Value &value);
-Value error_object(std::string message);
+Value error_object(std::string message, std::string error_type = "GenericError");
 
 static Value print_builtin(std::vector<Value> &args);
 static Value println_builtin(std::vector<Value> &args);

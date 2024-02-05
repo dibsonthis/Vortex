@@ -1,9 +1,1 @@
-const g = {
-
-}
-
-try {
-    g.h(5)
-} catch(e) {
-    println(e)
-}
+import [] : strings

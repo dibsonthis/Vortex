@@ -62,7 +62,7 @@ struct FunctionObj
     bool generator_init = false;
     bool generator_done = false;
     bool is_type_generator = false;
-std::string import_path;
+    std::string import_path;
 };
 
 struct TypeObj
@@ -475,7 +475,7 @@ struct VM
     int status = 0;
     std::vector<std::shared_ptr<Closure>> closed_values;
     int coro_count = 0;
-std::vector<int> try_instructions;
+    std::vector<int> try_instructions;
 
     VM()
     {
@@ -483,12 +483,13 @@ std::vector<int> try_instructions;
     }
 };
 
-Value error_object(std::string message)
+Value error_object(std::string message, std::string error_type = "GenericError")
 {
     Value error_obj = object_val();
     error_obj.get_object()->type_name = "Error";
-    error_obj.get_object()->keys = {"message"};
+    error_obj.get_object()->keys = {"message", "type"};
     error_obj.get_object()->values["message"] = string_val(message);
+    error_obj.get_object()->values["type"] = string_val(error_type);
 
     return error_obj;
 }

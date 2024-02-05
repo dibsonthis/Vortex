@@ -32,22 +32,24 @@ Value pop_close(VM &vm)
     return value;
 }
 
-static void runtimeError(VM &vm, std::string message, ...)
+static void runtimeError(VM &vm, std::string message, std::string error_type, ...)
 {
 
     int last_frame = vm.frames.size() - 1;
     CallFrame &frame = vm.frames[last_frame];
-    // vm.frames.pop_back();
 
-    if (vm.try_instructions.size() > 0)
+    int num_try_blocks = vm.try_instructions.size();
+
+    if (num_try_blocks > 0)
     {
         vm.status = 2;
 
         size_t instr = frame.ip - frame.function->chunk.code.data() - 1;
 
         Value error_obj = object_val();
-        error_obj.get_object()->keys = {"message", "line", "path"};
+        error_obj.get_object()->keys = {"message", "type", "line", "path"};
         error_obj.get_object()->values["message"] = string_val(message);
+        error_obj.get_object()->values["type"] = string_val(error_type);
         error_obj.get_object()->values["line"] = number_val(frame.function->chunk.lines[instr]);
         error_obj.get_object()->values["path"] = string_val(frame.function->name == "" ? frame.name : frame.function->import_path);
 
@@ -55,6 +57,9 @@ static void runtimeError(VM &vm, std::string message, ...)
         int instruction_index = std::find(frame.function->instruction_offsets.begin(), frame.function->instruction_offsets.end(), current_offset) - frame.function->instruction_offsets.begin();
         int instruction = frame.function->instruction_offsets[instruction_index];
         int _instruction = frame.function->chunk.code[instruction];
+
+        int try_count = 1;
+
         while (true)
         {
             if (instruction_index == 0)
@@ -78,15 +83,23 @@ static void runtimeError(VM &vm, std::string message, ...)
             int diff = frame.function->instruction_offsets[instruction_index + 1] - instruction;
             frame.ip -= diff;
             _instruction = frame.function->chunk.code[instruction];
+
+            if (_instruction == OP_TRY_END)
+            {
+                try_count++;
+            }
             if (_instruction == OP_TRY_BEGIN)
             {
-                break;
+                try_count--;
+                if (try_count == 0)
+                {
+                    break;
+                }
             }
         }
         push(vm, error_obj);
         frame.ip += vm.try_instructions.back() + 5;
         vm.try_instructions.pop_back();
-        // vm.status = 0;
         return;
     }
     else
@@ -95,8 +108,8 @@ static void runtimeError(VM &vm, std::string message, ...)
     }
 
     va_list args;
-    va_start(args, message);
-    vfprintf(stderr, message.c_str(), args);
+    va_start(args, error_type);
+    vfprintf(stderr, (error_type + ": " + message).c_str(), args);
     va_end(args);
     fputs("\n", stderr);
 
@@ -189,7 +202,7 @@ static EvaluateResult run(VM &vm)
     define_native(vm, "__get_future__", get_future_builtin);
     define_native(vm, "__check_future__", check_future_builtin);
     define_native(vm, "exit", exit_builtin);
-    define_native(vm, "__error__", error_builtin);
+    define_native(vm, "error", error_builtin);
     define_native(vm, "Error", error_type_builtin);
     define_native(vm, "load_lib", load_lib_builtin);
 
@@ -1337,7 +1350,7 @@ static EvaluateResult run(VM &vm)
 
                 if (result.is_object() && result.get_object()->type_name == "Error")
                 {
-                    runtimeError(vm, result.get_object()->values["message"].get_string());
+                    runtimeError(vm, result.get_object()->values["message"].get_string(), result.get_object()->values["type"].get_string());
                     if (vm.status == 2)
                     {
                         vm.status = 0;
@@ -1492,7 +1505,7 @@ static EvaluateResult run(VM &vm)
                     }
                     catch (...)
                     {
-                        runtimeError(vm, "No such file or directory: '" + parent_path.string() + "'");
+                        runtimeError(vm, "No such file or directory: '" + parent_path.string() + "'", "ImportError");
                         if (vm.status == 2)
                         {
                             vm.status = 0;
@@ -1575,7 +1588,7 @@ static EvaluateResult run(VM &vm)
                     }
                     catch (...)
                     {
-                        runtimeError(vm, "No such file or directory: '" + parent_path.string() + "'");
+                        runtimeError(vm, "No such file or directory: '" + parent_path.string() + "'", "ImportError");
                         if (vm.status == 2)
                         {
                             vm.status = 0;
@@ -1630,11 +1643,6 @@ static EvaluateResult run(VM &vm)
                     {
                         auto &var = import_vm.frames[0].function->chunk.public_variables[i];
 
-                        // if (import_vm.stack[i].is_function())
-                        // {
-                        //     import_vm.stack[i].get_function()->import_path = path.get_string();
-                        // }
-
                         obj->values[var] = import_vm.stack[i];
                         obj->keys.push_back(var);
                     }
@@ -1674,7 +1682,7 @@ static EvaluateResult run(VM &vm)
                 }
                 catch (...)
                 {
-                    runtimeError(vm, "No such file or directory: '" + parent_path.string() + "'");
+                    runtimeError(vm, "No such file or directory: '" + parent_path.string() + "'", "ImportError");
                     if (vm.status == 2)
                     {
                         vm.status = 0;
@@ -1729,11 +1737,6 @@ static EvaluateResult run(VM &vm)
                     {
                         if (name == import_vm.frames[0].function->chunk.public_variables[i])
                         {
-                            // if (import_vm.stack[i].is_function())
-                            // {
-                            //     import_vm.stack[i].get_function()->import_path = path.get_string();
-                            // }
-
                             push(vm, import_vm.stack[i]);
                             found = true;
                             break;
@@ -1742,7 +1745,7 @@ static EvaluateResult run(VM &vm)
 
                     if (!found)
                     {
-                        runtimeError(vm, "Cannot import variable '" + name + "' from '" + path.get_string() + "'");
+                        runtimeError(vm, "Cannot import variable '" + name + "' from '" + path.get_string() + "'", "ImportError");
                         if (vm.status == 2)
                         {
                             vm.status = 0;
@@ -3165,37 +3168,42 @@ static Value exit_builtin(std::vector<Value> &args)
 
 static Value error_builtin(std::vector<Value> &args)
 {
-    if (args.size() != 2)
+    if (args.size() < 1 || args.size() > 2)
     {
-        return error_object("Function 'error' expects 1 argument");
+        return error_object("Function 'error' expects 1 or 2 arguments");
     }
 
     Value message = args[0];
-    Value vm = args[1];
+    std::string error_type = "GenericError";
 
     if (!message.is_string())
     {
-        return error_object("Function 'exit' expects argument 'message' to be a string");
+        return error_object("Function 'error' expects argument 'message' to be a string");
     }
 
-    if (!vm.is_pointer())
+    if (args.size() == 2)
     {
-        return error_object("Function 'exit' expects argument 'vm' to be a pointer");
+        Value error_type_value = args[1];
+        if (!error_type_value.is_string())
+        {
+            return error_object("Function 'error' expects argument 'type' to be a string");
+        }
+
+        error_type = error_type_value.get_string();
     }
 
-    VM *_vm = (VM *)(vm.get_pointer()->value);
-    runtimeError(*_vm, message.get_string());
-    exit(0);
+    return error_object(message.get_string(), error_type);
 
     return message;
 }
 
-Value error_object(std::string message)
+Value error_object(std::string message, std::string error_type)
 {
     Value error_obj = object_val();
     error_obj.get_object()->type_name = "Error";
-    error_obj.get_object()->keys = {"message"};
+    error_obj.get_object()->keys = {"message", "type"};
     error_obj.get_object()->values["message"] = string_val(message);
+    error_obj.get_object()->values["type"] = string_val(error_type);
 
     return error_obj;
 }
