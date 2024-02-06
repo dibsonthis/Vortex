@@ -59,6 +59,9 @@ static void runtimeError(VM &vm, std::string message, std::string error_type, ..
         int _instruction = frame.function->chunk.code[instruction];
 
         int try_count = 1;
+        int diff;
+
+        instruction_index++;
 
         while (true)
         {
@@ -73,14 +76,17 @@ static void runtimeError(VM &vm, std::string message, std::string error_type, ..
 
                 last_frame -= 1;
                 frame = vm.frames[last_frame];
+                vm.frames.pop_back();
                 current_offset = (int)(size_t)(frame.ip - &frame.function->chunk.code[0]);
                 instruction_index = std::find(frame.function->instruction_offsets.begin(), frame.function->instruction_offsets.end(), current_offset) - frame.function->instruction_offsets.begin();
                 instruction = frame.function->instruction_offsets[instruction_index];
                 _instruction = frame.function->chunk.code[instruction];
+                instruction_index++;
+                frame.ip += 5;
             }
             instruction_index--;
             instruction = frame.function->instruction_offsets[instruction_index];
-            int diff = frame.function->instruction_offsets[instruction_index + 1] - instruction;
+            diff = instruction - frame.function->instruction_offsets[instruction_index - 1];
             frame.ip -= diff;
             _instruction = frame.function->chunk.code[instruction];
 
@@ -99,6 +105,8 @@ static void runtimeError(VM &vm, std::string message, std::string error_type, ..
         }
         push(vm, error_obj);
         frame.ip += vm.try_instructions.back() + 5;
+        // frame.ip += vm.try_instructions.back();
+        // frame.ip += vm.try_instructions.back() + 10;
         vm.try_instructions.pop_back();
         return;
     }
