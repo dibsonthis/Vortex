@@ -1,0 +1,201 @@
+import [Tween, TweenEx, Animation, parametric, quad] : "gui/animation"
+import [Defer] : "../utils/utils"
+import [] : "gui/core"
+
+var init_ref = InitRef()
+
+var count = 0
+
+var animated_count = ref(0)
+
+const anim = Tween(animated_count)
+
+count::onChange((data) => {
+    anim.play(data.old, data.current, 3, parametric)
+})
+
+const default_config = {
+    width: 300,
+    height: 100,
+    border: false,
+}
+
+const default_props = {
+    start: 0,
+    num: 1,
+    onClick: () => {}
+}
+
+var t_ref = ref(0)
+const t_anim = Tween(t_ref)
+
+var t = "0"
+t::onChange((data) => {
+    if (data.old != data.current) {
+        t_anim.play(number(data.old), number(data.current), 2, quad)
+    }
+})
+
+const button_config = {
+    width: 200,
+    height: 40,
+    ry: 10,
+    b: 0.5,
+}
+
+const button_anim = Animation([
+    TweenEx(
+        button_config, 
+        button_config, 
+        {r: 1, g: 0.5, b: 1, a: 0.5},
+        0.5,
+        quad
+    ),
+    TweenEx(
+        button_config, 
+        {r: 1, g: 0.5, b: 1, a: 0.5},
+        button_config, 
+        0.5,
+        quad)
+])
+
+var decrement_button_config = {
+    width: 200,
+    x: -180,
+    expanded: false,
+    speed: 0.1
+}
+
+const decrement_button_anim_out = Animation([
+    TweenEx(
+        decrement_button_config,
+        { x: -180 },
+        { x: -200 },
+        decrement_button_config.speed,
+        // quad
+    ),
+    TweenEx(
+        decrement_button_config,
+        { x: -200 },
+        { x: 40 },
+        decrement_button_config.speed,
+        // quad
+    ),
+    TweenEx(
+        decrement_button_config,
+        { x: 40 },
+        { x: 10 },
+        0.1,
+        quad
+    ),
+])
+
+const decrement_button_anim_in = Animation([
+    TweenEx(
+        decrement_button_config,
+        { x: 10 },
+        { x: 40 },
+        decrement_button_config.speed,
+        // quad
+    ),
+    TweenEx(
+        decrement_button_config,
+        { x: 40 },
+        { x: -180 },
+        0.1,
+        quad
+    ),
+])
+
+const Counter = (props = {}, data = {}, config = {}) => {
+
+    button_anim.run()
+    decrement_button_anim_out.run()
+    decrement_button_anim_in.run()
+    anim.run()
+    t_anim.run()
+
+    const merged_config = {
+        ...default_config,
+        ...config
+    }
+    
+    return Child(() => {
+
+        const merged_props = {
+            ...default_props,
+            ...props
+        }
+
+        OnInit(init_ref, () => {
+            count = count + merged_props.start
+            data.count = count.pure()
+        })
+
+        t = imgui.input_text("Amount", t)
+
+        Text(f"Balance: $${t_ref.value}", {
+            ry: 5,
+            font: merged_config.font
+        })
+
+        Text(f"Count: ${count}", {
+            ry: 5,
+            font: merged_config.font
+        })
+
+        Text(f"Animated count: ${animated_count.value}", {
+            ry: 5,
+            font: merged_config.font
+        })
+
+        Button("Increment", {
+            onClick: () =>  {
+                count += GetMouseState().x
+                data.count = count.pure()
+                props.onClick && props.onClick()
+
+                button_anim.play()
+                anim.play()
+            },
+            width: button_config.width,
+            height: button_config.height,
+            rx: button_config.rx,
+            ry: button_config.ry,
+            color: {
+                r: button_config.r,
+                g: button_config.g,
+                b: button_config.b
+            },
+            hoverColor: {
+                r: button_config.r,
+                g: button_config.g,
+                b: button_config.b
+            },
+            activeColor: {
+                r: button_config.r,
+                g: button_config.g,
+                b: button_config.b
+            },
+        })
+
+
+        Button("Decrement", {
+            onClick: () =>  {
+                count -= GetMouseState().y
+                data.count = count.pure()
+                data.animated_count = animated_count
+                props.onClick && props.onClick()
+
+                decrement_button_config.expanded && decrement_button_anim_in.play()
+                !decrement_button_config.expanded && decrement_button_anim_out.play()
+
+                decrement_button_config.expanded = !decrement_button_config.expanded
+            },
+            ry: 10,
+            width: decrement_button_config.width,
+            x: decrement_button_config.x
+        })
+
+    }, merged_config)
+}

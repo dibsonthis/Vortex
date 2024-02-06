@@ -1,0 +1,15 @@
+import [] : "../components/gui/core"
+
+const init = Init("Demo", 800, 600, 300, 100, WindowFlags.NoResize | WindowFlags.NoMove | WindowFlags.NoTitleBar)
+
+import [App] : "../components/App"
+
+var global = {}
+
+// Main(App, init, global)
+
+try {
+    Main(App, init, global)
+} catch (e) {
+    println(e)
+}

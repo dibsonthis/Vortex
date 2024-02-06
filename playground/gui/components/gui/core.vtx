@@ -1,0 +1,326 @@
+import [] : functional
+import sdl
+import time
+
+const imgui = sdl.imgui
+
+const WindowFlags = imgui.WINDOW_FLAGS
+const StyleElements = imgui.IMGUI_COLOR
+
+const ref = (value) => {
+    return {
+        value: value
+    }
+}
+
+const merge = (obj_a, obj_b) => {
+    var obj = {}
+    obj_a.info().keys.forEach((k) => {
+        obj[k] = obj_a[k]
+    })
+    obj_b.info().keys.forEach((k) => {
+        obj[k] = obj_b[k]
+    })
+    return obj
+}
+
+const ImportFont = (file_path, size = 12) => imgui.import_font(file_path, size)
+const PushFont = (font) => imgui.push_font(font)
+const PopFont = () => imgui.pop_font()
+const SetWindowSize = (width, height) => imgui.set_window_size(width, height)
+const SetWindowPos = (xPos = 0, yPos = 0) => imgui.set_window_pos(xPos, yPos)
+
+const SameLine = () => imgui.same_line()
+const SpaceX = (x) => imgui.set_cursor_pos_x(imgui.get_cursor_pos().x + x)
+const SpaceY = (y) => imgui.set_cursor_pos_y(imgui.get_cursor_pos().y + y)
+const Space = (x = 1, y = 0) => {
+    imgui.set_cursor_pos_x(imgui.get_cursor_pos().x + x)
+    imgui.set_cursor_pos_y(imgui.get_cursor_pos().y + y)
+}
+const SetX = (x) => imgui.set_cursor_pos_x(x)
+const SetY = (y) => imgui.set_cursor_pos_y(y)
+const Set = (x = 0, y = 0) => {
+    imgui.set_cursor_pos_x(x)
+    imgui.set_cursor_pos_y(y)
+}
+const GetCursorPos = () => imgui.get_cursor_pos()
+
+const SetScrollHereX = (center_x_ratio = 0.5) => imgui.set_scroll_here_x(center_x_ratio)
+const SetScrollHereY = (center_y_ratio = 0.5) => imgui.set_scroll_here_y(center_y_ratio)
+
+const PushStyleColor = (element, color = { r: 1, g: 1, b: 1, a: 1 }) => {
+    imgui.push_style_color(element, 
+        color.r || 0, 
+        color.g || 0, 
+        color.b || 0, 
+        color.a || 1
+    )
+}
+
+const PopStyleColor = () => {
+    imgui.pop_style_color()
+}
+
+const GuiInit = (window, renderer) => {
+    imgui.check_version()
+    imgui.create_context()
+    imgui.init_io()
+    imgui.init_for_sdl(window, renderer)
+    imgui.sdl_render_init(renderer)
+}
+
+const ChildNamed = (child_name, child_fn, config = {}) => {
+    config.color && imgui.push_style_color(
+        imgui.IMGUI_COLOR.ChildBg, 
+        config.color.r || 0, 
+        config.color.g || 0, 
+        config.color.b || 0, 
+        config.color.a || 1
+    )
+
+    config.y && SetY(config.y)
+    config.x && SetX(config.x)
+
+    config.ry && SpaceY(config.ry)
+    config.rx && SpaceX(config.rx)
+
+    imgui.begin_child(child_name, config.width || 100, config.height || 40, config.border || false, config.flags || 0)
+    child_fn()
+    imgui.end_child()
+    
+    config.color && imgui.pop_style_color()
+}
+
+const Child = (child_fn, config = {}) => ChildNamed(f"${imgui.get_cursor_pos()}", child_fn, config)
+
+const Text = (text, config = {}) => {
+    const color = config.color || { r: 1, g: 1, b: 1, a: 1 }
+
+    imgui.push_style_color(
+        imgui.IMGUI_COLOR.Text, 
+        color.r || 0, 
+        color.g || 0, 
+        color.b || 0, 
+        color.a || 1)
+
+    config.font && imgui.push_font(config.font)
+
+    config.y && SetY(config.y)
+    config.x && SetX(config.x)
+
+    config.ry && SpaceY(config.ry)
+    config.rx && SpaceX(config.rx)
+    
+    imgui.text(text.string())
+    
+    imgui.pop_style_color()
+    config.font && imgui.pop_font()
+
+    return text
+}
+
+const CheckBox = (text, value_ref, config = {}) => {
+    var current_value = value_ref.value
+
+    config.y && SetY(config.y)
+    config.x && SetX(config.x)
+
+    config.ry && SpaceY(config.ry)
+    config.rx && SpaceX(config.rx)
+
+    config.font && imgui.push_font(config.font)
+
+    value_ref.value = imgui.checkbox(text, value_ref.value)
+
+    if (current_value != value_ref.value) {
+        if (value_ref.value) {
+            config.onCheck && config.onCheck()
+        } else {
+            config.onUnCheck && config.onUnCheck()
+        }
+    }
+
+    config.font && imgui.pop_font()
+
+    return config
+}
+
+const SliderFloat = (text, value_ref, start = 0, end = 1, config = {}) => {
+    var current_value = value_ref.value
+
+    config.y && SetY(config.y)
+    config.x && SetX(config.x)
+
+    config.ry && SpaceY(config.ry)
+    config.rx && SpaceX(config.rx)
+
+    config.font && imgui.push_font(config.font)
+
+    value_ref.value = imgui.slider_float(text, value_ref.value, start, end)
+
+    if (current_value != value_ref.value) {
+        config.onChange && config.onChange()
+    }
+
+    config.font && imgui.pop_font()
+
+    return config
+}
+
+const Button = (text, config = {}) => {
+    const color = config.color || {r: 0, g: 0, b: 0.5, a: 1}
+    const textColor = config.textColor || {r: 1, g: 1, b: 1, a: 1}
+    const width = config.width || 200
+    const height = config.height || 40
+    const hoverColor = config.hoverColor || {r: 0, g: 0, b: 1, a: 1}
+    const activeColor = config.activeColor || {r: 0, g: 1, b: 1, a: 1}
+    const onClick = config.onClick || (() => {})
+    
+    imgui.push_style_color(
+        imgui.IMGUI_COLOR.Button, 
+        color.r || 0, 
+        color.g || 0, 
+        color.b || 0, 
+        color.a || 1)
+
+    imgui.push_style_color(
+        imgui.IMGUI_COLOR.ButtonHovered, 
+        hoverColor.r || 0, 
+        hoverColor.g || 0, 
+        hoverColor.b || 0, 
+        hoverColor.a || 1)
+
+    imgui.push_style_color(
+        imgui.IMGUI_COLOR.ButtonActive, 
+        activeColor.r || 0, 
+        activeColor.g || 0, 
+        activeColor.b || 0, 
+        activeColor.a || 1)
+
+    imgui.push_style_color(
+        imgui.IMGUI_COLOR.Text, 
+        textColor.r || 0, 
+        textColor.g || 0, 
+        textColor.b || 0, 
+        textColor.a || 1)
+
+    config.font && imgui.push_font(config.font)
+
+    config.y && SetY(config.y)
+    config.x && SetX(config.x)
+
+    config.ry && SpaceY(config.ry)
+    config.rx && SpaceX(config.rx)
+
+    if (imgui.button(text, width, height)) {
+        onClick()
+    }
+
+    imgui.pop_style_color(4)
+
+    config.font && imgui.pop_font()
+
+    return config
+}
+
+const InitRef = () => ref(false)
+
+const OnInit = (init_ref, fn) => {
+    if (init_ref.value) {
+        return
+    }
+
+    fn()
+
+    init_ref.value = true
+}
+
+/* SDL Functions */
+
+const GetMouseState = () => sdl.getMouseState()
+
+/* Main */
+
+const Init = (title = "", width = 600, height = 600, x_pos = 300, y_pos = 100, flags = 0) => {
+    var init = sdl.initSDL()
+
+    if (init != 0) {
+        print("Error initializing SDL\n")
+        exit(1)
+    } else {
+        print("Initialized SDL\n")
+    }
+
+    const window = sdl.createWindow(title, x_pos, y_pos, width, height)
+    const renderer = sdl.createRenderer(window)
+
+    GuiInit(window, renderer)
+
+    return {
+        window: window,
+        renderer: renderer,
+        title: title,
+        width: width,
+        height: height,
+        x_pos: x_pos,
+        y_pos: y_pos,
+        flags: flags
+    }
+}
+
+const Main = (app_main, init_obj, global = { running: true } ) => {
+    global.running = true
+    global.window = init_obj.window
+    global.renderer = init_obj.renderer
+
+    if (global.handle_event) {
+        const g = global.handle_event
+        const h = (e) => {
+            if (e.type == sdl.EventType.QUIT) {
+                global.running = false
+            }
+            g(e)
+        }
+        global.handle_event = h
+    }
+
+    !global.handle_event and (global.handle_event = (e) => {
+        if (e.type == sdl.EventType.QUIT) {
+            global.running = false
+        }
+    })
+
+    while (global.running) {
+
+        const start_time = time.clock()
+    
+        var status;
+        while (status != 0) {
+            const poll = sdl.pollEvent()
+            status = poll.status
+            const event = poll.event
+    
+            imgui.process_event(event)
+    
+            global.handle_event(event)
+        }
+
+        imgui.new_frame()
+        imgui.begin(init_obj.title, init_obj.flags)
+        
+        app_main(global)
+
+        imgui.end()
+        imgui.render()
+    
+        sdl.renderClear(init_obj.renderer)
+    
+        imgui.render_draw_data(imgui.get_draw_data())
+    
+        sdl.setRenderDrawColor(init_obj.renderer, 255, 255, 255, 255)
+    
+        sdl.renderPresent(init_obj.renderer)
+    
+        global.delta = time.clock() - start_time
+    }
+}

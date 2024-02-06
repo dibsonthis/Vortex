@@ -1,0 +1,194 @@
+import [] : string
+import [] : "../components/gui/core"
+import sdl
+import time
+
+import [Counter] : "../components/Counter"
+
+/* State */
+var volume = ref(70)
+var checked = ref(false)
+var current_volume = volume.value
+var child_text_stream = []
+var child_text = ""
+var scroll_to_bottom = false
+var counter_data = {}
+/* ==== */
+
+/* Hooks */
+child_text::onChange((data) => {
+    if (child_text_stream.length() > 20) {
+        child_text_stream.remove(0)
+    }
+    child_text_stream.append(data.current + ": " + time.datetime())
+    scroll_to_bottom = true
+})
+/* ==== */
+
+/* Form fields */
+/* ==== */
+
+/* Components */
+/* ==== */
+
+/* Resources */
+const font = ImportFont("/Users/adib/Dev/Personal/Resources/Fonts/Personal/monofonto.otf", 18)
+const font_lg = ImportFont("/Users/adib/Dev/Personal/Resources/Fonts/Personal/monofonto.otf", 32)
+
+const sound = sdl.loadWav("/Users/adib/Dev/Personal/Resources/Sounds/Free/swoosh.mp3")
+const music = sdl.loadMusic("/Users/adib/Dev/Personal/Resources/Sounds/Free/ambience.wav")
+/* ==== */
+
+/* Config */
+/* ==== */
+
+const App = (global) => {
+    /* Dynamic Config */
+    const top_child_config = { 
+        border: true, 
+        color: { r: 1, g: 1, b: 1, a: 1 }, 
+        width: sdl.getWindowSize(global.window).w - 35, 
+        height: 150,
+        ry: 20,
+        rx: 10
+    }
+    /* ==== */
+
+    SetWindowSize(sdl.getWindowSize(global.window).w, sdl.getWindowSize(global.window).h)
+    SetWindowPos(0, 0)
+
+    sdl.musicVolume((volume.value / 100) * 128)
+
+    Child(() => {
+        for (child_text_stream, index, text) {
+            Text(text, {
+                color: {r: 0, g: 0, b: 0},
+                font: font
+            })
+        }
+        if (scroll_to_bottom) {
+            SetScrollHereY(1)
+            scroll_to_bottom = false
+        }
+    }, top_child_config)
+
+    Counter({ num: 20, start: 100, global: global, onClick: () => {
+        child_text = f"Event from child - changed to ${counter_data.count}"
+    }}, counter_data, { border: true, height: 250 })
+
+    SameLine()
+
+    Child(() => {
+        Text(f"Mouse:\n\nx: ${GetMouseState().x}\ny: ${GetMouseState().y}")
+    }, { width: 200, height: 100, border: true })
+
+    const music_status = sdl.musicStatus()
+
+    !music_status.playing && Button("Play", {
+        onClick: () => {
+            sdl.playMusic(music)
+            child_text = "Played"
+        },
+        width: 200,
+        height: 40,
+        color: {g: 0.5},
+        textColor: {r: 1, g: 1, b: 1},
+        hoverColor: {g: 0.2},
+        activeColor: {g: 0.2},
+        // font: font_lg,
+        ry: 10
+    })
+
+    music_status.playing && Button("Stop", {
+        onClick: () => {
+            sdl.haltMusic()
+            child_text = "Stopped"
+        },
+        width: 200,
+        height: 40,
+        color: {r: 0.5},
+        textColor: {r: 1, g: 1, b: 1},
+        hoverColor: {r: 0.2},
+        activeColor: {r: 0.2},
+        // font: font_lg,
+        ry: 10
+    })
+
+    music_status.playing and music_status.paused &&
+    SameLine() &&
+    Button("Resume", {
+        onClick: () => {
+            sdl.resumeMusic()
+            child_text = "Resumed"
+        },
+        width: 200,
+        height: 40,
+        color: {b: 0.5},
+        textColor: {r: 1, g: 1, b: 1},
+        hoverColor: {b: 0.2},
+        activeColor: {b: 0.2},
+        // font: font_lg,
+    })
+
+    music_status.playing and !music_status.paused && 
+    SameLine() &&
+    Button("Pause", {
+        onClick: () => {
+            sdl.pauseMusic()
+            child_text = "Paused"
+        },
+        width: 200,
+        height: 40,
+        color: {b: 0.5},
+        textColor: {r: 1, g: 1, b: 1},
+        hoverColor: {b: 0.2},
+        activeColor: {b: 0.2},
+        // font: font_lg,
+    })
+
+    SliderFloat("Volume", volume, 0, 100, {
+        onChange: () => {
+            checked.value = false
+            child_text = f"Set volume to ${volume.value}"
+        },
+        // font: font_lg,
+        ry: 10
+    })
+
+    Button("Full Blast", {
+        onClick: () => {
+            volume.value = 100
+            checked.value = false
+            child_text = "Set to max volume"
+        },
+        hoverColor: { r: 0.5, g: 0.5, b: 1, a: 1 },
+        color: { r: 0, g: 0, b: 1, a: 1 },
+        width: 200,
+        height: 40,
+        // font: font_lg,
+        ry: 10
+    })
+
+    SameLine()
+
+    CheckBox("Mute", checked, {
+        onCheck: () => {
+            current_volume = volume.value
+            volume.value = 0
+            child_text = "Muted"
+        },
+        onUnCheck: () => {
+            volume.value = current_volume
+            child_text = "Unmuted"
+        },
+        // font: font_lg,
+    })
+
+    const cursor_pos = GetCursorPos()
+
+    Child(() => {
+        Text(f"(${GetMouseState().x}, ${GetMouseState().y})")
+    }, {x: GetMouseState().x + 10, y: GetMouseState().y + 10 })
+
+    Set(cursor_pos.x, cursor_pos.y)
+}

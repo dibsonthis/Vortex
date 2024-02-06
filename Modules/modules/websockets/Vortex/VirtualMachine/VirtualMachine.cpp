@@ -34,7 +34,6 @@ Value pop_close(VM &vm)
 
 static void runtimeError(VM &vm, std::string message, std::string error_type, ...)
 {
-
     int last_frame = vm.frames.size() - 1;
     CallFrame &frame = vm.frames[last_frame];
 
@@ -662,7 +661,7 @@ static EvaluateResult run(VM &vm)
                 if (flag == 0)
                 {
                     runtimeError(vm, "Global '" + name_str + "' is undefined");
-                    pop(vm);
+                    // pop(vm);
                     if (vm.status == 2)
                     {
                         vm.status = 0;

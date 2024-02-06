@@ -1,0 +1,242 @@
+import [ref] : "core"
+import [] : functional
+import time
+
+const interpolate = (x1, x2, y1, y2, p) => {
+    const value = y1 + (y2 - y1) * ((p - x1) / (x2 - x1))
+    return value
+}
+
+const lerp = (start, end, t) => {
+    const value = start + (end - start) * t
+    return value
+}
+
+const ease_in = (t, n = 2) => t^n
+const bezier = (t) => t * t * (3 - 2 * t)
+const quad = (t) => {
+    if (t <= 0.5) {
+        return 2 * t * t
+    }
+    t -= 0.5
+    return 2 * t * (1 - t) + 0.5
+}
+const parametric = (t) => {
+    const sqr = t * t
+    return sqr / (2 * (sqr - t) + 1)
+}
+
+const Tween = (value_ref, _start = 0, _end = 0, duration = 0, easing = None) => {
+
+    var start_time = None
+    var playing = false
+    var played = false
+
+    var start = _start.pure()
+    var end = _end.pure()
+
+    const play = (s = None, e = None, d = None, easing_fn = None) => {
+
+        s && (start = s.pure())
+        e && (end = e.pure())
+        d && (duration = d.pure())
+        easing_fn && (easing = easing_fn.pure())
+
+        start_time = None
+
+        playing = true
+        played = true
+    }
+
+    const stop = () => {
+        playing = false
+        start_time = None
+    }
+
+    const run = () => {
+        if (!playing) {
+            return
+        }
+
+        if (!start_time) {
+            start_time = time.clock()
+        }
+
+        var total_time = (time.clock() - start_time) / 1000
+
+        if (easing) {
+            value_ref.value = lerp(start, end, easing(total_time/duration))
+        } else {
+            value_ref.value = lerp(start, end, total_time/duration)
+        }
+
+        if (total_time > duration) {
+            value_ref.value = end
+            playing = false
+            start_time = None
+        }
+    }
+
+    return {
+        run: run,
+        play: play,
+        stop: stop,
+        is_playing: () => playing,
+        has_played: () => played,
+        reset: () => {
+            played = false
+            playing = false
+        },
+    }
+}
+
+const Animation = (tweens) => {
+    const num_tweens = tweens.length()
+    var tween_to_play = 0
+    var finished = false
+    var playing = false
+    
+    const play = () => {
+        tween_to_play = 0
+        finished = false
+        playing = true
+    }
+
+    const stop = () => {
+        finished = true
+        playing = false
+        tween_to_play = 0
+        tweens.forEach((tween) => tween.reset())
+    }
+
+    const run = () => {
+        if (!playing) {
+            return
+        }
+        if (tween_to_play >= num_tweens) {
+            finished = true
+            playing = false
+            tween_to_play = 0
+            tweens.forEach((tween) => tween.reset())
+            return
+        }
+        for (tweens, index, tween) {
+            if (index == tween_to_play) {
+                const is_playing = tween.is_playing()
+                const has_played = tween.has_played()
+                
+                if (!is_playing && has_played) {
+                    tween_to_play += 1
+                }
+                tween.run()
+                if (!is_playing && !has_played) {
+                    tween.play()
+                }
+                break
+            }
+        }
+    }
+
+    return {
+        run: run,
+        play: play,
+        stop: stop
+    }
+}
+
+const TweenEx = (obj, start_obj, end_obj, duration = 0, easing = None) => {
+    var playing = false
+    var played = false
+
+    var tweens = []
+    var obj_ref = obj.obj_map((k, v) => ref(v)).obj_filter((k, v) => v.value.type() == "Number")
+
+    const obj_keys = obj_ref.info().keys
+    const start_obj_keys = start_obj.info().keys
+    const end_obj_keys = end_obj.info().keys
+
+    for (obj_keys, i, k) {
+        if (!start_obj[k]) {
+            start_obj[k] = obj[k]
+        }
+        if (!end_obj[k]) {
+            end_obj[k] = obj[k]
+        }
+    }
+    for (start_obj_keys, i, k) {
+        if (!obj[k]) {
+            obj[k] = start_obj[k]
+            obj_ref[k] = ref(obj[k])
+        }
+        if (!end_obj[k]) {
+            end_obj[k] = start_obj[k]
+        }
+    }
+    for (end_obj_keys, i, k) {
+        if (!obj[k]) {
+            obj[k] = 0
+            obj_ref[k] = ref(obj[k])
+        }
+        if (!start_obj[k]) {
+            start_obj[k] = end_obj[k]
+        }
+    }
+
+    for (obj.info().keys, index, key) {
+        if (obj[key].type() != "Number") {
+            continue
+        }
+        const tween = Tween(obj_ref[key], start_obj[key], end_obj[key], duration, easing)
+        tweens.append(tween)
+    }
+
+    const run = () => {
+        if (!playing) {
+            return
+        }
+
+        tweens.forEach((tween) => {
+            tween.run()
+        })
+        for (tweens, index, tween) {
+            if (tween.has_played() and !tween.is_playing()) {
+                playing = false
+                played = true
+                break
+            }
+        }
+        for (start_obj.info().keys, index, key) {
+            if (!obj_ref[key]) {
+                continue
+            }
+            obj[key] = obj_ref[key].value
+        }
+    }
+
+    const stop = () => {
+        playing = false
+    }
+
+    const play = () => {
+        tweens.forEach((tween) => {
+            tweenf.play()
+        })
+        playing = true
+        played = true
+    }
+
+    return {
+        run: run,
+        stop: stop,
+        play: play,
+        is_playing: () => playing,
+        has_played: () => played,
+        reset: () => {
+            played = false
+            playing = false
+            tweens.forEach((tween) => {
+                tween.reset()
+            })
+        },
+    }
+}

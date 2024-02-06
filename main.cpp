@@ -19,6 +19,8 @@ int main(int argc, char **argv)
 {
     if (type == CompType::DEV)
     {
+        // std::filesystem::current_path("../../../playground/gui/src");
+        // Lexer lexer("source.vtx");
         std::filesystem::current_path("../../../playground");
         Lexer lexer("source.vtx");
 

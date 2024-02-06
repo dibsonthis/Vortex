@@ -1,0 +1,25 @@
+import time
+
+const Defer = (fn, s = 1, once = false) => {
+    var start_time = None
+    var duration = 0
+    var fired = false
+
+    return () => {
+        if (once and fired) {
+            return
+        }
+
+        if (start_time == None) {
+            start_time = time.clock()
+        } else {
+            duration = (time.clock() - start_time) / 1000
+        }
+
+        if (duration >= s) {
+            start_time = time.clock()
+            fired = true
+            return fn()
+        }
+    }
+}
