@@ -1,23 +1,24 @@
-const trycatch = (try_fn, catch_fn) => {
-    try {
-        try_fn()
-    } catch (e) {
-    println(e)
-       catch_fn()
-    }
+const g = () => {
+    g()
 }
 
-const add = (a, b) => {
-    return trycatch(() => {
-        const g = 120
-        g * a + b
-    }, () => 512)
-}
+g()
 
-add(5, "1").println()
+println("Here")
 
 // try {
-//     println(x * 100 / "j")
-// } catch (e) {
-//    println(5)
+//     try {
+//         8 * "fff"
+//     } catch (e) {
+//         error(e.message, "ReThrow")
+//         // println(e)
+//     }
+// } catch(e) {
+//     println(e)
+// }
+
+// try {
+//     const g = 8 * "fff"
+// } catch(e) {
+//     println(e)
 // }

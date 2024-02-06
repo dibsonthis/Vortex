@@ -82,7 +82,6 @@ static void runtimeError(VM &vm, std::string message, std::string error_type, ..
                 instruction = frame.function->instruction_offsets[instruction_index];
                 _instruction = frame.function->chunk.code[instruction];
                 instruction_index++;
-                frame.ip += 5;
             }
             instruction_index--;
             instruction = frame.function->instruction_offsets[instruction_index];
@@ -103,10 +102,32 @@ static void runtimeError(VM &vm, std::string message, std::string error_type, ..
                 }
             }
         }
+
         push(vm, error_obj);
-        frame.ip += vm.try_instructions.back() + 5;
-        // frame.ip += vm.try_instructions.back();
-        // frame.ip += vm.try_instructions.back() + 10;
+
+        instruction_index--;
+
+        while (true)
+        {
+            instruction_index++;
+            instruction = frame.function->instruction_offsets[instruction_index];
+            _instruction = frame.function->chunk.code[instruction];
+            frame.ip += diff;
+            diff = frame.function->instruction_offsets[instruction_index + 1] - instruction;
+
+            if (_instruction == OP_TRY_BEGIN)
+            {
+                try_count++;
+            }
+            if (_instruction == OP_CATCH_BEGIN)
+            {
+                try_count--;
+                if (try_count == 0)
+                {
+                    break;
+                }
+            }
+        }
         vm.try_instructions.pop_back();
         return;
     }
@@ -121,9 +142,19 @@ static void runtimeError(VM &vm, std::string message, std::string error_type, ..
     va_end(args);
     fputs("\n", stderr);
 
+    CallFrame *prev_frame;
+
     for (int i = vm.frames.size() - 1; i >= 0; i--)
     {
         CallFrame *frame = &vm.frames[i];
+        if (prev_frame && prev_frame->function == frame->function)
+        {
+            // Likely hit a recursion error
+            continue;
+        }
+
+        prev_frame = frame;
+
         auto &function = frame->function;
         size_t instruction = frame->ip - function->chunk.code.data() - 1;
         if (function->name == "error" || function->name == "Error")
@@ -2225,6 +2256,12 @@ void freeVM(VM &vm)
 
 static int call_function(VM &vm, Value &function, int param_num, CallFrame *&frame, std::shared_ptr<Value> object)
 {
+    if (vm.frames.size() > vm.call_stack_limit)
+    {
+        runtimeError(vm, "Stack size limit exceeded", "RecursionError");
+        return -1;
+    }
+
     auto &function_obj = function.get_function();
     int positional_args = function_obj->arity - function_obj->defaults;
 

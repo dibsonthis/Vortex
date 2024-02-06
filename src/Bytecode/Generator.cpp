@@ -421,6 +421,8 @@ int gen_try_catch(Chunk &chunk, node_ptr node)
     uint8_t *catch_bytes = int_to_bytes(catch_offset);
     patch_bytes(chunk, try_begin_instruction, catch_bytes);
 
+    begin_scope();
+
     add_code(chunk, OP_CATCH_BEGIN, node->line);
 
     // error object
@@ -435,13 +437,13 @@ int gen_try_catch(Chunk &chunk, node_ptr node)
         declareVariable(error_var_name, false, true);
         add_code(chunk, OP_SWAP_TOS, node->line);
         add_opcode(chunk, OP_SET_FORCE, resolve_variable(error_var_name), node->line);
-        add_code(chunk, OP_POP, node->line); // pop the error object off the stack
+        // add_code(chunk, OP_POP, node->line); // pop the error object off the stack
         // add_code(chunk, OP_POP, node->line); // pop the original empty object off the stack
     }
-    begin_scope();
+
     generate_bytecode(node->_Node.TryCatch().catch_body->_Node.Object().elements, chunk);
-    // add_code(chunk, OP_POP, node->line); // pop the error object off the stack
     end_scope(chunk);
+
     int offset = chunk.code.size() - jump_instruction - 4;
     uint8_t *bytes = int_to_bytes(offset);
     patch_bytes(chunk, jump_instruction, bytes);
