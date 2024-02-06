@@ -1,12 +1,23 @@
-const obj_a = {
-    // a: 1,
-    // b: 2
+const trycatch = (try_fn, catch_fn) => {
+    try {
+        try_fn()
+    } catch (e) {
+    println(e)
+       catch_fn()
+    }
 }
 
-const obj_b = {
-    ...obj_a,
-    b: 40,
-    c: 70
+const add = (a, b) => {
+    return trycatch(() => {
+        const g = 120
+        g * a + b
+    }, () => 512)
 }
 
-println(obj_b)
+add(5, "1").println()
+
+// try {
+//     println(x * 100 / "j")
+// } catch (e) {
+//    println(5)
+// }
