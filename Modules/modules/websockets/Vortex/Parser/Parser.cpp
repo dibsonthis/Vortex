@@ -231,7 +231,14 @@ void Parser::parse_colon(std::string end)
 
             if (current_node->_Node.Op().right->type == NodeType::FUNC)
             {
-                current_node->_Node.Op().right->_Node.Function().name = left->_Node.ID().value;
+                if (left->type == NodeType::ID)
+                {
+                    current_node->_Node.Op().right->_Node.Function().name = left->_Node.ID().value;
+                }
+                else
+                {
+                    current_node->_Node.Op().right->_Node.Function().name = left->_Node.String().value;
+                }
             }
         }
         advance();

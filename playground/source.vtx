@@ -1,19 +1,5 @@
-var x = 0
-
-const adder = (v) => {
-    println("running")
-    v += 1
+const g = {
+    "f": () => 10
 }
 
-x::onChange((e) => {
-    println(e)
-    adder(e.old)
-})
-
-x = 10
-
-println(x)
-
-x = 20
-
-println(x)
+println(g)
