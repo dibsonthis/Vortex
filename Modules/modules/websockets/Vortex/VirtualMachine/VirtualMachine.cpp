@@ -1,5 +1,7 @@
 #include "VirtualMachine.hpp"
 
+int internal_stack_count = 0;
+
 void push(VM &vm, Value &value)
 {
     vm.stack.push_back(value);
@@ -416,7 +418,9 @@ static EvaluateResult run(VM &vm)
 
                 Value obj = object_val();
                 obj.get_object()->keys = {"old", "current"};
-                obj.get_object()->values["old"] = value;
+                Value old_pure = copy(value);
+                old_pure.hooks.onChangeHook = nullptr;
+                obj.get_object()->values["old"] = old_pure;
                 obj.get_object()->values["current"] = new_value;
 
                 vm.stack[index + frame->frame_start] = new_value;
@@ -508,7 +512,11 @@ static EvaluateResult run(VM &vm)
                 {
                     Value obj = object_val();
                     obj.get_object()->keys = {"old", "current"};
-                    obj.get_object()->values["old"] = current;
+
+                    Value old_pure = copy(current);
+                    old_pure.hooks.onChangeHook = nullptr;
+                    obj.get_object()->values["old"] = old_pure;
+
                     obj.get_object()->values["current"] = value;
 
                     container.get_object()->values[accessor.get_string()] = value;
@@ -943,7 +951,11 @@ static EvaluateResult run(VM &vm)
 
                 Value obj = object_val();
                 obj.get_object()->keys = {"old", "current"};
-                obj.get_object()->values["old"] = value;
+
+                Value old_pure = copy(value);
+                old_pure.hooks.onChangeHook = nullptr;
+                obj.get_object()->values["old"] = old_pure;
+
                 obj.get_object()->values["current"] = new_value;
 
                 *frame->function->closed_vars[index]->location = new_value;
@@ -1455,6 +1467,7 @@ static EvaluateResult run(VM &vm)
                 if (result.is_object() && result.get_object()->type_name == "Error")
                 {
                     runtimeError(vm, result.get_object()->values["message"].get_string(), result.get_object()->values["type"].get_string());
+
                     if (vm.status == 2)
                     {
                         vm.status = 0;
@@ -1545,6 +1558,19 @@ static EvaluateResult run(VM &vm)
                     }
                 }
                 Value result = native_function->function(args);
+
+                if (result.is_object() && result.get_object()->type_name == "Error")
+                {
+                    runtimeError(vm, result.get_object()->values["message"].get_string(), result.get_object()->values["type"].get_string());
+
+                    if (vm.status == 2)
+                    {
+                        vm.status = 0;
+                        break;
+                    }
+
+                    return EVALUATE_RUNTIME_ERROR;
+                }
                 push(vm, result);
                 break;
             }
@@ -2208,7 +2234,15 @@ static EvaluateResult run(VM &vm)
 
 EvaluateResult evaluate(VM &vm)
 {
-    return run(vm);
+    internal_stack_count++;
+    if (internal_stack_count > 200)
+    {
+        std::cout << "InternalError: Internal stack size limit exceeded";
+        return EVALUATE_RUNTIME_ERROR;
+    }
+    auto res = run(vm);
+    internal_stack_count--;
+    return res;
 }
 
 bool is_equal(Value &v1, Value &v2)
@@ -2608,7 +2642,11 @@ static Value insert_builtin(std::vector<Value> &args)
     {
         Value obj = object_val();
         obj.get_object()->keys = {"old", "current"};
-        obj.get_object()->values["old"] = list_copy;
+
+        Value old_pure = copy(list_copy);
+        old_pure.hooks.onChangeHook = nullptr;
+        obj.get_object()->values["old"] = old_pure;
+
         obj.get_object()->values["current"] = list;
 
         // store onChangeHook here
@@ -2683,6 +2721,10 @@ static Value append_builtin(std::vector<Value> &args)
     {
         Value obj = object_val();
         obj.get_object()->keys = {"old", "current"};
+
+        Value old_pure = copy(list_copy);
+        old_pure.hooks.onChangeHook = nullptr;
+
         obj.get_object()->values["old"] = list_copy;
         obj.get_object()->values["current"] = list;
 
@@ -2773,7 +2815,11 @@ static Value remove_builtin(std::vector<Value> &args)
     {
         Value obj = object_val();
         obj.get_object()->keys = {"old", "current"};
-        obj.get_object()->values["old"] = list_copy;
+
+        Value old_pure = copy(list_copy);
+        old_pure.hooks.onChangeHook = nullptr;
+
+        obj.get_object()->values["old"] = old_pure;
         obj.get_object()->values["current"] = list;
 
         // store onChangeHook here
