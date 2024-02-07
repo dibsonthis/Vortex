@@ -31,10 +31,10 @@ type Client = (uri) => {
         send: (message) => lib._client_send(this.client, this.connection, message),
         set_on_open: (function) => {
                 const client = this
-                lib._client_on_open(this.client, () => {
+                lib._client_on_open(this.client, (data) => {
                 client.connected = true
                 client.reconnect_attempts_count = 0
-                function()
+                function(data)
             })
         },
         set_on_close: (function) => {
