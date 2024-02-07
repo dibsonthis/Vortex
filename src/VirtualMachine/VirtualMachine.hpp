@@ -54,6 +54,7 @@ struct VM
     int coro_count = 0;
     std::vector<int> try_instructions;
     int call_stack_limit = 3000;
+    int internal_callstack_count = 0;
 
     VM()
     {

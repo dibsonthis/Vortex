@@ -25,7 +25,7 @@ macBuild()
       case $yn in
           [Yy]* )
           echo "Password required to access usr/local"
-          sudo -s eval 'mv "$PWD"/bin/build/interp/mac/vortex /usr/local/bin; sudo -s eval; mkdir /usr/local/share/vortex; mkdir /usr/local/share/vortex/modules; echo "Compiling modules..."; cd "Modules"; ./build_modules.sh; cd ..; cp -R "$PWD"/Modules/modules/* /usr/local/share/vortex/modules; cp "$PWD"/scripts/uninstall.sh /usr/local/share/vortex; chmod +x /usr/local/share/vortex/uninstall.sh'
+          sudo -s eval 'cp "$PWD"/bin/build/interp/mac/vortex /usr/local/bin; sudo -s eval; mkdir /usr/local/share/vortex; mkdir /usr/local/share/vortex/modules; echo "Compiling modules..."; cd "Modules"; ./build_modules.sh; cd ..; cp -R "$PWD"/Modules/modules/* /usr/local/share/vortex/modules; cp "$PWD"/scripts/mac/uninstall.sh /usr/local/share/vortex; chmod +x /usr/local/share/vortex/uninstall.sh'
           echo "Added Vortex and standard modules to usr/local - Important: To uninstall, you will need to run 'usr/local/share/vortex/uninstall.sh'"; break;;
           [Nn]* ) exit;;
           * ) echo "Please answer y or n.";;
@@ -61,7 +61,7 @@ linBuild()
       case $yn in
           [Yy]* )
           echo "Password required to access usr/local"
-          sudo -s eval 'mv "$PWD"/bin/build/interp/linux/vortex /usr/local/bin; sudo -s eval; mkdir /usr/local/share/vortex; mkdir /usr/local/share/vortex/modules; echo "Compiling modules..."; cd "Modules"; ./build_modules_lin.sh; cd ..; cp -R "$PWD"/Modules/modules/* /usr/local/share/vortex/modules; cp "$PWD"/scripts/uninstall.sh /usr/local/share/vortex; chmod +x /usr/local/share/vortex/uninstall.sh'
+          sudo -s eval 'cp "$PWD"/bin/build/interp/linux/vortex /usr/local/bin; sudo -s eval; mkdir /usr/local/share/vortex; mkdir /usr/local/share/vortex/modules; echo "Compiling modules..."; cd "Modules"; ./build_modules_lin.sh; cd ..; cp -R "$PWD"/Modules/modules/* /usr/local/share/vortex/modules; cp "$PWD"/scripts/mac/uninstall.sh /usr/local/share/vortex; chmod +x /usr/local/share/vortex/uninstall.sh'
           echo "Added Vortex and standard modules to usr/local - Important: To uninstall, you will need to run 'usr/local/share/vortex/uninstall.sh'"; break;;
           [Nn]* ) exit;;
           * ) echo "Please answer y or n.";;

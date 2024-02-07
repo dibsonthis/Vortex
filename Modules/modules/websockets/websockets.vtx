@@ -31,10 +31,10 @@ type Client = (uri) => {
         send: (message) => lib._client_send(this.client, this.connection, message),
         set_on_open: (function) => {
                 const client = this
-                lib._client_on_open(this.client, (data) => {
+                lib._client_on_open(this.client, () => {
                 client.connected = true
                 client.reconnect_attempts_count = 0
-                function(data)
+                function()
             })
         },
         set_on_close: (function) => {
@@ -144,8 +144,9 @@ type Server = () => {
     const s = {
         server: lib._server(),
         listen: (port) => {
-            lib._server_listen(this.server, port)
             this._port = port
+            println(f"Listening on port ${port}")
+            lib._server_listen(this.server, port)
         },
         send: (id, message) => lib._server_send(this.server, id, message),
         broadcast: (message) => lib._server_broadcast(this.server, message),

@@ -1,7 +1,19 @@
-// const g = () => {
-//     g()
-// }
+var x = 0
 
-// g()
+const adder = (v) => {
+    println("running")
+    v += 1
+}
 
-// println("Here")
+x::onChange((e) => {
+    println(e)
+    adder(e.old)
+})
+
+x = 10
+
+println(x)
+
+x = 20
+
+println(x)

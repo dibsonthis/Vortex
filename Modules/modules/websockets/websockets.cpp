@@ -552,8 +552,8 @@ context_ptr server_on_tls_init(tls_mode mode, websocketpp::connection_hdl hdl)
 {
     namespace asio = websocketpp::lib::asio;
 
-    std::cout << "on_tls_init called with hdl: " << hdl.lock().get() << std::endl;
-    std::cout << "using TLS mode: " << (mode == MOZILLA_MODERN ? "Mozilla Modern" : "Mozilla Intermediate") << std::endl;
+    // std::cout << "on_tls_init called with hdl: " << hdl.lock().get() << std::endl;
+    // std::cout << "using TLS mode: " << (mode == MOZILLA_MODERN ? "Mozilla Modern" : "Mozilla Intermediate") << std::endl;
 
     context_ptr ctx = websocketpp::lib::make_shared<asio::ssl::context>(asio::ssl::context::tlsv12);
 
