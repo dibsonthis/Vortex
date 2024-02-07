@@ -39,6 +39,11 @@ static void runtimeError(VM &vm, std::string message, std::string error_type, ..
     int last_frame = vm.frames.size() - 1;
     CallFrame &frame = vm.frames[last_frame];
 
+    if (frame.function->is_generator)
+    {
+        frame = *vm.gen_frames[frame.function->name];
+    }
+
     int num_try_blocks = vm.try_instructions.size();
 
     if (num_try_blocks > 0)
@@ -130,6 +135,12 @@ static void runtimeError(VM &vm, std::string message, std::string error_type, ..
             }
         }
         vm.try_instructions.pop_back();
+
+        if (frame.function->is_generator)
+        {
+            *vm.gen_frames[frame.function->name] = frame;
+        }
+
         return;
     }
     else
@@ -2402,6 +2413,10 @@ static int call_function(VM &vm, Value &function, int param_num, CallFrame *&fra
 
         int instruction_index = frame->ip - &frame->function->chunk.code[0];
         call_frame->instruction_index = instruction_index;
+
+        auto offsets = instruction_offsets(call_frame->function->chunk);
+        call_frame->function->instruction_offsets = offsets;
+
         vm.gen_frames[function_copy_obj->name] = call_frame;
 
         push(vm, function_copy);
