@@ -39,7 +39,7 @@ static void runtimeError(VM &vm, std::string message, std::string error_type, ..
     int last_frame = vm.frames.size() - 1;
     CallFrame &frame = vm.frames[last_frame];
 
-    if (frame.function->is_generator)
+    if (frame.function->is_generator && frame.function->generator_init)
     {
         frame = *vm.gen_frames[frame.function->name];
     }
@@ -76,13 +76,17 @@ static void runtimeError(VM &vm, std::string message, std::string error_type, ..
                 int to_clean = vm.stack.size() - frame.sp;
                 for (int i = 0; i < to_clean; i++)
                 {
-                    Value &value = vm.stack.back();
                     vm.stack.pop_back();
                 }
 
                 last_frame -= 1;
                 frame = vm.frames[last_frame];
-                vm.frames.pop_back();
+
+                if (frame.function->is_generator && frame.function->generator_init)
+                {
+                    frame = *vm.gen_frames[frame.function->name];
+                }
+
                 current_offset = (int)(size_t)(frame.ip - &frame.function->chunk.code[0]);
                 instruction_index = std::find(frame.function->instruction_offsets.begin(), frame.function->instruction_offsets.end(), current_offset) - frame.function->instruction_offsets.begin();
                 instruction = frame.function->instruction_offsets[instruction_index];
@@ -136,9 +140,14 @@ static void runtimeError(VM &vm, std::string message, std::string error_type, ..
         }
         vm.try_instructions.pop_back();
 
-        if (frame.function->is_generator)
+        if (frame.function->is_generator && frame.function->generator_init)
         {
             *vm.gen_frames[frame.function->name] = frame;
+        }
+
+        while (vm.frames.size() > last_frame + 1)
+        {
+            vm.frames.pop_back();
         }
 
         return;

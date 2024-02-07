@@ -1,16 +1,11 @@
 const coro = () => {
-    var x = 0
-    while (true) {
-        try {
-            yield 1 + _value
-        } catch(e) {
-            yield 1 + x
-        }
-        x += 1
+    try {
+        yield 1 + _value
+    } catch(e) {
+        yield (-1)
     }
 }
 
 const c = coro()
 
-c().println()
-c(4).println()
+c(10).println()

@@ -191,6 +191,7 @@ const TweenEx = (obj, start_obj, end_obj, duration = 0, easing = None) => {
     }
 
     const run = () => {
+        8 * "f"
         if (!playing) {
             return
         }
@@ -219,7 +220,7 @@ const TweenEx = (obj, start_obj, end_obj, duration = 0, easing = None) => {
 
     const play = () => {
         tweens.forEach((tween) => {
-            tweenf.play()
+            tween.play()
         })
         playing = true
         played = true
