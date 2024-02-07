@@ -385,6 +385,7 @@ struct VM
     std::vector<std::shared_ptr<Closure>> closed_values;
     int coro_count = 0;
     std::vector<int> try_instructions;
+int call_stack_limit = 3000;
 
     VM()
     {
