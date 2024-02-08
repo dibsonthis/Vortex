@@ -536,13 +536,12 @@ static EvaluateResult run(VM &vm)
                     Value old_pure = copy(current);
                     old_pure.hooks.onChangeHook = nullptr;
                     obj.get_object()->values["old"] = old_pure;
-
                     obj.get_object()->values["current"] = value;
 
                     container.get_object()->values[accessor.get_string()] = value;
 
                     // store onChangeHook here
-                    auto hook = obj.get_object()->values["old"].hooks.onChangeHook;
+                    auto hook = current.hooks.onChangeHook;
                     obj.get_object()->values["old"].hooks.onChangeHook = nullptr;
 
                     auto value_hook = obj.get_object()->values["current"].hooks.onChangeHook;
@@ -2674,7 +2673,7 @@ static Value insert_builtin(std::vector<Value> &args)
         obj.get_object()->values["current"] = list;
 
         // store onChangeHook here
-        auto hook = obj.get_object()->values["old"].hooks.onChangeHook;
+        auto hook = list_copy.hooks.onChangeHook;
         obj.get_object()->values["old"].hooks.onChangeHook = nullptr;
 
         auto value_hook = obj.get_object()->values["current"].hooks.onChangeHook;
@@ -2753,7 +2752,7 @@ static Value append_builtin(std::vector<Value> &args)
         obj.get_object()->values["current"] = list;
 
         // store onChangeHook here
-        auto hook = obj.get_object()->values["old"].hooks.onChangeHook;
+        auto hook = list_copy.hooks.onChangeHook;
         obj.get_object()->values["old"].hooks.onChangeHook = nullptr;
 
         auto value_hook = obj.get_object()->values["current"].hooks.onChangeHook;
@@ -2847,7 +2846,7 @@ static Value remove_builtin(std::vector<Value> &args)
         obj.get_object()->values["current"] = list;
 
         // store onChangeHook here
-        auto hook = obj.get_object()->values["old"].hooks.onChangeHook;
+        auto hook = list_copy.hooks.onChangeHook;
         obj.get_object()->values["old"].hooks.onChangeHook = nullptr;
 
         auto value_hook = obj.get_object()->values["current"].hooks.onChangeHook;

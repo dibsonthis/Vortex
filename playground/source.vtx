@@ -1,11 +1,1 @@
-const coro = () => {
-    try {
-        yield 1 + _value
-    } catch(e) {
-        yield (-1)
-    }
-}
-
-const c = coro()
-
-c(10).println()
+import websockets

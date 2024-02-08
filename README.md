@@ -10,7 +10,11 @@ Vortex is a dynamically typed programming language that comes with C interoperab
 
 ## Start Using Vortex Now
 
-If you want to start using Vortex straight away, we've pre-compiled the intepreter and standard library modules for an easy to use seamless experience. Running the below will create a self contained scaffold in the current directory that includes everything you need to run Vortex programs, namely:
+Read through the [Vortex Documentation](https://dibs.gitbook.io/vortex-docs/) here to get a deeper understanding of the language and how it works.
+
+The docs include a Getting Started guide you can follow.
+
+<!-- If you want to start using Vortex straight away, we've pre-compiled the intepreter and standard library modules for an easy to use seamless experience. Running the below will create a self contained scaffold in the current directory that includes everything you need to run Vortex programs, namely:
 
 - The Vortex interpreter
 - Vortex standard library modules
@@ -38,9 +42,9 @@ Windows:
 ```bash
 curl -LO -k https://raw.githubusercontent.com/dibsonthis/vortex-dist/main/win/scaffold.bat
 scaffold.bat
-```
+``` -->
 
-More information cam be found here: [Vortex Dist](https://github.com/dibsonthis/vortex-dist)
+<!-- More information cam be found here: [Vortex Dist](https://github.com/dibsonthis/vortex-dist) -->
 
 ## Features
 
