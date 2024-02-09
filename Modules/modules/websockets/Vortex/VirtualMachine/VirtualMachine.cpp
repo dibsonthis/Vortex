@@ -3059,14 +3059,9 @@ static Value info_builtin(std::vector<Value> &args)
         {
             obj->values["keys"].get_list()->push_back(string_val(key));
         }
-        for (auto &prop : object->values)
+        for (auto &key : object->keys)
         {
-            std::string key = prop.first;
-            if (std::find(object->keys.begin(), object->keys.end(), key) == object->keys.end())
-            {
-                obj->values["keys"].get_list()->insert(obj->values["keys"].get_list()->begin(), string_val(key));
-            }
-            obj->values["values"].get_list()->push_back(prop.second);
+            obj->values["values"].get_list()->push_back(object->values[key]);
         }
         return info;
     }
