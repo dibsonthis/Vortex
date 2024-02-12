@@ -1,1 +1,4 @@
-import websockets
+const n = () => "/Users/adib/Dev/Personal/Vortex/Modules/modules/string/string.vtx"
+import str : n()
+
+println(str)

@@ -1171,60 +1171,67 @@ void gen_import(Chunk &chunk, node_ptr node)
         node->_Node.Import().target->_Node.String().value = "@modules/" + target_value;
     }
 
-    if (node->_Node.Import().target->type != NodeType::STRING)
+    // if (node->_Node.Import().target->type != NodeType::STRING)
+    // {
+    //     error("Import target must be a string");
+    // }
+
+    if (node->_Node.Import().target->type == NodeType::STRING)
     {
-        error("Import target must be a string");
-    }
+        std::string target_name = std::string(node->_Node.Import().target->_Node.String().value);
 
-    std::string target_name = std::string(node->_Node.Import().target->_Node.String().value);
+        replaceAll(target_name, "@modules/", "");
 
-    replaceAll(target_name, "@modules/", "");
-
-    std::string path = node->_Node.Import().target->_Node.String().value + ".vtx";
+        std::string path = node->_Node.Import().target->_Node.String().value + ".vtx";
 
 #if GCC_COMPILER
 #if __apple__ || __linux__
-    if (chunk.import_path != "")
-    {
-        replaceAll(path, "@modules", chunk.import_path + "/" + target_name);
-    }
-    else
-    {
-        replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
-    }
+        if (chunk.import_path != "")
+        {
+            replaceAll(path, "@modules", chunk.import_path + "/" + target_name);
+        }
+        else
+        {
+            replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
+        }
 #else
-    if (chunk.import_path != "")
-    {
-        replaceAll(path, "@modules", chunk.import_path + "/" + target_name);
-    }
-    else
-    {
-        replaceAll(path, "@modules", "C:/Program Files/vortex/modules/" + target_name);
-    }
+        if (chunk.import_path != "")
+        {
+            replaceAll(path, "@modules", chunk.import_path + "/" + target_name);
+        }
+        else
+        {
+            replaceAll(path, "@modules", "C:/Program Files/vortex/modules/" + target_name);
+        }
 #endif
 #else
 #if defined(__APPLE__) || defined(__linux__)
-    if (chunk.import_path != "")
-    {
-        replaceAll(path, "@modules", chunk.import_path + "/" + target_name);
-    }
-    else
-    {
-        replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
-    }
+        if (chunk.import_path != "")
+        {
+            replaceAll(path, "@modules", chunk.import_path + "/" + target_name);
+        }
+        else
+        {
+            replaceAll(path, "@modules", "/usr/local/share/vortex/modules/" + target_name);
+        }
 #else
-    if (chunk.import_path != "")
-    {
-        replaceAll(path, "@modules", chunk.import_path + "/" + target_name);
-    }
-    else
-    {
-        replaceAll(path, "@modules", "C:/Program Files/vortex/modules/" + target_name);
-    }
+        if (chunk.import_path != "")
+        {
+            replaceAll(path, "@modules", chunk.import_path + "/" + target_name);
+        }
+        else
+        {
+            replaceAll(path, "@modules", "C:/Program Files/vortex/modules/" + target_name);
+        }
 #endif
 #endif
 
-    add_constant_code(chunk, string_val(path), node->line);
+        add_constant_code(chunk, string_val(path), node->line);
+    }
+    else
+    {
+        generate(node->_Node.Import().target, chunk);
+    }
 
     if (node->_Node.Import().module->type == NodeType::ID)
     {

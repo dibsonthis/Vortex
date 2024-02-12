@@ -1,0 +1,16 @@
+const lib = load_lib("./bin/crypto", [
+    "evp_generate_key", "evp_encrypt", "evp_decrypt",
+    "rsa_generate_pair", "rsa_encrypt", "rsa_decrypt"
+    ])
+
+const evp = {
+    generate_key: (size = 32) => lib.evp_generate_key(size),
+    encrypt: (str, key) => lib.evp_encrypt(str, key),
+    decrypt: (str, key) => lib.evp_decrypt(str, key),
+}
+
+const rsa = {
+    generate_pair: (size = 2048) => lib.rsa_generate_pair(size),
+    encrypt: (str, key) => lib.rsa_encrypt(str, key),
+    decrypt: (str, key) => lib.rsa_decrypt(str, key),
+}
