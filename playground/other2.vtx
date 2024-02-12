@@ -1,0 +1,3 @@
+import [global_obj] : "./other"
+
+global_obj.x = 100

@@ -1719,6 +1719,23 @@ static EvaluateResult run(VM &vm)
                 else
                 {
                     // import mod : path
+
+                    std::string path_string = path.get_string();
+                    std::string absolute_path = std::filesystem::canonical(path_string);
+
+                    if (vm.import_cache.count(absolute_path) > 0)
+                    {
+                        for (auto &global : vm.import_cache[absolute_path].import_globals)
+                        {
+                            if (global.first != "__vm__")
+                            {
+                                vm.globals[global.first] = global.second;
+                            }
+                        }
+                        push(vm, vm.import_cache[absolute_path].import_object);
+                        break;
+                    }
+
                     Lexer lexer(path.get_string());
                     lexer.tokenize();
 
@@ -1770,6 +1787,11 @@ static EvaluateResult run(VM &vm)
                     main_frame.function->instruction_offsets = offsets;
                     evaluate(import_vm);
 
+                    for (auto &c : import_vm.import_cache)
+                    {
+                        vm.import_cache[c.first] = c.second;
+                    }
+
                     if (import_vm.status != 0)
                     {
                         exit(import_vm.status);
@@ -1796,6 +1818,11 @@ static EvaluateResult run(VM &vm)
                         obj->keys.push_back(var);
                     }
 
+                    CachedImport cached;
+                    cached.import_object = import_obj;
+                    cached.import_globals = import_vm.globals;
+                    vm.import_cache[absolute_path] = cached;
+
                     push(vm, import_obj);
 
                     break;
@@ -1813,7 +1840,44 @@ static EvaluateResult run(VM &vm)
 
                 Value path = pop(vm);
 
-                Lexer lexer(path.get_string());
+                std::string path_string = path.get_string();
+                std::string absolute_path = std::filesystem::canonical(path_string);
+
+                if (vm.import_cache.count(absolute_path) > 0)
+                {
+                    for (auto &global : vm.import_cache[absolute_path].import_globals)
+                    {
+                        if (global.first != "__vm__")
+                        {
+                            vm.globals[global.first] = global.second;
+                        }
+                    }
+
+                    auto &import_object = vm.import_cache[absolute_path].import_object;
+
+                    for (auto &name : names)
+                    {
+                        if (import_object.get_object()->values.count(name) > 0)
+                        {
+                            push(vm, import_object.get_object()->values[name]);
+                            continue;
+                        }
+
+                        runtimeError(vm, "Cannot import variable '" + name + "' from '" + path_string + "'", "ImportError");
+
+                        if (vm.status == 2)
+                        {
+                            vm.status = 0;
+                            break;
+                        }
+
+                        return EVALUATE_RUNTIME_ERROR;
+                    }
+
+                    break;
+                }
+
+                Lexer lexer(path_string);
                 lexer.tokenize();
 
                 Parser parser(lexer.nodes, lexer.file_name);
@@ -1863,6 +1927,11 @@ static EvaluateResult run(VM &vm)
                 main_frame.function->instruction_offsets = offsets;
                 evaluate(import_vm);
 
+                for (auto &c : import_vm.import_cache)
+                {
+                    vm.import_cache[c.first] = c.second;
+                }
+
                 if (import_vm.status != 0)
                 {
                     exit(import_vm.status);
@@ -1878,6 +1947,21 @@ static EvaluateResult run(VM &vm)
                 }
 
                 std::filesystem::current_path(current_path);
+
+                Value import_obj = object_val();
+                auto &obj = import_obj.get_object();
+                for (int i = 0; i < import_vm.frames[0].function->chunk.public_variables.size(); i++)
+                {
+                    auto &var = import_vm.frames[0].function->chunk.public_variables[i];
+
+                    obj->values[var] = import_vm.stack[i];
+                    obj->keys.push_back(var);
+                }
+
+                CachedImport cached;
+                cached.import_object = import_obj;
+                cached.import_globals = import_vm.globals;
+                vm.import_cache[absolute_path] = cached;
 
                 for (auto &name : names)
                 {

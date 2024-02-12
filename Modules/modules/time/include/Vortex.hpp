@@ -462,6 +462,11 @@ struct CallFrame
     int instruction_index;
     std::vector<Value> gen_stack;
 };
+struct CachedImport
+{
+    Value import_object;
+    std::unordered_map<std::string, Value> import_globals;
+};
 struct VM
 {
     std::vector<Value> stack;
@@ -475,7 +480,8 @@ struct VM
     std::vector<std::shared_ptr<Closure>> closed_values;
     int coro_count = 0;
     std::vector<int> try_instructions;
-int call_stack_limit = 3000;
+    int call_stack_limit = 3000;
+    std::unordered_map<std::string, CachedImport> import_cache;
 
     VM()
     {

@@ -1,1 +1,3 @@
-const g = (a, b) => a + b
+var global_obj = {
+    x: 10
+}

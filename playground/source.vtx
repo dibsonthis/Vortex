@@ -1,4 +1,4 @@
-import os
+import o : "other2"
+import [global_obj] : "./other"
 
-const s = "../src/utils/utils.cpp"
-println(os.absolute(s))
+println(global_obj)

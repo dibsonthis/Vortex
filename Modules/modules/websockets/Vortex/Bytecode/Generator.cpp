@@ -1272,7 +1272,7 @@ void gen_import(Chunk &chunk, node_ptr node)
                 error("Import variables must be identifiers");
             }
             add_constant_code(chunk, string_val(elem->_Node.ID().value), node->line);
-            declareVariable(elem->_Node.ID().value, true);
+            declareVariable(elem->_Node.ID().value, false);
         }
         add_opcode(chunk, OP_IMPORT, elements.size(), node->line);
     }
