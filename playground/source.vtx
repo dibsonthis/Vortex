@@ -1,4 +1,4 @@
-const n = () => "/Users/adib/Dev/Personal/Vortex/Modules/modules/string/string.vtx"
-import str : n()
+import os
 
-println(str)
+const s = "../src/utils/utils.cpp"
+println(os.absolute(s))

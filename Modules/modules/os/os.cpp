@@ -72,3 +72,22 @@ extern "C" Value os_name(std::vector<Value> &args)
     Value os_name = string_val(os_name_str);
     return os_name;
 }
+
+extern "C" Value absolute(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        return error_object("Function 'absolute' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value filePath = args[0];
+
+    if (!filePath.is_string())
+    {
+        return error_object("Parameter 'filePath' must be a string");
+    }
+
+    return string_val(std::filesystem::absolute(filePath.get_string()));
+}

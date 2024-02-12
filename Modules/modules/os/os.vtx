@@ -1,7 +1,8 @@
-const lib = load_lib("./bin/os", ["list_dir", "os_name"])
+const lib = load_lib("./bin/os", ["list_dir", "os_name", "absolute"])
 
 const list_dir = (filepath) => lib.list_dir(filepath)
 const os_name = () => lib.os_name()
+const absolute = (filepath) => lib.absolute(filepath)
 
 const walk = (filePath) => {
     const dirs = list_dir(filePath)
