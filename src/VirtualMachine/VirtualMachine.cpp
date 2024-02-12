@@ -2367,6 +2367,22 @@ bool is_equal(Value &v1, Value &v2)
     {
         return v1.get_boolean() == v2.get_boolean();
     }
+    if (v1.is_function())
+    {
+        return v1.get_function() == v2.get_function();
+    }
+    if (v1.is_object())
+    {
+        return v1.get_object() == v2.get_object();
+    }
+    if (v1.is_list())
+    {
+        return v1.get_list() == v2.get_list();
+    }
+    if (v1.is_pointer())
+    {
+        return v1.get_pointer() == v2.get_pointer();
+    }
     if (v1.is_none())
     {
         return true;

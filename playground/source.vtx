@@ -1,4 +1,7 @@
-import o : "other2"
-import [global_obj] : "./other"
+const add = (a, b) => a + b
 
-println(global_obj)
+const obj = {
+    a: add
+}
+
+println(add == obj.a)
