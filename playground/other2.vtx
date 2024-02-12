@@ -1,3 +1,3 @@
-import [global_obj] : "./other"
+import [] : "./other"
 
 global_obj.x = 100

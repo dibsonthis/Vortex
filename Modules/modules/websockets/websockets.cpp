@@ -8,14 +8,20 @@
 // #define WIN32_LEAN_AND_MEAN
 #define _WEBSOCKETPP_MINGW_THREAD_
 #endif
-// #include "Vortex/Node/Node.hpp"
+
 #include <functional>
-#include "Vortex/Lexer/Lexer.hpp"
-#include "Vortex/Parser/Parser.hpp"
-#include "Vortex/Bytecode/Bytecode.hpp"
-#include "Vortex/Bytecode/Generator.hpp"
-#include "Vortex/VirtualMachine/VirtualMachine.hpp"
+#include "../../../src/Node/Node.hpp"
+#include "../../../src/Lexer/Lexer.hpp"
+#include "../../../src/Parser/Parser.hpp"
+#include "../../../src/Bytecode/Bytecode.hpp"
+#include "../../../src/Bytecode/Generator.hpp"
+#include "../../../src/VirtualMachine/VirtualMachine.hpp"
 #include "include/websocketpp/asio.hpp"
+// #include "Vortex/Lexer/Lexer.hpp"
+// #include "Vortex/Parser/Parser.hpp"
+// #include "Vortex/Bytecode/Bytecode.hpp"
+// #include "Vortex/Bytecode/Generator.hpp"
+// #include "Vortex/VirtualMachine/VirtualMachine.hpp"
 
 // TLS or no TLS
 #include "include/websocketpp/config/asio_client.hpp" // TLS

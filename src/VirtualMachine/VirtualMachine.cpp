@@ -1636,7 +1636,28 @@ static EvaluateResult run(VM &vm)
 
                 if (mod.is_none())
                 {
-                    Lexer lexer(path.get_string());
+                    std::string path_string = path.get_string();
+                    std::string absolute_path = std::filesystem::canonical(path_string);
+
+                    if (vm.import_cache.count(absolute_path) > 0)
+                    {
+                        for (auto &global : vm.import_cache[absolute_path].import_globals)
+                        {
+                            if (global.first != "__vm__")
+                            {
+                                vm.globals[global.first] = global.second;
+                            }
+                        }
+
+                        for (auto &prop : vm.import_cache[absolute_path].import_object.get_object()->values)
+                        {
+                            define_global(vm, prop.first, prop.second);
+                        }
+
+                        break;
+                    }
+
+                    Lexer lexer(path_string);
                     lexer.tokenize();
 
                     Parser parser(lexer.nodes, lexer.file_name);
@@ -1703,14 +1724,25 @@ static EvaluateResult run(VM &vm)
 
                     std::filesystem::current_path(current_path);
 
+                    Value import_obj = object_val();
+                    auto &obj = import_obj.get_object();
+                    for (int i = 0; i < import_vm.frames[0].function->chunk.public_variables.size(); i++)
+                    {
+                        auto &var = import_vm.frames[0].function->chunk.public_variables[i];
+
+                        obj->values[var] = import_vm.stack[i];
+                        obj->keys.push_back(var);
+                    }
+
+                    CachedImport cached;
+                    cached.import_object = import_obj;
+                    cached.import_globals = import_vm.globals;
+                    vm.import_cache[absolute_path] = cached;
+
                     for (int i = 0; i < import_vm.frames[0].function->chunk.public_variables.size(); i++)
                     {
                         auto &var = import_vm.frames[0].function->chunk.public_variables[i];
                         auto &value = import_vm.stack[i];
-                        // if (value.is_function())
-                        // {
-                        //     import_vm.stack[i].get_function()->import_path = path.get_string();
-                        // }
                         define_global(vm, var, import_vm.stack[i]);
                     }
 

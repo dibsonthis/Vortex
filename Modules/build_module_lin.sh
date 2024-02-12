@@ -19,7 +19,8 @@ elif [ "$1" = "requests" ]; then
 elif [ "$1" = "sqlite" ]; then
     CONFIG="-lsqlite3"
 elif [ "$1" = "websockets" ]; then
-    CONFIG="Vortex/**/*.cpp"
+    # CONFIG="Vortex/**/*.cpp"
+    CONFIG="../../../src/**/*.cpp"
     DIRECT_LIBS=""
 else
     CONFIG=$CONFIG

@@ -31,7 +31,8 @@ elif [ "$FILE" = "requests" ]; then
 elif [ "$FILE" = "sqlite" ]; then
     DIRECT_LIBS="-lsqlite3"
 elif [ "$FILE" = "websockets" ]; then
-    CONFIG="$FILE/lib/*.dll $FILE/Vortex/**/*.cpp"
+    # CONFIG="$FILE/lib/*.dll $FILE/Vortex/**/*.cpp"
+    CONFIG="$FILE/lib/*.dll ../../src/**/*.cpp"
     DIRECT_LIBS="-L$FILE/lib -l:libssl-3-x64.dll -l:libcrypto-3-x64.dll -lcrypt32 -DWIN32_LEAN_AND_MEAN -lpthread -lws2_32 -lmswsock"
 else
     CONFIG=$CONFIG
