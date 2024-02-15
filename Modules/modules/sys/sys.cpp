@@ -89,7 +89,7 @@ extern "C" Value __globals__(std::vector<Value> &args)
 
 extern "C" Value __frame__(std::vector<Value> &args)
 {
-    int num_required_args = 1;
+    int num_required_args = 2;
 
     if (args.size() != num_required_args)
     {
@@ -97,20 +97,43 @@ extern "C" Value __frame__(std::vector<Value> &args)
     }
 
     Value vm = args[0];
+    Value depth = args[1];
 
     if (!vm.is_pointer())
     {
         return error_object("Function '__frame__' expects argument 'vm' to be a pointer");
     }
 
+    if (!depth.is_number())
+    {
+        return error_object("Function '__frame__' expects argument 'depth' to be a number");
+    }
+
     VM *_vm = (VM *)(vm.get_pointer()->value);
+    int _depth = depth.get_number();
+
+    if (_depth < 1)
+    {
+        _depth = 1;
+    }
+
+    if (_depth > _vm->frames.size())
+    {
+        _depth = _vm->frames.size();
+    }
+
+    CallFrame frame = _vm->frames[_vm->frames.size() - _depth];
+
+    size_t instr = frame.ip - frame.function->chunk.code.data() - 1;
 
     Value obj = object_val();
 
-    CallFrame frame = _vm->frames[_vm->frames.size() - 2];
     obj.get_object()->values["name"] = string_val(frame.function->name);
-    obj.get_object()->values["level"] = number_val(_vm->frames.size() - 1);
-    obj.get_object()->keys = {"name", "level"};
+    obj.get_object()->values["level"] = number_val(_vm->frames.size() - _depth);
+    obj.get_object()->values["line"] = number_val(frame.function->chunk.lines[instr]);
+    obj.get_object()->values["path"] = string_val(frame.function->name == "" ? frame.name : frame.function->import_path);
+    obj.get_object()->values["id"] = number_val(reinterpret_cast<intptr_t>(frame.function.get()));
+    obj.get_object()->keys = {"name", "level", "line", "path", "id"};
     return obj;
 }
 
