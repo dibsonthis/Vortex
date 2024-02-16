@@ -18,6 +18,7 @@
 #include "include/SDL2/SDL_ttf.h"
 #include "include/SDL2/SDL_mixer.h"
 #include "include/SDL2/imgui.h"
+#include "include/SDL2/imgui_internal.h"
 #include "include/SDL2/imgui_impl_sdl2.h"
 #include "include/SDL2/imgui_impl_sdlrenderer2.h"
 #include "include/SDL2/imgui_stdlib.h"
@@ -2142,9 +2143,16 @@ extern "C" Value imgui_get_cursor_pos(std::vector<Value> &args)
         return error_object("Function 'get_cursor_pos' expects " + std::to_string(num_required_args) + " argument(s)");
     }
 
-    auto pos = ImGui::GetCursorPos();
+    auto *window = ImGui::GetCurrentWindowRead();
 
+    if (!window)
+    {
+        return error_object("Missing ImGUI window context", "LibraryError");
+    }
+
+    auto pos = ImGui::GetCursorPos();
     Value pos_obj = object_val();
+
     pos_obj.get_object()->keys = {"x", "y"};
     pos_obj.get_object()->values["x"] = number_val(pos.x);
     pos_obj.get_object()->values["y"] = number_val(pos.y);

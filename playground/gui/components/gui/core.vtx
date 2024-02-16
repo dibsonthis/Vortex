@@ -1,5 +1,5 @@
 import [] : functional
-import sdl
+import sdl : "/Users/adib/Dev/Personal/Vortex/Modules/modules/sdl/sdl"
 import time
 
 const imgui = sdl.imgui

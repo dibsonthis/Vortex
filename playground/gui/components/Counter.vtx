@@ -107,7 +107,7 @@ const decrement_button_anim_in = Animation([
     ),
 ])
 
-const Counter = (props = {}, data = {}, config = {}) => {
+const Counter = Child((props = {}, data = {}, config = {}) => {
 
     button_anim.run()
     decrement_button_anim_out.run()
@@ -198,4 +198,4 @@ const Counter = (props = {}, data = {}, config = {}) => {
         })
 
     }, merged_config)
-}
+})
