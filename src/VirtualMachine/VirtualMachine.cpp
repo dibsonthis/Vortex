@@ -437,11 +437,12 @@ static EvaluateResult run(VM &vm)
                 Value new_value = pop(vm);
 
                 Value obj = object_val();
-                obj.get_object()->keys = {"old", "current"};
+                obj.get_object()->keys = {"old", "current", "name"};
                 Value old_pure = copy(value);
                 old_pure.hooks.onChangeHook = nullptr;
                 obj.get_object()->values["old"] = old_pure;
                 obj.get_object()->values["current"] = new_value;
+                obj.get_object()->values["name"] = string_val(value.hooks.onChangeHookName);
 
                 vm.stack[index + frame->frame_start] = new_value;
 
@@ -478,6 +479,7 @@ static EvaluateResult run(VM &vm)
                 }
 
                 obj.get_object()->values["current"].hooks.onChangeHook = value.hooks.onChangeHook;
+                obj.get_object()->values["current"].hooks.onChangeHookName = value.hooks.onChangeHookName;
                 push(vm, obj.get_object()->values["current"]);
                 vm.stack[index + frame->frame_start] = vm.stack.back();
                 break;
@@ -531,12 +533,13 @@ static EvaluateResult run(VM &vm)
                 if (current.hooks.onChangeHook)
                 {
                     Value obj = object_val();
-                    obj.get_object()->keys = {"old", "current"};
+                    obj.get_object()->keys = {"old", "current", "name"};
 
                     Value old_pure = copy(current);
                     old_pure.hooks.onChangeHook = nullptr;
                     obj.get_object()->values["old"] = old_pure;
                     obj.get_object()->values["current"] = value;
+                    obj.get_object()->values["name"] = string_val(current.hooks.onChangeHookName);
 
                     container.get_object()->values[accessor.get_string()] = value;
 
@@ -583,6 +586,7 @@ static EvaluateResult run(VM &vm)
                     }
 
                     obj.get_object()->values["current"].hooks.onChangeHook = current.hooks.onChangeHook;
+                    obj.get_object()->values["current"].hooks.onChangeHookName = current.hooks.onChangeHookName;
                     push(vm, obj.get_object()->values["current"]);
                     container.get_object()->values[accessor.get_string()] = obj.get_object()->values["current"];
                     break;
@@ -969,13 +973,14 @@ static EvaluateResult run(VM &vm)
                 Value new_value = pop(vm);
 
                 Value obj = object_val();
-                obj.get_object()->keys = {"old", "current"};
+                obj.get_object()->keys = {"old", "current", "name"};
 
                 Value old_pure = copy(value);
                 old_pure.hooks.onChangeHook = nullptr;
                 obj.get_object()->values["old"] = old_pure;
 
                 obj.get_object()->values["current"] = new_value;
+                obj.get_object()->values["name"] = string_val(value.hooks.onChangeHookName);
 
                 *frame->function->closed_vars[index]->location = new_value;
 
@@ -1012,6 +1017,7 @@ static EvaluateResult run(VM &vm)
                 }
 
                 obj.get_object()->values["current"].hooks.onChangeHook = value.hooks.onChangeHook;
+                obj.get_object()->values["current"].hooks.onChangeHookName = value.hooks.onChangeHookName;
                 push(vm, obj.get_object()->values["current"]);
                 *frame->function->closed_vars[index]->location = vm.stack.back();
                 break;
@@ -2028,8 +2034,21 @@ static EvaluateResult run(VM &vm)
         case OP_HOOK_ONCHANGE:
         {
             int index = READ_INT();
+            Value name = pop(vm);
             Value function = pop(vm);
+            if (!name.is_string())
+            {
+                runtimeError(vm, "Hook expects second argument to evaluate to a string", "HookError");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
+                return EVALUATE_RUNTIME_ERROR;
+            }
             vm.stack[index + frame->frame_start].hooks.onChangeHook = std::make_shared<Value>(function);
+            vm.stack[index + frame->frame_start].hooks.onChangeHookName = name.get_string();
             break;
         }
         case OP_HOOK_CLOSURE_ONCHANGE:
@@ -2796,13 +2815,14 @@ static Value insert_builtin(std::vector<Value> &args)
     if (list.hooks.onChangeHook)
     {
         Value obj = object_val();
-        obj.get_object()->keys = {"old", "current"};
+        obj.get_object()->keys = {"old", "current", "name"};
 
         Value old_pure = copy(list_copy);
         old_pure.hooks.onChangeHook = nullptr;
         obj.get_object()->values["old"] = old_pure;
 
         obj.get_object()->values["current"] = list;
+        obj.get_object()->values["name"] = string_val(list_copy.hooks.onChangeHookName);
 
         // store onChangeHook here
         auto hook = list_copy.hooks.onChangeHook;
@@ -2845,6 +2865,7 @@ static Value insert_builtin(std::vector<Value> &args)
         }
 
         obj.get_object()->values["current"].hooks.onChangeHook = list.hooks.onChangeHook;
+        obj.get_object()->values["current"].hooks.onChangeHookName = list.hooks.onChangeHookName;
         *ls = *obj.get_object()->values["current"].get_list();
     }
 
@@ -2875,13 +2896,14 @@ static Value append_builtin(std::vector<Value> &args)
     if (list.hooks.onChangeHook)
     {
         Value obj = object_val();
-        obj.get_object()->keys = {"old", "current"};
+        obj.get_object()->keys = {"old", "current", "name"};
 
         Value old_pure = copy(list_copy);
         old_pure.hooks.onChangeHook = nullptr;
 
         obj.get_object()->values["old"] = list_copy;
         obj.get_object()->values["current"] = list;
+        obj.get_object()->values["name"] = string_val(list_copy.hooks.onChangeHookName);
 
         // store onChangeHook here
         auto hook = list_copy.hooks.onChangeHook;
@@ -2924,6 +2946,7 @@ static Value append_builtin(std::vector<Value> &args)
         }
 
         obj.get_object()->values["current"].hooks.onChangeHook = list.hooks.onChangeHook;
+        obj.get_object()->values["current"].hooks.onChangeHookName = list.hooks.onChangeHookName;
         *ls = *obj.get_object()->values["current"].get_list();
     }
 
@@ -2969,13 +2992,14 @@ static Value remove_builtin(std::vector<Value> &args)
     if (list.hooks.onChangeHook)
     {
         Value obj = object_val();
-        obj.get_object()->keys = {"old", "current"};
+        obj.get_object()->keys = {"old", "current", "name"};
 
         Value old_pure = copy(list_copy);
         old_pure.hooks.onChangeHook = nullptr;
 
         obj.get_object()->values["old"] = old_pure;
         obj.get_object()->values["current"] = list;
+        obj.get_object()->values["name"] = string_val(list_copy.hooks.onChangeHookName);
 
         // store onChangeHook here
         auto hook = list_copy.hooks.onChangeHook;
@@ -3018,6 +3042,7 @@ static Value remove_builtin(std::vector<Value> &args)
         }
 
         obj.get_object()->values["current"].hooks.onChangeHook = list.hooks.onChangeHook;
+        obj.get_object()->values["current"].hooks.onChangeHookName = list.hooks.onChangeHookName;
         *ls = *obj.get_object()->values["current"].get_list();
     }
 

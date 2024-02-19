@@ -104,6 +104,7 @@ struct Meta
 struct ValueHooks
 {
     std::shared_ptr<Value> onChangeHook = nullptr;
+std::string onChangeHookName;
 };
 
 struct Value

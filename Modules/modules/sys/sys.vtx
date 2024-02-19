@@ -1,4 +1,4 @@
-const lib = load_lib("./bin/sys", ["__stack__", "__globals__", "__frame__", "__system__", "__env__"])
+const lib = load_lib("./bin/sys", ["__stack__", "__globals__", "__frame__", "__system__"])
 
 const stack = () => lib.__stack__(__vm__)
 const globals = () => lib.__globals__(__vm__)

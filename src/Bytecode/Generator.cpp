@@ -722,7 +722,8 @@ void gen_hook(Chunk &chunk, node_ptr node)
     if (node->_Node.Op().left->type == NodeType::ID)
     {
         bool is_closure = false;
-        int index = resolve_variable(node->_Node.Op().left->_Node.ID().value);
+        std::string name = node->_Node.Op().left->_Node.ID().value;
+        int index = resolve_variable(name);
         if (index == -1)
         {
             // error("Cannot assign hook to closure or global variable");
@@ -739,15 +740,33 @@ void gen_hook(Chunk &chunk, node_ptr node)
             error("Hook must be a function call");
         }
 
-        if (node->_Node.Op().right->_Node.FunctionCall().args.size() != 1)
+        int arity = node->_Node.Op().right->_Node.FunctionCall().args.size();
+
+        if (arity < 1)
         {
             error("Cannot assign empty hook - make sure to include a valid function");
+        }
+
+        if (arity > 2)
+        {
+            error("Invalid hook - hook accepts at most 2 arguments");
         }
 
         std::string hook_name = node->_Node.Op().right->_Node.FunctionCall().name;
         node_ptr function = node->_Node.Op().right->_Node.FunctionCall().args[0];
 
         generate(function, chunk);
+
+        if (arity == 2)
+        {
+            auto name_node = node->_Node.Op().right->_Node.FunctionCall().args[1];
+            generate(name_node, chunk);
+        }
+        else
+        {
+            add_constant_code(chunk, string_val(name), node->line);
+        }
+
         if (hook_name == "onChange")
         {
             if (is_closure)

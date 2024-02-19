@@ -1,4 +1,38 @@
-import o : "other2"
-import [] : "./other"
 
-println(global_obj)
+const with_hook = (data, hook, name = None) => {
+    if (data.type() != "Object") {
+        if (name) {
+            data::onChange((e) => hook(e), name)
+        } else {
+            data::onChange((e) => hook(e))
+        }
+        return data
+    }
+
+    var _data = data
+
+    if (name) {
+        _data::onChange((e) => hook(e), name)
+    } else {
+        _data::onChange((e) => hook(e))
+    }
+
+    for (_data.info().keys, index, key) {
+        var value = _data[key]
+        value = with_hook(value, hook, key)
+        _data[key] = value
+    }
+
+    return _data
+}
+
+var o = with_hook({
+    name: "John",
+    address: {
+        street: "Flinders St",
+        number: 122
+    }
+}, (e) => println(e), "o")
+
+o.address.street = "Flounders St"
+o.address.street = "Flinders St"
