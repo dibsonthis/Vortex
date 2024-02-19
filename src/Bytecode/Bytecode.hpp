@@ -78,6 +78,8 @@ enum OpCode
     OP_ITER,
     OP_HOOK_ONCHANGE,
     OP_HOOK_CLOSURE_ONCHANGE,
+    OP_HOOK_ONACCESS,
+    OP_HOOK_CLOSURE_ONACCESS,
     OP_TRY_BEGIN,
     OP_TRY_END,
     OP_CATCH_BEGIN
@@ -178,6 +180,8 @@ struct ValueHooks
 {
     std::shared_ptr<Value> onChangeHook = nullptr;
     std::string onChangeHookName;
+    std::shared_ptr<Value> onAccessHook = nullptr;
+    std::string onAccessHookName;
 };
 
 std::string toString(Value value);

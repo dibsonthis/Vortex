@@ -412,7 +412,56 @@ static EvaluateResult run(VM &vm)
         case OP_LOAD:
         {
             int index = READ_INT();
-            push(vm, vm.stack[index + frame->frame_start]);
+            Value &value = vm.stack[index + frame->frame_start];
+            push(vm, value);
+            if (value.hooks.onAccessHook)
+            {
+                Value obj = object_val();
+                obj.get_object()->keys = {"value", "name"};
+                Value value_pure = copy(value);
+                value_pure.hooks.onAccessHook = nullptr;
+                value_pure.hooks.onChangeHook = nullptr;
+                obj.get_object()->values["value"] = value_pure;
+                obj.get_object()->values["name"] = string_val(value.hooks.onAccessHookName);
+
+                VM func_vm;
+                std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+                main->name = "";
+                main->arity = 0;
+                main->chunk = Chunk();
+                main->chunk.import_path = frame->function->chunk.import_path;
+                CallFrame main_frame;
+                main_frame.name = frame->name;
+                main_frame.function = main;
+                main_frame.sp = 0;
+                main_frame.ip = main->chunk.code.data();
+                main_frame.frame_start = 0;
+                func_vm.frames.push_back(main_frame);
+
+                add_constant(main->chunk, *value.hooks.onAccessHook);
+                add_constant(main->chunk, obj);
+
+                add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
+                add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+                add_opcode(main->chunk, OP_CALL, 1, 0);
+                add_code(main->chunk, OP_EXIT, 0);
+
+                auto offsets = instruction_offsets(main_frame.function->chunk);
+                main_frame.function->instruction_offsets = offsets;
+
+                auto status = evaluate(func_vm);
+
+                if (status != 0)
+                {
+                    exit(1);
+                }
+
+                obj.get_object()->values["value"].hooks.onChangeHook = value.hooks.onChangeHook;
+                obj.get_object()->values["value"].hooks.onChangeHookName = value.hooks.onChangeHookName;
+                obj.get_object()->values["value"].hooks.onAccessHook = value.hooks.onAccessHook;
+                obj.get_object()->values["value"].hooks.onAccessHookName = value.hooks.onAccessHookName;
+                break;
+            }
             break;
         }
         case OP_SET:
@@ -441,6 +490,7 @@ static EvaluateResult run(VM &vm)
                 obj.get_object()->keys = {"old", "current", "name"};
                 Value old_pure = copy(value);
                 old_pure.hooks.onChangeHook = nullptr;
+                old_pure.hooks.onAccessHook = nullptr;
                 obj.get_object()->values["old"] = old_pure;
                 obj.get_object()->values["current"] = new_value;
                 obj.get_object()->values["name"] = string_val(value.hooks.onChangeHookName);
@@ -481,6 +531,8 @@ static EvaluateResult run(VM &vm)
 
                 obj.get_object()->values["current"].hooks.onChangeHook = value.hooks.onChangeHook;
                 obj.get_object()->values["current"].hooks.onChangeHookName = value.hooks.onChangeHookName;
+                obj.get_object()->values["current"].hooks.onAccessHook = value.hooks.onAccessHook;
+                obj.get_object()->values["current"].hooks.onAccessHookName = value.hooks.onAccessHookName;
                 push(vm, obj.get_object()->values["current"]);
                 vm.stack[index + frame->frame_start] = vm.stack.back();
                 break;
@@ -538,6 +590,7 @@ static EvaluateResult run(VM &vm)
 
                     Value old_pure = copy(current);
                     old_pure.hooks.onChangeHook = nullptr;
+                    old_pure.hooks.onAccessHook = nullptr;
                     obj.get_object()->values["old"] = old_pure;
                     obj.get_object()->values["current"] = value;
                     obj.get_object()->values["name"] = string_val(current.hooks.onChangeHookName);
@@ -588,6 +641,8 @@ static EvaluateResult run(VM &vm)
 
                     obj.get_object()->values["current"].hooks.onChangeHook = current.hooks.onChangeHook;
                     obj.get_object()->values["current"].hooks.onChangeHookName = current.hooks.onChangeHookName;
+                    obj.get_object()->values["current"].hooks.onAccessHook = current.hooks.onAccessHook;
+                    obj.get_object()->values["current"].hooks.onAccessHookName = current.hooks.onAccessHookName;
                     push(vm, obj.get_object()->values["current"]);
                     container.get_object()->values[accessor.get_string()] = obj.get_object()->values["current"];
                     break;
@@ -947,7 +1002,56 @@ static EvaluateResult run(VM &vm)
         case OP_LOAD_CLOSURE:
         {
             int index = READ_INT();
-            push(vm, *frame->function->closed_vars[index]->location);
+            Value &value = *frame->function->closed_vars[index]->location;
+            push(vm, value);
+            if (value.hooks.onAccessHook)
+            {
+                Value obj = object_val();
+                obj.get_object()->keys = {"value", "name"};
+                Value value_pure = copy(value);
+                value_pure.hooks.onAccessHook = nullptr;
+                value_pure.hooks.onChangeHook = nullptr;
+                obj.get_object()->values["value"] = value_pure;
+                obj.get_object()->values["name"] = string_val(value.hooks.onAccessHookName);
+
+                VM func_vm;
+                std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+                main->name = "";
+                main->arity = 0;
+                main->chunk = Chunk();
+                main->chunk.import_path = frame->function->chunk.import_path;
+                CallFrame main_frame;
+                main_frame.name = frame->name;
+                main_frame.function = main;
+                main_frame.sp = 0;
+                main_frame.ip = main->chunk.code.data();
+                main_frame.frame_start = 0;
+                func_vm.frames.push_back(main_frame);
+
+                add_constant(main->chunk, *value.hooks.onAccessHook);
+                add_constant(main->chunk, obj);
+
+                add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
+                add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+                add_opcode(main->chunk, OP_CALL, 1, 0);
+                add_code(main->chunk, OP_EXIT, 0);
+
+                auto offsets = instruction_offsets(main_frame.function->chunk);
+                main_frame.function->instruction_offsets = offsets;
+
+                auto status = evaluate(func_vm);
+
+                if (status != 0)
+                {
+                    exit(1);
+                }
+
+                obj.get_object()->values["value"].hooks.onChangeHook = value.hooks.onChangeHook;
+                obj.get_object()->values["value"].hooks.onChangeHookName = value.hooks.onChangeHookName;
+                obj.get_object()->values["value"].hooks.onAccessHook = value.hooks.onAccessHook;
+                obj.get_object()->values["value"].hooks.onAccessHookName = value.hooks.onAccessHookName;
+                break;
+            }
             break;
         }
         case OP_SET_CLOSURE:
@@ -978,6 +1082,7 @@ static EvaluateResult run(VM &vm)
 
                 Value old_pure = copy(value);
                 old_pure.hooks.onChangeHook = nullptr;
+                old_pure.hooks.onAccessHook = nullptr;
                 obj.get_object()->values["old"] = old_pure;
 
                 obj.get_object()->values["current"] = new_value;
@@ -1019,6 +1124,8 @@ static EvaluateResult run(VM &vm)
 
                 obj.get_object()->values["current"].hooks.onChangeHook = value.hooks.onChangeHook;
                 obj.get_object()->values["current"].hooks.onChangeHookName = value.hooks.onChangeHookName;
+                obj.get_object()->values["current"].hooks.onAccessHook = value.hooks.onAccessHook;
+                obj.get_object()->values["current"].hooks.onAccessHookName = value.hooks.onAccessHookName;
                 push(vm, obj.get_object()->values["current"]);
                 *frame->function->closed_vars[index]->location = vm.stack.back();
                 break;
@@ -1369,7 +1476,57 @@ static EvaluateResult run(VM &vm)
                 }
                 else
                 {
-                    push(vm, object->values[index]);
+                    Value &value = object->values[index];
+                    push(vm, value);
+
+                    if (value.hooks.onAccessHook)
+                    {
+                        Value obj = object_val();
+                        obj.get_object()->keys = {"value", "name"};
+                        Value value_pure = copy(value);
+                        value_pure.hooks.onAccessHook = nullptr;
+                        value_pure.hooks.onChangeHook = nullptr;
+                        obj.get_object()->values["value"] = value_pure;
+                        obj.get_object()->values["name"] = string_val(value.hooks.onAccessHookName);
+
+                        VM func_vm;
+                        std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+                        main->name = "";
+                        main->arity = 0;
+                        main->chunk = Chunk();
+                        main->chunk.import_path = frame->function->chunk.import_path;
+                        CallFrame main_frame;
+                        main_frame.name = frame->name;
+                        main_frame.function = main;
+                        main_frame.sp = 0;
+                        main_frame.ip = main->chunk.code.data();
+                        main_frame.frame_start = 0;
+                        func_vm.frames.push_back(main_frame);
+
+                        add_constant(main->chunk, *value.hooks.onAccessHook);
+                        add_constant(main->chunk, obj);
+
+                        add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
+                        add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+                        add_opcode(main->chunk, OP_CALL, 1, 0);
+                        add_code(main->chunk, OP_EXIT, 0);
+
+                        auto offsets = instruction_offsets(main_frame.function->chunk);
+                        main_frame.function->instruction_offsets = offsets;
+
+                        auto status = evaluate(func_vm);
+
+                        if (status != 0)
+                        {
+                            exit(1);
+                        }
+
+                        obj.get_object()->values["value"].hooks.onChangeHook = value.hooks.onChangeHook;
+                        obj.get_object()->values["value"].hooks.onChangeHookName = value.hooks.onChangeHookName;
+                        obj.get_object()->values["value"].hooks.onAccessHook = value.hooks.onAccessHook;
+                        obj.get_object()->values["value"].hooks.onAccessHookName = value.hooks.onAccessHookName;
+                        break;
+                    }
                 }
             }
             else if (_container.is_string())
@@ -2048,6 +2205,36 @@ static EvaluateResult run(VM &vm)
 
                 return EVALUATE_RUNTIME_ERROR;
             }
+            if (index == -1)
+            {
+                Value &val = vm.stack.back();
+                val.hooks.onChangeHook = std::make_shared<Value>(function);
+                val.hooks.onChangeHookName = name.get_string();
+                vm.stack.pop_back();
+                break;
+            }
+            if (index == -2)
+            {
+                Value accessor = pop(vm);
+                Value container = pop(vm);
+
+                if (container.is_object() && accessor.is_string())
+                {
+                    container.get_object()->values[accessor.get_string()].hooks.onChangeHook = std::make_shared<Value>(function);
+                    container.get_object()->values[accessor.get_string()].hooks.onChangeHookName = name.get_string();
+                    break;
+                }
+
+                runtimeError(vm, "Unnamed hook only works with objects", "HookError");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
+                return EVALUATE_RUNTIME_ERROR;
+            }
+
             vm.stack[index + frame->frame_start].hooks.onChangeHook = std::make_shared<Value>(function);
             vm.stack[index + frame->frame_start].hooks.onChangeHookName = name.get_string();
             break;
@@ -2055,8 +2242,154 @@ static EvaluateResult run(VM &vm)
         case OP_HOOK_CLOSURE_ONCHANGE:
         {
             int index = READ_INT();
+            Value name = pop(vm);
             Value function = pop(vm);
+            if (!name.is_string())
+            {
+                runtimeError(vm, "Hook expects second argument to evaluate to a string", "HookError");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
+                return EVALUATE_RUNTIME_ERROR;
+            }
+
+            if (index == -1)
+            {
+                Value &val = vm.stack.back();
+                val.hooks.onChangeHook = std::make_shared<Value>(function);
+                val.hooks.onChangeHookName = name.get_string();
+                vm.stack.pop_back();
+                break;
+            }
+            if (index == -2)
+            {
+                Value accessor = pop(vm);
+                Value container = pop(vm);
+
+                if (container.is_object() && accessor.is_string())
+                {
+                    container.get_object()->values[accessor.get_string()].hooks.onChangeHook = std::make_shared<Value>(function);
+                    container.get_object()->values[accessor.get_string()].hooks.onChangeHookName = name.get_string();
+                    break;
+                }
+
+                runtimeError(vm, "Unnamed hook only works with objects", "HookError");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
+                return EVALUATE_RUNTIME_ERROR;
+            }
+
             (*frame->function->closed_vars[index]->location).hooks.onChangeHook = std::make_shared<Value>(function);
+            (*frame->function->closed_vars[index]->location).hooks.onAccessHookName = name.get_string();
+            break;
+        }
+        case OP_HOOK_ONACCESS:
+        {
+            int index = READ_INT();
+            Value name = pop(vm);
+            Value function = pop(vm);
+            if (!name.is_string())
+            {
+                runtimeError(vm, "Hook expects second argument to evaluate to a string", "HookError");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
+                return EVALUATE_RUNTIME_ERROR;
+            }
+
+            if (index == -1)
+            {
+                Value &val = vm.stack.back();
+                val.hooks.onChangeHook = std::make_shared<Value>(function);
+                val.hooks.onChangeHookName = name.get_string();
+                vm.stack.pop_back();
+                break;
+            }
+            if (index == -2)
+            {
+                Value accessor = pop(vm);
+                Value container = pop(vm);
+
+                if (container.is_object() && accessor.is_string())
+                {
+                    container.get_object()->values[accessor.get_string()].hooks.onAccessHook = std::make_shared<Value>(function);
+                    container.get_object()->values[accessor.get_string()].hooks.onAccessHookName = name.get_string();
+                    break;
+                }
+
+                runtimeError(vm, "Unnamed hook only works with objects", "HookError");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
+                return EVALUATE_RUNTIME_ERROR;
+            }
+
+            vm.stack[index + frame->frame_start].hooks.onAccessHook = std::make_shared<Value>(function);
+            vm.stack[index + frame->frame_start].hooks.onAccessHookName = name.get_string();
+            break;
+        }
+        case OP_HOOK_CLOSURE_ONACCESS:
+        {
+            int index = READ_INT();
+            Value name = pop(vm);
+            Value function = pop(vm);
+            if (!name.is_string())
+            {
+                runtimeError(vm, "Hook expects second argument to evaluate to a string", "HookError");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
+                return EVALUATE_RUNTIME_ERROR;
+            }
+
+            if (index == -1)
+            {
+                Value &val = vm.stack.back();
+                val.hooks.onChangeHook = std::make_shared<Value>(function);
+                val.hooks.onChangeHookName = name.get_string();
+                vm.stack.pop_back();
+                break;
+            }
+            if (index == -2)
+            {
+                Value accessor = pop(vm);
+                Value container = pop(vm);
+
+                if (container.is_object() && accessor.is_string())
+                {
+                    container.get_object()->values[accessor.get_string()].hooks.onAccessHook = std::make_shared<Value>(function);
+                    container.get_object()->values[accessor.get_string()].hooks.onAccessHookName = name.get_string();
+                    break;
+                }
+
+                runtimeError(vm, "Unnamed hook only works with objects", "HookError");
+                if (vm.status == 2)
+                {
+                    vm.status = 0;
+                    break;
+                }
+
+                return EVALUATE_RUNTIME_ERROR;
+            }
+
+            (*frame->function->closed_vars[index]->location).hooks.onAccessHook = std::make_shared<Value>(function);
+            (*frame->function->closed_vars[index]->location).hooks.onAccessHookName = name.get_string();
             break;
         }
         case OP_NEGATE:
@@ -2820,6 +3153,7 @@ static Value insert_builtin(std::vector<Value> &args)
 
         Value old_pure = copy(list_copy);
         old_pure.hooks.onChangeHook = nullptr;
+        old_pure.hooks.onAccessHook = nullptr;
         obj.get_object()->values["old"] = old_pure;
 
         obj.get_object()->values["current"] = list;
@@ -2867,6 +3201,8 @@ static Value insert_builtin(std::vector<Value> &args)
 
         obj.get_object()->values["current"].hooks.onChangeHook = list.hooks.onChangeHook;
         obj.get_object()->values["current"].hooks.onChangeHookName = list.hooks.onChangeHookName;
+        obj.get_object()->values["current"].hooks.onAccessHook = list.hooks.onAccessHook;
+        obj.get_object()->values["current"].hooks.onAccessHookName = list.hooks.onAccessHookName;
         *ls = *obj.get_object()->values["current"].get_list();
     }
 
@@ -2901,6 +3237,7 @@ static Value append_builtin(std::vector<Value> &args)
 
         Value old_pure = copy(list_copy);
         old_pure.hooks.onChangeHook = nullptr;
+        old_pure.hooks.onAccessHook = nullptr;
 
         obj.get_object()->values["old"] = list_copy;
         obj.get_object()->values["current"] = list;
@@ -2948,6 +3285,8 @@ static Value append_builtin(std::vector<Value> &args)
 
         obj.get_object()->values["current"].hooks.onChangeHook = list.hooks.onChangeHook;
         obj.get_object()->values["current"].hooks.onChangeHookName = list.hooks.onChangeHookName;
+        obj.get_object()->values["current"].hooks.onAccessHook = list.hooks.onAccessHook;
+        obj.get_object()->values["current"].hooks.onAccessHookName = list.hooks.onAccessHookName;
         *ls = *obj.get_object()->values["current"].get_list();
     }
 
@@ -2997,6 +3336,7 @@ static Value remove_builtin(std::vector<Value> &args)
 
         Value old_pure = copy(list_copy);
         old_pure.hooks.onChangeHook = nullptr;
+        old_pure.hooks.onAccessHook = nullptr;
 
         obj.get_object()->values["old"] = old_pure;
         obj.get_object()->values["current"] = list;
@@ -3044,6 +3384,8 @@ static Value remove_builtin(std::vector<Value> &args)
 
         obj.get_object()->values["current"].hooks.onChangeHook = list.hooks.onChangeHook;
         obj.get_object()->values["current"].hooks.onChangeHookName = list.hooks.onChangeHookName;
+        obj.get_object()->values["current"].hooks.onAccessHook = list.hooks.onAccessHook;
+        obj.get_object()->values["current"].hooks.onAccessHookName = list.hooks.onAccessHookName;
         *ls = *obj.get_object()->values["current"].get_list();
     }
 

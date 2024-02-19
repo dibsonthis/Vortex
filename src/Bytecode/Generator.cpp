@@ -186,16 +186,6 @@ void gen_eq(Chunk &chunk, node_ptr node)
     node_ptr left = node->_Node.Op().left;
     if (left->type == NodeType::ID)
     {
-        // int index = resolve_variable(left->_Node.ID().value);
-        // int closure_index = -1;
-        // if (index == -1) {
-        //     closure_index = resolve_closure(left->_Node.ID().value);
-        //     if (closure_index == -1) {
-        //         error("Variable '" + left->_Node.ID().value + "' is undefined");
-        //     }
-        // }
-        // Variable variable = current->variables[index];
-
         generate(node->_Node.Op().right, chunk);
 
         int index = resolve_variable(left->_Node.ID().value);
@@ -219,25 +209,6 @@ void gen_eq(Chunk &chunk, node_ptr node)
         {
             add_opcode(chunk, OP_SET_CLOSURE, index, node->line);
         }
-        // if (index >= 0 && variable.is_const) {
-        //     error("Cannot modify constant '" + left->_Node.ID().value + "'");
-        // }
-        // generate(node->_Node.Op().right, chunk);
-        // if (closure_index != -1) {
-        //     bool captured = false;
-        //     for (int var : current->closed_vars) {
-        //         if (index == var) {
-        //             captured = true;
-        //             break;
-        //         }
-        //     }
-        //     if (!captured) {
-        //         current->closed_vars.push_back(closure_index);
-        //     }
-        //     add_opcode(chunk, OP_SET_CLOSURE, closure_index, node->line);
-        // } else {
-        //     add_opcode(chunk, OP_SET, index, node->line);
-        // }
     }
     else if (left->type == NodeType::ACCESSOR)
     {
@@ -726,7 +697,6 @@ void gen_hook(Chunk &chunk, node_ptr node)
         int index = resolve_variable(name);
         if (index == -1)
         {
-            // error("Cannot assign hook to closure or global variable");
             index = resolve_closure_nested(node->_Node.Op().left->_Node.ID().value);
             if (index == -1)
             {
@@ -778,6 +748,17 @@ void gen_hook(Chunk &chunk, node_ptr node)
                 add_opcode(chunk, OP_HOOK_ONCHANGE, index, node->line);
             }
         }
+        else if (hook_name == "onAccess")
+        {
+            if (is_closure)
+            {
+                add_opcode(chunk, OP_HOOK_CLOSURE_ONACCESS, index, node->line);
+            }
+            else
+            {
+                add_opcode(chunk, OP_HOOK_ONACCESS, index, node->line);
+            }
+        }
         else
         {
             error("Invalid hook name: '" + hook_name + "'");
@@ -785,7 +766,72 @@ void gen_hook(Chunk &chunk, node_ptr node)
     }
     else
     {
-        error("Left hand side of hook assignment must be an identifier");
+        int index = -1;
+
+        auto &left = node->_Node.Op().left;
+
+        if (left->type == NodeType::ACCESSOR)
+        {
+            generate(left->_Node.Accessor().container, chunk);
+            generate(left->_Node.Accessor().accessor->_Node.List().elements[0], chunk);
+            index = -2;
+        }
+        else if (left->type == NodeType::OP && left->_Node.Op().value == ".")
+        {
+            generate(left->_Node.Op().left, chunk);
+            add_constant_code(chunk, string_val(left->_Node.Op().right->_Node.ID().value), node->line);
+            index = -2;
+        }
+        else
+        {
+            error("Malformed hook");
+        }
+
+        if (node->_Node.Op().right->type != NodeType::FUNC_CALL)
+        {
+            error("Hook must be a function call");
+        }
+
+        int arity = node->_Node.Op().right->_Node.FunctionCall().args.size();
+
+        if (arity < 1)
+        {
+            error("Cannot assign empty hook - make sure to include a valid function");
+        }
+
+        if (arity > 2)
+        {
+            error("Invalid hook - hook accepts at most 2 arguments");
+        }
+
+        std::string hook_name = node->_Node.Op().right->_Node.FunctionCall().name;
+        node_ptr function = node->_Node.Op().right->_Node.FunctionCall().args[0];
+
+        generate(function, chunk);
+
+        if (arity == 2)
+        {
+            auto name_node = node->_Node.Op().right->_Node.FunctionCall().args[1];
+            generate(name_node, chunk);
+        }
+        else
+        {
+            add_constant_code(chunk, string_val(""), node->line);
+        }
+
+        if (hook_name == "onChange")
+        {
+            add_opcode(chunk, OP_HOOK_ONCHANGE, index, node->line);
+        }
+        else if (hook_name == "onAccess")
+        {
+            add_opcode(chunk, OP_HOOK_ONACCESS, index, node->line);
+        }
+        else
+        {
+            error("Invalid hook name: '" + hook_name + "'");
+        }
+        // error("Left hand side of hook assignment must be an identifier");
     }
 }
 

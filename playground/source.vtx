@@ -1,35 +1,19 @@
-
-const with_hook = (data, hook, name = None) => {
-    if (data.type() != "Object") {
-        if (name) {
-            data::onChange((e) => hook(e), name)
-        } else {
-            data::onChange((e) => hook(e))
-        }
-        return data
-    }
-
-    var _data = data
-
-    if (name) {
-        _data::onChange((e) => hook(e), name)
-    } else {
-        _data::onChange((e) => hook(e))
-    }
-
-    for (_data.info().keys, index, key) {
-        var value = _data[key]
-        value = with_hook(value, hook, key)
-        _data[key] = value
-    }
-
-    return _data
+var o = {
+    x: 200
 }
 
-var x = 120
-var y = 40
-var z = x
+o.x::onAccess((e) => println(e), "o.x")
 
-println(x.id())
-println(y.id())
-println(z.id())
+var d = 100
+
+d::onAccess((e) => println(e))
+
+const g = () => {
+    if (o.x > d) {
+        return "max"
+    }
+
+    return "min"
+}
+
+g()
