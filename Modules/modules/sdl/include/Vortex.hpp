@@ -126,7 +126,7 @@ long long int id;
         std::shared_ptr<PointerObj>>
         value;
 
-    Value() : type(None)
+    Value() : type(ValueType::None)
     {
         id = ++v_counter;
     }

@@ -103,7 +103,7 @@ struct Meta
 struct ValueHooks
 {
     std::shared_ptr<Value> onChangeHook = nullptr;
-std::string onChangeHookName;
+    std::string onChangeHookName;
 };
 
 static long long int v_counter = 0;
@@ -112,7 +112,7 @@ struct Value
     ValueType type;
     Meta meta;
     ValueHooks hooks;
-long long int id;
+    long long int id;
     std::variant<
         double,
         std::string,
@@ -125,7 +125,7 @@ long long int id;
         std::shared_ptr<PointerObj>>
         value;
 
-    Value() : type(None)
+    Value() : type(ValueType::None)
     {
         id = ++v_counter;
     }
@@ -397,8 +397,8 @@ struct VM
     std::vector<std::shared_ptr<Closure>> closed_values;
     int coro_count = 0;
     std::vector<int> try_instructions;
-int call_stack_limit = 3000;
-std::unordered_map<std::string, CachedImport> import_cache;
+    int call_stack_limit = 3000;
+    std::unordered_map<std::string, CachedImport> import_cache;
 
     VM()
     {
