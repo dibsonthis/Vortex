@@ -254,6 +254,7 @@ static EvaluateResult run(VM &vm)
     define_native(vm, "dis", dis_builtin);
     define_native(vm, "length", length_builtin);
     define_native(vm, "info", info_builtin);
+    define_native(vm, "id", id_builtin);
     define_native(vm, "type", type_builtin);
     define_native(vm, "copy", copy_builtin);
     define_native(vm, "pure", pure_builtin);
@@ -3227,6 +3228,18 @@ static Value info_builtin(std::vector<Value> &args)
         return info;
     }
     }
+}
+
+static Value id_builtin(std::vector<Value> &args)
+{
+    if (args.size() != 1)
+    {
+        return error_object("Function 'id' expects 1 argument");
+    }
+
+    Value value = args[0];
+
+    return number_val(value.id);
 }
 
 static Value load_lib_builtin(std::vector<Value> &args)

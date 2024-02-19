@@ -26,13 +26,10 @@ const with_hook = (data, hook, name = None) => {
     return _data
 }
 
-var o = with_hook({
-    name: "John",
-    address: {
-        street: "Flinders St",
-        number: 122
-    }
-}, (e) => println(e), "o")
+var x = 120
+var y = 40
+var z = x
 
-o.address.street = "Flounders St"
-o.address.street = "Flinders St"
+println(x.id())
+println(y.id())
+println(z.id())

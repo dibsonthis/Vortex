@@ -106,11 +106,13 @@ struct ValueHooks
     std::string onChangeHookName;
 };
 
+static long long int v_counter = 0;
 struct Value
 {
     ValueType type;
     Meta meta;
     ValueHooks hooks;
+    long long int id;
     std::variant<
         double,
         std::string,
@@ -123,9 +125,13 @@ struct Value
         std::shared_ptr<PointerObj>>
         value;
 
-    Value() : type(ValueType::None) {}
+    Value() : type(None)
+    {
+        id = ++v_counter;
+    }
     Value(ValueType type) : type(type)
     {
+        id = ++v_counter;
         switch (type)
         {
         case ValueType::Number:
