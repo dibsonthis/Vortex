@@ -4,16 +4,15 @@ void Lexer::load_source(std::string filename)
 {
 	std::ifstream stream(filename);
 	std::string source_str((std::istreambuf_iterator<char>(stream)),
-		std::istreambuf_iterator<char>());
+						   std::istreambuf_iterator<char>());
 	source = source_str;
 }
 
 void Lexer::error_and_exit(std::string message)
 {
-	std::string error_message = "\n\n[Lexer] Lexical Error in '" + file_name + "' @ (" + std::to_string(line) + ", " + std::to_string(column) + "): " + message;
+	std::string error_message = "[Lexer] Lexical Error in '" + file_name + "' @ (" + std::to_string(line) + ", " + std::to_string(column) + "): " + message;
 	std::cout << error_message;
-	std::cout << "\nCompilation failed. Press any key to exit...";
-	std::cin.get();
+	std::cout << "\nCompilation failed.";
 	exit(1);
 }
 
@@ -68,27 +67,32 @@ void Lexer::build_identifier()
 		node->_Node = BooleanNode();
 		node->_Node.Boolean().value = false;
 	}
-	else if (name == "as") {
+	else if (name == "as")
+	{
 		node->type = NodeType::OP;
 		node->_Node = OpNode();
 		node->_Node.Op().value = name;
 	}
-	else if (name == "is") {
+	else if (name == "is")
+	{
 		node->type = NodeType::OP;
 		node->_Node = OpNode();
 		node->_Node.Op().value = name;
 	}
-	else if (name == "in") {
+	else if (name == "in")
+	{
 		node->type = NodeType::OP;
 		node->_Node = OpNode();
 		node->_Node.Op().value = name;
 	}
-	else if (name == "or") {
+	else if (name == "or")
+	{
 		node->type = NodeType::OP;
 		node->_Node = OpNode();
 		node->_Node.Op().value = name;
 	}
-		else if (name == "and") {
+	else if (name == "and")
+	{
 		node->type = NodeType::OP;
 		node->_Node = OpNode();
 		node->_Node.Op().value = name;
@@ -132,7 +136,6 @@ void Lexer::build_number()
 		{
 			break;
 		}
-
 	}
 
 	if (num_dots == 0)
@@ -163,14 +166,16 @@ void Lexer::format_string()
 	current_char = source[index];
 	advance();
 
-	while (current_char != '"') {
+	while (current_char != '"')
+	{
 		if (current_char == '\\' && peek() == '"')
 		{
 			advance();
 			advance();
 			continue;
 		}
-		if (current_char == '$' && peek() == '{') {
+		if (current_char == '$' && peek() == '{')
+		{
 			source[index] = '"';
 			advance();
 			source[index] = '+';
@@ -180,17 +185,22 @@ void Lexer::format_string()
 			index += 7;
 			current_char = source[index];
 			int num_brackets = 1;
-			while (true) {
-				if (current_char == '\0') {
+			while (true)
+			{
+				if (current_char == '\0')
+				{
 					error_and_exit("Malformed string interpolation - missing '}'");
 				}
-				if (current_char == '{') {
+				if (current_char == '{')
+				{
 					num_brackets++;
 				}
-				if (current_char == '}') {
+				if (current_char == '}')
+				{
 					num_brackets--;
 				}
-				if (current_char == '}' && num_brackets == 0) {
+				if (current_char == '}' && num_brackets == 0)
+				{
 					break;
 				}
 				advance();
@@ -225,28 +235,39 @@ void Lexer::build_string()
 			return;
 		}
 
-		if (current_char == '\\' && peek() == '\\') {
+		if (current_char == '\\' && peek() == '\\')
+		{
 			str += current_char;
 			advance();
 			str += current_char;
 			advance();
-		} else if (current_char == '\\' && peek() == '"') {
+		}
+		else if (current_char == '\\' && peek() == '"')
+		{
 			str += current_char;
 			advance();
 			str += current_char;
 			advance();
-		} else if (current_char == '\n') {
+		}
+		else if (current_char == '\n')
+		{
 			line++;
 			column = 0;
 			advance(); // consume '\n'
-		} else if (current_char == '"') {
-			if (peek(-1) != '\\') {
+		}
+		else if (current_char == '"')
+		{
+			if (peek(-1) != '\\')
+			{
 				break;
-			} else if (peek(-1) == '\\' && peek(-2) == '\\') {
+			}
+			else if (peek(-1) == '\\' && peek(-2) == '\\')
+			{
 				break;
 			}
 		}
-		else {
+		else
+		{
 			str += current_char;
 			advance();
 		}
@@ -289,7 +310,7 @@ void Lexer::build_string()
 			i++;
 		}
 		else if ((str)[i] == '\\' && isdigit((str)[i + 1]) && isdigit((str)[i + 2]) && isdigit((str)[i + 3]))
-		{	
+		{
 			std::string escapeCode = {(str)[i + 1], (str)[i + 2], (str)[i + 3]};
 			char escapeChar = static_cast<char>(std::stoi(escapeCode, nullptr, 8));
 
@@ -300,8 +321,9 @@ void Lexer::build_string()
 			i++;
 		}
 		else if ((str)[i] == '\\' && ((str)[i + 1] == 'O' || (str)[i + 1] == 'o'))
-		{	
-			try {
+		{
+			try
+			{
 				std::string escapeCode = {(str)[i + 2], (str)[i + 3], (str)[i + 4]};
 				char escapeChar = static_cast<char>(std::stoi(escapeCode, nullptr, 8));
 
@@ -310,11 +332,15 @@ void Lexer::build_string()
 				i++;
 				i++;
 				i++;
-			} catch (...) {}
+			}
+			catch (...)
+			{
+			}
 		}
 		else if ((str)[i] == '\\' && ((str)[i + 1] == 'X' || (str)[i + 1] == 'x'))
-		{	
-			try {
+		{
+			try
+			{
 				// 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E and F
 
 				std::string escapeCode = "";
@@ -322,7 +348,8 @@ void Lexer::build_string()
 				hex_i++;
 				hex_i++;
 				char hex_c = str[hex_i];
-				while (isdigit(hex_c) || hex_c == 'A' || hex_c == 'B' || hex_c == 'C' || hex_c == 'D' || hex_c == 'E' || hex_c == 'F' || hex_c == 'a' || hex_c == 'b' || hex_c == 'c' || hex_c == 'd' || hex_c == 'e' || hex_c == 'f') {
+				while (isdigit(hex_c) || hex_c == 'A' || hex_c == 'B' || hex_c == 'C' || hex_c == 'D' || hex_c == 'E' || hex_c == 'F' || hex_c == 'a' || hex_c == 'b' || hex_c == 'c' || hex_c == 'd' || hex_c == 'e' || hex_c == 'f')
+				{
 					escapeCode.push_back(hex_c);
 					hex_i++;
 					hex_c = str[hex_i];
@@ -332,31 +359,39 @@ void Lexer::build_string()
 
 				(str)[i] = escapeChar;
 				(node->_Node.String().value).push_back((str)[i]);
-				for (int it = 0; it <= escapeCode.size(); it++) {
+				for (int it = 0; it <= escapeCode.size(); it++)
+				{
 					i++;
 				}
-			} catch (...) {}
+			}
+			catch (...)
+			{
+			}
 		}
 		else if ((str)[i] == '\\' && ((str)[i + 1] == 'U' || (str)[i + 1] == 'u'))
-		{	
+		{
 			std::string escapeCode = {(str)[i + 2], (str)[i + 3], (str)[i + 4], (str)[i + 5]};
 
 			unsigned int codepoint = std::stoul(escapeCode, nullptr, 16);
 			std::string utf8Character;
 
-			if (codepoint <= 0x7F) {
-        		utf8Character += static_cast<char>(codepoint);
+			if (codepoint <= 0x7F)
+			{
+				utf8Character += static_cast<char>(codepoint);
 			}
-			else if (codepoint <= 0x7FF) {
+			else if (codepoint <= 0x7FF)
+			{
 				utf8Character += static_cast<char>(0xC0 | ((codepoint >> 6) & 0x1F));
 				utf8Character += static_cast<char>(0x80 | (codepoint & 0x3F));
 			}
-			else if (codepoint <= 0xFFFF) {
+			else if (codepoint <= 0xFFFF)
+			{
 				utf8Character += static_cast<char>(0xE0 | ((codepoint >> 12) & 0x0F));
 				utf8Character += static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F));
 				utf8Character += static_cast<char>(0x80 | (codepoint & 0x3F));
 			}
-			else if (codepoint <= 0x10FFFF) {
+			else if (codepoint <= 0x10FFFF)
+			{
 				utf8Character += static_cast<char>(0xF0 | ((codepoint >> 18) & 0x07));
 				utf8Character += static_cast<char>(0x80 | ((codepoint >> 12) & 0x3F));
 				utf8Character += static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F));
@@ -367,7 +402,7 @@ void Lexer::build_string()
 			(node->_Node.String().value).append(utf8Character);
 			i++;
 		}
-		else if ((str)[i] == '\\' && str[i+1] == '\\')
+		else if ((str)[i] == '\\' && str[i + 1] == '\\')
 		{
 			(str)[i] = '\\';
 			(node->_Node.String().value).push_back('\\');
@@ -539,7 +574,7 @@ void Lexer::tokenize()
 		}
 		else if (current_char == '>' && peek() == '=')
 		{
-			//node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
+			// node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
 			node_ptr node = std::make_shared<Node>(NodeType::OP, line, column);
 			node->_Node.Op().value = ">=";
 			nodes.push_back(node);

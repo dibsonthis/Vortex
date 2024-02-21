@@ -43,7 +43,7 @@ int main(int argc, char **argv)
         main_frame.ip = main->chunk.code.data();
         main_frame.frame_start = 0;
 
-        generate_bytecode(parser.nodes, main_frame.function->chunk);
+        generate_bytecode(parser.nodes, main_frame.function->chunk, parser.file_name);
         add_code(main_frame.function->chunk, OP_EXIT);
         disassemble_chunk(main_frame.function->chunk, "Test");
         auto offsets = instruction_offsets(main_frame.function->chunk);
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
         main_frame.ip = main->chunk.code.data();
         main_frame.frame_start = 0;
 
-        generate_bytecode(parser.nodes, main_frame.function->chunk);
+        generate_bytecode(parser.nodes, main_frame.function->chunk, path);
         auto offsets = instruction_offsets(main_frame.function->chunk);
         main_frame.function->instruction_offsets = offsets;
         vm.frames.push_back(main_frame);

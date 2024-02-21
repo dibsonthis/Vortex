@@ -3,6 +3,8 @@
 #include "Bytecode.hpp"
 #include "../Node/Node.hpp"
 
+static std::string generator_file_path;
+
 struct Variable
 {
     std::string name;
@@ -75,17 +77,19 @@ void gen_import(Chunk &chunk, node_ptr node);
 void gen_list(Chunk &chunk, node_ptr node);
 
 void generate(node_ptr node, Chunk &chunk);
-void generate_bytecode(std::vector<node_ptr> &nodes, Chunk &chunk);
+void generate_bytecode(std::vector<node_ptr> &nodes, Chunk &chunk, std::string file_path = "");
 
 static void begin_scope();
 static void end_scope(Chunk &chunk);
 
 static void addVariable(std::string name, bool is_const, bool is_internal = false);
 static void declareVariable(std::string name, bool is_const = false, bool is_internal = false);
+static void declareVariable(std::string name, bool is_const, bool is_internal, Chunk &chunk, node_ptr node);
 
 static int resolve_variable(std::string name);
 static int resolve_closure(std::string name);
 static int resolve_closure_nested(std::string name);
 
 void error(std::string message);
+void error(std::string message, Chunk &chunk, node_ptr node);
 void reset();

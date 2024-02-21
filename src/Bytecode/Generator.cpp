@@ -195,7 +195,7 @@ void gen_eq(Chunk &chunk, node_ptr node)
             Variable variable = current->variables[index];
             if (variable.is_const)
             {
-                error("Cannot modify constant '" + left->_Node.ID().value + "'");
+                error("Cannot modify constant '" + left->_Node.ID().value + "'", chunk, node);
             }
             add_opcode(chunk, OP_SET, index, node->line);
             return;
@@ -203,7 +203,7 @@ void gen_eq(Chunk &chunk, node_ptr node)
         index = resolve_closure_nested(left->_Node.ID().value);
         if (index == -1)
         {
-            error("Variable '" + left->_Node.ID().value + "' is undefined");
+            error("Variable '" + left->_Node.ID().value + "' is undefined", chunk, node);
         }
         else
         {
@@ -220,7 +220,7 @@ void gen_eq(Chunk &chunk, node_ptr node)
                 Variable variable = current->variables[index];
                 if (variable.is_const)
                 {
-                    error("Cannot modify constant '" + variable.name + "'");
+                    error("Cannot modify constant '" + variable.name + "'", chunk, node);
                 }
             }
         }
@@ -239,7 +239,7 @@ void gen_eq(Chunk &chunk, node_ptr node)
                 Variable variable = current->variables[index];
                 if (variable.is_const)
                 {
-                    error("Cannot modify constant '" + variable.name + "'");
+                    error("Cannot modify constant '" + variable.name + "'", chunk, node);
                 }
             }
         }
@@ -252,7 +252,7 @@ void gen_eq(Chunk &chunk, node_ptr node)
             return;
         }
 
-        error("Right hand side of '.' operator must be an identifier");
+        error("Right hand side of '.' operator must be an identifier", chunk, node);
     }
 }
 
@@ -301,7 +301,7 @@ void gen_var(Chunk &chunk, node_ptr node)
             }
         }
     }
-    declareVariable(node->_Node.VariableDeclaration().name);
+    declareVariable(node->_Node.VariableDeclaration().name, false, false, chunk, node);
     add_code(chunk, OP_MAKE_NON_CONST, node->line);
 }
 
@@ -343,7 +343,7 @@ void gen_const(Chunk &chunk, node_ptr node)
             }
         }
     }
-    declareVariable(node->_Node.ConstantDeclatation().name, true);
+    declareVariable(node->_Node.ConstantDeclatation().name, true, false, chunk, node);
     add_code(chunk, OP_MAKE_CONST, node->line);
 }
 
@@ -353,7 +353,7 @@ void gen_id(Chunk &chunk, node_ptr node, int global_flag)
     {
         if (current->nested_object_count == 0)
         {
-            error("Cannot use 'this' in outer scope");
+            error("Cannot use 'this' in outer scope", chunk, node);
         }
         add_code(chunk, OP_LOAD_THIS, node->line);
         return;
@@ -399,13 +399,13 @@ int gen_try_catch(Chunk &chunk, node_ptr node)
     // error object
     if (node->_Node.TryCatch().catch_keyword->_Node.FunctionCall().args.size() > 1)
     {
-        error("Catch keyword expects 0 or 1 arguments");
+        error("Catch keyword expects 0 or 1 arguments", chunk, node);
     }
     if (node->_Node.TryCatch().catch_keyword->_Node.FunctionCall().args.size() == 1)
     {
         std::string error_var_name = node->_Node.TryCatch().catch_keyword->_Node.FunctionCall().args[0]->_Node.ID().value;
         add_constant_code(chunk, object_val());
-        declareVariable(error_var_name, false, true);
+        declareVariable(error_var_name, false, true, chunk, node);
         add_code(chunk, OP_SWAP_TOS, node->line);
         add_opcode(chunk, OP_SET_FORCE, resolve_variable(error_var_name), node->line);
         // add_code(chunk, OP_POP, node->line); // pop the error object off the stack
@@ -504,18 +504,18 @@ void gen_for_loop(Chunk &chunk, node_ptr node)
         begin_scope();
 
         add_constant_code(chunk, number_val(0));
-        declareVariable(node->_Node.ForLoop().index_name->_Node.ID().value, false, true);
+        declareVariable(node->_Node.ForLoop().index_name->_Node.ID().value, false, true, chunk, node);
 
         if (node->_Node.ForLoop().value_name)
         {
             generate(node->_Node.ForLoop().start, chunk);
-            declareVariable(node->_Node.ForLoop().value_name->_Node.ID().value, false, true);
+            declareVariable(node->_Node.ForLoop().value_name->_Node.ID().value, false, true, chunk, node);
         }
 
         generate(node->_Node.ForLoop().end, chunk);
         generate(node->_Node.ForLoop().start, chunk);
         add_code(chunk, OP_SUBTRACT, node->line);
-        declareVariable("___size___", false, true);
+        declareVariable("___size___", false, true, chunk, node);
 
         int loop_start = chunk.code.size() - 1;
 
@@ -564,22 +564,22 @@ void gen_for_loop(Chunk &chunk, node_ptr node)
         begin_scope();
 
         add_constant_code(chunk, number_val(0));
-        declareVariable(node->_Node.ForLoop().index_name->_Node.ID().value, false, true);
+        declareVariable(node->_Node.ForLoop().index_name->_Node.ID().value, false, true, chunk, node);
 
         generate(node->_Node.ForLoop().iterator, chunk);
-        declareVariable("___iter___", false, true);
+        declareVariable("___iter___", false, true, chunk, node);
 
         if (node->_Node.ForLoop().value_name)
         {
             add_opcode(chunk, OP_LOAD, resolve_variable("___iter___"), node->line);
             add_constant_code(chunk, number_val(0));
             add_opcode(chunk, OP_ACCESSOR, 0, node->line);
-            declareVariable(node->_Node.ForLoop().value_name->_Node.ID().value, false, true);
+            declareVariable(node->_Node.ForLoop().value_name->_Node.ID().value, false, true, chunk, node);
         }
 
         add_opcode(chunk, OP_LOAD, resolve_variable("___iter___"), node->line);
         add_code(chunk, OP_LEN, node->line);
-        declareVariable("___size___", false, true);
+        declareVariable("___size___", false, true, chunk, node);
 
         add_opcode(chunk, OP_LOAD, resolve_variable("___size___"));
         add_constant_code(chunk, number_val(0), node->line);
@@ -700,26 +700,26 @@ void gen_hook(Chunk &chunk, node_ptr node)
             index = resolve_closure_nested(node->_Node.Op().left->_Node.ID().value);
             if (index == -1)
             {
-                error("Cannot assign hook to global variable");
+                error("Cannot assign hook to global variable", chunk, node);
             }
             is_closure = true;
         }
 
         if (node->_Node.Op().right->type != NodeType::FUNC_CALL)
         {
-            error("Hook must be a function call");
+            error("Hook must be a function call", chunk, node);
         }
 
         int arity = node->_Node.Op().right->_Node.FunctionCall().args.size();
 
         if (arity < 1)
         {
-            error("Cannot assign empty hook - make sure to include a valid function");
+            error("Cannot assign empty hook - make sure to include a valid function", chunk, node);
         }
 
         if (arity > 2)
         {
-            error("Invalid hook - hook accepts at most 2 arguments");
+            error("Invalid hook - hook accepts at most 2 arguments", chunk, node);
         }
 
         std::string hook_name = node->_Node.Op().right->_Node.FunctionCall().name;
@@ -761,7 +761,7 @@ void gen_hook(Chunk &chunk, node_ptr node)
         }
         else
         {
-            error("Invalid hook name: '" + hook_name + "'");
+            error("Invalid hook name: '" + hook_name + "'", chunk, node);
         }
     }
     else
@@ -784,24 +784,24 @@ void gen_hook(Chunk &chunk, node_ptr node)
         }
         else
         {
-            error("Malformed hook");
+            error("Malformed hook", chunk, node);
         }
 
         if (node->_Node.Op().right->type != NodeType::FUNC_CALL)
         {
-            error("Hook must be a function call");
+            error("Hook must be a function call", chunk, node);
         }
 
         int arity = node->_Node.Op().right->_Node.FunctionCall().args.size();
 
         if (arity < 1)
         {
-            error("Cannot assign empty hook - make sure to include a valid function");
+            error("Cannot assign empty hook - make sure to include a valid function", chunk, node);
         }
 
         if (arity > 2)
         {
-            error("Invalid hook - hook accepts at most 2 arguments");
+            error("Invalid hook - hook accepts at most 2 arguments", chunk, node);
         }
 
         std::string hook_name = node->_Node.Op().right->_Node.FunctionCall().name;
@@ -829,7 +829,7 @@ void gen_hook(Chunk &chunk, node_ptr node)
         }
         else
         {
-            error("Invalid hook name: '" + hook_name + "'");
+            error("Invalid hook name: '" + hook_name + "'", chunk, node);
         }
         // error("Left hand side of hook assignment must be an identifier");
     }
@@ -840,7 +840,7 @@ void gen_break(Chunk &chunk, node_ptr node)
     // if (!current->in_loop)
     if (current->nested_loop_count == 0)
     {
-        error("Cannot use 'break' outside of a loop");
+        error("Cannot use 'break' outside of a loop", chunk, node);
     }
 
     add_code(chunk, OP_BREAK, node->line);
@@ -851,7 +851,7 @@ void gen_continue(Chunk &chunk, node_ptr node)
     // if (!current->in_loop)
     if (current->nested_loop_count == 0)
     {
-        error("Cannot use 'continue' outside of a loop");
+        error("Cannot use 'continue' outside of a loop", chunk, node);
     }
 
     add_code(chunk, OP_CONTINUE, node->line);
@@ -862,7 +862,7 @@ void gen_return(Chunk &chunk, node_ptr node)
     // if (!current->in_function)
     if (current->nested_function_count == 0)
     {
-        error("Cannot use 'return' at the top level");
+        error("Cannot use 'return' at the top level", chunk, node);
     }
 
     if (node->_Node.Return().value)
@@ -881,7 +881,7 @@ void gen_yield(Chunk &chunk, node_ptr node)
     // if (!current->in_function)
     if (current->nested_function_count == 0)
     {
-        error("Cannot use 'yield' at the top level");
+        error("Cannot use 'yield' at the top level", chunk, node);
     }
 
     if (node->_Node.Yield().value)
@@ -940,7 +940,7 @@ void gen_function(Chunk &chunk, node_ptr node)
         {
             if (is_capture && node->_Node.Function().default_values[param_name]->type != NodeType::LIST)
             {
-                error("Capture param (...) cannot have a default value");
+                error("Capture param (...) cannot have a default value", chunk, node);
             }
             function->defaults++;
             auto temp = current;
@@ -954,17 +954,17 @@ void gen_function(Chunk &chunk, node_ptr node)
             is_capture ? add_constant_code(function->chunk, placeholder, param->line) : add_constant_code(function->chunk, none_val(), param->line);
         }
 
-        declareVariable(param->_Node.ID().value);
+        declareVariable(param->_Node.ID().value, false, false, chunk, node);
     }
 
     add_constant_code(function->chunk, function_value, node->line);
-    declareVariable(function->name);
+    declareVariable(function->name, false, false, chunk, node);
 
     if (function->is_generator)
     {
         Value none = none_val();
         add_constant_code(function->chunk, none, node->line);
-        declareVariable("_value", false);
+        declareVariable("_value", false, false, chunk, node);
     }
 
     if (node->_Node.Function().body->type == NodeType::OBJECT)
@@ -1053,7 +1053,7 @@ void gen_type(Chunk &chunk, node_ptr node)
 
     if (type_node.body->type != NodeType::OBJECT)
     {
-        error("Invalid type body");
+        error("Invalid type body", chunk, node);
     }
 
     if (type_node.body->_Node.Object().elements.size() == 1 && type_node.body->_Node.Object().elements[0]->type == NodeType::COMMA_LIST)
@@ -1158,7 +1158,7 @@ void gen_type(Chunk &chunk, node_ptr node)
         add_opcode(chunk, OP_TYPE_DEFAULTS, defaults.size(), node->line);
     }
 
-    declareVariable(type_node.name, true);
+    declareVariable(type_node.name, true, false, chunk, node);
 }
 
 void gen_typed_object(Chunk &chunk, node_ptr node)
@@ -1203,7 +1203,7 @@ void gen_object(Chunk &chunk, node_ptr node)
         }
         if (elem->type != NodeType::OP || elem->_Node.Op().value != ":")
         {
-            error("Object properties must be in shape (name: value)");
+            error("Object properties must be in shape (name: value)", chunk, node);
         }
         if (elem->_Node.Op().left->type == NodeType::ID)
         {
@@ -1302,7 +1302,7 @@ void gen_import(Chunk &chunk, node_ptr node)
     {
         // import x : x
         add_constant_code(chunk, string_val(node->_Node.Import().module->_Node.ID().value), node->line);
-        declareVariable(node->_Node.Import().module->_Node.ID().value, true);
+        declareVariable(node->_Node.Import().module->_Node.ID().value, true, false, chunk, node);
         add_opcode(chunk, OP_IMPORT, 0, node->line);
     }
     else if (node->_Node.Import().module->type == NodeType::LIST && node->_Node.Import().module->_Node.List().elements.size() == 0)
@@ -1313,7 +1313,7 @@ void gen_import(Chunk &chunk, node_ptr node)
         // }
         if (current->nested_function_count > 0 || current->nested_object_count > 0)
         {
-            error("Cannot import [] outside of global scope");
+            error("Cannot import [] outside of global scope", chunk, node);
         }
         add_constant_code(chunk, none_val(), node->line);
         add_opcode(chunk, OP_IMPORT, 0, node->line);
@@ -1334,10 +1334,10 @@ void gen_import(Chunk &chunk, node_ptr node)
         {
             if (elem->type != NodeType::ID)
             {
-                error("Import variables must be identifiers");
+                error("Import variables must be identifiers", chunk, node);
             }
             add_constant_code(chunk, string_val(elem->_Node.ID().value), node->line);
-            declareVariable(elem->_Node.ID().value, false);
+            declareVariable(elem->_Node.ID().value, false, false, chunk, node);
         }
         add_opcode(chunk, OP_IMPORT, elements.size(), node->line);
     }
@@ -1680,8 +1680,12 @@ void generate(node_ptr node, Chunk &chunk)
     }
 }
 
-void generate_bytecode(std::vector<node_ptr> &nodes, Chunk &chunk)
+void generate_bytecode(std::vector<node_ptr> &nodes, Chunk &chunk, std::string file_path)
 {
+    if (file_path != "")
+    {
+        generator_file_path = file_path;
+    }
     for (node_ptr &node : nodes)
     {
         if (node->type == NodeType::OP && node->_Node.Op().value == ";")
@@ -1786,6 +1790,26 @@ static void declareVariable(std::string name, bool is_const, bool is_internal)
         if (name == variable.name)
         {
             error("Variable '" + name + "' already defined");
+        }
+    }
+
+    addVariable(name, is_const, is_internal);
+}
+
+static void declareVariable(std::string name, bool is_const, bool is_internal, Chunk &chunk, node_ptr node)
+{
+
+    for (int i = current->variableCount - 1; i >= 0; i--)
+    {
+        Variable variable = current->variables[i];
+        if (variable.depth != -1 && variable.depth < current->scopeDepth)
+        {
+            break;
+        }
+
+        if (name == variable.name)
+        {
+            error("Variable '" + name + "' already defined", chunk, node);
         }
     }
 
@@ -1898,6 +1922,13 @@ static int resolve_closure_nested(std::string name)
 void error(std::string message)
 {
     std::cout << message << "\n";
+    exit(1);
+}
+
+void error(std::string message, Chunk &chunk, node_ptr node)
+{
+    std::string error_message = "Compile Error in '" + generator_file_path + "' @ (" + std::to_string(node->line) + ", " + std::to_string(node->column) + "): " + message;
+    std::cout << error_message << "\n";
     exit(1);
 }
 
