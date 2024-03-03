@@ -1131,7 +1131,7 @@ static EvaluateResult run(VM &vm)
                 break;
             }
             *frame->function->closed_vars[index]->location = vm.stack.back();
-            *frame->function->closed_vars[index]->location->meta.is_const = false;
+            frame->function->closed_vars[index]->location->meta.is_const = false;
 
             break;
         }
