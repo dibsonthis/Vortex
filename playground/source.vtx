@@ -1,3 +1,9 @@
+var b = {}
+
 const f = () => {
-    x = 100
+    const a = {name: "j"}
+    b = a.copy()
 }
+
+f()
+f()

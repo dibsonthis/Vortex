@@ -1,3 +1,1 @@
-var global_obj = {
-    x: 10
-}
+var msg = "Hi"

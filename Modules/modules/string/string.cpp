@@ -143,3 +143,53 @@ extern "C" Value replaceAll(std::vector<Value> &args)
 
     return new_str;
 }
+
+extern "C" Value lower(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        return error_object("Function 'lower' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value &text = args[0];
+
+    if (!text.is_string())
+    {
+        return error_object("Function 'lower' expects argument 'text' to be a string");
+    }
+
+    std::string copy = std::string(text.get_string());
+
+    std::transform(copy.begin(), copy.end(), copy.begin(),
+                   [](unsigned char c)
+                   { return std::tolower(c); });
+
+    return string_val(copy);
+}
+
+extern "C" Value upper(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        return error_object("Function 'upper' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value &text = args[0];
+
+    if (!text.is_string())
+    {
+        return error_object("Function 'upper' expects argument 'text' to be a string");
+    }
+
+    std::string copy = std::string(text.get_string());
+
+    std::transform(copy.begin(), copy.end(), copy.begin(),
+                   [](unsigned char c)
+                   { return std::toupper(c); });
+
+    return string_val(copy);
+}
