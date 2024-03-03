@@ -54,6 +54,15 @@
       "preLaunchTask": "C/C++: clang++ build and debug active file"
     },
     {
+      "name": "C/C++ Linux: clang++ build and debug active file",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/bin/build/dev/main",
+      "args": [],
+      "cwd": "${workspaceFolder}/bin/build/dev",
+      "preLaunchTask": "C/C++ Linux: clang++ build and debug active file"
+    },
+    {
       "name": "C/C++: clang++ build interpreter",
       "type": "lldb",
       "request": "launch",

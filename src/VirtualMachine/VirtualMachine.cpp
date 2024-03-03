@@ -163,7 +163,7 @@ static void runtimeError(VM &vm, std::string message, std::string error_type, ..
     va_end(args);
     fputs("\n", stderr);
 
-    CallFrame *prev_frame;
+    CallFrame *prev_frame = nullptr;
 
     for (int i = vm.frames.size() - 1; i >= 0; i--)
     {
