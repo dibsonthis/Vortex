@@ -91,3 +91,52 @@ extern "C" Value absolute(std::vector<Value> &args)
 
     return string_val(std::filesystem::absolute(filePath.get_string()));
 }
+
+extern "C" Value get_env(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        return error_object("Function 'get_env' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value name = args[0];
+
+    if (!name.is_string())
+    {
+        return error_object("Parameter 'name' must be a string");
+    }
+
+    char *value = std::getenv(name.get_string().c_str());
+    std::string env_var = std::string(value == NULL ? "" : value);
+
+    return string_val(env_var);
+}
+
+extern "C" Value set_env(std::vector<Value> &args)
+{
+    int num_required_args = 2;
+
+    if (args.size() != num_required_args)
+    {
+        return error_object("Function 'get_env' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value name = args[0];
+    Value value = args[1];
+
+    if (!name.is_string())
+    {
+        return error_object("Parameter 'name' must be a string");
+    }
+
+    if (!value.is_string())
+    {
+        return error_object("Parameter 'value' must be a string");
+    }
+
+    int res = setenv(name.get_string().c_str(), value.get_string().c_str(), 1);
+
+    return number_val(res);
+}

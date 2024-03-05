@@ -1,9 +1,75 @@
-var b = {}
+// var x = 100
 
-const f = () => {
-    const a = {name: "j"}
-    b = a.copy()
+// x::onChange((e) => println(e))
+
+// var g = x.info().onChangeHook
+// x::onChange((e) => {
+//     g(e)
+//     println("Addition")
+// })
+
+// x = 20
+
+// var h = x.info().onChangeHook
+// x::onChange((e) => {
+//     h(e)
+//     println(10)
+// })
+
+// x = 10
+
+var x = {
+    value: 100
 }
 
-f()
-f()
+
+const appendOnChange = (_ref, hook) => {
+    const currentHook = _ref.value.info().onChangeHook
+    if (currentHook) {
+        _ref.value::onChange((e) => {
+            currentHook(e)
+            hook(e)
+        })
+        return _ref
+    }
+    _ref.value::onChange(hook)
+    return _ref
+}
+
+x
+.appendOnChange((e) => println(e))
+.appendOnChange((e) => println("Middle"))
+.appendOnChange((e) => println("End"))
+
+// x.value = 20
+
+var y = 10
+
+y::onChange((e) => println(e))
+// const old_hook = y.info().onChangeHook
+// y::onChange((e) => {
+//     if (old_hook) {
+//         old_hook(e)
+//     }
+
+//     println("Extension")
+// })
+
+y = 30
+
+var blah = (val) => {
+    const old_hook = val.info().onChangeHook
+    y::onChange((e) => {
+        if (old_hook) {
+            old_hook(e)
+        }
+
+        println("Extension")
+    })
+
+    return val
+}
+
+blah(y)
+
+y = 100

@@ -3551,7 +3551,7 @@ static Value info_builtin(std::vector<Value> &args)
     }
     case Object:
     {
-        obj->keys = {"type", "typename", "keys", "values"};
+        obj->keys = {"type", "typename", "keys", "values", "onChangeHook", "onAccessHook"};
         auto &object = value.get_object();
         obj->values["type"] = object->type == nullptr ? none_val() : string_val(object->type->name);
         obj->values["typename"] = string_val(object->type_name);
@@ -3565,10 +3565,15 @@ static Value info_builtin(std::vector<Value> &args)
         {
             obj->values["values"].get_list()->push_back(object->values[key]);
         }
+        obj->values["onChangeHook"] = value.hooks.onChangeHook ? *value.hooks.onChangeHook : none_val();
+        obj->values["onAccessHook"] = value.hooks.onAccessHook ? *value.hooks.onAccessHook : none_val();
         return info;
     }
     default:
     {
+        obj->keys = {"onChangeHook", "onAccessHook"};
+        obj->values["onChangeHook"] = value.hooks.onChangeHook ? *value.hooks.onChangeHook : none_val();
+        obj->values["onAccessHook"] = value.hooks.onAccessHook ? *value.hooks.onAccessHook : none_val();
         return info;
     }
     }
