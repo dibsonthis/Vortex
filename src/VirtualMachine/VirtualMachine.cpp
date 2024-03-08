@@ -3052,7 +3052,6 @@ static Value eval_builtin(std::vector<Value> &args)
     {
         main_frame.function->chunk.code.pop_back();
     }
-    disassemble_chunk(main_frame.function->chunk, "Eval");
     main_frame.function->instruction_offsets = offsets;
     vm.frames.push_back(main_frame);
     add_code(main_frame.function->chunk, OP_EXIT);
