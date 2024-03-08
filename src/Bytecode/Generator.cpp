@@ -3,6 +3,7 @@
 #include "../Node/Node.hpp"
 
 std::shared_ptr<Compiler> current = std::make_shared<Compiler>();
+std::shared_ptr<Compiler> prev;
 
 void gen_literal(Chunk &chunk, node_ptr node)
 {
@@ -1680,8 +1681,13 @@ void generate(node_ptr node, Chunk &chunk)
     }
 }
 
-void generate_bytecode(std::vector<node_ptr> &nodes, Chunk &chunk, std::string file_path)
+void generate_bytecode(std::vector<node_ptr> &nodes, Chunk &chunk, std::string file_path, bool reset_compiler)
 {
+    if (reset_compiler)
+    {
+        prev = current;
+        current = std::make_shared<Compiler>();
+    }
     if (file_path != "")
     {
         generator_file_path = file_path;
@@ -1737,6 +1743,11 @@ void generate_bytecode(std::vector<node_ptr> &nodes, Chunk &chunk, std::string f
         {
             chunk.variables.push_back(var.name);
         }
+    }
+
+    if (reset_compiler)
+    {
+        current = prev;
     }
 }
 

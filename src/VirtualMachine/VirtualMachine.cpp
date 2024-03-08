@@ -242,6 +242,7 @@ static EvaluateResult run(VM &vm)
     define_global(vm, "__vm__", vm_ptr);
 
     // Define native functions
+    define_native(vm, "eval", eval_builtin);
     define_native(vm, "print", print_builtin);
     define_native(vm, "println", println_builtin);
     define_native(vm, "clock", clock_builtin);
@@ -2996,6 +2997,73 @@ static int call_function(VM &vm, Value &function, int param_num, CallFrame *&fra
     frame = &vm.frames.back();
 
     return 0;
+}
+
+static Value eval_builtin(std::vector<Value> &args)
+{
+    if (args.size() != 2)
+    {
+        return error_object("Function 'eval' expects 2 arguments");
+    }
+
+    Value source = args[0];
+    Value context = args[1];
+
+    if (!source.is_string())
+    {
+        return error_object("Function 'eval' expects arg 'source' to be a string");
+    }
+
+    if (!context.is_object())
+    {
+        return error_object("Function 'eval' expects arg 'context' to be an object");
+    }
+
+    Lexer lexer(source.get_string(), false);
+    lexer.tokenize();
+
+    Parser parser(lexer.nodes, lexer.file_name);
+    parser.parse(0, "_");
+    parser.remove_op_node(";");
+    auto ast = parser.nodes;
+
+    VM vm;
+    std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+    main->name = "";
+    main->arity = 0;
+    main->chunk = Chunk();
+    CallFrame main_frame;
+    main_frame.name = "_eval";
+    main_frame.function = main;
+    main_frame.sp = 0;
+    main_frame.ip = main->chunk.code.data();
+    main_frame.frame_start = 0;
+
+    auto context_obj = context.get_object();
+
+    for (auto key : context_obj->keys)
+    {
+        vm.globals[key] = context_obj->values[key];
+    }
+
+    generate_bytecode(parser.nodes, main_frame.function->chunk, "_eval", true);
+    auto offsets = instruction_offsets(main_frame.function->chunk);
+    if (main_frame.function->chunk.code.back() == OP_POP)
+    {
+        main_frame.function->chunk.code.pop_back();
+    }
+    disassemble_chunk(main_frame.function->chunk, "Eval");
+    main_frame.function->instruction_offsets = offsets;
+    vm.frames.push_back(main_frame);
+    add_code(main_frame.function->chunk, OP_EXIT);
+    evaluate(vm);
+
+    if (vm.stack.size() > 0)
+    {
+        return vm.stack.back();
+    }
+
+    return none_val();
 }
 
 static Value print_builtin(std::vector<Value> &args)

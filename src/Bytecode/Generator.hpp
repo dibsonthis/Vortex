@@ -77,7 +77,7 @@ void gen_import(Chunk &chunk, node_ptr node);
 void gen_list(Chunk &chunk, node_ptr node);
 
 void generate(node_ptr node, Chunk &chunk);
-void generate_bytecode(std::vector<node_ptr> &nodes, Chunk &chunk, std::string file_path = "");
+void generate_bytecode(std::vector<node_ptr> &nodes, Chunk &chunk, std::string file_path = "", bool reset_compiler = false);
 
 static void begin_scope();
 static void end_scope(Chunk &chunk);

@@ -94,6 +94,7 @@ bool is_falsey(Value &value);
 Value copy(Value &value);
 Value error_object(std::string message, std::string error_type = "GenericError");
 
+static Value eval_builtin(std::vector<Value> &args);
 static Value print_builtin(std::vector<Value> &args);
 static Value println_builtin(std::vector<Value> &args);
 static Value clock_builtin(std::vector<Value> &args);
