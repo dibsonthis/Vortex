@@ -540,6 +540,7 @@ static EvaluateResult run(VM &vm)
             }
             vm.stack[index + frame->frame_start] = vm.stack.back();
             vm.stack[index + frame->frame_start].meta.is_const = false;
+            vm.stack[index + frame->frame_start].hooks = value.hooks;
             break;
         }
         case OP_SET_FORCE:
@@ -547,6 +548,7 @@ static EvaluateResult run(VM &vm)
             int index = READ_INT();
             Value value = vm.stack[index + frame->frame_start];
             vm.stack[index + frame->frame_start] = vm.stack.back();
+            vm.stack[index + frame->frame_start].hooks = value.hooks;
             break;
         }
         case OP_SET_PROPERTY:
@@ -650,6 +652,7 @@ static EvaluateResult run(VM &vm)
                 }
                 std::string &accessor_string = accessor.get_string();
                 auto &keys = container.get_object()->keys;
+                value.hooks = current.hooks;
                 container.get_object()->values[accessor_string] = value;
                 if (std::find(keys.begin(), keys.end(), accessor_string) == keys.end())
                 {
@@ -1133,6 +1136,7 @@ static EvaluateResult run(VM &vm)
             }
             *frame->function->closed_vars[index]->location = vm.stack.back();
             frame->function->closed_vars[index]->location->meta.is_const = false;
+            frame->function->closed_vars[index]->location->hooks = value.hooks;
 
             break;
         }

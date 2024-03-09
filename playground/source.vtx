@@ -37,7 +37,8 @@ var methods = {
     }
 }
 
-data::onAccess((e) => println(e))
+data.age::onAccess((e) => println(e))
 
+methods.incr()
 methods.incr()
 methods.incr()
