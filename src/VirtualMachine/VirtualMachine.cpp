@@ -2313,8 +2313,8 @@ static EvaluateResult run(VM &vm)
             if (index == -1)
             {
                 Value &val = vm.stack.back();
-                val.hooks.onChangeHook = std::make_shared<Value>(function);
-                val.hooks.onChangeHookName = name.get_string();
+                val.hooks.onAccessHook = std::make_shared<Value>(function);
+                val.hooks.onAccessHookName = name.get_string();
                 vm.stack.pop_back();
                 break;
             }
@@ -2364,8 +2364,8 @@ static EvaluateResult run(VM &vm)
             if (index == -1)
             {
                 Value &val = vm.stack.back();
-                val.hooks.onChangeHook = std::make_shared<Value>(function);
-                val.hooks.onChangeHookName = name.get_string();
+                val.hooks.onAccessHook = std::make_shared<Value>(function);
+                val.hooks.onAccessHookName = name.get_string();
                 vm.stack.pop_back();
                 break;
             }
