@@ -158,7 +158,7 @@ void Lexer::build_number()
 	nodes.push_back(node);
 }
 
-void Lexer::format_string()
+void Lexer::format_string(bool is_tilde)
 {
 	int current_index = index;
 
@@ -166,9 +166,11 @@ void Lexer::format_string()
 	current_char = source[index];
 	advance();
 
-	while (current_char != '"')
+	char _c = is_tilde ? '`' : '"';
+
+	while (current_char != _c)
 	{
-		if (current_char == '\\' && peek() == '"')
+		if (current_char == '\\' && peek() == _c)
 		{
 			advance();
 			advance();
@@ -176,7 +178,8 @@ void Lexer::format_string()
 		}
 		if (current_char == '$' && peek() == '{')
 		{
-			source[index] = '"';
+			// source[index] = '"';
+			source[index] = _c;
 			advance();
 			source[index] = '+';
 			advance();
@@ -207,7 +210,14 @@ void Lexer::format_string()
 			}
 			source[index] = ')';
 			advance();
-			source.insert(index, "+\"");
+			if (is_tilde)
+			{
+				source.insert(index, "+`");
+			}
+			else
+			{
+				source.insert(index, "+\"");
+			}
 			source_length += 2;
 			current_char = source[index];
 			advance();
@@ -219,7 +229,7 @@ void Lexer::format_string()
 	current_char = source[index];
 }
 
-void Lexer::build_string()
+void Lexer::build_string(bool is_tilde)
 {
 	node_ptr node(new Node(NodeType::STRING, line, column));
 
@@ -231,6 +241,12 @@ void Lexer::build_string()
 	{
 		if (current_char == '\0')
 		{
+			if (is_tilde)
+			{
+				error_and_exit("Warning: Missing end '`', end of file reached.");
+				return;
+			}
+
 			error_and_exit("Warning: Missing end '\"', end of file reached.");
 			return;
 		}
@@ -242,20 +258,41 @@ void Lexer::build_string()
 			str += current_char;
 			advance();
 		}
-		else if (current_char == '\\' && peek() == '"')
+		else if (!is_tilde && current_char == '\\' && peek() == '"')
 		{
 			str += current_char;
+			advance();
+			str += current_char;
+			advance();
+		}
+		else if (is_tilde && current_char == '\\' && peek() == '`')
+		{
 			advance();
 			str += current_char;
 			advance();
 		}
 		else if (current_char == '\n')
 		{
+			if (is_tilde)
+			{
+				str += '\n';
+			}
 			line++;
 			column = 0;
 			advance(); // consume '\n'
 		}
-		else if (current_char == '"')
+		else if (!is_tilde && current_char == '"')
+		{
+			if (peek(-1) != '\\')
+			{
+				break;
+			}
+			else if (peek(-1) == '\\' && peek(-2) == '\\')
+			{
+				break;
+			}
+		}
+		else if (is_tilde && current_char == '`')
 		{
 			if (peek(-1) != '\\')
 			{
@@ -499,6 +536,10 @@ void Lexer::tokenize()
 		{
 			format_string();
 		}
+		else if (current_char == 'f' && peek() == '`')
+		{
+			format_string(true);
+		}
 		else if (current_char == ' ' || current_char == '\t')
 		{
 			advance();
@@ -522,6 +563,10 @@ void Lexer::tokenize()
 		else if (current_char == '"')
 		{
 			build_string();
+		}
+		else if (current_char == '`')
+		{
+			build_string(true);
 		}
 		else if (current_char == '.' && peek() == '.' && peek(2) == '.')
 		{

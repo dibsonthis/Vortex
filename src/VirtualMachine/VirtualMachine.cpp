@@ -652,7 +652,10 @@ static EvaluateResult run(VM &vm)
                 }
                 std::string &accessor_string = accessor.get_string();
                 auto &keys = container.get_object()->keys;
-                value.hooks = current.hooks;
+                if (!current.is_none())
+                {
+                    value.hooks = current.hooks;
+                }
                 container.get_object()->values[accessor_string] = value;
                 if (std::find(keys.begin(), keys.end(), accessor_string) == keys.end())
                 {
@@ -769,6 +772,58 @@ static EvaluateResult run(VM &vm)
                 }
             }
             push(vm, vm.globals[name_str]);
+
+            auto value = vm.globals[name_str];
+
+            if (value.hooks.onAccessHook)
+            {
+                Value obj = object_val();
+                obj.get_object()->keys = {"value", "name"};
+                Value value_pure = copy(value);
+                value_pure.hooks.onAccessHook = nullptr;
+                value_pure.hooks.onChangeHook = nullptr;
+                obj.get_object()->values["value"] = value_pure;
+                obj.get_object()->values["name"] = string_val(value.hooks.onAccessHookName);
+
+                VM func_vm;
+                std::shared_ptr<FunctionObj> main = std::make_shared<FunctionObj>();
+                main->name = "";
+                main->arity = 0;
+                main->chunk = Chunk();
+                main->chunk.import_path = frame->function->chunk.import_path;
+                CallFrame main_frame;
+                main_frame.name = frame->name;
+                main_frame.function = main;
+                main_frame.sp = 0;
+                main_frame.ip = main->chunk.code.data();
+                main_frame.frame_start = 0;
+                func_vm.frames.push_back(main_frame);
+
+                add_constant(main->chunk, *value.hooks.onAccessHook);
+                add_constant(main->chunk, obj);
+
+                add_opcode(main->chunk, OP_LOAD_CONST, 1, 0);
+                add_opcode(main->chunk, OP_LOAD_CONST, 0, 0);
+                add_opcode(main->chunk, OP_CALL, 1, 0);
+                add_code(main->chunk, OP_EXIT, 0);
+
+                auto offsets = instruction_offsets(main_frame.function->chunk);
+                main_frame.function->instruction_offsets = offsets;
+
+                auto status = evaluate(func_vm);
+
+                if (status != 0)
+                {
+                    exit(1);
+                }
+
+                obj.get_object()->values["value"].hooks.onChangeHook = value.hooks.onChangeHook;
+                obj.get_object()->values["value"].hooks.onChangeHookName = value.hooks.onChangeHookName;
+                obj.get_object()->values["value"].hooks.onAccessHook = value.hooks.onAccessHook;
+                obj.get_object()->values["value"].hooks.onAccessHookName = value.hooks.onAccessHookName;
+                break;
+            }
+
             break;
         }
         case OP_MAKE_OBJECT:
@@ -2217,7 +2272,7 @@ static EvaluateResult run(VM &vm)
                 Value &val = vm.stack.back();
                 val.hooks.onChangeHook = std::make_shared<Value>(function);
                 val.hooks.onChangeHookName = name.get_string();
-                vm.stack.pop_back();
+                // vm.stack.pop_back();
                 break;
             }
             if (index == -2)
@@ -2229,6 +2284,7 @@ static EvaluateResult run(VM &vm)
                 {
                     container.get_object()->values[accessor.get_string()].hooks.onChangeHook = std::make_shared<Value>(function);
                     container.get_object()->values[accessor.get_string()].hooks.onChangeHookName = name.get_string();
+                    push(vm, container.get_object()->values[accessor.get_string()]);
                     break;
                 }
 
@@ -2244,6 +2300,7 @@ static EvaluateResult run(VM &vm)
 
             vm.stack[index + frame->frame_start].hooks.onChangeHook = std::make_shared<Value>(function);
             vm.stack[index + frame->frame_start].hooks.onChangeHookName = name.get_string();
+            push(vm, vm.stack[index + frame->frame_start]);
             break;
         }
         case OP_HOOK_CLOSURE_ONCHANGE:
@@ -2268,7 +2325,7 @@ static EvaluateResult run(VM &vm)
                 Value &val = vm.stack.back();
                 val.hooks.onChangeHook = std::make_shared<Value>(function);
                 val.hooks.onChangeHookName = name.get_string();
-                vm.stack.pop_back();
+                // vm.stack.pop_back();
                 break;
             }
             if (index == -2)
@@ -2280,6 +2337,7 @@ static EvaluateResult run(VM &vm)
                 {
                     container.get_object()->values[accessor.get_string()].hooks.onChangeHook = std::make_shared<Value>(function);
                     container.get_object()->values[accessor.get_string()].hooks.onChangeHookName = name.get_string();
+                    push(vm, container.get_object()->values[accessor.get_string()]);
                     break;
                 }
 
@@ -2295,6 +2353,7 @@ static EvaluateResult run(VM &vm)
 
             (*frame->function->closed_vars[index]->location).hooks.onChangeHook = std::make_shared<Value>(function);
             (*frame->function->closed_vars[index]->location).hooks.onAccessHookName = name.get_string();
+            push(vm, *frame->function->closed_vars[index]->location);
             break;
         }
         case OP_HOOK_ONACCESS:
@@ -2319,7 +2378,7 @@ static EvaluateResult run(VM &vm)
                 Value &val = vm.stack.back();
                 val.hooks.onAccessHook = std::make_shared<Value>(function);
                 val.hooks.onAccessHookName = name.get_string();
-                vm.stack.pop_back();
+                // vm.stack.pop_back();
                 break;
             }
             if (index == -2)
@@ -2331,6 +2390,8 @@ static EvaluateResult run(VM &vm)
                 {
                     container.get_object()->values[accessor.get_string()].hooks.onAccessHook = std::make_shared<Value>(function);
                     container.get_object()->values[accessor.get_string()].hooks.onAccessHookName = name.get_string();
+
+                    push(vm, container.get_object()->values[accessor.get_string()]);
                     break;
                 }
 
@@ -2346,6 +2407,7 @@ static EvaluateResult run(VM &vm)
 
             vm.stack[index + frame->frame_start].hooks.onAccessHook = std::make_shared<Value>(function);
             vm.stack[index + frame->frame_start].hooks.onAccessHookName = name.get_string();
+            push(vm, vm.stack[index + frame->frame_start]);
             break;
         }
         case OP_HOOK_CLOSURE_ONACCESS:
@@ -2370,7 +2432,7 @@ static EvaluateResult run(VM &vm)
                 Value &val = vm.stack.back();
                 val.hooks.onAccessHook = std::make_shared<Value>(function);
                 val.hooks.onAccessHookName = name.get_string();
-                vm.stack.pop_back();
+                // vm.stack.pop_back();
                 break;
             }
             if (index == -2)
@@ -2382,6 +2444,7 @@ static EvaluateResult run(VM &vm)
                 {
                     container.get_object()->values[accessor.get_string()].hooks.onAccessHook = std::make_shared<Value>(function);
                     container.get_object()->values[accessor.get_string()].hooks.onAccessHookName = name.get_string();
+                    push(vm, container.get_object()->values[accessor.get_string()]);
                     break;
                 }
 
@@ -2397,6 +2460,7 @@ static EvaluateResult run(VM &vm)
 
             (*frame->function->closed_vars[index]->location).hooks.onAccessHook = std::make_shared<Value>(function);
             (*frame->function->closed_vars[index]->location).hooks.onAccessHookName = name.get_string();
+            push(vm, *frame->function->closed_vars[index]->location);
             break;
         }
         case OP_NEGATE:

@@ -1701,6 +1701,7 @@ void generate_bytecode(std::vector<node_ptr> &nodes, Chunk &chunk, std::string f
         if (node->type == NodeType::OP && node->_Node.Op().value == "::")
         {
             generate(node, chunk);
+            add_code(chunk, OP_POP, node->line);
             continue;
         }
         if (node->type == NodeType::OP)

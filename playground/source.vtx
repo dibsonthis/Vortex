@@ -1,44 +1,15 @@
-// const obj = {
-//     x: 100
-// }
+const template = `
+Hi
+John
+<div>
+    <h1> {{ title }} </h1>
+    <div #nameDiv>
+        <input #nameInput />
+        <button @click: updateTitle> Change title </button>
+    </div>
+    <p> Hi, my name is {{ name }} and I am {{ age }} years old. </p>
+    <p> My favorite color is {{ props.color }}. </p>
+</div>
+`
 
-// const Proxy = (target, schema = {}) => {
-//     var proxy = copy(target)
-//     for (schema.info().keys, index, key) {
-//         const fn = schema[key][1]
-//         proxy[key] = fn(target[key])
-//         proxy[key]::onAccess(schema[key][0])
-//     }
-
-//     return proxy
-// }
-
-// const proxy = Proxy(obj, {
-//     x: [(e) => {
-//         println("X")
-//     }, (e) => e * 2]
-// })
-
-// const proxy = Proxy(obj, {
-//     x: {
-//         get: (e) => println("X")
-//     }
-// })
-
-// proxy.x.println()
-
-var data = {
-    age: 10
-}
-
-var methods = {
-    incr: () => {
-        data.age += 1
-    }
-}
-
-data.age::onAccess((e) => println(e))
-
-methods.incr()
-methods.incr()
-methods.incr()
+println(template)

@@ -33,25 +33,25 @@ class Lexer
 
 	void build_number();
 
-	void format_string();
+	void format_string(bool is_tilde = false);
 
-	void build_string();
+	void build_string(bool is_tilde = false);
 
 	void handle_line_comment();
 
 	void handle_block_comment();
 
 public:
-
 	Lexer() = default;
-	
+
 	Lexer(std::string src, bool is_file = true)
 	{
 		if (is_file)
 		{
 			load_source(src);
 			path = src;
-			file_name = std::filesystem::path(src).stem().string();;
+			file_name = std::filesystem::path(src).stem().string();
+			;
 		}
 		else
 		{
@@ -70,7 +70,7 @@ public:
 	std::string path;
 
 	std::string file_name;
-	
+
 	std::vector<std::shared_ptr<Node>> nodes;
 
 	void init(std::string source);
