@@ -163,3 +163,55 @@ extern "C" Value __system__(std::vector<Value> &args)
 
     return none_val();
 }
+
+extern "C" Value __argc__(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        return error_object("Function '__argc__' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value vm = args[0];
+
+    if (!vm.is_pointer())
+    {
+        return error_object("Function '__argc__' expects argument 'vm' to be a pointer");
+    }
+
+    VM *_vm = (VM *)(vm.get_pointer()->value);
+
+    return number_val(_vm->argc);
+}
+
+extern "C" Value __argv__(std::vector<Value> &args)
+{
+    int num_required_args = 1;
+
+    if (args.size() != num_required_args)
+    {
+        return error_object("Function '__argv__' expects " + std::to_string(num_required_args) + " argument(s)");
+    }
+
+    Value vm = args[0];
+
+    if (!vm.is_pointer())
+    {
+        return error_object("Function '__argv__' expects argument 'vm' to be a pointer");
+    }
+
+    VM *_vm = (VM *)(vm.get_pointer()->value);
+
+    Value argv_obj = object_val();
+
+    for (int i = 0; i < _vm->argc; i++)
+    {
+        std::string s(_vm->argv[i]);
+        std::string key = std::to_string(i);
+        argv_obj.get_object()->keys.push_back(key);
+        argv_obj.get_object()->values[key] = string_val(s);
+    }
+
+    return argv_obj;
+}

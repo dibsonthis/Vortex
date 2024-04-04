@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     {
         if (argc == 1)
         {
-            std::cout << "You must enter a source path e.g: vortex \"dev/main.vtx\"\n";
+            std::cout << "You must enter a source path e.g: vortex dev/main.vtx\n";
             return 1;
         }
 
@@ -118,6 +118,23 @@ int main(int argc, char **argv)
         main_frame.sp = 0;
         main_frame.ip = main->chunk.code.data();
         main_frame.frame_start = 0;
+
+        // auto argv_obj = object_val();
+        // for (int i = 0; i < argc; i++)
+        // {
+        //     std::string s(argv[i]);
+        //     std::string key = std::to_string(i);
+        //     argv_obj.get_object()->keys.push_back(key);
+        //     argv_obj.get_object()->values[key] = string_val(s);
+        // }
+
+        // auto argc_num = number_val(argc);
+
+        // vm.objects.push_back(&argc_num);
+        // vm.objects.push_back(&argv_obj);
+
+        vm.argc = argc;
+        vm.argv = argv;
 
         generate_bytecode(parser.nodes, main_frame.function->chunk, path);
         auto offsets = instruction_offsets(main_frame.function->chunk);

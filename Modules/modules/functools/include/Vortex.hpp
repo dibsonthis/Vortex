@@ -401,6 +401,8 @@ struct VM
     std::vector<int> try_instructions;
     int call_stack_limit = 3000;
     std::unordered_map<std::string, CachedImport> import_cache;
+    int argc = 0;
+    char **argv;
 
     VM()
     {

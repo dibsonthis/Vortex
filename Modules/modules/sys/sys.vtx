@@ -1,6 +1,8 @@
-const lib = load_lib("./bin/sys", ["__stack__", "__globals__", "__frame__", "__system__"])
+const lib = load_lib("./bin/sys", ["__stack__", "__globals__", "__frame__", "__system__", "__argc__", "__argv__"])
 
 const stack = () => lib.__stack__(__vm__)
 const globals = () => lib.__globals__(__vm__)
 const frame = (depth = 2) => lib.__frame__(__vm__, depth)
 const system = (command) => lib.__system__(command, __vm__)
+const argc = () => lib.__argc__(__vm__)
+const argv = () => lib.__argv__(__vm__)

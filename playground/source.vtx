@@ -1,15 +1,2 @@
-const template = `
-Hi
-John
-<div>
-    <h1> {{ title }} </h1>
-    <div #nameDiv>
-        <input #nameInput />
-        <button @click: updateTitle> Change title </button>
-    </div>
-    <p> Hi, my name is {{ name }} and I am {{ age }} years old. </p>
-    <p> My favorite color is {{ props.color }}. </p>
-</div>
-`
-
-println(template)
+import sys : "/Users/adib/Dev/Personal/Vortex/Modules/modules/sys/sys"
+println(sys.argv())
