@@ -119,20 +119,6 @@ int main(int argc, char **argv)
         main_frame.ip = main->chunk.code.data();
         main_frame.frame_start = 0;
 
-        // auto argv_obj = object_val();
-        // for (int i = 0; i < argc; i++)
-        // {
-        //     std::string s(argv[i]);
-        //     std::string key = std::to_string(i);
-        //     argv_obj.get_object()->keys.push_back(key);
-        //     argv_obj.get_object()->values[key] = string_val(s);
-        // }
-
-        // auto argc_num = number_val(argc);
-
-        // vm.objects.push_back(&argc_num);
-        // vm.objects.push_back(&argv_obj);
-
         vm.argc = argc;
         vm.argv = argv;
 
